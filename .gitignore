@@ -1,0 +1,22 @@
+# ABSOFTWARE GITIGNORE:
+
+# General
+*.exe
+*.exe.config
+*.pdb
+*.so
+*.dll
+*.dylib
+*.o
+*.obj
+*.ilk
+*.exp
+*.lib
+*.pdb
+*.swp
+*.*.user
+.vs
+bin
+obj
+packages/**/*
+!packages/repositories.config
