@@ -89,11 +89,11 @@ namespace ABSoftware.ABSave.Serialization
 
         internal static bool HandleKeyBeforeType(Type type, ABSaveWriter writer)
         {
-            var successful = ABSaveUtils.SearchForCachedType(writer, type, out byte[] key);
+            var successful = writer.CachedTypes.TryGetValue(type, out int key);
 
             if (successful)
             {
-                writer.WriteByteArray(key, false);
+                writer.WriteInt32((uint)key);
                 return true;
             }
 
@@ -104,24 +104,20 @@ namespace ABSoftware.ABSave.Serialization
                 writer.WriteByte(255);
             }
             else
-                writer.WriteByteArray(ABSaveUtils.CreateCachedType(type, writer), false);
+            {
+                int size = writer.CachedAssemblies.Count;
+                writer.CachedTypes.Add(type, size);
+                writer.WriteInt32ToSignificantBytes(size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(writer.CachedTypes.Count - 1));
+            }
 
             return false;
         }
 
         public static void SerializeAssembly(Assembly assembly, ABSaveWriter writer)
         {
-            var successful = ABSaveUtils.SearchForCachedAssembly(writer, assembly, out byte key);
+            var successful = writer.CachedAssemblies.TryGetValue(assembly, out int key);
 
-            if (successful)
-            {
-                writer.WriteByte(key);
-                return;
-            }
-            else if (writer.CachedAssemblies.Count == byte.MaxValue)
-                writer.WriteByte(255);
-            else
-                writer.WriteByte(ABSaveUtils.CreateCachedAssembly(assembly, writer));
+            if (HandleKeyBeforeAssembly(assembly, writer, successful, key)) return;
 
             var assemblyName = assembly.GetName();
             var publicKeyToken = assemblyName.GetPublicKeyToken();
@@ -139,6 +135,25 @@ namespace ABSoftware.ABSave.Serialization
 
             if (hasPublicKeyToken)
                 writer.WriteByteArray(publicKeyToken, false);
+        }
+
+        private static bool HandleKeyBeforeAssembly(Assembly assembly, ABSaveWriter writer, bool successful, int key)
+        {
+            if (successful)
+            {
+                writer.WriteInt32((uint)key);
+                return true;
+            }
+            else if (writer.CachedAssemblies.Count == int.MaxValue)
+                writer.WriteInt32(int.MaxValue);
+            else
+            {
+                int size = writer.CachedAssemblies.Count;
+                writer.CachedAssemblies.Add(assembly, size);
+                writer.WriteInt32ToSignificantBytes(size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(writer.CachedAssemblies.Count - 1));
+            }
+
+            return false;
         }
 
         public static void SerializeVersion(Version version, ABSaveWriter writer)

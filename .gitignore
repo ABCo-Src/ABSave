@@ -20,3 +20,4 @@ bin
 obj
 packages/**/*
 !packages/repositories.config
+TestCoverage
