@@ -12,7 +12,7 @@ using System.Threading.Tasks;
     "036843f13de106ee3dd3c38a8c6ea28dfcf6d08e0a633d2c69bdace83858240697c03de97def5d"+
     "a06d8bec0830a75c092aae290b01420d11e7d5f9caaeb53cb624d8127de4f2765f9b466eb3a738"+
     "fba225fe")]
-namespace ABSoftware.ABSave.Serialization
+namespace ABSoftware.ABSave.Serialization.Writer
 {
     /// <summary>
     /// A stream that writes in "chunks" as opposed to one big block of memory. Used by default with ABSave when writing to a variable.

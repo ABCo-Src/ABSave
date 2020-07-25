@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Serialization
+namespace ABSoftware.ABSave.Serialization.Writer
 {
     public class ABSaveStreamWriter : ABSaveWriter
     {

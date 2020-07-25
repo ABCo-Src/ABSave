@@ -1,10 +1,8 @@
 ﻿using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Serialization;
+using ABSoftware.ABSave.Serialization.Writer;
 using System;
-using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
-using System.Text;
 
 namespace ABSoftware.ABSave.Converters.Internal
 {
@@ -13,8 +11,8 @@ namespace ABSoftware.ABSave.Converters.Internal
         public static AssemblyTypeConverter Instance = new AssemblyTypeConverter();
         private AssemblyTypeConverter() { }
 
-        public override bool HasExactType => true;
-        public override Type ExactType => typeof(Assembly);
+        public override bool HasExactType => false;
+        public override bool CheckCanConvertType(TypeInformation typeInformation) => typeInformation.ActualType == typeof(Assembly) || typeInformation.ActualType.IsSubclassOf(typeof(Assembly));
 
         public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer)
         {

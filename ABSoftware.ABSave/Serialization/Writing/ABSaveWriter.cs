@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace ABSoftware.ABSave.Serialization
+namespace ABSoftware.ABSave.Serialization.Writer
 {
     /// <summary>
     /// The central part of ABSave serialization, this contains information about the state of the ABSave document and the actual serialized data of the document.

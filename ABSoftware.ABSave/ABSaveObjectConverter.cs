@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Serialization;
+using ABSoftware.ABSave.Serialization.Writer;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,7 +10,7 @@ namespace ABSoftware.ABSave
 {
     public static class ABSaveObjectConverter
     {
-        public static Dictionary<Type, MemberInfo[]> CachedMemberInfos = new Dictionary<Type, MemberInfo[]>();
+        public static Dictionary<Type, FieldInfo[]> CachedFieldInfos = new Dictionary<Type, FieldInfo[]>();
 
         public static void AutoSerializeObject(object obj, ABSaveWriter writer, TypeInformation typeInformation)
         {
@@ -21,48 +22,20 @@ namespace ABSoftware.ABSave
                 if (writer.Settings.WithNames)
                     writer.WriteText(info[i].Name);
 
-                object val;
-                Type specifiedType;
-
-                if (info[i] is FieldInfo field)
-                {
-                    val = field.GetValue(obj);
-                    specifiedType = field.FieldType;
-                }
-
-                else if (info[i] is PropertyInfo property)
-                {
-                    val = property.GetValue(obj);
-                    specifiedType = property.PropertyType;
-                }
-
-                else throw new Exception("ABSave: Not field or property info");
-
+                var val = info[i].GetValue(obj);
                 var actualType = val.GetType();
+                var specifiedType = info[i].FieldType;
 
-                ABSaveSerializer.SerializeAuto(val, writer, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)));
+                ABSaveItemSerializer.SerializeAuto(val, writer, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)));
             }
         }
 
-        internal static MemberInfo[] GetMembers(Type typ)
+        public static FieldInfo[] GetObjectMemberInfos(Type typ)
         {
-            var fields = typ.GetFields(BindingFlags.Public | BindingFlags.Instance);
-            var properties = typ.GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            var ret = new MemberInfo[fields.Length + properties.Length];
+            if (CachedFieldInfos.TryGetValue(typ, out FieldInfo[] res)) return res;
 
-            Array.Copy(fields, ret, fields.Length);
-            Array.Copy(properties, 0, ret, fields.Length, properties.Length);
-
-            return ret;
-        }
-
-        public static MemberInfo[] GetObjectMemberInfos(Type typ)
-        {
-            var info = CachedMemberInfos[typ];
-            if (info != null) return info;
-
-            info = GetMembers(typ);
-            CachedMemberInfos.Add(typ, info);
+            var info = typ.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+            CachedFieldInfos.Add(typ, info);
             return info;
         }
     }

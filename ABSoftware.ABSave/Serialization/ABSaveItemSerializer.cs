@@ -1,16 +1,14 @@
 ﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Converters.Internal;
 using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Serialization.Writer;
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Reflection;
-using System.Text;
 
 namespace ABSoftware.ABSave.Serialization
 {
-    public static class ABSaveSerializer
+    public static class ABSaveItemSerializer
     {
         public static void SerializeAuto(object obj, ABSaveWriter writer, TypeInformation typeInformation)
         {
@@ -18,13 +16,11 @@ namespace ABSoftware.ABSave.Serialization
 
             if (writer.Settings.AutoCheckTypeConverters && AttemptSerializeWithTypeConverter(obj, writer, typeInformation))
                 return;
-            if (writer.Settings.AutoCheckStringConverters && AttemptSerializeWithStringConverter(obj, writer, typeInformation))
-                return;
 
             ABSaveObjectConverter.AutoSerializeObject(obj, writer, typeInformation);
         }
 
-        static void SerializeAttributes(object obj, ABSaveWriter writer, TypeInformation typeInformation)
+        internal static void SerializeAttributes(object obj, ABSaveWriter writer, TypeInformation typeInformation)
         {
             // If a nullable represents a null item, this will write the null attribute.
             if (obj == null)
@@ -35,7 +31,7 @@ namespace ABSoftware.ABSave.Serialization
 
             // NOTE: Because of nullable's unique behaviour with boxing, they must be handled specially here, we must make sure we write an attribute if they aren't null.
             // From here, it will serialize it just like it's a normal data type.
-            if (typeInformation.SpecifiedType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            if (typeInformation.SpecifiedType.IsGenericType && typeInformation.SpecifiedType.GetGenericTypeDefinition() == typeof(Nullable<>))
                 writer.WriteMatchingTypeAttribute();
             else if (writer.Settings.WithTypes)
                 SerializeTypeBeforeItem(writer, typeInformation.SpecifiedType, typeInformation.ActualType);
@@ -48,22 +44,6 @@ namespace ABSoftware.ABSave.Serialization
                 typeConverter.Serialize(obj, typeInformation, writer);
                 return true;
             }
-
-            return false;
-        }
-
-        static bool AttemptSerializeWithStringConverter(object obj, ABSaveWriter writer, TypeInformation typeInformation)
-        {
-            var typeConv = TypeDescriptor.GetConverter(typeInformation.ActualType);
-            if (typeConv.IsValid(obj))
-                if (typeConv.CanConvertTo(typeof(string)) && typeConv.CanConvertFrom(typeof(string)))
-                {
-                    if (writer.Settings.WithTypes)
-                        SerializeTypeBeforeItem(writer, typeInformation.SpecifiedType, typeInformation.ActualType);
-
-                    writer.WriteText(typeConv.ConvertToString(obj));
-                    return true;
-                }
 
             return false;
         }

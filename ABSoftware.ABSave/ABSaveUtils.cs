@@ -9,7 +9,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave
 {
-    internal class ABSaveUtils
+    internal static class ABSaveUtils
     {
         internal const int UNSIGNED_24BIT_MAX = 16777215;
 
@@ -22,6 +22,7 @@ namespace ABSoftware.ABSave
             else if (num <= UNSIGNED_24BIT_MAX) return 3;
             else return 4;
         }
+
         #endregion
 
         #region Type Convertion
@@ -34,7 +35,7 @@ namespace ABSoftware.ABSave
                 return true;
             }
             else
-                for (int i = settings.NonExactConverters.Count; i >= 0; i--)
+                for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
                     if (settings.NonExactConverters[i].CheckCanConvertType(type))
                     {
                         converter = settings.NonExactConverters[i];

@@ -14,7 +14,6 @@ namespace ABSoftware.ABSave
         public bool WithNames = true;
         public bool WithTypes = true;
         public bool CacheTypesAndAssemblies = true;
-        public bool AutoCheckStringConverters = true;
         public bool AutoCheckTypeConverters = true;
         public bool UseLittleEndian = BitConverter.IsLittleEndian;
 
@@ -47,12 +46,6 @@ namespace ABSoftware.ABSave
         public ABSaveSettings SetUseLittleEndian(bool useLittleEndian)
         {
             UseLittleEndian = useLittleEndian;
-            return this;
-        }
-
-        public ABSaveSettings SetAutoCheckStringConverters(bool checkStringConverters)
-        {
-            AutoCheckStringConverters = checkStringConverters;
             return this;
         }
 

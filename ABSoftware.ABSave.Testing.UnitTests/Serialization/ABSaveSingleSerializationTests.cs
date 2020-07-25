@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Converters.Internal;
 using ABSoftware.ABSave.Serialization;
+using ABSoftware.ABSave.Serialization.Writer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -42,7 +43,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [DataRow(true)]
         public void SerializeAssembly_NoCulture_PublicKeyToken(bool writeKey)
         {
-            var assembly = typeof(ABSaveSerializer).Assembly;
+            var assembly = typeof(ABSaveItemSerializer).Assembly;
             var actual = new ABSaveMemoryWriter(new ABSaveSettings().SetCacheTypesAndAssemblies(writeKey));
             AssemblyTypeConverter.Instance.Serialize(assembly, new Helpers.TypeInformation(), actual);
 
@@ -62,7 +63,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [DataRow(true)]
         public void SerializeType(bool writeKey)
         {
-            var type = typeof(ABSaveSerializer);
+            var type = typeof(ABSaveItemSerializer);
             var actual = new ABSaveMemoryWriter(new ABSaveSettings().SetCacheTypesAndAssemblies(writeKey));
             TypeTypeConverter.Instance.Serialize(type, new Helpers.TypeInformation(), actual);
 
@@ -172,6 +173,34 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteByteArray(guid.ToByteArray(), false);
+
+            CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
+        }
+
+        [TestMethod]
+        public void SerializeDateTime()
+        {
+            var dateTime = new DateTime(116);
+
+            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
+            DateTimeTypeConverter.Instance.Serialize(dateTime, new Helpers.TypeInformation(), actual);
+
+            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
+            expected.WriteInt64((ulong)dateTime.Ticks);
+
+            CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
+        }
+
+        [TestMethod]
+        public void SerializeTimeSpan()
+        {
+            var timeSpan = new TimeSpan(116);
+
+            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
+            TimeSpanTypeConverter.Instance.Serialize(timeSpan, new Helpers.TypeInformation(), actual);
+
+            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
+            expected.WriteInt64((ulong)timeSpan.Ticks);
 
             CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
         }
