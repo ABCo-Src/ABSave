@@ -1,4 +1,6 @@
-﻿using ABSoftware.ABSave.Serialization;
+﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,28 +13,38 @@ namespace ABSoftware.ABSave
     {
         internal const int UNSIGNED_24BIT_MAX = 16777215;
 
-        #region Helpers
-
-        public static byte VersionNumberOfDecimals(Version ver)
-        {
-            if (ver.MinorRevision > 0) return 4;
-            else if (ver.Minor > 0) return 3;
-            else if (ver.MajorRevision > 0) return 2;
-            else if (ver.Major > 0) return 1;
-            return 0;
-        }
-
-        #endregion
-
         #region Numerical
 
-        public static int GetRequiredNoOfBytesToStoreNumber(int num)
+        internal static int GetRequiredNoOfBytesToStoreNumber(int num)
         {
             if (num <= byte.MaxValue) return 1;
             else if (num <= ushort.MaxValue) return 2;
             else if (num <= UNSIGNED_24BIT_MAX) return 3;
             else return 4;
         }
+        #endregion
+
+        #region Type Convertion
+
+        internal static bool TryFindConverterForType(ABSaveSettings settings, TypeInformation type, out ABSaveTypeConverter converter)
+        {
+            if (settings.ExactConverters.TryGetValue(type.ActualType, out ABSaveTypeConverter val))
+            {
+                converter = val;
+                return true;
+            }
+            else
+                for (int i = settings.NonExactConverters.Count; i >= 0; i--)
+                    if (settings.NonExactConverters[i].CheckCanConvertType(type))
+                    {
+                        converter = settings.NonExactConverters[i];
+                        return true;
+                    }
+
+            converter = null;
+            return false;
+        }
+
         #endregion
     }
 }

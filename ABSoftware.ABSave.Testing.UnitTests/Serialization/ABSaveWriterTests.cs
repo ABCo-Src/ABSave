@@ -151,6 +151,23 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteByteArrayMemory_Large_NeedsDedicatedSizeChunk(bool reversed)
+        {
+            InitWriter(true, reversed);
+            var arr = GenerateByteArr(65535);
+
+            var memWriter = _writer as ABSaveMemoryWriter;
+            memWriter.FreeSpace = 1;
+            memWriter.CurrentChunk = memWriter.DataStart = memWriter.DataEnd = new LinkedMemoryDataChunk(1);
+
+            _writer.WriteByteArray(arr, true);
+
+            TestBytes(GetBytes(65535, reversed).Concat(arr));
+        }
+
+        [TestMethod]
         [DataRow(false, false)]
         [DataRow(false, true)]
         [DataRow(true, false)]
@@ -184,7 +201,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             InitWriter(true, reversed);
 
             var memWriter = _writer as ABSaveMemoryWriter;
-
+            memWriter.FreeSpace = 55;
             memWriter.CurrentChunk = memWriter.DataStart = memWriter.DataEnd = new LinkedMemoryDataChunk(55);
 
             _writer.WriteText(RepeatString("ABC\u0001DEF", 100));
@@ -192,33 +209,6 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             TestBytes(GetBytes(1400, reversed).Concat(stringAsShorts));
         }
 
-        [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void Combo(bool isMemory, bool reversed)
-        {
-            InitWriter(isMemory, reversed);
-
-            var arr = GenerateByteArr(600);
-
-            _writer.WriteByte(9);
-            _writer.WriteByte(48);
-            _writer.WriteByteArray(arr, false);
-            _writer.WriteText("ABC\u0001DEF");
-
-            var expected = new List<byte>()
-            {
-                9, 48
-            };
-
-            expected.AddRange(arr);
-            expected.AddRange(GetBytes(14, reversed));
-            expected.AddRange(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70));
-
-            TestBytes(expected);
-        }
 
         [TestMethod]
         [DataRow(false, false)]
@@ -254,6 +244,53 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             TestBytes(expected);
         }
 
+        [TestMethod]
+        [DataRow(false, false)]
+        [DataRow(false, true)]
+        [DataRow(true, false)]
+        [DataRow(true, true)]
+        public void WriteDecimal(bool isMemory, bool reversed)
+        {
+            InitWriter(isMemory, reversed);
+
+            _writer.WriteDecimal(15092196.5M);
+
+            var parts = decimal.GetBits(15092196.5M);
+            var bits = new byte[16];
+            for (int i = 0; i < 4; i++)
+                Array.Copy(GetBytes(parts[i], reversed).ToArray(), 0, bits, i * 4, 4);
+
+            TestBytes(bits);
+        }
+
+        [TestMethod]
+        [DataRow(false, false)]
+        [DataRow(false, true)]
+        [DataRow(true, false)]
+        [DataRow(true, true)]
+        public void Combo(bool isMemory, bool reversed)
+        {
+            InitWriter(isMemory, reversed);
+
+            var arr = GenerateByteArr(600);
+
+            _writer.WriteByte(9);
+            _writer.WriteByte(48);
+            _writer.WriteByteArray(arr, false);
+            _writer.WriteText("ABC\u0001DEF");
+
+            var expected = new List<byte>()
+            {
+                9, 48
+            };
+
+            expected.AddRange(arr);
+            expected.AddRange(GetBytes(14, reversed));
+            expected.AddRange(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70));
+
+            TestBytes(expected);
+        }
+
         #region Helpers
 
         public void InitWriter(bool isMemory, bool reversed) => InitWriter(new ABSaveSettings().SetUseLittleEndian(reversed ? !BitConverter.IsLittleEndian : BitConverter.IsLittleEndian), isMemory);
@@ -263,7 +300,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             if (isMemory)
                 _writer = new ABSaveMemoryWriter(settings);
-            else 
+            else
             {
                 _nonMemoryStream = new MemoryStream();
                 _writer = new ABSaveStreamWriter(_nonMemoryStream, settings);

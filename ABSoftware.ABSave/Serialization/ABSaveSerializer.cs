@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Converters.Internal;
 using ABSoftware.ABSave.Helpers;
 using System;
 using System.Collections.Generic;
@@ -11,16 +12,10 @@ namespace ABSoftware.ABSave.Serialization
 {
     public static class ABSaveSerializer
     {
-        /// <returns>Used internally by ABSave, describes whether ABSave needs to put a NextItem character after this object when serialized.</returns>
-        public static void SerializeAuto(object obj, ABSaveWriter writer)
-        {
-            var type = obj.GetType();
-            SerializeAuto(obj, writer, new TypeInformation(type, Type.GetTypeCode(type)));
-        }
-
-        /// <returns>Used internally by ABSave, describes whether ABSave needs to put a NextItem character after this object when serialized.</returns>
         public static void SerializeAuto(object obj, ABSaveWriter writer, TypeInformation typeInformation)
         {
+            SerializeAttributes(obj, writer, typeInformation);
+
             if (writer.Settings.AutoCheckTypeConverters && AttemptSerializeWithTypeConverter(obj, writer, typeInformation))
                 return;
             if (writer.Settings.AutoCheckStringConverters && AttemptSerializeWithStringConverter(obj, writer, typeInformation))
@@ -29,26 +24,39 @@ namespace ABSoftware.ABSave.Serialization
             ABSaveObjectConverter.AutoSerializeObject(obj, writer, typeInformation);
         }
 
-        public static bool AttemptSerializeWithTypeConverter(object obj, ABSaveWriter writer, TypeInformation typeInformation)
+        static void SerializeAttributes(object obj, ABSaveWriter writer, TypeInformation typeInformation)
         {
-            var absaveConverter = ABSaveTypeConverter.FindTypeConverterForType(typeInformation);
-            if (absaveConverter != null)
+            // If a nullable represents a null item, this will write the null attribute.
+            if (obj == null)
             {
-                if (writer.Settings.WithTypes)
-                    SerializeTypeBeforeItem(writer, typeInformation.SpecifiedType, typeInformation.ActualType);
+                writer.WriteNullAttribute();
+                return;
+            }
 
-                absaveConverter.Serialize(obj, writer, typeInformation);
+            // NOTE: Because of nullable's unique behaviour with boxing, they must be handled specially here, we must make sure we write an attribute if they aren't null.
+            // From here, it will serialize it just like it's a normal data type.
+            if (typeInformation.SpecifiedType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                writer.WriteMatchingTypeAttribute();
+            else if (writer.Settings.WithTypes)
+                SerializeTypeBeforeItem(writer, typeInformation.SpecifiedType, typeInformation.ActualType);
+        }
+
+        static bool AttemptSerializeWithTypeConverter(object obj, ABSaveWriter writer, TypeInformation typeInformation)
+        {
+            if (ABSaveUtils.TryFindConverterForType(writer.Settings, typeInformation, out ABSaveTypeConverter typeConverter))
+            {
+                typeConverter.Serialize(obj, typeInformation, writer);
                 return true;
             }
 
             return false;
         }
 
-        public static bool AttemptSerializeWithStringConverter(object obj, ABSaveWriter writer, TypeInformation typeInformation)
+        static bool AttemptSerializeWithStringConverter(object obj, ABSaveWriter writer, TypeInformation typeInformation)
         {
             var typeConv = TypeDescriptor.GetConverter(typeInformation.ActualType);
             if (typeConv.IsValid(obj))
-                if (typeConv.CanConvertTo(typeof(string)) || typeConv.CanConvertFrom(typeof(string)))
+                if (typeConv.CanConvertTo(typeof(string)) && typeConv.CanConvertFrom(typeof(string)))
                 {
                     if (writer.Settings.WithTypes)
                         SerializeTypeBeforeItem(writer, typeInformation.SpecifiedType, typeInformation.ActualType);
@@ -60,125 +68,19 @@ namespace ABSoftware.ABSave.Serialization
             return false;
         }
 
-        public static void SerializeString(string str, ABSaveWriter writer) => writer.WriteText(str);
-
-        public static void SerializeType(Type type, ABSaveWriter writer)
-        {
-            SerializeType(type, type.GetGenericTypeDefinition(), writer);
-        }
-
-        public static void SerializeType(Type type, Type genericType, ABSaveWriter writer, bool storeIfGeneric = true)
-        {
-            if (HandleKeyBeforeType(type, writer)) return;
-            SerializeAssembly(type.Assembly, writer);
-            writer.WriteText(genericType.FullName);
-
-            if (storeIfGeneric)
-            {
-                if (type.IsGenericTypeDefinition)
-                {
-                    writer.WriteByte(1);
-                    return;
-                } else writer.WriteByte(0);
-            }
-            
-            var generics = type.GenericTypeArguments;
-            for (int i = 0; i < generics.Length; i++)
-                SerializeType(type, type.GetGenericTypeDefinition(), writer, storeIfGeneric);
-        }
-
-        internal static bool HandleKeyBeforeType(Type type, ABSaveWriter writer)
-        {
-            var successful = writer.CachedTypes.TryGetValue(type, out int key);
-
-            if (successful)
-            {
-                writer.WriteInt32((uint)key);
-                return true;
-            }
-
-            // If we can't save anymore types, just write 65,535.
-            else if (writer.CachedTypes.Count == ushort.MaxValue)
-            {
-                writer.WriteByte(255);
-                writer.WriteByte(255);
-            }
-            else
-            {
-                int size = writer.CachedAssemblies.Count;
-                writer.CachedTypes.Add(type, size);
-                writer.WriteInt32ToSignificantBytes(size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(writer.CachedTypes.Count - 1));
-            }
-
-            return false;
-        }
-
-        public static void SerializeAssembly(Assembly assembly, ABSaveWriter writer)
-        {
-            var successful = writer.CachedAssemblies.TryGetValue(assembly, out int key);
-
-            if (HandleKeyBeforeAssembly(assembly, writer, successful, key)) return;
-
-            var assemblyName = assembly.GetName();
-            var publicKeyToken = assemblyName.GetPublicKeyToken();
-            var hasCulture = assemblyName.CultureName != "";
-            var hasPublicKeyToken = publicKeyToken != null;
-
-            // First Byte: 000000(1 for culture)(1 for PublicKeyToken)
-            var firstByte = (hasCulture ? 2 : 0) & (hasPublicKeyToken ? 1 : 0);
-            writer.WriteByte((byte)firstByte);
-            writer.WriteText(assemblyName.Name);
-            SerializeVersion(assemblyName.Version, writer);
-
-            if (hasCulture)
-                writer.WriteText(assemblyName.CultureName);
-
-            if (hasPublicKeyToken)
-                writer.WriteByteArray(publicKeyToken, false);
-        }
-
-        private static bool HandleKeyBeforeAssembly(Assembly assembly, ABSaveWriter writer, bool successful, int key)
-        {
-            if (successful)
-            {
-                writer.WriteInt32((uint)key);
-                return true;
-            }
-            else if (writer.CachedAssemblies.Count == int.MaxValue)
-                writer.WriteInt32(int.MaxValue);
-            else
-            {
-                int size = writer.CachedAssemblies.Count;
-                writer.CachedAssemblies.Add(assembly, size);
-                writer.WriteInt32ToSignificantBytes(size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(writer.CachedAssemblies.Count - 1));
-            }
-
-            return false;
-        }
-
-        public static void SerializeVersion(Version version, ABSaveWriter writer)
-        {
-            var numberOfDecimals = ABSaveUtils.VersionNumberOfDecimals(version);
-
-            writer.WriteByte(numberOfDecimals);
-
-            if (numberOfDecimals >= 1) writer.WriteInt32((uint)version.Major);
-            if (numberOfDecimals >= 2) writer.WriteInt32((uint)version.Major);
-            if (numberOfDecimals >= 3) writer.WriteInt32((uint)version.Build);
-            if (numberOfDecimals == 4) writer.WriteInt32((uint)version.Revision);
-        }
-
         public static void SerializeTypeBeforeItem(ABSaveWriter writer, Type specifiedType, Type actualType)
         {
-            // Write the type itself.
-            Type actualTypeGeneric = actualType.GetGenericTypeDefinition();
-
-            if (specifiedType != null && actualTypeGeneric != specifiedType.GetGenericTypeDefinition())
+            // If the specified type is a value type, then there's no need to write any type information about it, since we know for certain nothing can inherit from it, and by extension no other type of data can be put there.
+            if (!specifiedType.IsValueType)
             {
-                writer.WriteDifferentTypeAttribute();
-                SerializeType(actualType, actualTypeGeneric, writer, false);
+                // Remember that if the main part of the type is the same, the generics cannot be different, it's only if the main part is different do we need to write generics as well.
+                if (specifiedType != null && actualType != specifiedType)
+                {
+                    writer.WriteDifferentTypeAttribute();
+                    TypeTypeConverter.Instance.SerializeClosedType(actualType, writer);
+                }
+                else writer.WriteMatchingTypeAttribute();
             }
-            else writer.WriteMatchingTypeAttribute();
         }
     }
 }

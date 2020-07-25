@@ -33,52 +33,74 @@ namespace ABSoftware.ABSave.Serialization
         public abstract unsafe void WriteSingle(float num);
         public abstract unsafe void WriteDouble(double num);
         public abstract unsafe void WriteDecimal(decimal num);
-        protected abstract unsafe void NumericalWriteBytes(byte* data, int numberOfBytes);
         public abstract unsafe void WriteInt32ToSignificantBytes(int s, int significantBytes);
 
         public unsafe void WriteNumber(object num, TypeCode tCode)
         {
-            switch (tCode)
+            unchecked
             {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
+                switch (tCode)
+                {
+                    case TypeCode.Byte:
+                        
+                        WriteByte((byte)num);
+                        break;
 
-                    // Just return the byte.
-                    WriteByte((byte)num);
-                    break;
+                    case TypeCode.SByte:
 
-                case TypeCode.UInt16:
-                case TypeCode.Int16:
+                        WriteByte((byte)(sbyte)num);
+                        break;
 
-                    WriteInt16((ushort)num);
-                    break;
+                    case TypeCode.UInt16:
 
-                case TypeCode.UInt32:
-                case TypeCode.Int32:
+                        WriteInt16((ushort)num);
+                        break;
 
-                    WriteInt32((uint)num);
-                    break;
+                    case TypeCode.Int16:
 
-                case TypeCode.UInt64:
-                case TypeCode.Int64:
+                        WriteInt16((ushort)(short)num);
+                        break;
 
-                    WriteInt64((ulong)num);
-                    break;
+                    case TypeCode.Char:
 
-                case TypeCode.Single:
+                        WriteInt16((char)num);
+                        break;
 
-                    WriteSingle((float)num);
-                    break;
+                    case TypeCode.UInt32:
 
-                case TypeCode.Double:
+                        WriteInt32((uint)num);
+                        break;
 
-                    WriteDouble((double)num);
-                    break;
+                    case TypeCode.Int32:
 
-                case TypeCode.Decimal:
+                        WriteInt32((uint)(int)num);
+                        break;
 
-                    WriteDecimal((decimal)num);
-                    break;
+                    case TypeCode.UInt64:
+
+                        WriteInt64((ulong)num);
+                        break;
+
+                    case TypeCode.Int64:
+
+                        WriteInt64((ulong)(long)num);
+                        break;
+
+                    case TypeCode.Single:
+
+                        WriteSingle((float)num);
+                        break;
+
+                    case TypeCode.Double:
+
+                        WriteDouble((double)num);
+                        break;
+
+                    case TypeCode.Decimal:
+
+                        WriteDecimal((decimal)num);
+                        break;
+                }
             }
         }
 

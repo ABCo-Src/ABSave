@@ -92,18 +92,22 @@ namespace ABSoftware.ABSave.Serialization
                 WriteInt32((uint)bits[i]);
         }
 
-        protected unsafe override void NumericalWriteBytes(byte* data, int numberOfBytes)
+        protected unsafe void NumericalWriteBytes(byte* data, int numberOfBytes)
         {
+            byte[] byt = new byte[numberOfBytes];
+
             if (ShouldReverseEndian)
             {
                 byte* currentDataPos = data + numberOfBytes;
                 for (int i = 0; i < numberOfBytes; i++)
-                    Output.WriteByte(*--currentDataPos);
+                    byt[i] = *--currentDataPos;
             } else {
                 byte* currentDataPos = data;
                 for (int i = 0; i < numberOfBytes; i++)
-                    Output.WriteByte(*currentDataPos++);
+                    byt[i] = *currentDataPos++;
             }
+
+            Output.Write(byt, 0, numberOfBytes);
         }
 
         public override unsafe void WriteInt32ToSignificantBytes(int s, int significantBytes)
