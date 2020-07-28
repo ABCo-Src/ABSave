@@ -54,7 +54,7 @@ namespace ABSoftware.ABSave.Serialization
             if (!specifiedType.IsValueType)
             {
                 // Remember that if the main part of the type is the same, the generics cannot be different, it's only if the main part is different do we need to write generics as well.
-                if (specifiedType != null && actualType != specifiedType)
+                if (actualType != specifiedType)
                 {
                     writer.WriteDifferentTypeAttribute();
                     TypeTypeConverter.Instance.SerializeClosedType(actualType, writer);

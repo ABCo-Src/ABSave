@@ -47,5 +47,25 @@ namespace ABSoftware.ABSave
         }
 
         #endregion
+
+        public static bool HasGenericInterface(Type[] interfaces, Type theInterface)
+        {
+            for (int i = 0; i < interfaces.Length; i++)
+                if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == theInterface)
+                    return true;
+
+            return false;
+        }
+
+        public static bool HasInterface(Type toCheck, Type theInterface)
+        {
+            var interfaces = toCheck.GetInterfaces();
+
+            for (int i = 0; i < interfaces.Length; i++)
+                if (interfaces[i] == theInterface)
+                    return true;
+
+            return false;
+        }
     }
 }

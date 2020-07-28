@@ -33,13 +33,16 @@ namespace ABSoftware.ABSave.Converters
             { typeof(StringBuilder), StringBuilderTypeConverter.Instance },
             { typeof(string), StringTypeConverter.Instance },
             { typeof(Version), VersionTypeConverter.Instance },
-            { typeof(DateTime), DateTimeTypeConverter.Instance }
+            { typeof(DateTime), DateTimeTypeConverter.Instance },
+            { typeof(TimeSpan), TimeSpanTypeConverter.Instance }
         };
 
         internal static List<ABSaveTypeConverter> BuiltInNonExact = new List<ABSaveTypeConverter>()
         {
             AssemblyTypeConverter.Instance,
             TypeTypeConverter.Instance,
+            KeyValueConverter.Instance,
+            CollectionTypeConverter.Instance,
             NumberAndEnumTypeConverter.Instance
         };
 

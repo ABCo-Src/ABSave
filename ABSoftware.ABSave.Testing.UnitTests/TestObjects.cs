@@ -14,4 +14,10 @@ namespace ABSoftware.ABSave.Testing.UnitTests
         public int Itm2 = 12;
         public string Itm3 = "abc";
     }
+
+    public class DeepObject
+    {
+        internal SimpleObject Simple = new SimpleObject();
+        public string NullItm = null;
+    }
 }
