@@ -5,10 +5,17 @@ using System.Text;
 namespace ABSoftware.ABSave.Testing.UnitTests
 {
     public struct ValueTypeObj { }
-    public class ReferenceTypeSub { }
+    public class ReferenceTypeSub : ReferenceTypeBase { }
     public class ReferenceTypeBase { }
 
-    public class SimpleObject
+    public struct SimpleStruct
+    {
+        public int Inside;
+
+        public SimpleStruct(int inside) => Inside = inside;
+    }
+
+    public class SimpleClass
     {
         internal bool Itm1 = true;
         public int Itm2 = 12;
@@ -17,7 +24,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
 
     public class DeepObject
     {
-        internal SimpleObject Simple = new SimpleObject();
+        internal SimpleClass Simple = new SimpleClass();
         public string NullItm = null;
     }
 }

@@ -10,23 +10,23 @@ namespace ABSoftware.ABSave.Serialization
 {
     public static class ABSaveItemSerializer
     {
-        public static void SerializeAuto(object obj, ABSaveWriter writer, TypeInformation typeInformation)
+        public static void SerializeAuto(object obj, TypeInformation typeInformation, ABSaveWriter writer)
         {
-            SerializeAttributes(obj, writer, typeInformation);
+            if (SerializeAttributes(obj, typeInformation, writer)) return;
 
-            if (writer.Settings.AutoCheckTypeConverters && AttemptSerializeWithTypeConverter(obj, writer, typeInformation))
+            if (writer.Settings.AutoCheckTypeConverters && AttemptSerializeWithTypeConverter(obj, typeInformation, writer))
                 return;
 
-            ABSaveObjectConverter.AutoSerializeObject(obj, writer, typeInformation);
+            ABSaveObjectConverter.AutoSerializeObject(obj, typeInformation, writer);
         }
 
-        internal static void SerializeAttributes(object obj, ABSaveWriter writer, TypeInformation typeInformation)
+        internal static bool SerializeAttributes(object obj, TypeInformation typeInformation, ABSaveWriter writer)
         {
             // If a nullable represents a null item, this will write the null attribute.
             if (obj == null)
             {
                 writer.WriteNullAttribute();
-                return;
+                return true;
             }
 
             // NOTE: Because of nullable's unique behaviour with boxing, they must be handled specially here, we must make sure we write an attribute if they aren't null.
@@ -35,9 +35,11 @@ namespace ABSoftware.ABSave.Serialization
                 writer.WriteMatchingTypeAttribute();
             else if (writer.Settings.WithTypes)
                 SerializeTypeBeforeItem(writer, typeInformation.SpecifiedType, typeInformation.ActualType);
+
+            return false;
         }
 
-        static bool AttemptSerializeWithTypeConverter(object obj, ABSaveWriter writer, TypeInformation typeInformation)
+        static bool AttemptSerializeWithTypeConverter(object obj, TypeInformation typeInformation, ABSaveWriter writer)
         {
             if (ABSaveUtils.TryFindConverterForType(writer.Settings, typeInformation, out ABSaveTypeConverter typeConverter))
             {

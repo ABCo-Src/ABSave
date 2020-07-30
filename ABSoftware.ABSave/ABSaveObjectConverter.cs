@@ -12,7 +12,7 @@ namespace ABSoftware.ABSave
     {
         public static Dictionary<Type, FieldInfo[]> CachedFieldInfos = new Dictionary<Type, FieldInfo[]>();
 
-        public static void AutoSerializeObject(object obj, ABSaveWriter writer, TypeInformation typeInformation)
+        public static void AutoSerializeObject(object obj, TypeInformation typeInformation, ABSaveWriter writer)
         {
             var info = GetObjectMemberInfos(typeInformation.ActualType);
 
@@ -26,7 +26,7 @@ namespace ABSoftware.ABSave
                 var actualType = val.GetType();
                 var specifiedType = info[i].FieldType;
 
-                ABSaveItemSerializer.SerializeAuto(val, writer, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)));
+                ABSaveItemSerializer.SerializeAuto(val, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)), writer);
             }
         }
 
