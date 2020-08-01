@@ -1,5 +1,4 @@
 ﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Converters.Internal;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Serialization.Writer;
 using System;
@@ -17,7 +16,7 @@ namespace ABSoftware.ABSave.Serialization
             if (writer.Settings.AutoCheckTypeConverters && AttemptSerializeWithTypeConverter(obj, typeInformation, writer))
                 return;
 
-            ABSaveObjectConverter.AutoSerializeObject(obj, typeInformation, writer);
+            ABSaveObjectConverter.Serialize(obj, typeInformation, writer);
         }
 
         internal static bool SerializeAttributes(object obj, TypeInformation typeInformation, ABSaveWriter writer)
@@ -33,7 +32,7 @@ namespace ABSoftware.ABSave.Serialization
             // From here, it will serialize it just like it's a normal data type.
             if (typeInformation.SpecifiedType.IsGenericType && typeInformation.SpecifiedType.GetGenericTypeDefinition() == typeof(Nullable<>))
                 writer.WriteMatchingTypeAttribute();
-            else if (writer.Settings.WithTypes)
+            else
                 SerializeTypeBeforeItem(writer, typeInformation.SpecifiedType, typeInformation.ActualType);
 
             return false;

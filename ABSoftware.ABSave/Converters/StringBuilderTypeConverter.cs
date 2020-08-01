@@ -3,7 +3,7 @@ using ABSoftware.ABSave.Serialization.Writer;
 using System;
 using System.Text;
 
-namespace ABSoftware.ABSave.Converters.Internal
+namespace ABSoftware.ABSave.Converters
 {
     public class StringBuilderTypeConverter : ABSaveTypeConverter
     {

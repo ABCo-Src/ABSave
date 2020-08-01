@@ -11,31 +11,27 @@ namespace ABSoftware.ABSave.Testing.UnitTests
     [TestClass]
     public class ABSaveObjectConverterTests
     {
-        public ABSaveSettings NoNames = new ABSaveSettings().SetWithNames(false);
-        public ABSaveSettings Names = new ABSaveSettings().SetWithNames(true);
-
         [TestMethod]
-        public void Auto_NoNames_SimpleObject()
+        public void Auto_SimpleStruct()
         {
-            var actual = new ABSaveMemoryWriter(NoNames);
-            ABSaveObjectConverter.AutoSerializeObject(new SimpleClass(), new TypeInformation(typeof(SimpleClass), TypeCode.Object), actual);
+            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
+            ABSaveObjectConverter.Serialize(new SimpleStruct(12), new TypeInformation(typeof(SimpleStruct), TypeCode.Object), actual);
 
-            var expected = new ABSaveMemoryWriter(NoNames);
-            expected.WriteInt32(3);
-            expected.WriteByte(1);
+            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
+            expected.WriteInt32(1);
+            expected.WriteText("Inside");
             expected.WriteInt32(12);
-            ABSaveItemSerializer.SerializeAuto("abc", new TypeInformation(typeof(string), TypeCode.String), expected);
 
             CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
         }
 
         [TestMethod]
-        public void Auto_Names_SimpleObject()
+        public void Auto_SimpleObject()
         {
-            var actual = new ABSaveMemoryWriter(Names);
-            ABSaveObjectConverter.AutoSerializeObject(new SimpleClass(), new TypeInformation(typeof(SimpleClass), TypeCode.Object), actual);
+            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
+            ABSaveObjectConverter.Serialize(new SimpleClass(), new TypeInformation(typeof(SimpleClass), TypeCode.Object), actual);
 
-            var expected = new ABSaveMemoryWriter(Names);
+            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteInt32(3);
             expected.WriteText("Itm1");
             expected.WriteByte(1);

@@ -2,7 +2,7 @@
 using ABSoftware.ABSave.Serialization.Writer;
 using System;
 
-namespace ABSoftware.ABSave.Converters.Internal
+namespace ABSoftware.ABSave.Converters
 {
     public class DateTimeTypeConverter : ABSaveTypeConverter
     {

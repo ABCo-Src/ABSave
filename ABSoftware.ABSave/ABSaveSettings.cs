@@ -6,13 +6,10 @@ using System.Text;
 namespace ABSoftware.ABSave
 {
     /// <summary>
-    /// Stores the configuration and general information required for serialization.
-    /// Should only be used once per serialization.
+    /// Stores the configuration for serialization/deserialization.
     /// </summary>
     public class ABSaveSettings
     {
-        public bool WithNames = true;
-        public bool WithTypes = true;
         public bool CacheTypesAndAssemblies = true;
         public bool AutoCheckTypeConverters = true;
         public bool UseLittleEndian = BitConverter.IsLittleEndian;
@@ -20,21 +17,10 @@ namespace ABSoftware.ABSave
         internal Dictionary<Type, ABSaveTypeConverter> ExactConverters;
         internal List<ABSaveTypeConverter> NonExactConverters;
 
-        public ABSaveSettings() {
+        public ABSaveSettings() 
+        {
             ExactConverters = ABSaveTypeConverter.BuiltInExact;
             NonExactConverters = ABSaveTypeConverter.BuiltInNonExact;
-        }
-
-        public ABSaveSettings SetWithNames(bool withNames)
-        {
-            WithNames = withNames;
-            return this;
-        }
-
-        public ABSaveSettings SetWithTypes(bool withTypes) 
-        {
-            WithTypes = withTypes;
-            return this;
         }
 
         public ABSaveSettings SetCacheTypesAndAssemblies(bool cacheTypesAndAssemblies)

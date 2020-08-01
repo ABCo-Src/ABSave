@@ -10,7 +10,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Xml.Schema;
 
-namespace ABSoftware.ABSave.Converters.Internal
+namespace ABSoftware.ABSave.Converters
 {
     public class CollectionTypeConverter : ABSaveTypeConverter
     {

@@ -4,7 +4,7 @@ using System;
 using System.Globalization;
 using System.Reflection;
 
-namespace ABSoftware.ABSave.Converters.Internal
+namespace ABSoftware.ABSave.Converters
 {
     public class AssemblyTypeConverter : ABSaveTypeConverter
     {

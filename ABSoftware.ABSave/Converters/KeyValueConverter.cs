@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABSoftware.ABSave.Converters.Internal
+namespace ABSoftware.ABSave.Converters
 {
     public class KeyValueConverter : ABSaveTypeConverter
     {

@@ -1,4 +1,4 @@
-﻿using ABSoftware.ABSave.Converters.Internal;
+﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Serialization;
 using ABSoftware.ABSave.Serialization.Writer;
@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
@@ -36,19 +37,19 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [TestMethod]
         public void SerializeArray_ValueType_NoConverter()
         {
-            var actual = new ABSaveMemoryWriter(new ABSaveSettings().SetWithNames(false));
+            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
             var arrType = new TypeInformation(typeof(SimpleStruct[]), TypeCode.Object);
 
+            var arr = new SimpleStruct[] { new SimpleStruct(1134), new SimpleStruct(5678) };
+
             Assert.IsTrue(CollectionTypeConverter.Instance.CheckCanConvertType(arrType));
-            CollectionTypeConverter.Instance.Serialize(new SimpleStruct[] { new SimpleStruct(1134), new SimpleStruct(5678) }, arrType, actual);
+            CollectionTypeConverter.Instance.Serialize(arr, arrType, actual);
 
             var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteByte(0);
             expected.WriteInt32(2);
-            expected.WriteInt32(1);
-            expected.WriteInt32(1134);
-            expected.WriteInt32(1);
-            expected.WriteInt32(5678);
+            ABSaveObjectConverter.Serialize(arr[0], new TypeInformation(typeof(SimpleStruct), TypeCode.Object), expected);
+            ABSaveObjectConverter.Serialize(arr[1], new TypeInformation(typeof(SimpleStruct), TypeCode.Object), expected);
 
             CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
         }
@@ -56,7 +57,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [TestMethod]
         public void SerializeArray_NonValueType()
         {
-            var actual = new ABSaveMemoryWriter(new ABSaveSettings().SetWithNames(false));
+            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
             var arrType = new TypeInformation(typeof(SimpleClass[]), TypeCode.Object);
 
             var so = new SimpleClass[] { new SimpleClass(), new SimpleClass() };
@@ -64,7 +65,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             Assert.IsTrue(CollectionTypeConverter.Instance.CheckCanConvertType(arrType));
             CollectionTypeConverter.Instance.Serialize(so, arrType, actual);
 
-            var expected = new ABSaveMemoryWriter(new ABSaveSettings().SetWithNames(false));
+            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteByte(0);
             expected.WriteInt32(2);
             ABSaveItemSerializer.SerializeAuto(so[0], new TypeInformation(typeof(SimpleClass), TypeCode.Object), expected);
