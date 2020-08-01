@@ -16,11 +16,6 @@ namespace ABSoftware.ABSave.Mapping
         internal Action<object, object> Setter = null;
         internal Type FieldType = null;
 
-        public void SerializeAndGenerateActualType(object obj, TypeInformation typeInfo, ABSaveWriter writer)
-        {
-
-        }
-
         public abstract void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer);
     }
 }

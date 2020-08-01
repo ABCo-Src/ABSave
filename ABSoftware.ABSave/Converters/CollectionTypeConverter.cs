@@ -42,7 +42,7 @@ namespace ABSoftware.ABSave.Converters
 
         public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer)
         {
-            if (typeInfo.ActualType.IsArray) SerializeArray((Array)obj, typeInfo, writer, typeInfo.ActualType.GetElementType(), null);
+            if (typeInfo.ActualType.IsArray) SerializeArray((Array)obj, writer, typeInfo.ActualType.GetElementType(), null);
             else
             {
                 var collectionType = GetCollectionType(typeInfo.ActualType, out Type specifiedItem);
@@ -52,13 +52,13 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer, CollectionMapItem map)
+        public void Serialize(object obj, ABSaveWriter writer, CollectionMapItem map)
         {
-            if (map.CollectionType == CollectionType.Array) SerializeArray((Array)obj, typeInfo, writer, map.ItemType, map.ItemConverter);
+            if (map.CollectionType == CollectionType.Array) SerializeArray((Array)obj, writer, map.ItemType, map.ItemConverter);
             else SerializeByType(obj, writer, map.ItemType, map.CollectionType, map.ItemConverter);
         }
 
-        void SerializeArray(Array arr, TypeInformation typeInfo, ABSaveWriter writer, Type itemType, ABSaveMapItem perItemMap)
+        void SerializeArray(Array arr, ABSaveWriter writer, Type itemType, ABSaveMapItem perItemMap)
         {
             var arrRank = arr.Rank;
 

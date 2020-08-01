@@ -36,21 +36,21 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [TestMethod]
         public void GetCollectionType_NonGenericIList()
         {
-            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(ArrayList), out Type genericItemType);
+            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(ArrayList), out _);
             Assert.AreEqual(CollectionType.NonGenericIList, result);
         }
 
         [TestMethod]
         public void GetCollectionType_NonGenericICollection()
         {
-            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(Hashtable), out Type genericItemType);
+            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(Hashtable), out _);
             Assert.AreEqual(CollectionType.NonGeneric, result);
         }
 
         [TestMethod]
         public void GetCollectionType_None()
         {
-            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(ABSaveCollectionSerializerTests), out Type genericItemType);
+            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(ABSaveCollectionSerializerTests), out _);
             Assert.AreEqual(CollectionType.None, result);
         }
 
@@ -268,7 +268,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var map = new CollectionMapItem(CollectionType.Array, typeof(int), new TypeConverterMapItem(NumberAndEnumTypeConverter.Instance));
 
             var actual = new ABSaveMemoryWriter(new ABSaveSettings());
-            CollectionTypeConverter.Instance.Serialize(new int[] { 1, 2, 3, 4 }, new TypeInformation(typeof(int[]), TypeCode.Object), actual, map);
+            CollectionTypeConverter.Instance.Serialize(new int[] { 1, 2, 3, 4 }, actual, map);
 
             var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteByte(0);
