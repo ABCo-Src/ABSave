@@ -1,4 +1,4 @@
-﻿using ABSoftware.ABSave.Converters.Internal;
+﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Serialization;
 using ABSoftware.ABSave.Serialization.Writer;
@@ -68,7 +68,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_ExactTypeConverter()
         {
             var actual = new ABSaveMemoryWriter(new ABSaveSettings());
-            ABSaveItemSerializer.SerializeAuto("abcd", new TypeInformation(typeof(string), TypeCode.String), actual);
+            ABSaveItemSerializer.Serialize("abcd", new TypeInformation(typeof(string), TypeCode.String), actual);
 
             var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteMatchingTypeAttribute();
@@ -81,7 +81,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_NonExactTypeConverter()
         {
             var actual = new ABSaveMemoryWriter(new ABSaveSettings());
-            ABSaveItemSerializer.SerializeAuto(1234f, new TypeInformation(typeof(float), TypeCode.Single), actual);
+            ABSaveItemSerializer.Serialize(1234f, new TypeInformation(typeof(float), TypeCode.Single), actual);
 
             var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteSingle(1234f);
@@ -93,7 +93,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_ReferenceTypeObject()
         {
             var actual = new ABSaveMemoryWriter(new ABSaveSettings());
-            ABSaveItemSerializer.SerializeAuto(new ReferenceTypeSub(), new TypeInformation(typeof(ReferenceTypeSub), TypeCode.Object), actual);
+            ABSaveItemSerializer.Serialize(new ReferenceTypeSub(), new TypeInformation(typeof(ReferenceTypeSub), TypeCode.Object), actual);
 
             var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteMatchingTypeAttribute();
@@ -106,7 +106,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_ValueTypeObject()
         {
             var actual = new ABSaveMemoryWriter(new ABSaveSettings());
-            ABSaveItemSerializer.SerializeAuto(new ValueTypeObj(), new TypeInformation(typeof(ValueTypeObj), TypeCode.Object), actual);
+            ABSaveItemSerializer.Serialize(new ValueTypeObj(), new TypeInformation(typeof(ValueTypeObj), TypeCode.Object), actual);
 
             var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteInt32(0);

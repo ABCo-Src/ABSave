@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Serialization.Writer;
 using System;
 using System.ComponentModel;
@@ -9,7 +10,7 @@ namespace ABSoftware.ABSave.Serialization
 {
     public static class ABSaveItemSerializer
     {
-        public static void SerializeAuto(object obj, TypeInformation typeInformation, ABSaveWriter writer)
+        public static void Serialize(object obj, TypeInformation typeInformation, ABSaveWriter writer)
         {
             if (SerializeAttributes(obj, typeInformation, writer)) return;
 
@@ -17,6 +18,12 @@ namespace ABSoftware.ABSave.Serialization
                 return;
 
             ABSaveObjectConverter.Serialize(obj, typeInformation, writer);
+        }
+
+        public static void Serialize(object obj, TypeInformation typeInformation, ABSaveWriter writer, ABSaveMapItem map)
+        {
+            if (SerializeAttributes(obj, typeInformation, writer)) return;
+            map.Serialize(obj, typeInformation, writer);
         }
 
         internal static bool SerializeAttributes(object obj, TypeInformation typeInformation, ABSaveWriter writer)

@@ -1,6 +1,7 @@
 ﻿using ABSoftware.ABSave.Converters;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace ABSoftware.ABSave
@@ -13,6 +14,7 @@ namespace ABSoftware.ABSave
         public bool CacheTypesAndAssemblies = true;
         public bool AutoCheckTypeConverters = true;
         public bool UseLittleEndian = BitConverter.IsLittleEndian;
+        public BindingFlags MemberReflectionFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
         internal Dictionary<Type, ABSaveTypeConverter> ExactConverters;
         internal List<ABSaveTypeConverter> NonExactConverters;
@@ -38,6 +40,12 @@ namespace ABSoftware.ABSave
         public ABSaveSettings SetAutoCheckTypeConverters(bool checkTypeConverters)
         {
             AutoCheckTypeConverters = checkTypeConverters;
+            return this;
+        }
+
+        public ABSaveSettings SetReflectionFlags(BindingFlags flags)
+        {
+            MemberReflectionFlags = flags;
             return this;
         }
 

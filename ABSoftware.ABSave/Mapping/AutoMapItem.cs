@@ -9,6 +9,6 @@ namespace ABSoftware.ABSave.Mapping
 {
     public class AutoMapItem : ABSaveMapItem
     {
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer) => ABSaveItemSerializer.SerializeAuto(obj, typeInfo, writer);
+        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer) => ABSaveItemSerializer.Serialize(obj, typeInfo, writer);
     }
 }

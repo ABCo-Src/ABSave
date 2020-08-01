@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Serialization;
 using ABSoftware.ABSave.Serialization.Writer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -14,6 +15,45 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
     [TestClass]
     public class ABSaveCollectionSerializerTests
     {
+        [TestMethod]
+        public void GetCollectionType_GenericIList()
+        {
+            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(List<string>), out Type genericItemType);
+
+            Assert.AreEqual(CollectionType.GenericIList, result);
+            Assert.IsTrue(typeof(string).IsEquivalentTo(genericItemType));
+        }
+
+        [TestMethod]
+        public void GetCollectionType_GenericICollection()
+        {
+            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(Dictionary<string, string>), out Type genericItemType);
+
+            Assert.AreEqual(CollectionType.Generic, result);
+            Assert.IsTrue(typeof(KeyValuePair<string, string>).IsEquivalentTo(genericItemType));
+        }
+
+        [TestMethod]
+        public void GetCollectionType_NonGenericIList()
+        {
+            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(ArrayList), out Type genericItemType);
+            Assert.AreEqual(CollectionType.NonGenericIList, result);
+        }
+
+        [TestMethod]
+        public void GetCollectionType_NonGenericICollection()
+        {
+            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(Hashtable), out Type genericItemType);
+            Assert.AreEqual(CollectionType.NonGeneric, result);
+        }
+
+        [TestMethod]
+        public void GetCollectionType_None()
+        {
+            var result = CollectionTypeConverter.Instance.GetCollectionType(typeof(ABSaveCollectionSerializerTests), out Type genericItemType);
+            Assert.AreEqual(CollectionType.None, result);
+        }
+
         [TestMethod]
         public void SerializeArray_ValueType_UseConverter()
         {
@@ -68,8 +108,8 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveMemoryWriter(new ABSaveSettings());
             expected.WriteByte(0);
             expected.WriteInt32(2);
-            ABSaveItemSerializer.SerializeAuto(so[0], new TypeInformation(typeof(SimpleClass), TypeCode.Object), expected);
-            ABSaveItemSerializer.SerializeAuto(so[1], new TypeInformation(typeof(SimpleClass), TypeCode.Object), expected);
+            ABSaveItemSerializer.Serialize(so[0], new TypeInformation(typeof(SimpleClass), TypeCode.Object), expected);
+            ABSaveItemSerializer.Serialize(so[1], new TypeInformation(typeof(SimpleClass), TypeCode.Object), expected);
 
             CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
         }
@@ -217,6 +257,25 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             expected.WriteDifferentTypeAttribute();
             TypeTypeConverter.Instance.Serialize(typeof(int), new TypeInformation(), expected);
+            expected.WriteInt32(4);
+
+            CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
+        }
+
+        [TestMethod]
+        public void SerializeArray_Map()
+        {
+            var map = new CollectionMapItem(CollectionType.Array, typeof(int), new TypeConverterMapItem(NumberAndEnumTypeConverter.Instance));
+
+            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
+            CollectionTypeConverter.Instance.Serialize(new int[] { 1, 2, 3, 4 }, new TypeInformation(typeof(int[]), TypeCode.Object), actual, map);
+
+            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
+            expected.WriteByte(0);
+            expected.WriteInt32(4);
+            expected.WriteInt32(1);
+            expected.WriteInt32(2);
+            expected.WriteInt32(3);
             expected.WriteInt32(4);
 
             CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());

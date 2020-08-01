@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Serialization;
 using ABSoftware.ABSave.Serialization.Writer;
 using System;
@@ -12,6 +13,21 @@ using System.Xml.Schema;
 
 namespace ABSoftware.ABSave.Converters
 {
+    public enum CollectionType
+    {
+        Array,
+        GenericIList,
+        Generic,
+        NonGenericIList,
+        NonGeneric,
+        None
+    }
+
+    public class ABSaveOnlyICollectionException : Exception
+    {
+        public ABSaveOnlyICollectionException() : base("ABSAVE: ABSave can only serialize ICollections, plain IEnumerables are not accepted.") { }
+    }
+
     public class CollectionTypeConverter : ABSaveTypeConverter
     {
         public readonly static CollectionTypeConverter Instance = new CollectionTypeConverter();
@@ -26,67 +42,75 @@ namespace ABSoftware.ABSave.Converters
 
         public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer)
         {
-            if (typeInfo.ActualType.IsArray) SerializeArray((Array)obj, typeInfo, writer);
-            else 
+            if (typeInfo.ActualType.IsArray) SerializeArray((Array)obj, typeInfo, writer, typeInfo.ActualType.GetElementType(), null);
+            else
             {
-                var interfaces = typeInfo.ActualType.GetInterfaces();
+                var collectionType = GetCollectionType(typeInfo.ActualType, out Type specifiedItem);
+                if (collectionType == CollectionType.None) throw new ABSaveOnlyICollectionException();
 
-                if (TryGetIEnumerableGenericArgument(interfaces, out Type specifiedItem)) 
-                    SerializeGeneric((dynamic)obj, interfaces, specifiedItem, writer);
-                else 
-                    SerializeNonGeneric((IEnumerable)obj, writer);
+                SerializeByType(obj, writer, specifiedItem, collectionType, null);
             }
         }
 
-        void SerializeArray(Array arr, TypeInformation typeInfo, ABSaveWriter writer)
+        public void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer, CollectionMapItem map)
         {
-            var itemType = typeInfo.ActualType.GetElementType();
+            if (map.CollectionType == CollectionType.Array) SerializeArray((Array)obj, typeInfo, writer, map.ItemType, map.ItemConverter);
+            else SerializeByType(obj, writer, map.ItemType, map.CollectionType, map.ItemConverter);
+        }
+
+        void SerializeArray(Array arr, TypeInformation typeInfo, ABSaveWriter writer, Type itemType, ABSaveMapItem perItemMap)
+        {
             var arrRank = arr.Rank;
 
             if (arrRank == 1)
-                SerializeSingleDimensionalArray(arr, itemType, writer);
+                SerializeSingleDimensionalArray(arr, itemType, writer, perItemMap);
             else
-                SerializeMultiDimensionalArray(arr, itemType, writer, arrRank);
+                SerializeMultiDimensionalArray(arr, itemType, writer, perItemMap, arrRank);
         }
 
-        void SerializeGeneric(dynamic arr, Type[] arrInterfaces, Type specifiedItemType, ABSaveWriter writer)
+        private void SerializeByType(object obj, ABSaveWriter writer, Type specifiedItem, CollectionType collectionType, ABSaveMapItem perItemMap)
         {
-            var arrSize = Enumerable.Count(arr); // TODO: Maybe optimize performance for non-collections to require only one iteration?
-            writer.WriteInt32((uint)arrSize);
+            switch (collectionType)
+            {
+                case CollectionType.Generic:
+                case CollectionType.GenericIList:
+                    var perItem = GetSerializeCorrectPerItemOperation(specifiedItem, writer.Settings, perItemMap, out TypeInformation itemInfo);
+                    var asDynamic = (dynamic)obj;
 
-            var perItem = GetSerializeCorrectPerItemOperation(specifiedItemType, writer.Settings, out TypeInformation itemInfo);
+                    var arrSize = asDynamic.Count;
+                    writer.WriteInt32((uint)arrSize);
 
-            if (ABSaveUtils.HasGenericInterface(arrInterfaces, typeof(IList<>)))
-                for (int i = 0; i < arrSize; i++) perItem(arr[i], itemInfo, writer);
-            else
-                foreach (object item in arr) perItem(item, itemInfo, writer);
+                    if (collectionType == CollectionType.GenericIList)
+                        for (int i = 0; i < arrSize; i++) perItem(asDynamic[i], itemInfo, writer, perItemMap);
+                    else
+                        foreach (object item in asDynamic) perItem(item, itemInfo, writer, perItemMap);
+
+                    break;
+
+                case CollectionType.NonGeneric:
+                    var asCollection = (ICollection)obj;
+                    writer.WriteInt32((uint)asCollection.Count);
+
+                    foreach (object item in asCollection)
+                        AutoSerializeItem(item, ObjectTypeInfo, writer, perItemMap);
+
+                    break;
+
+                case CollectionType.NonGenericIList:
+                    var asList = (IList)obj;
+                    var size = asList.Count;
+                    writer.WriteInt32((uint)size);
+
+                    for (int i = 0; i < size; i++)
+                        AutoSerializeItem(asList[i], ObjectTypeInfo, writer, perItemMap);
+
+                    break;
+            }
         }
 
-        void SerializeNonGeneric(IEnumerable arr, ABSaveWriter writer)
-        {
-            // TODO: Maybe optimize performance for non-collections to require only one iteration?
-            int size = GetNonGenericSize(arr);
-            writer.WriteInt32((uint)size);
+        #region Array
 
-            var itemInfo = ObjectTypeInfo;
-
-            if (arr is IList list)
-                for (int i = 0; i < size; i++) 
-                    SerializeItemAuto(list[i], itemInfo, writer);
-
-            else
-                foreach (object item in arr) 
-                    SerializeItemAuto(item, itemInfo, writer);
-        }
-
-        void SerializeItemAuto(object item, TypeInformation typeInfo, ABSaveWriter writer)
-        {
-            typeInfo.ActualType = item.GetType();
-            typeInfo.ActualTypeCode = Type.GetTypeCode(typeInfo.ActualType);
-            ABSaveItemSerializer.SerializeAuto(item, typeInfo, writer);
-        }
-
-        void SerializeSingleDimensionalArray(Array arr, Type itemType, ABSaveWriter writer)
+        void SerializeSingleDimensionalArray(Array arr, Type itemType, ABSaveWriter writer, ABSaveMapItem perItemMap)
         {
             int lowerBound = arr.GetLowerBound(0);
             var defaultLowerBound = lowerBound == 0;
@@ -98,13 +122,13 @@ namespace ABSoftware.ABSave.Converters
             // Fast write bytes or shorts using the writer's native methods.
             if (TryFastWriteArray(arr, writer, itemType)) return;
 
-            var perItem = GetSerializeCorrectPerItemOperation(itemType, writer.Settings, out TypeInformation itemInfo);
+            var perItem = GetSerializeCorrectPerItemOperation(itemType, writer.Settings, perItemMap, out TypeInformation itemInfo);
             int endIndex = lowerBound + arr.Length;
 
-            for (int i = lowerBound; i < endIndex; i++) perItem(arr.GetValue(i), itemInfo, writer);
+            for (int i = lowerBound; i < endIndex; i++) perItem(arr.GetValue(i), itemInfo, writer, perItemMap);
         }
 
-        unsafe void SerializeMultiDimensionalArray(Array arr, Type itemType, ABSaveWriter writer, int arrRank)
+        unsafe void SerializeMultiDimensionalArray(Array arr, Type itemType, ABSaveWriter writer, ABSaveMapItem perItemMap, int arrRank)
         {
             int* lowerBounds = stackalloc int[arrRank];
             int* lengths = stackalloc int[arrRank];
@@ -129,11 +153,10 @@ namespace ABSoftware.ABSave.Converters
                 writer.WriteInt32((uint)lengths[i]);
             }
 
-            SerializeDimension(arr, itemType, writer, new ArrayDimensionInfo(lowerBounds, lengths, arrRank), 0);
+            SerializeDimension(arr, itemType, writer, perItemMap, new ArrayDimensionInfo(lowerBounds, lengths, arrRank), 0);
         }
 
-
-        unsafe void SerializeDimension(Array arr, Type itemType, ABSaveWriter writer, in ArrayDimensionInfo dimensionInfo, int dimension)
+        unsafe void SerializeDimension(Array arr, Type itemType, ABSaveWriter writer, ABSaveMapItem perItemMap, in ArrayDimensionInfo dimensionInfo, int dimension)
         {
             int lowerBound = dimensionInfo.LowerBounds[dimension];
             int length = dimensionInfo.Lengths[dimension];
@@ -142,14 +165,14 @@ namespace ABSoftware.ABSave.Converters
             int endIndex = lowerBound + length;
             if (dimension == dimensionInfo.EndDimension)
             {
-                var perItem = GetSerializeCorrectPerItemOperation(itemType, writer.Settings, out TypeInformation itemInfo);
-                for (currentPos[dimension] = lowerBound; currentPos[dimension] < endIndex; currentPos[dimension]++) perItem(arr.GetValue(currentPos), itemInfo, writer);
+                var perItem = GetSerializeCorrectPerItemOperation(itemType, writer.Settings, perItemMap, out TypeInformation itemInfo);
+                for (currentPos[dimension] = lowerBound; currentPos[dimension] < endIndex; currentPos[dimension]++) perItem(arr.GetValue(currentPos), itemInfo, writer, perItemMap);
             }
             else
             {
                 int nextDimension = dimension + 1;
                 for (currentPos[dimension] = lowerBound; currentPos[dimension] < endIndex; currentPos[dimension]++)
-                    SerializeDimension(arr, itemType, writer, dimensionInfo, nextDimension);
+                    SerializeDimension(arr, itemType, writer, perItemMap, dimensionInfo, nextDimension);
             }
         }
 
@@ -165,6 +188,15 @@ namespace ABSoftware.ABSave.Converters
             }
 
             return defaultLowerBound;
+        }
+
+        #endregion
+
+        void AutoSerializeItem(object item, TypeInformation typeInfo, ABSaveWriter writer, ABSaveMapItem map)
+        {
+            typeInfo.ActualType = item.GetType();
+            typeInfo.ActualTypeCode = Type.GetTypeCode(typeInfo.ActualType);
+            ABSaveItemSerializer.Serialize(item, typeInfo, writer);
         }
 
         unsafe bool TryFastWriteArray(Array arr, ABSaveWriter writer, Type itemType)
@@ -199,46 +231,73 @@ namespace ABSoftware.ABSave.Converters
 
         #region Helpers
 
-        Action<object, TypeInformation, ABSaveWriter> GetSerializeCorrectPerItemOperation(Type itemType, ABSaveSettings settings, out TypeInformation itemInfo)
+        Action<object, TypeInformation, ABSaveWriter, ABSaveMapItem> GetSerializeCorrectPerItemOperation(Type itemType, ABSaveSettings settings, ABSaveMapItem perItemMap, out TypeInformation itemInfo)
         {
+            if (perItemMap != null) 
+            {
+                itemInfo = new TypeInformation(itemType, Type.GetTypeCode(itemType));
+
+                return (item, typeInfo, writer, map) =>
+                {
+                    typeInfo.ActualType = item.GetType();
+                    typeInfo.ActualTypeCode = Type.GetTypeCode(typeInfo.ActualType);
+                    perItemMap.Serialize(item, typeInfo, writer);
+                };
+            }
+
             // If the specified type is a value type, then we know for a fact all the items will be the same type, so we only need to find the converter once.
             if (itemType.IsValueType)
             {
                 itemInfo = new TypeInformation(itemType, Type.GetTypeCode(itemType));
 
                 if (ABSaveUtils.TryFindConverterForType(settings, itemInfo, out ABSaveTypeConverter converter))
-                    return converter.Serialize;
+                    return (item, typeInfo, writer, map) => converter.Serialize(item, typeInfo, writer);
                 else
-                    return ABSaveItemSerializer.SerializeAuto;
+                    return (item, typeInfo, writer, map) => ABSaveItemSerializer.Serialize(item, typeInfo, writer);
             }
 
             itemInfo = new TypeInformation(null, TypeCode.Empty, itemType, Type.GetTypeCode(itemType));
-            return SerializeItemAuto;
+            return AutoSerializeItem;
         }
 
-        int GetNonGenericSize(IEnumerable arr)
+        internal CollectionType GetCollectionType(Type type, out Type genericItemType)
         {
-            if (arr is ICollection collection) return collection.Count;
-            else
+            var interfaces = type.GetInterfaces();
+            CollectionType detectedType = CollectionType.None;
+            Type genericICollection;
+            int i = 0;
+
+            for (; i < interfaces.Length; i++)
             {
-                int size = 0;
-                var enumerator = arr.GetEnumerator();
-                while (enumerator.MoveNext()) size++;
-                return size;
-            }
-        }
-
-        bool TryGetIEnumerableGenericArgument(Type[] interfaces, out Type genericArgument)
-        {
-            for (int i = 0; i < interfaces.Length; i++)
-                if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                // If it's an "IList", then we can instantly return there, as that confirms it's a generic ICollection, which is the best thing to get.
+                if (interfaces[i].IsGenericType)
                 {
-                    genericArgument = interfaces[i].GetGenericArguments()[0];
-                    return true;
+                    var genericTypeDef = interfaces[i].GetGenericTypeDefinition();
+
+                    if (genericTypeDef == typeof(IList<>)) goto ReturnIList;
+                    else if (genericTypeDef == typeof(ICollection<>))
+                    {
+                        genericICollection = interfaces[i];
+
+                        // Try to see if it's an IList<>.
+                        for (; i < interfaces.Length; i++)
+                            if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == typeof(IList<>)) goto ReturnIList;
+
+                        genericItemType = genericICollection.GetGenericArguments()[0];
+                        return CollectionType.Generic;
+                    }
                 }
 
-            genericArgument = null;
-            return false;
+                else if (interfaces[i] == typeof(IList)) detectedType = CollectionType.NonGenericIList;
+                else if (detectedType != CollectionType.NonGenericIList && interfaces[i] == typeof(ICollection)) detectedType = CollectionType.NonGeneric;
+            }
+
+            genericItemType = null;
+            return detectedType;
+
+        ReturnIList:
+            genericItemType = interfaces[i].GetGenericArguments()[0];
+            return CollectionType.GenericIList;
         }
 
         #endregion

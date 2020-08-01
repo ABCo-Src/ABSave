@@ -37,7 +37,7 @@ namespace ABSoftware.ABSave.Helpers
             SpecifiedTypeCode = actualTypeCode;
         }
 
-        public TypeInformation(Type actualType, TypeCode actualTypeCode, Type specifiedType, TypeCode specifiedTypeCode) : this(actualType, actualTypeCode)
+        public TypeInformation(Type actualType, TypeCode actualTypeCode, Type specifiedType, TypeCode specifiedTypeCode)
         {
             ActualType = actualType;
             ActualTypeCode = actualTypeCode;

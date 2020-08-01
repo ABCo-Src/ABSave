@@ -11,11 +11,9 @@ namespace ABSoftware.ABSave
 {
     public static class ABSaveObjectConverter
     {
-        public static Dictionary<Type, FieldInfo[]> CachedFieldInfos = new Dictionary<Type, FieldInfo[]>();
-
         public static void Serialize(object obj, TypeInformation typeInformation, ABSaveWriter writer)
         {
-            var info = GetObjectMemberInfos(typeInformation.ActualType);
+            var info = GetObjectMemberInfos(typeInformation.ActualType, writer.Settings);
 
             writer.WriteInt32((uint)info.Length);
             for (int i = 0; i < info.Length; i++)
@@ -34,14 +32,14 @@ namespace ABSoftware.ABSave
                 writer.WriteText(item.Items[i].Name);
 
                 if (item.Items[i].UseReflection)
-                    AutoSerializeValue(obj, typeInformation.ActualType.GetField(item.Items[i].Name), writer);
+                    AutoSerializeValue(obj, typeInformation.ActualType.GetField(item.Items[i].Name, writer.Settings.MemberReflectionFlags), writer);
                 else
                 {
                     var objVal = item.Items[i].Getter(obj);
                     var actualType = objVal.GetType();
                     var specifiedType = item.Items[i].FieldType;
 
-                    item.Items[i].Serialize(objVal, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)), writer);
+                    ABSaveItemSerializer.Serialize(objVal, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)), writer, item.Items[i]);
                 }
             }
         }
@@ -52,16 +50,9 @@ namespace ABSoftware.ABSave
             var actualType = val.GetType();
             var specifiedType = item.FieldType;
 
-            ABSaveItemSerializer.SerializeAuto(val, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)), writer);
+            ABSaveItemSerializer.Serialize(val, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)), writer);
         }
 
-        public static FieldInfo[] GetObjectMemberInfos(Type typ)
-        {
-            if (CachedFieldInfos.TryGetValue(typ, out FieldInfo[] res)) return res;
-
-            var info = typ.GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
-            CachedFieldInfos.Add(typ, info);
-            return info;
-        }
+        public static FieldInfo[] GetObjectMemberInfos(Type typ, ABSaveSettings settings) => typ.GetFields(settings.MemberReflectionFlags);
     }
 }
