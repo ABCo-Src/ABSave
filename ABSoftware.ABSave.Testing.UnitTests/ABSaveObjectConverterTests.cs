@@ -2,10 +2,11 @@
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Serialization;
-using ABSoftware.ABSave.Serialization.Writer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ABSoftware.ABSave.Testing.UnitTests
@@ -16,24 +17,24 @@ namespace ABSoftware.ABSave.Testing.UnitTests
         [TestMethod]
         public void Serialize_SimpleStruct()
         {
-            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
+            var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             ABSaveObjectConverter.Serialize(new SimpleStruct(12), new TypeInformation(typeof(SimpleStruct), TypeCode.Object), actual);
 
-            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
+            var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(1);
             expected.WriteText("Inside");
             expected.WriteInt32(12);
 
-            CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
+            WriterComparer.Compare(expected, actual);
         }
 
         [TestMethod]
         public void Serialize_SimpleObject()
         {
-            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
+            var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             ABSaveObjectConverter.Serialize(new SimpleClass(), new TypeInformation(typeof(SimpleClass), TypeCode.Object), actual);
 
-            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
+            var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(3);
             expected.WriteText("Itm1");
             expected.WriteByte(1);
@@ -42,7 +43,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
             expected.WriteText("Itm3");
             ABSaveItemSerializer.Serialize("abc", new TypeInformation(typeof(string), TypeCode.String), expected);
 
-            CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
+            WriterComparer.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -53,10 +54,10 @@ namespace ABSoftware.ABSave.Testing.UnitTests
                 .AddItem(nameof(SimpleClass.Itm2), new TypeConverterMapItem(NumberAndEnumTypeConverter.Instance))
                 .AddItem(nameof(SimpleClass.Itm3), new TypeConverterMapItem(StringTypeConverter.Instance));
 
-            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
+            var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             ABSaveObjectConverter.Serialize(new SimpleClass(), new TypeInformation(typeof(SimpleClass), TypeCode.Object), actual, map);
 
-            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
+            var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(3);
             expected.WriteText("Itm1");
             expected.WriteByte(1);
@@ -65,7 +66,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
             expected.WriteText("Itm3");
             ABSaveItemSerializer.Serialize("abc", new TypeInformation(typeof(string), TypeCode.String), expected);
 
-            CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
+            WriterComparer.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -76,10 +77,10 @@ namespace ABSoftware.ABSave.Testing.UnitTests
                 .AddItem<SimpleClass, int>(nameof(SimpleClass.Itm2), o => o.Itm2, (o, v) => o.Itm2 = v, new TypeConverterMapItem(NumberAndEnumTypeConverter.Instance))
                 .AddItem<SimpleClass, string>(nameof(SimpleClass.Itm3), o => o.Itm3, (o, v) => o.Itm3 = v, new TypeConverterMapItem(StringTypeConverter.Instance));
 
-            var actual = new ABSaveMemoryWriter(new ABSaveSettings());
+            var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             ABSaveObjectConverter.Serialize(new SimpleClass(), new TypeInformation(typeof(SimpleClass), TypeCode.Object), actual, map);
 
-            var expected = new ABSaveMemoryWriter(new ABSaveSettings());
+            var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(3);
             expected.WriteText("Itm1");
             expected.WriteByte(1);
@@ -88,7 +89,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
             expected.WriteText("Itm3");
             ABSaveItemSerializer.Serialize("abc", new TypeInformation(typeof(string), TypeCode.String), expected);
 
-            CollectionAssert.AreEqual(expected.ToBytes(), actual.ToBytes());
+            WriterComparer.Compare(expected, actual);
         }
     }
 }

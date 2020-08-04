@@ -1,5 +1,4 @@
 ﻿using ABSoftware.ABSave.Serialization;
-using ABSoftware.ABSave.Serialization.Writer;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -14,16 +13,12 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
     [TestClass]
     public class ABSaveWriterTests
     {
-        bool _isMemory;
-        MemoryStream _nonMemoryStream;
         ABSaveWriter _writer;
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void WriteByte(bool isMemory)
+        public void WriteByte()
         {
-            InitWriter(isMemory, false);
+            InitWriter(false);
             for (int i = 0; i < 600; i++)
                 _writer.WriteByte((byte)i);
 
@@ -31,78 +26,66 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteInt16(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteInt16(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             _writer.WriteInt16(6);
 
             TestBytes(GetBytes((short)6, reversed));
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteInt32(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteInt32(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             _writer.WriteInt32(79643);
 
             TestBytes(GetBytes(79643, reversed));
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteInt64(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteInt64(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             _writer.WriteInt64(79643);
 
             TestBytes(GetBytes((long)79643, reversed));
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteFloat(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteFloat(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             _writer.WriteSingle(58.4f);
 
             TestBytes(GetBytes(58.4f, reversed));
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteDouble(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteDouble(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             _writer.WriteDouble(58.4d);
 
             TestBytes(GetBytes(58.4d, reversed));
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteByteArray_Small_NoSize(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteByteArray_Small_NoSize(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             var arr = GenerateByteArr(5);
             _writer.WriteByteArray(arr, false);
 
@@ -110,13 +93,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteByteArray_Large_NoSize(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteByteArray_Large_NoSize(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             var arr = GenerateByteArr(600);
             _writer.WriteByteArray(arr, false);
 
@@ -124,13 +105,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteByteArray_Small(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteByteArray_Small(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             var arr = GenerateByteArr(5);
             _writer.WriteByteArray(arr, true);
 
@@ -138,13 +117,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteByteArray_Large(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteByteArray_Large(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             var arr = GenerateByteArr(600);
             _writer.WriteByteArray(arr, true);
 
@@ -154,71 +131,31 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public void WriteByteArrayMemory_Large_NeedsDedicatedSizeChunk(bool reversed)
+        public unsafe void WriteText_Small(bool reversed)
         {
-            InitWriter(true, reversed);
-            var arr = GenerateByteArr(65535);
-
-            var memWriter = _writer as ABSaveMemoryWriter;
-            memWriter.FreeSpace = 1;
-            memWriter.CurrentChunk = memWriter.DataStart = memWriter.DataEnd = new LinkedMemoryDataChunk(1);
-
-            _writer.WriteByteArray(arr, true);
-
-            TestBytes(GetBytes(65535, reversed).Concat(arr));
-        }
-
-        [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public unsafe void WriteText_Small(bool isMemory, bool reversed)
-        {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
             _writer.WriteText("ABC\u0001DEF");
-            TestBytes(GetBytes(14, reversed).Concat(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70)));
-        }
-
-        [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public unsafe void WriteText_Large(bool isMemory, bool reversed)
-        {
-            InitWriter(isMemory, reversed);
-
-            _writer.WriteText(RepeatString("ABC\u0001DEF", 100));
-            var stringAsShorts = RepeatBytes(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70), 100);
-            TestBytes(GetBytes(1400, reversed).Concat(stringAsShorts));
+            TestBytes(GetBytes(7, reversed).Concat(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70)));
         }
 
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public unsafe void WriteTextMemory_Large_CharAcrossTwoChunks(bool reversed)
+        public unsafe void WriteText_Large(bool reversed)
         {
-            InitWriter(true, reversed);
-
-            var memWriter = _writer as ABSaveMemoryWriter;
-            memWriter.FreeSpace = 55;
-            memWriter.CurrentChunk = memWriter.DataStart = memWriter.DataEnd = new LinkedMemoryDataChunk(55);
+            InitWriter(reversed);
 
             _writer.WriteText(RepeatString("ABC\u0001DEF", 100));
             var stringAsShorts = RepeatBytes(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70), 100);
-            TestBytes(GetBytes(1400, reversed).Concat(stringAsShorts));
+            TestBytes(GetBytes(700, reversed).Concat(stringAsShorts));
         }
 
-
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteInt32ToSignificantBytes(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteInt32ToSignificantBytes(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
 
             // 126721718 = 078D9EB6
             // L ++-- --++ B
@@ -246,13 +183,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void WriteDecimal(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void WriteDecimal(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
 
             _writer.WriteDecimal(15092196.5M);
 
@@ -265,13 +200,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        [DataRow(false, false)]
-        [DataRow(false, true)]
-        [DataRow(true, false)]
-        [DataRow(true, true)]
-        public void Combo(bool isMemory, bool reversed)
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Combo(bool reversed)
         {
-            InitWriter(isMemory, reversed);
+            InitWriter(reversed);
 
             var arr = GenerateByteArr(600);
 
@@ -286,7 +219,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             };
 
             expected.AddRange(arr);
-            expected.AddRange(GetBytes(14, reversed));
+            expected.AddRange(GetBytes(7, reversed));
             expected.AddRange(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70));
 
             TestBytes(expected);
@@ -294,24 +227,13 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
         #region Helpers
 
-        public void InitWriter(bool isMemory, bool reversed) => InitWriter(new ABSaveSettings().SetUseLittleEndian(reversed ? !BitConverter.IsLittleEndian : BitConverter.IsLittleEndian), isMemory);
-        public void InitWriter(ABSaveSettings settings, bool isMemory)
-        {
-            _isMemory = isMemory;
-
-            if (isMemory)
-                _writer = new ABSaveMemoryWriter(settings);
-            else
-            {
-                _nonMemoryStream = new MemoryStream();
-                _writer = new ABSaveStreamWriter(_nonMemoryStream, settings);
-            }
-        }
+        public void InitWriter(bool reversed) => InitWriter(new ABSaveSettings().SetUseLittleEndian(reversed ? !BitConverter.IsLittleEndian : BitConverter.IsLittleEndian));
+        public void InitWriter(ABSaveSettings settings) => _writer = new ABSaveWriter(new MemoryStream(), settings);
 
         public void TestBytes(byte[] expected) => TestBytes(new List<byte>(expected));
         public void TestBytes(IEnumerable<byte> expected)
         {
-            byte[] bArr = _isMemory ? ((ABSaveMemoryWriter)_writer).ToBytes() : _nonMemoryStream.ToArray();
+            byte[] bArr = ((MemoryStream)_writer.Output).ToArray();
 
             int i = 0;
             foreach (byte itm in expected)
