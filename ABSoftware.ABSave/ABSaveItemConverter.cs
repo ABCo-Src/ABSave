@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Serialization;
@@ -6,27 +7,42 @@ using System;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace ABSoftware.ABSave.Serialization
+namespace ABSoftware.ABSave
 {
-    public static class ABSaveItemSerializer
+    public static class ABSaveItemConverter
     {
-        public static void Serialize(object obj, TypeInformation typeInformation, ABSaveWriter writer)
-        {
-            if (SerializeAttributes(obj, typeInformation, writer)) return;
+        public static void Serialize(object obj, Type specifiedType, ABSaveWriter writer) => Serialize(obj, obj.GetType(), specifiedType, writer);
 
-            if (writer.Settings.AutoCheckTypeConverters && AttemptSerializeWithTypeConverter(obj, typeInformation, writer))
+        public static void Serialize(object obj, Type actualType, Type specifiedType, ABSaveWriter writer)
+        {
+            if (SerializeAttributes(obj, actualType, specifiedType, writer)) return;
+
+            if (writer.Settings.AutoCheckTypeConverters && AttemptSerializeWithTypeConverter(obj, actualType, writer))
                 return;
 
-            ABSaveObjectConverter.Serialize(obj, typeInformation, writer);
+            ABSaveObjectConverter.Serialize(obj, actualType, writer);
         }
 
-        public static void Serialize(object obj, TypeInformation typeInformation, ABSaveWriter writer, ABSaveMapItem map)
+        public static object Deserialize(Type specifiedType, ABSaveReader reader)
         {
-            if (SerializeAttributes(obj, typeInformation, writer)) return;
-            map.Serialize(obj, typeInformation, writer);
+            // TODO
         }
 
-        internal static bool SerializeAttributes(object obj, TypeInformation typeInformation, ABSaveWriter writer)
+        public static void Serialize(object obj, Type specifiedType, ABSaveWriter writer, ABSaveMapItem mapItem)
+        {
+            if (mapItem == null)
+            {
+                Serialize(obj, specifiedType, writer);
+                return;
+            }
+
+            var actualType = obj.GetType();
+
+            if (SerializeAttributes(obj, actualType, specifiedType, writer)) return;
+            mapItem.Serialize(obj, actualType, writer);
+        }
+
+        internal static bool SerializeAttributes(object obj, Type actualType, Type specifiedType, ABSaveWriter writer)
         {
             // If a nullable represents a null item, this will write the null attribute.
             if (obj == null)
@@ -45,11 +61,11 @@ namespace ABSoftware.ABSave.Serialization
             return false;
         }
 
-        static bool AttemptSerializeWithTypeConverter(object obj, TypeInformation typeInformation, ABSaveWriter writer)
+        static bool AttemptSerializeWithTypeConverter(object obj, Type type, ABSaveWriter writer)
         {
-            if (ABSaveUtils.TryFindConverterForType(writer.Settings, typeInformation, out ABSaveTypeConverter typeConverter))
+            if (ABSaveUtils.TryFindConverterForType(writer.Settings, type, out ABSaveTypeConverter typeConverter))
             {
-                typeConverter.Serialize(obj, typeInformation, writer);
+                typeConverter.Serialize(obj, type, writer);
                 return true;
             }
 

@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Serialization;
 using System;
@@ -16,6 +17,7 @@ namespace ABSoftware.ABSave.Mapping
         internal Action<object, object> Setter = null;
         internal Type FieldType = null;
 
-        public abstract void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer);
+        public abstract void Serialize(object obj, Type type, ABSaveWriter writer);
+        public abstract object Deserialize(Type type, ABSaveReader reader);
     }
 }

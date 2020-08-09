@@ -108,8 +108,8 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteByte(0);
             expected.WriteInt32(2);
-            ABSaveItemSerializer.Serialize(so[0], new TypeInformation(typeof(SimpleClass), TypeCode.Object), expected);
-            ABSaveItemSerializer.Serialize(so[1], new TypeInformation(typeof(SimpleClass), TypeCode.Object), expected);
+            ABSaveItemConverter.Serialize(so[0], new TypeInformation(typeof(SimpleClass), TypeCode.Object), expected);
+            ABSaveItemConverter.Serialize(so[1], new TypeInformation(typeof(SimpleClass), TypeCode.Object), expected);
 
             WriterComparer.Compare(expected, actual);
         }

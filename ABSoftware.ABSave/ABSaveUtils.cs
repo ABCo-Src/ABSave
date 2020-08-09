@@ -27,9 +27,9 @@ namespace ABSoftware.ABSave
 
         #region Type Convertion
 
-        internal static bool TryFindConverterForType(ABSaveSettings settings, TypeInformation type, out ABSaveTypeConverter converter)
+        internal static bool TryFindConverterForType(ABSaveSettings settings, Type type, out ABSaveTypeConverter converter)
         {
-            if (settings.ExactConverters.TryGetValue(type.ActualType, out ABSaveTypeConverter val))
+            if (settings.ExactConverters.TryGetValue(type, out ABSaveTypeConverter val))
             {
                 converter = val;
                 return true;

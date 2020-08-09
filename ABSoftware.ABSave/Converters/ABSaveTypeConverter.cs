@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Serialization;
 using System;
@@ -21,8 +22,9 @@ namespace ABSoftware.ABSave.Converters
         /// <summary>
         /// Manually checks whether this converter converts the given type. Should only be used if this type converter doesn't convert exact types.
         /// </summary>
-        public virtual bool CheckCanConvertType(TypeInformation typeInformation) => throw new NotImplementedException("ABSAVE: This type converter hasn't implemented 'CheckCanConvertType'");
-        public abstract void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer);
+        public virtual bool CheckCanConvertType(Type type) => throw new NotImplementedException("ABSAVE: This type converter hasn't implemented 'CheckCanConvertType'");
+        public abstract void Serialize(object obj, Type type, ABSaveWriter writer);
+        public abstract object Deserialize(Type type, ABSaveReader reader);
 
         #region Type Converter Management
 

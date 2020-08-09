@@ -18,7 +18,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
         public void Serialize_SimpleStruct()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveObjectConverter.Serialize(new SimpleStruct(12), new TypeInformation(typeof(SimpleStruct), TypeCode.Object), actual);
+            ABSaveObjectConverter.Serialize(new SimpleStruct(12), typeof(SimpleStruct), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(1);
@@ -32,7 +32,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
         public void Serialize_SimpleObject()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveObjectConverter.Serialize(new SimpleClass(), new TypeInformation(typeof(SimpleClass), TypeCode.Object), actual);
+            ABSaveObjectConverter.Serialize(new SimpleClass(), typeof(SimpleClass), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(3);
@@ -41,7 +41,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
             expected.WriteText("Itm2");
             expected.WriteInt32(12);
             expected.WriteText("Itm3");
-            ABSaveItemSerializer.Serialize("abc", new TypeInformation(typeof(string), TypeCode.String), expected);
+            ABSaveItemConverter.Serialize("abc", typeof(string), expected);
 
             WriterComparer.Compare(expected, actual);
         }
@@ -64,7 +64,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
             expected.WriteText("Itm2");
             expected.WriteInt32(12);
             expected.WriteText("Itm3");
-            ABSaveItemSerializer.Serialize("abc", new TypeInformation(typeof(string), TypeCode.String), expected);
+            ABSaveItemConverter.Serialize("abc", typeof(string), TypeCode.String, expected);
 
             WriterComparer.Compare(expected, actual);
         }
@@ -87,7 +87,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
             expected.WriteText("Itm2");
             expected.WriteInt32(12);
             expected.WriteText("Itm3");
-            ABSaveItemSerializer.Serialize("abc", new TypeInformation(typeof(string), TypeCode.String), expected);
+            ABSaveItemConverter.Serialize("abc", typeof(string), TypeCode.String, expected);
 
             WriterComparer.Compare(expected, actual);
         }

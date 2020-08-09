@@ -43,7 +43,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [DataRow(true)]
         public void SerializeAssembly_NoCulture_PublicKeyToken(bool writeKey)
         {
-            var assembly = typeof(ABSaveItemSerializer).Assembly;
+            var assembly = typeof(ABSaveItemConverter).Assembly;
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings().SetCacheTypesAndAssemblies(writeKey));
             AssemblyTypeConverter.Instance.Serialize(assembly, new Helpers.TypeInformation(), actual);
 
@@ -63,11 +63,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [DataRow(true)]
         public void SerializeType(bool writeKey)
         {
-            var type = typeof(ABSaveItemSerializer);
-            var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
+            var type = typeof(ABSaveItemConverter);
+            var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings().SetCacheTypesAndAssemblies(writeKey));
             TypeTypeConverter.Instance.Serialize(type, new Helpers.TypeInformation(), actual);
 
-            var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
+            var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings().SetCacheTypesAndAssemblies(writeKey));
             if (writeKey)
                 expected.WriteByte(0);
             AssemblyTypeConverter.Instance.Serialize(type.Assembly, new Helpers.TypeInformation(), expected);

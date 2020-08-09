@@ -1,4 +1,5 @@
-﻿using ABSoftware.ABSave.Helpers;
+﻿using ABSoftware.ABSave.Deserialization;
+using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Globalization;
@@ -18,29 +19,27 @@ namespace ABSoftware.ABSave.Converters
         {
             var assembly = (Assembly)obj;
 
-            var successful = writer.CachedAssemblies.TryGetValue(assembly, out int key);
-
-            if (writer.Settings.CacheTypesAndAssemblies && HandleKeyBeforeAssembly(assembly, writer, successful, key)) return;
+            if (writer.Settings.CacheTypesAndAssemblies && SerializeKeyBeforeAssembly(assembly, writer)) return;
 
             var assemblyName = assembly.GetName();
             var publicKeyToken = assemblyName.GetPublicKeyToken();
-            var neutralAssemblyCulture = assemblyName.CultureInfo.Equals(CultureInfo.InvariantCulture);
+            var cultureNeutral = assemblyName.CultureInfo.Equals(CultureInfo.InvariantCulture);
             var hasPublicKeyToken = publicKeyToken != null;
 
-            // First Byte: 000000(1 for non-neutral culture)(1 for PublicKeyToken)
-            var firstByte = (neutralAssemblyCulture ? 2 : 0) | (hasPublicKeyToken ? 1 : 0);
+            var firstByte = (cultureNeutral ? 2 : 0) | (hasPublicKeyToken ? 1 : 0);
             writer.WriteByte((byte)firstByte);
             writer.WriteText(assemblyName.Name);
             VersionTypeConverter.Instance.Serialize(assemblyName.Version, new TypeInformation(), writer);
 
-            if (!neutralAssemblyCulture)
+            if (!cultureNeutral)
                 writer.WriteText(assemblyName.CultureName);
             if (hasPublicKeyToken)
                 writer.WriteByteArray(publicKeyToken, false);
         }
 
-        bool HandleKeyBeforeAssembly(Assembly assembly, ABSaveWriter writer, bool successful, int key)
+        bool SerializeKeyBeforeAssembly(Assembly assembly, ABSaveWriter writer)
         {
+            var successful = writer.CachedAssemblies.TryGetValue(assembly, out int key);
             if (successful)
             {
                 writer.WriteInt32((uint)key);
@@ -52,10 +51,44 @@ namespace ABSoftware.ABSave.Converters
             {
                 int size = writer.CachedAssemblies.Count;
                 writer.CachedAssemblies.Add(assembly, size);
-                writer.WriteInt32ToSignificantBytes(size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(writer.CachedAssemblies.Count - 1));
+                writer.WriteLittleEndianInt32(size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(size));
             }
 
             return false;
+        }
+
+        public override object Deserialize(TypeInformation typeInfo, ABSaveReader reader)
+        {
+            uint key = 0;
+
+            // Handle the key.
+            if (reader.Settings.CacheTypesAndAssemblies)
+            {
+                key = reader.ReadLittleEndianInt32(ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(reader.CachedAssemblies.Count - 1));
+                if (key < reader.CachedAssemblies.Count) return reader.CachedAssemblies[(int)key];
+            }
+
+            var assemblyName = new AssemblyName();
+
+            var firstByte = reader.ReadByte();
+            var cultureNeutral = (firstByte & 2) > 0;
+            var hasPublicKeyToken = (firstByte & 1) > 0;
+
+            assemblyName.Name = reader.ReadString();
+            assemblyName.Version = (Version)VersionTypeConverter.Instance.Deserialize(new TypeInformation(), reader);
+            assemblyName.CultureInfo = cultureNeutral ? CultureInfo.InvariantCulture : new CultureInfo(reader.ReadString());
+           
+            if (hasPublicKeyToken)
+            {
+                byte[] publicKeyToken = new byte[8];
+                reader.ReadBytes(publicKeyToken);
+                assemblyName.SetPublicKeyToken(publicKeyToken);
+            }
+
+            var assembly = Assembly.Load(assemblyName);
+            if (key != 0xFFFFFFFF) reader.CachedAssemblies.Add(assembly);
+
+            return assembly;
         }
     }
 }

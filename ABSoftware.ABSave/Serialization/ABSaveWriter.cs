@@ -28,6 +28,12 @@ namespace ABSoftware.ABSave.Serialization
             ShouldReverseEndian = settings.UseLittleEndian != BitConverter.IsLittleEndian;
         }
 
+        public void Reset()
+        {
+            CachedAssemblies.Clear();
+            CachedTypes.Clear();
+        }
+
         #region Byte Writing
         public void WriteByte(byte byt) => Output.WriteByte(byt);
 
@@ -35,6 +41,12 @@ namespace ABSoftware.ABSave.Serialization
         {
             if (writeSize) WriteInt32((uint)arr.Length);
             Output.Write(arr, 0, arr.Length);
+        }
+
+        public void WriteBytes(ReadOnlySpan<byte> data, bool writeSize)
+        {
+            if (writeSize) WriteInt32((uint)data.Length);
+            Output.Write(data);
         }
 
         #endregion
@@ -63,6 +75,25 @@ namespace ABSoftware.ABSave.Serialization
                 Output.Write(new ReadOnlySpan<byte>(dest, byteCount));
             }
             else Output.Write(new ReadOnlySpan<byte>((byte*)str, byteCount));
+        }
+
+        public unsafe void WriteText(string str)
+        {
+            fixed (char* s = str)
+                FastWriteShorts((short*)s, str.Length);
+        }
+
+        public unsafe void WriteText(char[] chArr)
+        {
+            fixed (char* s = chArr)
+                FastWriteShorts((short*)s, chArr.Length);
+        }
+
+        public void WriteText(StringBuilder str)
+        {
+            char[] builderContents = new char[str.Length];
+            str.CopyTo(0, builderContents, 0, str.Length);
+            WriteText(builderContents);
         }
 
         #endregion
@@ -101,59 +132,37 @@ namespace ABSoftware.ABSave.Serialization
             if (ShouldReverseEndian)
             {
                 byte* buffer = stackalloc byte[numberOfBytes];
+                byte* bufferPos = buffer;
 
                 byte* currentDataPos = data + numberOfBytes;
                 for (int i = 0; i < numberOfBytes; i++)
-                    buffer[i] = *--currentDataPos;
+                    *bufferPos++ = *--currentDataPos;
 
-                Output.Write(new Span<byte>(buffer, numberOfBytes));
+                Output.Write(new ReadOnlySpan<byte>(buffer, numberOfBytes));
             } 
             
-            else Output.Write(new Span<byte>(data, numberOfBytes));
+            else Output.Write(new ReadOnlySpan<byte>(data, numberOfBytes));
         }
 
-        public unsafe void WriteInt32ToSignificantBytes(int s, int significantBytes)
+        public unsafe void WriteLittleEndianInt32(int s, int significantBytes)
         {
             byte* data = (byte*)&s;
 
-            byte* dest = stackalloc byte[4];
-            byte* destPos = dest;
-
             // L ++-- --++ B
             if (BitConverter.IsLittleEndian)
+                Output.Write(new ReadOnlySpan<byte>(data, significantBytes));
+            else
             {
-                if (ShouldReverseEndian)
-                {
-                    byte* currentDataPos = data + significantBytes;
-                    for (int i = 0; i < significantBytes; i++)
-                        *destPos++ = *--currentDataPos;
-                } 
-                else 
-                {
-                    byte* currentDataPos = data;
-                    for (int i = 0; i < significantBytes; i++)
-                        *destPos++ = *currentDataPos++;
-                }
-            } 
-            else 
-            {
-                if (ShouldReverseEndian)
-                {
-                    byte* currentDataPos = data + 3;
-                    for (int i = 0; i < significantBytes; i++)
-                        *destPos++ = *currentDataPos--;
-                } 
-                else 
-                {
-                    byte* currentDataPos = data + (4 - significantBytes);
-                    for (int i = 0; i < significantBytes; i++)
-                        *destPos++ = *currentDataPos++;
-                }
-            }
+                byte* dest = stackalloc byte[4];
+                byte* destPos = dest;
 
-            Output.Write(new ReadOnlySpan<byte>(dest, significantBytes));
+                data += 4;
+                for (int i = 0; i < significantBytes; i++)
+                    *destPos++ = *--data;
+
+                Output.Write(new ReadOnlySpan<byte>(dest, significantBytes));
+            }
         }
-        #endregion
 
         public unsafe void WriteNumber(object num, TypeCode tCode)
         {
@@ -224,27 +233,12 @@ namespace ABSoftware.ABSave.Serialization
             }
         }
 
-        public unsafe void WriteText(string str)
-        {
-            fixed (char* s = str)
-                FastWriteShorts((short*)s, str.Length);
-        }
+        #endregion
 
-        public unsafe void WriteText(char[] chArr)
-        {
-            fixed (char* s = chArr)
-                FastWriteShorts((short*)s, chArr.Length);
-        }
-
-        public void WriteText(StringBuilder str)
-        {
-            char[] builderContents = new char[str.Length];
-            str.CopyTo(0, builderContents, 0, str.Length);
-            WriteText(builderContents);
-        }
-
+        #region Attributes
         public void WriteNullAttribute() => WriteByte(1);
         public void WriteMatchingTypeAttribute() => WriteByte(2);
         public void WriteDifferentTypeAttribute() => WriteByte(3);
+        #endregion
     }
 }

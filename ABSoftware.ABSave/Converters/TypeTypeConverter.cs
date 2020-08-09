@@ -77,7 +77,7 @@ namespace ABSoftware.ABSave.Converters
             {
                 int size = writer.CachedAssemblies.Count;
                 writer.CachedTypes.Add(type, size);
-                writer.WriteInt32ToSignificantBytes(size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(size));
+                writer.WriteLittleEndianInt32(size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(size));
             }
 
             return false;

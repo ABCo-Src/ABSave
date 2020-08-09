@@ -10,9 +10,9 @@ namespace ABSoftware.ABSave
 {
     public static class ABSaveObjectConverter
     {
-        public static void Serialize(object obj, TypeInformation typeInformation, ABSaveWriter writer)
+        public static void Serialize(object obj, Type type, ABSaveWriter writer)
         {
-            var info = GetObjectMemberInfos(typeInformation.ActualType, writer.Settings);
+            var info = GetObjectMemberInfos(type, writer.Settings);
 
             writer.WriteInt32((uint)info.Length);
             for (int i = 0; i < info.Length; i++)
@@ -35,10 +35,9 @@ namespace ABSoftware.ABSave
                 else
                 {
                     var objVal = item.Items[i].Getter(obj);
-                    var actualType = objVal.GetType();
                     var specifiedType = item.Items[i].FieldType;
 
-                    ABSaveItemSerializer.Serialize(objVal, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)), writer, item.Items[i]);
+                    ABSaveItemConverter.Serialize(objVal, specifiedType, writer, item.Items[i]);
                 }
             }
         }
@@ -46,10 +45,9 @@ namespace ABSoftware.ABSave
         static void AutoSerializeValue(object obj, FieldInfo item, ABSaveWriter writer)
         {
             var val = item.GetValue(obj);
-            var actualType = val.GetType();
             var specifiedType = item.FieldType;
 
-            ABSaveItemSerializer.Serialize(val, new TypeInformation(actualType, Type.GetTypeCode(actualType), specifiedType, Type.GetTypeCode(specifiedType)), writer);
+            ABSaveItemConverter.Serialize(val, specifiedType, writer);
         }
 
         public static FieldInfo[] GetObjectMemberInfos(Type typ, ABSaveSettings settings) => typ.GetFields(settings.MemberReflectionFlags);

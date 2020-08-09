@@ -24,11 +24,11 @@ namespace ABSoftware.ABSave.Converters
 
             var keyVal = pair.Key;
             var keyActualType = keyVal.GetType();
-            ABSaveItemSerializer.Serialize(keyVal, new TypeInformation(keyActualType, Type.GetTypeCode(keyActualType), keySpecifiedType, Type.GetTypeCode(keySpecifiedType)), writer);
+            ABSaveItemConverter.Serialize(keyVal, new TypeInformation(keyActualType, Type.GetTypeCode(keyActualType), keySpecifiedType, Type.GetTypeCode(keySpecifiedType)), writer);
 
             var valueVal = pair.Value;
             var valueActualType = valueVal.GetType();
-            ABSaveItemSerializer.Serialize(pair.Value, new TypeInformation(valueActualType, Type.GetTypeCode(valueActualType), valueSpecifiedType, Type.GetTypeCode(valueSpecifiedType)), writer);
+            ABSaveItemConverter.Serialize(pair.Value, new TypeInformation(valueActualType, Type.GetTypeCode(valueActualType), valueSpecifiedType, Type.GetTypeCode(valueSpecifiedType)), writer);
         }
     }
 }
