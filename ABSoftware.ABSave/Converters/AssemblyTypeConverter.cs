@@ -1,5 +1,4 @@
 ﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Globalization;
@@ -13,9 +12,9 @@ namespace ABSoftware.ABSave.Converters
         private AssemblyTypeConverter() { }
 
         public override bool HasExactType => false;
-        public override bool CheckCanConvertType(TypeInformation typeInformation) => typeInformation.ActualType == typeof(Assembly) || typeInformation.ActualType.IsSubclassOf(typeof(Assembly));
+        public override bool CheckCanConvertType(Type type) => type.IsSubclassOf(typeof(Assembly));
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer)
+        public override void Serialize(object obj, Type type, ABSaveWriter writer)
         {
             var assembly = (Assembly)obj;
 
@@ -29,7 +28,7 @@ namespace ABSoftware.ABSave.Converters
             var firstByte = (cultureNeutral ? 2 : 0) | (hasPublicKeyToken ? 1 : 0);
             writer.WriteByte((byte)firstByte);
             writer.WriteText(assemblyName.Name);
-            VersionTypeConverter.Instance.Serialize(assemblyName.Version, new TypeInformation(), writer);
+            VersionTypeConverter.Instance.Serialize(assemblyName.Version, typeof(Version), writer);
 
             if (!cultureNeutral)
                 writer.WriteText(assemblyName.CultureName);
@@ -57,7 +56,7 @@ namespace ABSoftware.ABSave.Converters
             return false;
         }
 
-        public override object Deserialize(TypeInformation typeInfo, ABSaveReader reader)
+        public override object Deserialize(Type type, ABSaveReader reader)
         {
             uint key = 0;
 
@@ -75,18 +74,18 @@ namespace ABSoftware.ABSave.Converters
             var hasPublicKeyToken = (firstByte & 1) > 0;
 
             assemblyName.Name = reader.ReadString();
-            assemblyName.Version = (Version)VersionTypeConverter.Instance.Deserialize(new TypeInformation(), reader);
+            assemblyName.Version = (Version)VersionTypeConverter.Instance.Deserialize(typeof(Version), reader);
             assemblyName.CultureInfo = cultureNeutral ? CultureInfo.InvariantCulture : new CultureInfo(reader.ReadString());
            
             if (hasPublicKeyToken)
             {
-                byte[] publicKeyToken = new byte[8];
+                var publicKeyToken = new byte[8];
                 reader.ReadBytes(publicKeyToken);
                 assemblyName.SetPublicKeyToken(publicKeyToken);
             }
 
             var assembly = Assembly.Load(assemblyName);
-            if (key != 0xFFFFFFFF) reader.CachedAssemblies.Add(assembly);
+            if (key != uint.MaxValue) reader.CachedAssemblies.Add(assembly);
 
             return assembly;
         }

@@ -1,19 +1,19 @@
-﻿using ABSoftware.ABSave.Helpers;
+﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Serialization;
 using System;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public class NumberAndEnumTypeConverter : ABSaveTypeConverter
+    public class NumberTypeConverter : ABSaveTypeConverter
     {
         // Enums get the TypeCode of Int32.
-        public static NumberAndEnumTypeConverter Instance = new NumberAndEnumTypeConverter();
-        private NumberAndEnumTypeConverter() { }
+        public static NumberTypeConverter Instance = new NumberTypeConverter();
+        private NumberTypeConverter() { }
 
         public override bool HasExactType => false;
-        public override bool CheckCanConvertType(TypeInformation typeInformation)
+        public override bool CheckCanConvertType(Type type)
         {
-            switch (typeInformation.ActualTypeCode)
+            switch (Type.GetTypeCode(type))
             {
                 case TypeCode.Byte:
                 case TypeCode.SByte:
@@ -33,9 +33,7 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer)
-        {
-            writer.WriteNumber(obj, typeInfo.ActualTypeCode);
-        }
+        public override void Serialize(object obj, Type type, ABSaveWriter writer) => writer.WriteNumber(obj, Type.GetTypeCode(type));
+        public override object Deserialize(Type type, ABSaveReader reader) => reader.ReadNumber(Type.GetTypeCode(type));
     }
 }

@@ -13,6 +13,7 @@ namespace ABSoftware.ABSave
     {
         public bool CacheTypesAndAssemblies = true;
         public bool AutoCheckTypeConverters = true;
+        public bool ErrorOnUnknownItem = true;
         public bool UseLittleEndian = BitConverter.IsLittleEndian;
         public BindingFlags MemberReflectionFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
@@ -40,6 +41,12 @@ namespace ABSoftware.ABSave
         public ABSaveSettings SetAutoCheckTypeConverters(bool checkTypeConverters)
         {
             AutoCheckTypeConverters = checkTypeConverters;
+            return this;
+        }
+
+        public ABSaveSettings SetErrorOnUnknownItem(bool errorOnUnknown)
+        {
+            ErrorOnUnknownItem = errorOnUnknown;
             return this;
         }
 

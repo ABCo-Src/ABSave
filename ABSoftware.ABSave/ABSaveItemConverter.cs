@@ -1,6 +1,6 @@
 ﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Serialization;
 using System;
@@ -9,72 +9,89 @@ using System.Reflection;
 
 namespace ABSoftware.ABSave
 {
+    /// <summary>
+    /// Serializes items (and their attributes) in an ABSave document.
+    /// </summary>
     public static class ABSaveItemConverter
     {
-        public static void Serialize(object obj, Type specifiedType, ABSaveWriter writer) => Serialize(obj, obj.GetType(), specifiedType, writer);
+        public static void SerializeWithAttribute(object obj, Type specifiedType, ABSaveWriter writer) => SerializeWithAttribute(obj, obj.GetType(), specifiedType, writer);
 
-        public static void Serialize(object obj, Type actualType, Type specifiedType, ABSaveWriter writer)
+        public static void SerializeWithAttribute(object obj, Type actualType, Type specifiedType, ABSaveWriter writer)
         {
-            if (SerializeAttributes(obj, actualType, specifiedType, writer)) return;
-
-            if (writer.Settings.AutoCheckTypeConverters && AttemptSerializeWithTypeConverter(obj, actualType, writer))
-                return;
-
-            ABSaveObjectConverter.Serialize(obj, actualType, writer);
+            if (SerializeAttribute(obj, actualType, specifiedType, writer)) return;
+            SerializeWithoutAttribute(obj, actualType, writer);
         }
 
-        public static object Deserialize(Type specifiedType, ABSaveReader reader)
+        public static void SerializeWithoutAttribute(object obj, Type actualType, ABSaveWriter writer)
         {
-            // TODO
+            if (writer.Settings.AutoCheckTypeConverters && ABSaveUtils.TryFindConverterForType(writer.Settings, actualType, out ABSaveTypeConverter typeConverter))
+                typeConverter.Serialize(obj, actualType, writer);
+
+            else ABSaveObjectConverter.Serialize(obj, actualType, writer);
         }
 
-        public static void Serialize(object obj, Type specifiedType, ABSaveWriter writer, ABSaveMapItem mapItem)
+        public static object DeserializeWithAttribute(Type specifiedType, ABSaveReader reader)
         {
-            if (mapItem == null)
-            {
-                Serialize(obj, specifiedType, writer);
-                return;
-            }
+            var actualType = DeserializeAttribute(reader, specifiedType);
+            if (actualType == null) return null;
 
-            var actualType = obj.GetType();
-
-            if (SerializeAttributes(obj, actualType, specifiedType, writer)) return;
-            mapItem.Serialize(obj, actualType, writer);
+            return DeserializeWithoutAttribute(actualType, reader);
         }
 
-        internal static bool SerializeAttributes(object obj, Type actualType, Type specifiedType, ABSaveWriter writer)
+        public static object DeserializeWithoutAttribute(Type actualType, ABSaveReader reader)
         {
-            // If a nullable represents a null item, this will write the null attribute.
+            if (reader.Settings.AutoCheckTypeConverters && ABSaveUtils.TryFindConverterForType(reader.Settings, actualType, out ABSaveTypeConverter typeConverter))
+                return typeConverter.Deserialize(actualType, reader);
+
+            return ABSaveObjectConverter.Deserialize(actualType, reader, null);
+        }
+
+        public static bool SerializeAttribute(object obj, Type actualType, Type specifiedType, ABSaveWriter writer)
+        {
             if (obj == null)
             {
                 writer.WriteNullAttribute();
                 return true;
             }
 
-            // NOTE: Because of nullable's unique behaviour with boxing, they must be handled specially here, we must make sure we write an attribute if they aren't null.
-            // From here, it will serialize it just like it's a normal data type.
-            if (typeInformation.SpecifiedType.IsGenericType && typeInformation.SpecifiedType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                writer.WriteMatchingTypeAttribute();
-            else
-                SerializeTypeBeforeItem(writer, typeInformation.SpecifiedType, typeInformation.ActualType);
+            if (specifiedType.IsValueType)
+            {
+                // NOTE: Because of nullable's unique behaviour with boxing (resulting in a different "actual type"),
+                //       they must be handled specially here, to make make sure we write an attribute if their value isn't null.
+                if (specifiedType.IsGenericType && specifiedType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    writer.WriteMatchingTypeAttribute();
+            } 
+            else if (specifiedType == actualType) writer.WriteMatchingTypeAttribute();
+            else writer.WriteDifferentTypeAttribute();
 
             return false;
         }
 
-        static bool AttemptSerializeWithTypeConverter(object obj, Type type, ABSaveWriter writer)
+        /// <summary>
+        /// Returns the actual type of data specified by the attribute, or null if there is none.
+        /// </summary>
+        public static Type DeserializeAttribute(ABSaveReader reader, Type specifiedType)
         {
-            if (ABSaveUtils.TryFindConverterForType(writer.Settings, type, out ABSaveTypeConverter typeConverter))
+            if (specifiedType.IsValueType)
             {
-                typeConverter.Serialize(obj, type, writer);
-                return true;
+                if (specifiedType.IsGenericType && specifiedType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                    return specifiedType.GetGenericArguments()[0];
+
+                return specifiedType;
             }
 
-            return false;
+            return reader.ReadByte() switch
+            {
+                1 => null,
+                2 => specifiedType,
+                3 => TypeTypeConverter.Instance.DeserializeClosedType(reader),
+                _ => throw new ABSaveInvalidDocumentException(reader.Source.Position),
+            };
         }
 
-        public static void SerializeTypeBeforeItem(ABSaveWriter writer, Type specifiedType, Type actualType)
+        static void SerializeTypeBeforeItem(ABSaveWriter writer, Type specifiedType, Type actualType)
         {
-            // If the specified type is a value type, then there's no need to write any type information about it, since we know for certain nothing can inherit from it, and by extension no other type of data can be put there.
+            // If the specified type is a value type, then there's no need to write any type information about it, since we know for certain nothing can inherit from it.
             if (!specifiedType.IsValueType)
             {
                 // Remember that if the main part of the type is the same, the generics cannot be different, it's only if the main part is different do we need to write generics as well.

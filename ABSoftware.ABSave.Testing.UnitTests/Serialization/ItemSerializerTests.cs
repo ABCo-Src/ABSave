@@ -1,22 +1,19 @@
 ﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 {
     [TestClass]
-    public class ABSaveItemSerializerTests
+    public class ItemSerializerTests
     {
         [TestMethod]
         public void Attributes_Null()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeAttributes(null, new TypeInformation(), actual);
+            ABSaveItemConverter.SerializeAttribute(null, typeof(object), typeof(object), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteNullAttribute();
@@ -28,7 +25,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void Attributes_Nullable_NonNull()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeAttributes(new bool?(true), new TypeInformation(typeof(bool?), TypeCode.Object), actual);
+            ABSaveItemConverter.SerializeAttribute(new bool?(true), typeof(bool?), typeof(bool?), actual);
 
             CollectionAssert.AreEqual(new byte[] { 2 }, ((MemoryStream)actual.Output).ToArray());
         }
@@ -37,7 +34,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void Attributes_ValueType()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeAttributes(123, new TypeInformation(typeof(int), TypeCode.Int32), actual);
+            ABSaveItemConverter.SerializeAttribute(123, typeof(int), typeof(int), actual);
 
             CollectionAssert.AreEqual(new byte[0], ((MemoryStream)actual.Output).ToArray());
         }
@@ -46,7 +43,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void Attributes_ReferenceType_Matching()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeAttributes(new ReferenceTypeSub(), new TypeInformation(typeof(ReferenceTypeSub), TypeCode.Object), actual);
+            ABSaveItemConverter.SerializeAttribute(new ReferenceTypeSub(), typeof(ReferenceTypeSub), typeof(ReferenceTypeSub), actual);
 
             CollectionAssert.AreEqual(new byte[] { 2 }, ((MemoryStream)actual.Output).ToArray());
         }
@@ -55,7 +52,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void Attributes_ReferenceType_Different()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeAttributes(new ReferenceTypeSub(), new TypeInformation(typeof(ReferenceTypeSub), TypeCode.Object, typeof(ReferenceTypeBase), TypeCode.Object), actual);
+            ABSaveItemConverter.SerializeAttribute(new ReferenceTypeSub(), typeof(ReferenceTypeSub), typeof(ReferenceTypeBase), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteDifferentTypeAttribute();
@@ -68,7 +65,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_ExactTypeConverter()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.Serialize("abcd", new TypeInformation(typeof(string), TypeCode.String), actual);
+            ABSaveItemConverter.SerializeWithAttribute("abcd", typeof(string), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteMatchingTypeAttribute();
@@ -81,7 +78,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_NonExactTypeConverter()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.Serialize(1234f, new TypeInformation(typeof(float), TypeCode.Single), actual);
+            ABSaveItemConverter.SerializeWithAttribute(1234f, typeof(float), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteSingle(1234f);
@@ -93,7 +90,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_ReferenceTypeObject()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.Serialize(new ReferenceTypeSub(), new TypeInformation(typeof(ReferenceTypeSub), TypeCode.Object), actual);
+            ABSaveItemConverter.SerializeWithAttribute(new ReferenceTypeSub(), typeof(ReferenceTypeSub), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteMatchingTypeAttribute();
@@ -106,7 +103,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_ValueTypeObject()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.Serialize(new ValueTypeObj(), new TypeInformation(typeof(ValueTypeObj), TypeCode.Object), actual);
+            ABSaveItemConverter.SerializeWithAttribute(new ValueTypeObj(), typeof(ValueTypeObj), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(0);

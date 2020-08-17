@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 {
     [TestClass]
-    public class ABSaveWriterTests
+    public class WriterTests
     {
         ABSaveWriter _writer;
 

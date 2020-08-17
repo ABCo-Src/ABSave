@@ -1,5 +1,5 @@
 ﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
@@ -9,17 +9,37 @@ namespace ABSoftware.ABSave.Mapping
 {
     public class CollectionMapItem : ABSaveMapItem
     {
-        public CollectionType CollectionType;
-        public Type ItemType;
-        public ABSaveMapItem ItemConverter;
+        public Func<ICollectionWrapper> CreateWrapper;
+        public ABSaveMapItem PerItem;
 
-        public CollectionMapItem(CollectionType collectionType, Type itemType, ABSaveMapItem itemConverter)
+        public bool IsArray;
+        public Type ArrayElementType;
+        public bool ElementsSameType;
+
+        public static CollectionMapItem ForArray(bool canBeNull, Type elementType, bool elementsSameType, ABSaveMapItem perItem) => new CollectionMapItem(canBeNull, elementsSameType)
         {
-            CollectionType = collectionType;
-            ItemType = itemType;
-            ItemConverter = itemConverter;
-        }
+            ArrayElementType = elementType,
+            PerItem = perItem,
+            IsArray = true
+        };
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer) => CollectionTypeConverter.Instance.Serialize(obj, typeInfo, writer);
+        public static CollectionMapItem ForICollection(bool canBeNull, Func<ICollectionWrapper> createWrapper, ABSaveMapItem perItem) => new CollectionMapItem(canBeNull, elementsSameType)
+        {
+            CreateWrapper = createWrapper,
+            PerItem = perItem
+        };
+
+        private CollectionMapItem(bool canBeNull, bool elementsSameType) : base(canBeNull) => ElementsSameType = elementsSameType;
+
+        public override void Serialize(object obj, Type type, ABSaveWriter writer)
+        {
+            if (SerializeNullAttribute(obj, writer)) return;
+            CollectionTypeConverter.Instance.Serialize(obj, writer, this);
+        }
+        public override object Deserialize(Type type, ABSaveReader reader)
+        {
+            if (DeserializeNullAttribute(reader)) return null;
+            return CollectionTypeConverter.Instance.Deserialize(type, reader, this);
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿using ABSoftware.ABSave.Helpers;
+﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
@@ -8,6 +8,9 @@ namespace ABSoftware.ABSave.Mapping
 {
     public class AutoMapItem : ABSaveMapItem
     {
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer) => ABSaveItemConverter.Serialize(obj, typeInfo, writer);
+        public AutoMapItem(bool canBeNull) : base(canBeNull) { }
+
+        public override void Serialize(object obj, Type type, ABSaveWriter writer) => ABSaveItemConverter.SerializeWithAttribute(obj, type, writer);
+        public override object Deserialize(Type type, ABSaveReader reader) => ABSaveItemConverter.DeserializeWithAttribute(type, reader);
     }
 }

@@ -1,4 +1,4 @@
-﻿using ABSoftware.ABSave.Helpers;
+﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
@@ -13,11 +13,13 @@ namespace ABSoftware.ABSave.Mapping
 
         internal bool Initialized;
         internal ABSaveMapItem[] Items;
+        internal Dictionary<string, ABSaveMapItem> HashedItems;
 
-        public ObjectMapItem(int numberOfItems)
+        public ObjectMapItem(bool canBeNull, int numberOfItems) : base(canBeNull)
         {
             NumberOfItems = numberOfItems;
             Items = new ABSaveMapItem[numberOfItems];
+            HashedItems = new Dictionary<string, ABSaveMapItem>(numberOfItems);
         }
 
         public ObjectMapItem AddItem(string name, ABSaveMapItem mapItem)
@@ -26,6 +28,7 @@ namespace ABSoftware.ABSave.Mapping
 
             mapItem.Name = name;
             Items[_itemsAdded++] = mapItem;
+            HashedItems.Add(name, mapItem);
 
             return this;
         }
@@ -39,6 +42,7 @@ namespace ABSoftware.ABSave.Mapping
             return AddItem(name, mapItem);
         }
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer) => ABSaveObjectConverter.Serialize(obj, typeInfo, writer, this);
+        public override void Serialize(object obj, Type type, ABSaveWriter writer) => ABSaveObjectConverter.Serialize(obj, type, writer, this);
+        public override object Deserialize(Type type, ABSaveReader reader) => ABSaveObjectConverter.Deserialize(type, reader, this);
     }
 }

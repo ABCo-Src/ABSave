@@ -33,7 +33,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
             if (isHeap)
             {
                 byte[] destHeap = new byte[3];
-                _reader.ReadBytes(destHeap, 3);
+                _reader.ReadBytes(destHeap);
                 CollectionAssert.AreEqual(src, destHeap);
             } 
             else

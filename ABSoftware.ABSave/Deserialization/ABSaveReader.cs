@@ -11,7 +11,7 @@ namespace ABSoftware.ABSave.Deserialization
     {
         internal ABSaveSettings Settings;
         internal List<Assembly> CachedAssemblies = new List<Assembly>();
-        internal Dictionary<Type, int> CachedTypes = new Dictionary<Type, int>();
+        internal List<Type> CachedTypes = new List<Type>();
 
         public Stream Source;
         public bool ShouldReverseEndian;
@@ -151,6 +151,29 @@ namespace ABSoftware.ABSave.Deserialization
         }
 
         #endregion
+
+        public unsafe object ReadNumber(TypeCode tCode)
+        {
+            unchecked
+            {
+                return tCode switch
+                {
+                    TypeCode.Byte => ReadByte(),
+                    TypeCode.SByte => (sbyte)ReadByte(),
+                    TypeCode.UInt16 => ReadInt16(),
+                    TypeCode.Int16 => (int)ReadInt16(),
+                    TypeCode.Char => (char)ReadInt16(),
+                    TypeCode.UInt32 => ReadInt32(),
+                    TypeCode.Int32 => (int)ReadInt32(),
+                    TypeCode.UInt64 => ReadInt64(),
+                    TypeCode.Int64 => (int)ReadInt64(),
+                    TypeCode.Single => ReadSingle(),
+                    TypeCode.Double => ReadDouble(),
+                    TypeCode.Decimal => ReadDecimal(),
+                    _ => throw new Exception(),
+                };
+            }
+        }
 
         public unsafe string ReadString()
         {

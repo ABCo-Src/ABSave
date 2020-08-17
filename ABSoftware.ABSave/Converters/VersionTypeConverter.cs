@@ -1,4 +1,4 @@
-﻿using ABSoftware.ABSave.Helpers;
+﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Serialization;
 using System;
 
@@ -12,7 +12,7 @@ namespace ABSoftware.ABSave.Converters
         public override bool HasExactType => true;
         public override Type ExactType => typeof(Version);
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer)
+        public override void Serialize(object obj, Type type, ABSaveWriter writer)
         {
             var version = (Version)obj;
 
@@ -27,6 +27,17 @@ namespace ABSoftware.ABSave.Converters
             if (hasMinor) writer.WriteInt32((uint)version.Minor);
             if (hasBuild) writer.WriteInt32((uint)version.Build);
             if (hasRevision) writer.WriteInt32((uint)version.Revision);
+        }
+
+        public override object Deserialize(Type type, ABSaveReader reader)
+        {
+            var firstByte = reader.ReadByte();
+            var major = (firstByte & 8) > 0 ? (int)reader.ReadInt32() : 0;
+            var minor = (firstByte & 4) > 0 ? (int)reader.ReadInt32() : 0;
+            var build = (firstByte & 2) > 0 ? (int)reader.ReadInt32() : 0;
+            var revision = (firstByte & 1) > 0 ? (int)reader.ReadInt32() : 0;
+
+            return new Version(major, minor, build, revision);
         }
     }
 }
