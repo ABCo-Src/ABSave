@@ -1,9 +1,5 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Text;
 
 namespace ABSoftware.ABSave.Converters
@@ -13,7 +9,7 @@ namespace ABSoftware.ABSave.Converters
         /// <summary>
         /// Whether this type converter only converts one exact type.
         /// If it does, that type should be given using <see cref="ExactType"/>.
-        /// If it doesn't (e.g. this converter converts lots of different types), then the type should be checked with <see cref="CheckCanConvertType(TypeInformation)"/>.
+        /// If it doesn't (e.g. this converter converts lots of different types), then the type should be checked with <see cref="CheckCanConvertType(Type)"/>.
         /// </summary>
         public abstract bool HasExactType { get; }
         public virtual Type ExactType => null;
@@ -21,8 +17,9 @@ namespace ABSoftware.ABSave.Converters
         /// <summary>
         /// Manually checks whether this converter converts the given type. Should only be used if this type converter doesn't convert exact types.
         /// </summary>
-        public virtual bool CheckCanConvertType(TypeInformation typeInformation) => throw new NotImplementedException("ABSAVE: This type converter hasn't implemented 'CheckCanConvertType'");
-        public abstract void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer);
+        public virtual bool CheckCanConvertType(Type type) => throw new NotImplementedException("ABSAVE: This type converter hasn't implemented 'CheckCanConvertType'");
+        public abstract void Serialize(object obj, Type type, ABSaveWriter writer);
+        public abstract object Deserialize(Type type, ABSaveReader reader);
 
         #region Type Converter Management
 
@@ -43,7 +40,7 @@ namespace ABSoftware.ABSave.Converters
             TypeTypeConverter.Instance,
             KeyValueConverter.Instance,
             CollectionTypeConverter.Instance,
-            NumberAndEnumTypeConverter.Instance
+            NumberTypeConverter.Instance
         };
 
         #endregion

@@ -1,4 +1,4 @@
-﻿using ABSoftware.ABSave.Serialization;
+﻿
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -11,7 +11,7 @@ using System.Text.RegularExpressions;
 namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 {
     [TestClass]
-    public class ABSaveWriterTests
+    public class WriterTests
     {
         ABSaveWriter _writer;
 
@@ -83,19 +83,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public void WriteByteArray_Small_NoSize(bool reversed)
-        {
-            InitWriter(reversed);
-            var arr = GenerateByteArr(5);
-            _writer.WriteByteArray(arr, false);
-
-            TestBytes(arr);
-        }
-
-        [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void WriteByteArray_Large_NoSize(bool reversed)
+        public void WriteByteArray(bool reversed)
         {
             InitWriter(reversed);
             var arr = GenerateByteArr(600);
@@ -107,31 +95,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public void WriteByteArray_Small(bool reversed)
-        {
-            InitWriter(reversed);
-            var arr = GenerateByteArr(5);
-            _writer.WriteByteArray(arr, true);
-
-            TestBytes(GetBytes(5, reversed).Concat(arr));
-        }
-
-        [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void WriteByteArray_Large(bool reversed)
-        {
-            InitWriter(reversed);
-            var arr = GenerateByteArr(600);
-            _writer.WriteByteArray(arr, true);
-
-            TestBytes(GetBytes(600, reversed).Concat(arr));
-        }
-
-        [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public unsafe void WriteText_Small(bool reversed)
+        public unsafe void WriteText(bool reversed)
         {
             InitWriter(reversed);
             _writer.WriteText("ABC\u0001DEF");
@@ -139,46 +103,20 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public unsafe void WriteText_Large(bool reversed)
+        public void WriteInt32ToSignificantBytes()
         {
-            InitWriter(reversed);
+            InitWriter(false);
 
-            _writer.WriteText(RepeatString("ABC\u0001DEF", 100));
-            var stringAsShorts = RepeatBytes(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70), 100);
-            TestBytes(GetBytes(700, reversed).Concat(stringAsShorts));
-        }
-
-        [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void WriteInt32ToSignificantBytes(bool reversed)
-        {
-            InitWriter(reversed);
-
-            // 126721718 = 078D9EB6
+            // 126721718 = B69E8D07
             // L ++-- --++ B
             const int NUMBER = 126721718;
-            _writer.WriteInt32ToSignificantBytes(NUMBER, 4);
-            _writer.WriteInt32ToSignificantBytes(NUMBER, 3);
-            _writer.WriteInt32ToSignificantBytes(NUMBER, 2);
-            _writer.WriteInt32ToSignificantBytes(NUMBER, 1);
-            _writer.WriteInt32ToSignificantBytes(NUMBER, 0);
+            _writer.WriteLittleEndianInt32(NUMBER, 4);
+            _writer.WriteLittleEndianInt32(NUMBER, 3);
+            _writer.WriteLittleEndianInt32(NUMBER, 2);
+            _writer.WriteLittleEndianInt32(NUMBER, 1);
+            _writer.WriteLittleEndianInt32(NUMBER, 0);
 
-            var expected = new List<byte>() { };
-
-            void AddToExpected(byte[] toWrite)
-            {
-                if (BitConverter.IsLittleEndian) expected.AddRange(reversed ? toWrite : toWrite.Reverse());
-                else expected.AddRange(reversed ? toWrite.Reverse() : toWrite);
-            }
-
-            expected.AddRange(GetBytes(NUMBER, reversed));
-            AddToExpected(new byte[] { 0x8D, 0x9E, 0xB6 });
-            AddToExpected(new byte[] { 0x9E, 0xB6 });
-            AddToExpected(new byte[] { 0xB6 });
-
+            var expected = new byte[] { 0xB6, 0x9E, 0x8D, 0x07, 0xB6, 0x9E, 0x8D, 0xB6, 0x9E, 0xB6 };
             TestBytes(expected);
         }
 

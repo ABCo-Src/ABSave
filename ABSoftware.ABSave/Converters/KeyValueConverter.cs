@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -13,22 +11,29 @@ namespace ABSoftware.ABSave.Converters
         private KeyValueConverter() { }
 
         public override bool HasExactType => false;
-        public override bool CheckCanConvertType(TypeInformation typeInformation) => typeInformation.ActualType.IsGenericType && typeInformation.ActualType.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
+        public override bool CheckCanConvertType(Type type) => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer)
+        public override void Serialize(object obj, Type type, ABSaveWriter writer)
         {
-            var keySpecifiedType = typeInfo.ActualType.GetGenericArguments()[0];
-            var valueSpecifiedType = typeInfo.ActualType.GetGenericArguments()[1];
+            var genericArgs = type.GetGenericArguments();
+            var keySpecifiedType = genericArgs[0];
+            var valueSpecifiedType = genericArgs[1];
 
             dynamic pair = (dynamic)obj;
 
             var keyVal = pair.Key;
-            var keyActualType = keyVal.GetType();
-            ABSaveItemSerializer.Serialize(keyVal, new TypeInformation(keyActualType, Type.GetTypeCode(keyActualType), keySpecifiedType, Type.GetTypeCode(keySpecifiedType)), writer);
+            ABSaveItemConverter.SerializeWithAttribute(keyVal, keySpecifiedType, writer);
 
             var valueVal = pair.Value;
-            var valueActualType = valueVal.GetType();
-            ABSaveItemSerializer.Serialize(pair.Value, new TypeInformation(valueActualType, Type.GetTypeCode(valueActualType), valueSpecifiedType, Type.GetTypeCode(valueSpecifiedType)), writer);
+            ABSaveItemConverter.SerializeWithAttribute(valueVal, valueSpecifiedType, writer);
+        }
+
+        public override object Deserialize(Type type, ABSaveReader reader)
+        {
+            var keySpecifiedType = type.GetGenericArguments()[0];
+            var valueSpecifiedType = type.GetGenericArguments()[1];
+
+            return Activator.CreateInstance(type, ABSaveItemConverter.DeserializeWithAttribute(keySpecifiedType, reader), ABSaveItemConverter.DeserializeWithAttribute(valueSpecifiedType, reader));
         }
     }
 }

@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 
 namespace ABSoftware.ABSave.Converters
 {
@@ -12,6 +10,7 @@ namespace ABSoftware.ABSave.Converters
         public override bool HasExactType => true;
         public override Type ExactType => typeof(DateTime);
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer) => writer.WriteInt64((ulong)((DateTime)obj).Ticks);
+        public override void Serialize(object obj, Type type, ABSaveWriter writer) => writer.WriteInt64((ulong)((DateTime)obj).Ticks);
+        public override object Deserialize(Type type, ABSaveReader reader) => new DateTime((long)reader.ReadInt64());
     }
 }

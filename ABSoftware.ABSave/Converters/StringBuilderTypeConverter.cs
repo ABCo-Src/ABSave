@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 using System.Text;
 
 namespace ABSoftware.ABSave.Converters
@@ -13,9 +11,7 @@ namespace ABSoftware.ABSave.Converters
         public override bool HasExactType => true;
         public override Type ExactType => typeof(StringBuilder);
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer)
-        {
-            writer.WriteText((StringBuilder)obj);
-        }
+        public override void Serialize(object obj, Type type, ABSaveWriter writer) => writer.WriteText((StringBuilder)obj);
+        public override object Deserialize(Type type, ABSaveReader reader) => reader.ReadStringBuilder();
     }
 }

@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 
 namespace ABSoftware.ABSave.Converters
 {
@@ -10,9 +8,12 @@ namespace ABSoftware.ABSave.Converters
         private GuidTypeConverter() { }
         public override bool HasExactType => true;
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer)
+        public override void Serialize(object obj, Type type, ABSaveWriter writer) => writer.WriteByteArray(((Guid)obj).ToByteArray(), false);
+        public override object Deserialize(Type type, ABSaveReader reader)
         {
-            writer.WriteByteArray(((Guid)obj).ToByteArray(), false);
+            var data = new byte[16];
+            reader.ReadBytes(data);
+            return new Guid(data);
         }
     }
 }

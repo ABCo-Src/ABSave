@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,14 +8,18 @@ namespace ABSoftware.ABSave.Mapping
     {
         private int _itemsAdded = 0;
         public int NumberOfItems;
+        public Func<object> Constructor;
 
         internal bool Initialized;
         internal ABSaveMapItem[] Items;
+        internal Dictionary<string, ABSaveMapItem> HashedItems;
 
-        public ObjectMapItem(int numberOfItems)
+        public ObjectMapItem(bool canBeNull, Func<object> constructor, int numberOfItems) : base(canBeNull)
         {
             NumberOfItems = numberOfItems;
+            Constructor = constructor;
             Items = new ABSaveMapItem[numberOfItems];
+            HashedItems = new Dictionary<string, ABSaveMapItem>(numberOfItems);
         }
 
         public ObjectMapItem AddItem(string name, ABSaveMapItem mapItem)
@@ -26,6 +28,7 @@ namespace ABSoftware.ABSave.Mapping
 
             mapItem.Name = name;
             Items[_itemsAdded++] = mapItem;
+            HashedItems.Add(name, mapItem);
 
             return this;
         }
@@ -39,6 +42,32 @@ namespace ABSoftware.ABSave.Mapping
             return AddItem(name, mapItem);
         }
 
-        public override void Serialize(object obj, TypeInformation typeInfo, ABSaveWriter writer) => ABSaveObjectConverter.Serialize(obj, typeInfo, writer, this);
+        public override void Serialize(object obj, Type type, ABSaveWriter writer)
+        {
+            if (SerializeNullAttribute(obj, writer)) return;
+            ABSaveObjectConverter.Serialize(obj, type, writer, this);
+        }
+
+        public override object Deserialize(Type type, ABSaveReader reader)
+        {
+            if (DeserializeNullAttribute(reader)) return null;
+            return ABSaveObjectConverter.Deserialize(type, reader, this);
+        }
+    }
+
+    internal class ObjectSubMapItemCustom
+    {
+        
+    }
+
+    internal class ObjectSubMapItem
+    {
+        internal ABSaveMapItem BaseItem;
+        internal string Name;
+        internal bool UseReflection = true;
+        internal Func<object, object> Getter = null;
+        internal Action<object, object> Setter = null;
+        internal Type FieldType = null;
+        internal bool CanBeNull = false;
     }
 }
