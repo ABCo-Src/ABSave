@@ -1,6 +1,4 @@
 ﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,7 +10,16 @@ namespace ABSoftware.ABSave.Mapping
         public readonly ABSaveTypeConverter TypeConverter;
         public TypeConverterMapItem(bool canBeNull, ABSaveTypeConverter typeConverter) : base(canBeNull) => TypeConverter = typeConverter;
 
-        public override void Serialize(object obj, Type type, ABSaveWriter writer) => TypeConverter.Serialize(obj, type, writer);
-        public override object Deserialize(Type type, ABSaveReader reader) => TypeConverter.Deserialize(type, reader);
+        public override void Serialize(object obj, Type type, ABSaveWriter writer)
+        {
+            if (SerializeNullAttribute(obj, writer)) return;
+            TypeConverter.Serialize(obj, type, writer);
+        }
+
+        public override object Deserialize(Type type, ABSaveReader reader)
+        {
+            if (DeserializeNullAttribute(reader)) return null;
+            return TypeConverter.Deserialize(type, reader);
+        }
     }
 }

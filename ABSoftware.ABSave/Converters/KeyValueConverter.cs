@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -17,8 +15,9 @@ namespace ABSoftware.ABSave.Converters
 
         public override void Serialize(object obj, Type type, ABSaveWriter writer)
         {
-            var keySpecifiedType = type.GetGenericArguments()[0];
-            var valueSpecifiedType = type.GetGenericArguments()[1];
+            var genericArgs = type.GetGenericArguments();
+            var keySpecifiedType = genericArgs[0];
+            var valueSpecifiedType = genericArgs[1];
 
             dynamic pair = (dynamic)obj;
 
@@ -34,11 +33,7 @@ namespace ABSoftware.ABSave.Converters
             var keySpecifiedType = type.GetGenericArguments()[0];
             var valueSpecifiedType = type.GetGenericArguments()[1];
 
-            var keyValuePair = (dynamic)Activator.CreateInstance(type);
-
-            keyValuePair.Key = ABSaveItemConverter.DeserializeWithAttribute(keySpecifiedType, reader);
-            keyValuePair.Value = ABSaveItemConverter.DeserializeWithAttribute(valueSpecifiedType, reader);
-            return keyValuePair;
+            return Activator.CreateInstance(type, ABSaveItemConverter.DeserializeWithAttribute(keySpecifiedType, reader), ABSaveItemConverter.DeserializeWithAttribute(valueSpecifiedType, reader));
         }
     }
 }

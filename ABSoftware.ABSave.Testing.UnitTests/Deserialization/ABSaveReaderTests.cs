@@ -1,5 +1,4 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -127,14 +126,16 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
         [TestMethod]
         public void ReadInt32ToSignificantBytes()
         {
-            var src = new List<byte>();
-            src.AddRange(GetBytes(0xFFFFFFFF, false));
-            src.AddRange(GetBytes(0xFFFFFF, false));
-            src.AddRange(GetBytes(0xFFFF, false));
-            src.AddRange(GetBytes(0xFF, false));
-            src.AddRange(GetBytes(0, false));
+            var memoryStream = new MemoryStream();
+            var writer = new ABSaveWriter(memoryStream, new ABSaveSettings());
 
-            InitReader(src.ToArray(), false);
+            writer.WriteLittleEndianInt32(0xFFFFFFFF, 4);
+            writer.WriteLittleEndianInt32(0xFFFFFF, 3);
+            writer.WriteLittleEndianInt32(0xFFFF, 2);
+            writer.WriteLittleEndianInt32(0xFF, 1);
+            writer.WriteLittleEndianInt32(0, 0);
+
+            InitReader(memoryStream.ToArray(), new ABSaveSettings());
 
             Assert.AreEqual(0xFFFFFFFF, _reader.ReadLittleEndianInt32(4));
             Assert.AreEqual((uint)0xFFFFFF, _reader.ReadLittleEndianInt32(3));

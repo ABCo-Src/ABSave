@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -129,18 +127,19 @@ namespace ABSoftware.ABSave.Converters
         {
             var successful = writer.CachedTypes.TryGetValue(type, out int key);
 
+            // TODO: Optimize this in some way?
             if (successful)
             {
-                writer.WriteInt32((uint)key);
+                writer.WriteLittleEndianInt32((uint)key, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(writer.CachedTypes.Count - 1));
                 return true;
             }
             else if (writer.CachedTypes.Count == int.MaxValue)
                 writer.WriteInt32(uint.MaxValue);
             else
             {
-                int size = writer.CachedAssemblies.Count;
+                int size = writer.CachedTypes.Count;
                 writer.CachedTypes.Add(type, size);
-                writer.WriteLittleEndianInt32(size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(size));
+                writer.WriteLittleEndianInt32((uint)size, ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(size));
             }
 
             return false;
@@ -150,7 +149,7 @@ namespace ABSoftware.ABSave.Converters
         {
             if (reader.Settings.CacheTypesAndAssemblies)
             {
-                key = reader.ReadLittleEndianInt32(ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(reader.CachedAssemblies.Count));
+                key = reader.ReadLittleEndianInt32(ABSaveUtils.GetRequiredNoOfBytesToStoreNumber(reader.CachedTypes.Count));
                 if (key < reader.CachedTypes.Count) return reader.CachedTypes[(int)key];
             }
 

@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Deserialization
+namespace ABSoftware.ABSave
 {
     public class ABSaveReader
     {
@@ -134,15 +134,14 @@ namespace ABSoftware.ABSave.Deserialization
             uint dest = 0;
             byte* destPos = (byte*)&dest;
 
-            // L ++-- --++ B
             if (BitConverter.IsLittleEndian)
-                Source.Read(new Span<byte>(destPos, 4));
+                Source.Read(new Span<byte>(destPos, significantBytes));
             else
             {
-                byte* src = stackalloc byte[4];
-                Source.Read(new Span<byte>(src, 4));
+                byte* src = stackalloc byte[significantBytes];
+                Source.Read(new Span<byte>(src, significantBytes));
 
-                destPos += 4;
+                destPos += significantBytes;
                 for (int i = 0; i < significantBytes; i++)
                     *--destPos = *src++;
             }
@@ -161,16 +160,16 @@ namespace ABSoftware.ABSave.Deserialization
                     TypeCode.Byte => ReadByte(),
                     TypeCode.SByte => (sbyte)ReadByte(),
                     TypeCode.UInt16 => ReadInt16(),
-                    TypeCode.Int16 => (int)ReadInt16(),
+                    TypeCode.Int16 => (short)ReadInt16(),
                     TypeCode.Char => (char)ReadInt16(),
                     TypeCode.UInt32 => ReadInt32(),
                     TypeCode.Int32 => (int)ReadInt32(),
                     TypeCode.UInt64 => ReadInt64(),
-                    TypeCode.Int64 => (int)ReadInt64(),
+                    TypeCode.Int64 => (long)ReadInt64(),
                     TypeCode.Single => ReadSingle(),
                     TypeCode.Double => ReadDouble(),
                     TypeCode.Decimal => ReadDecimal(),
-                    _ => throw new Exception(),
+                    _ => throw new Exception("Invalid numerical type. Are you sure you have the right converter for the right item in your map?"),
                 };
             }
         }

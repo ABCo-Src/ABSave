@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 
 namespace ABSoftware.ABSave.Converters
 {
@@ -32,7 +30,7 @@ namespace ABSoftware.ABSave.Converters
         public override object Deserialize(Type type, ABSaveReader reader)
         {
             var firstByte = reader.ReadByte();
-            var major = (firstByte & 8) > 0 ? (int)reader.ReadInt32() : 0;
+            var major = (firstByte & 8) > 0 ? (int)reader.ReadInt32() : 1;
             var minor = (firstByte & 4) > 0 ? (int)reader.ReadInt32() : 0;
             var build = (firstByte & 2) > 0 ? (int)reader.ReadInt32() : 0;
             var revision = (firstByte & 1) > 0 ? (int)reader.ReadInt32() : 0;

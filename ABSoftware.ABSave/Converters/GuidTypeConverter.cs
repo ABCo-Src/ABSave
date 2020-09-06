@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 
 namespace ABSoftware.ABSave.Converters
 {
@@ -15,7 +13,7 @@ namespace ABSoftware.ABSave.Converters
         {
             var data = new byte[16];
             reader.ReadBytes(data);
-            return data;
+            return new Guid(data);
         }
     }
 }

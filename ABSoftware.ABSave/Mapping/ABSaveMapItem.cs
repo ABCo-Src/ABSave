@@ -1,6 +1,4 @@
 ﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -30,14 +28,14 @@ namespace ABSoftware.ABSave.Mapping
                 }
 
                 writer.WriteMatchingTypeAttribute();
-                return false;
             }
-            else return false;
+
+            return false;
         }
 
         public bool DeserializeNullAttribute(ABSaveReader reader)
         {
-            if (CanBeNull) return reader.ReadByte() != 1;
+            if (CanBeNull) return reader.ReadByte() == 1;
             return false;
         }
 

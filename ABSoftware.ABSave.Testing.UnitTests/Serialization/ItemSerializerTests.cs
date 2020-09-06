@@ -1,5 +1,4 @@
 ﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.IO;
@@ -10,7 +9,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
     public class ItemSerializerTests
     {
         [TestMethod]
-        public void Attributes_Null()
+        public void SerializeAttribute_Null()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             ABSaveItemConverter.SerializeAttribute(null, typeof(object), typeof(object), actual);
@@ -22,16 +21,16 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        public void Attributes_Nullable_NonNull()
+        public void SerializeAttribute_Nullable_NonNull()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeAttribute(new bool?(true), typeof(bool?), typeof(bool?), actual);
+            ABSaveItemConverter.SerializeAttribute(new bool?(true), typeof(bool), typeof(bool?), actual);
 
             CollectionAssert.AreEqual(new byte[] { 2 }, ((MemoryStream)actual.Output).ToArray());
         }
 
         [TestMethod]
-        public void Attributes_ValueType()
+        public void SerializeAttribute_ValueType()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             ABSaveItemConverter.SerializeAttribute(123, typeof(int), typeof(int), actual);
@@ -40,7 +39,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        public void Attributes_ReferenceType_Matching()
+        public void SerializeAttribute_MatchingType()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             ABSaveItemConverter.SerializeAttribute(new ReferenceTypeSub(), typeof(ReferenceTypeSub), typeof(ReferenceTypeSub), actual);
@@ -49,7 +48,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        public void Attributes_ReferenceType_Different()
+        public void SerializeAttribute_DifferentType()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             ABSaveItemConverter.SerializeAttribute(new ReferenceTypeSub(), typeof(ReferenceTypeSub), typeof(ReferenceTypeBase), actual);

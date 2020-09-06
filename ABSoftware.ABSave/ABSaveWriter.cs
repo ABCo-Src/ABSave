@@ -6,7 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Serialization
+namespace ABSoftware.ABSave
 {
     public sealed class ABSaveWriter
     {
@@ -144,7 +144,7 @@ namespace ABSoftware.ABSave.Serialization
             else Output.Write(new ReadOnlySpan<byte>(data, numberOfBytes));
         }
 
-        public unsafe void WriteLittleEndianInt32(int s, int significantBytes)
+        public unsafe void WriteLittleEndianInt32(uint s, int significantBytes)
         {
             byte* data = (byte*)&s;
 
@@ -153,10 +153,10 @@ namespace ABSoftware.ABSave.Serialization
                 Output.Write(new ReadOnlySpan<byte>(data, significantBytes));
             else
             {
-                byte* dest = stackalloc byte[4];
+                byte* dest = stackalloc byte[significantBytes];
                 byte* destPos = dest;
 
-                data += 4;
+                data += significantBytes;
                 for (int i = 0; i < significantBytes; i++)
                     *destPos++ = *--data;
 
@@ -229,6 +229,8 @@ namespace ABSoftware.ABSave.Serialization
 
                         WriteDecimal((decimal)num);
                         break;
+                    default:
+                        throw new Exception("Invalid numerical type. Are you sure you have the right converter for the right item in your map?");
                 }
             }
         }

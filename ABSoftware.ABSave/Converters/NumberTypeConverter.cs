@@ -1,6 +1,4 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Serialization;
-using System;
+﻿using System;
 
 namespace ABSoftware.ABSave.Converters
 {
@@ -22,8 +20,8 @@ namespace ABSoftware.ABSave.Converters
                 case TypeCode.Int16:
                 case TypeCode.UInt32:
                 case TypeCode.Int32:
-                case TypeCode.Int64:
                 case TypeCode.UInt64:
+                case TypeCode.Int64:
                 case TypeCode.Single:
                 case TypeCode.Double:
                 case TypeCode.Decimal:

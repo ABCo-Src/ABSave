@@ -1,7 +1,5 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Exceptions;
+﻿using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -23,7 +21,7 @@ namespace ABSoftware.ABSave
             }
         }
 
-        public static void Serialize(object obj, Type type, ABSaveWriter writer, ObjectMapItem item)
+        internal static void Serialize(object obj, Type type, ABSaveWriter writer, ObjectMapItem item)
         {
             writer.WriteInt32((uint)item.NumberOfItems);
             

@@ -1,5 +1,5 @@
 ﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Serialization;
+using ABSoftware.ABSave.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,15 +46,6 @@ namespace ABSoftware.ABSave
         }
 
         #endregion
-
-        public static bool HasGenericInterface(Type[] interfaces, Type theInterface)
-        {
-            for (int i = 0; i < interfaces.Length; i++)
-                if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == theInterface)
-                    return true;
-
-            return false;
-        }
 
         public static bool HasInterface(Type toCheck, Type theInterface)
         {
