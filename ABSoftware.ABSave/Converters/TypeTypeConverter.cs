@@ -32,7 +32,7 @@ namespace ABSoftware.ABSave.Converters
         public void SerializeTypeMainPart(Type type, Type genericType, ABSaveWriter writer)
         {
             AssemblyTypeConverter.Instance.Serialize(type.Assembly, typeof(Assembly), writer);
-            writer.WriteText(genericType.FullName);
+            writer.WriteString(genericType.FullName);
         }
 
         public void SerializeGenericPart(Type type, ABSaveWriter writer)

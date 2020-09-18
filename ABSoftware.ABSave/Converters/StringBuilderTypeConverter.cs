@@ -11,7 +11,7 @@ namespace ABSoftware.ABSave.Converters
         public override bool HasExactType => true;
         public override Type ExactType => typeof(StringBuilder);
 
-        public override void Serialize(object obj, Type type, ABSaveWriter writer) => writer.WriteText((StringBuilder)obj);
+        public override void Serialize(object obj, Type type, ABSaveWriter writer) => writer.WriteStringBuilder((StringBuilder)obj);
         public override object Deserialize(Type type, ABSaveReader reader) => reader.ReadStringBuilder();
     }
 }

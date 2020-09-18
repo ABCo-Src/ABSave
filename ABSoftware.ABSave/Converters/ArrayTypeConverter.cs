@@ -109,28 +109,38 @@ namespace ABSoftware.ABSave.Converters
         // TODO: BENCHMARK THIS - IS IT REALLY FASTER WITH ALL THE CHECKS?
         unsafe bool TryFastWriteArray(Array arr, ABSaveWriter writer, Type itemType)
         {
-            if (itemType == typeof(byte))
-                writer.WriteByteArray((byte[])arr, true);
+            switch (Type.GetTypeCode(itemType))
+            {
+                case TypeCode.Byte:
+                    writer.WriteByteArray((byte[])arr, true);
+                    return true;
+                case TypeCode.SByte:
+                    fixed (sbyte* s = (sbyte[])arr)
+                        writer.WriteBytes(new Span<byte>(s, arr.Length), true);
 
-            else if (itemType == typeof(sbyte))
-                fixed (sbyte* s = (sbyte[])arr)
-                    writer.WriteBytes(new Span<byte>(s, arr.Length), true);
+                    return true;
+                case TypeCode.Char:
+                    writer.WriteCharArray((char[])arr);
+                    return true;
+                case TypeCode.Int16:
+                    fixed (short* s = (short[])arr)
+                    {
+                        writer.WriteInt32((uint)arr.Length);
+                        writer.FastWriteShorts((ushort*)s, arr.Length);
+                    }
 
-            else if (itemType == typeof(char))
-                fixed (char* s = (char[])arr)
-                    writer.FastWriteShorts((short*)s, arr.Length);
+                    return true;
+                case TypeCode.UInt16:
+                    fixed (ushort* s = (ushort[])arr)
+                    {
+                        writer.WriteInt32((uint)arr.Length);
+                        writer.FastWriteShorts(s, arr.Length);
+                    }
 
-            else if (itemType == typeof(short))
-                fixed (short* s = (short[])arr)
-                    writer.FastWriteShorts(s, arr.Length);
-
-            else if (itemType == typeof(ushort))
-                fixed (ushort* s = (ushort[])arr)
-                    writer.FastWriteShorts((short*)s, arr.Length);
-
-            else return false;
-
-            return true;
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         #endregion
@@ -217,44 +227,42 @@ namespace ABSoftware.ABSave.Converters
 
         unsafe bool TryFastReadArray(int length, ABSaveReader reader, Type itemType, out Array arr)
         {
-            if (itemType == typeof(byte))
+            switch (Type.GetTypeCode(itemType))
             {
-                arr = new byte[length];
-                reader.ReadBytes((byte[])arr);
-            }
+                case TypeCode.Byte:
+                    arr = new byte[length];
+                    reader.ReadBytes((byte[])arr);
 
-            if (itemType == typeof(sbyte))
-            {
-                arr = new sbyte[length];
-                fixed (sbyte* arrData = (sbyte[])arr)
-                    reader.ReadBytes(new Span<byte>(arrData, length));
-            }
+                    return true;
+                case TypeCode.SByte:
+                    arr = new sbyte[length];
+                    fixed (sbyte* arrData = (sbyte[])arr)
+                        reader.ReadBytes(new Span<byte>(arrData, length));
 
-            else if (itemType == typeof(char))
-            {
-                arr = new char[length];
-                fixed (char* s = (char[])arr)
-                    reader.FastReadShorts((short*)s, (uint)length);
-            }
-            else if (itemType == typeof(short))
-            {
-                arr = new short[length];
-                fixed (char* s = (char[])arr)
-                    reader.FastReadShorts((short*)s, (uint)length);
-            }
-            else if (itemType == typeof(ushort))
-            {
-                arr = new ushort[length];
-                fixed (ushort* s = (ushort[])arr)
-                    reader.FastReadShorts((short*)s, (uint)length);
-            }
-            else
-            {
-                arr = null;
-                return false;
-            }
+                    return true;
 
-            return true;
+                case TypeCode.Char:
+                    arr = new char[length];
+                    fixed (char* arrData = (char[])arr)
+                        reader.FastReadShorts((ushort*)arrData, (uint)length);
+
+                    return true;
+                case TypeCode.Int16:
+                    arr = new short[length];
+                    fixed (short* arrData = (short[])arr)
+                        reader.FastReadShorts((ushort*)arrData, (uint)length);
+
+                    return true;
+                case TypeCode.UInt16:
+                    arr = new ushort[length];
+                    fixed (ushort* arrData = (ushort[])arr)
+                        reader.FastReadShorts(arrData, (uint)length);
+
+                    return true;
+                default:
+                    arr = null;
+                    return false;
+            }
         }
 
         #endregion

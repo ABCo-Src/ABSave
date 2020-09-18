@@ -21,8 +21,6 @@ namespace ABSoftware.ABSave.Converters
         public abstract void Serialize(object obj, Type type, ABSaveWriter writer);
         public abstract object Deserialize(Type type, ABSaveReader reader);
 
-        #region Type Converter Management
-
         internal static Dictionary<Type, ABSaveTypeConverter> BuiltInExact = new Dictionary<Type, ABSaveTypeConverter>()
         {
             { typeof(bool), BooleanTypeConverter.Instance },
@@ -40,9 +38,8 @@ namespace ABSoftware.ABSave.Converters
             TypeTypeConverter.Instance,
             KeyValueConverter.Instance,
             CollectionTypeConverter.Instance,
+            ArrayTypeConverter.Instance,
             NumberTypeConverter.Instance
         };
-
-        #endregion
     }
 }

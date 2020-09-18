@@ -69,7 +69,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
             var memoryStream = new MemoryStream();
             var writer = new ABSaveWriter(memoryStream, new ABSaveSettings());
             writer.WriteMatchingTypeAttribute();
-            writer.WriteText("abcd");
+            writer.WriteString("abcd");
 
             memoryStream.Position = 0;
             var reader = new ABSaveReader(memoryStream, new ABSaveSettings());

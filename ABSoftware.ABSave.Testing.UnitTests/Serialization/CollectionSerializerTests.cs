@@ -29,7 +29,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -49,7 +49,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             ABSaveObjectConverter.Serialize(arr[0], typeof(SimpleStruct), expected);
             ABSaveObjectConverter.Serialize(arr[1], typeof(SimpleStruct), expected);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -69,7 +69,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             ABSaveItemConverter.SerializeWithAttribute(so[0], typeof(SimpleClass), expected);
             ABSaveItemConverter.SerializeWithAttribute(so[1], typeof(SimpleClass), expected);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -97,7 +97,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -119,7 +119,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -149,7 +149,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -168,7 +168,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -195,7 +195,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             ABSaveItemConverter.SerializeAttribute(4, typeof(int), typeof(object), expected);
             expected.WriteInt32(4);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -214,7 +214,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -233,7 +233,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
     }
 }

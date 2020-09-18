@@ -35,7 +35,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteByte(1);
             expected.WriteInt32(1258215);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -51,11 +51,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             if (writeKey)
                 expected.WriteByte(0);
             expected.WriteByte(3);
-            expected.WriteText(assembly.GetName().Name);
+            expected.WriteString(assembly.GetName().Name);
             VersionTypeConverter.Instance.Serialize(assembly.GetName().Version, typeof(Version), expected);
             expected.WriteByteArray(assembly.GetName().GetPublicKeyToken(), false);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -71,9 +71,9 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             if (writeKey)
                 expected.WriteByte(0);
             AssemblyTypeConverter.Instance.Serialize(type.Assembly, typeof(Assembly), expected);
-            expected.WriteText(type.FullName);
+            expected.WriteString(type.FullName);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -87,7 +87,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteByte(0);
             expected.WriteByte(1);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -121,7 +121,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteDecimal(72);
             expected.WriteInt16(65);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -133,7 +133,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(2);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -143,9 +143,9 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             StringTypeConverter.Instance.Serialize("abc", typeof(string), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            expected.WriteText("abc");
+            expected.WriteString("abc");
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -158,9 +158,9 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             StringBuilderTypeConverter.Instance.Serialize(str, typeof(StringBuilder), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            expected.WriteText("abc");
+            expected.WriteString("abc");
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -174,7 +174,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteByteArray(guid.ToByteArray(), false);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -188,7 +188,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt64((ulong)dateTime.Ticks);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -202,7 +202,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt64((ulong)timeSpan.Ticks);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
     }
 

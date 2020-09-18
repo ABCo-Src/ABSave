@@ -16,6 +16,8 @@ namespace ABSoftware.ABSave
         public Stream Source;
         public bool ShouldReverseEndian;
 
+        byte[] _stringBuffer;
+
         public ABSaveReader(Stream source, ABSaveSettings settings)
         {
             Settings = settings;
@@ -40,27 +42,164 @@ namespace ABSoftware.ABSave
 
         #region Text Reading
 
-        public unsafe void FastReadShorts(short* dest, uint size)
+        unsafe Span<byte> ReadNullTerminatedBytesIntoBuffer(byte* stackSpace)
+        {
+            int currentPos = 0;
+
+            // We'll attempt to use the stack if the string fits into 128 bytes.
+            bool bufferIsStack = true;
+            Span<byte> buffer = new Span<byte>(stackSpace, 128);
+
+        ReadData:
+            // Read as many characters as we can fit into the buffer, unless we reach a null character.
+            for (; currentPos < buffer.Length; currentPos++)
+            {
+                int currentByte = Source.ReadByte();
+
+                switch (currentByte)
+                {
+                    case 0:
+                        return bufferIsStack ? new Span<byte>(stackSpace, currentPos) : new Span<byte>(_stringBuffer, 0, currentPos);
+                    case 0xC0:
+
+                        int nextByte = Source.ReadByte();
+
+                        if (nextByte == 0x80)
+                            buffer[currentPos] = 0;
+                        else
+                        {
+                            buffer[currentPos++] = 0xC0;
+                            buffer[currentPos] = (byte)nextByte;
+                        }
+
+                        break;
+                    default:
+                        buffer[currentPos] = (byte)currentByte;
+                        break;
+                }
+            }
+
+            // The data didn't fit into whatever buffer we had, so we need to (re)allocate onto the heap and continue reading into that.
+            if (bufferIsStack)
+            {
+                buffer = GetStringBufferFor(256);
+
+                fixed (byte* heapData = _stringBuffer)
+                    Buffer.MemoryCopy(stackSpace, heapData, 256, 128);
+
+                bufferIsStack = false;
+            }
+            else Array.Resize(ref _stringBuffer, _stringBuffer.Length * 2);
+
+            buffer = _stringBuffer;
+            goto ReadData;
+        }
+
+        public unsafe void FastReadShorts(ushort* dest, uint size)
         {
             var byteSize = size * 2;
             var destData = (byte*)dest;
 
             if (ShouldReverseEndian)
             {
-                byte* buffer = stackalloc byte[(int)byteSize];
-                Source.Read(new Span<byte>(buffer, (int)byteSize));
+                byte* buffer = stackalloc byte[2];
+                byte* strData = (byte*)dest;
 
-                byte* currentDestPos = destData;
+                var bufferSpan = new Span<byte>(buffer, 2);
 
                 for (int i = 0; i < size; i++)
                 {
-                    *destData++ = buffer[1];
-                    *destData++ = buffer[0];
-                    buffer += 2;
+                    Source.Read(bufferSpan);
+
+                    *strData++ = buffer[1];
+                    *strData++ = buffer[0];
                 }
 
             }
             else Source.Read(new Span<byte>(destData, (int)byteSize));
+        }
+
+        public unsafe string ReadString()
+        {
+            switch (Settings.TextMode)
+            {
+                case TextMode.UTF8:
+                    int size = (int)ReadInt32();
+
+                    Span<byte> buffer = size <= 128 ? stackalloc byte[size] : GetStringBufferFor(size);
+                    Source.Read(buffer);
+
+                    return Encoding.UTF8.GetString(buffer);
+                case TextMode.NullTerminatedUTF8:
+                    byte* stackSpace = stackalloc byte[128];
+
+                    Span<byte> nullTerminatedBuffer = ReadNullTerminatedBytesIntoBuffer(stackSpace);
+                    return Encoding.UTF8.GetString(nullTerminatedBuffer);
+                case TextMode.UTF16:
+                    uint utf16Size = ReadInt32();
+                    var str = new string('\0', (int)utf16Size);
+
+                    fixed (char* strData = str)
+                        FastReadShorts((ushort*)strData, utf16Size);
+
+                    return str;
+                default: throw new Exception("Invalid TextMode provided");
+            }
+        }
+
+        public unsafe char[] ReadCharArr()
+        {
+            switch (Settings.TextMode)
+            {
+                case TextMode.UTF8:
+                    int size = (int)ReadInt32();
+
+                    Span<byte> utf8Buffer = size <= 128 ? stackalloc byte[size] : GetStringBufferFor(size);
+                    Source.Read(utf8Buffer);
+
+                    return GetCharArrFromBuffer(utf8Buffer);
+                case TextMode.NullTerminatedUTF8:
+
+                    byte* stackSpace = stackalloc byte[128];
+                    Span<byte> nullTerminatedBuffer = ReadNullTerminatedBytesIntoBuffer(stackSpace);
+
+                    return GetCharArrFromBuffer(nullTerminatedBuffer);
+                case TextMode.UTF16:
+                    uint utf16Size = ReadInt32();
+                    var utf16Res = new char[(int)utf16Size];
+
+                    fixed (char* resData = utf16Res)
+                        FastReadShorts((ushort*)resData, utf16Size);
+
+                    return utf16Res;
+                default: throw new Exception("Invalid TextMode provided");
+            }
+        }
+
+        static char[] GetCharArrFromBuffer(Span<byte> utf8Buffer)
+        {
+            var res = new char[Encoding.UTF8.GetCharCount(utf8Buffer)];
+            Encoding.UTF8.GetChars(utf8Buffer, new Span<char>(res));
+
+            return res;
+        }
+
+        public unsafe StringBuilder ReadStringBuilder()
+        {
+            var size = ReadInt32();
+            var buffer = stackalloc char[(int)size];
+
+            FastReadShorts((ushort*)buffer, size);
+
+            var sb = new StringBuilder((int)size);
+            sb.Append(buffer, (int)size);
+            return sb;
+        }
+
+        byte[] GetStringBufferFor(int length)
+        {
+            if (_stringBuffer == null || _stringBuffer.Length < length) return _stringBuffer = new byte[length];
+            else return _stringBuffer;
         }
 
         #endregion
@@ -172,40 +311,6 @@ namespace ABSoftware.ABSave
                     _ => throw new Exception("Invalid numerical type. Are you sure you have the right converter for the right item in your map?"),
                 };
             }
-        }
-
-        public unsafe string ReadString()
-        {
-            var size = ReadInt32();
-            var newStr = new string('\0', (int)size);
-
-            fixed (char* ch = newStr)
-                FastReadShorts((short*)ch, size);
-
-            return newStr;
-        }
-
-        public unsafe char[] ReadCharArr()
-        {
-            var size = ReadInt32();
-            var newStr = new char[(int)size];
-
-            fixed (char* ch = newStr)
-                FastReadShorts((short*)ch, size);
-
-            return newStr;
-        }
-
-        public unsafe StringBuilder ReadStringBuilder()
-        {
-            var size = ReadInt32();
-            var buffer = stackalloc char[(int)size];
-
-            FastReadShorts((short*)buffer, size);
-
-            var sb = new StringBuilder((int)size);
-            sb.Append(buffer, (int)size);
-            return sb;
         }
     }
 }

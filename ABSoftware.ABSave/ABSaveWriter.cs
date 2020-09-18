@@ -1,24 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Xml.Serialization;
 
 namespace ABSoftware.ABSave
 {
     public sealed class ABSaveWriter
     {
-        internal ABSaveSettings Settings;
+        public ABSaveSettings Settings;
         internal Dictionary<Assembly, int> CachedAssemblies = new Dictionary<Assembly, int>();
         internal Dictionary<Type, int> CachedTypes = new Dictionary<Type, int>();
 
         public Stream Output;
-
         public bool ShouldReverseEndian;
 
-        public ABSaveWriter(Stream writeTo, ABSaveSettings settings) {
+        byte[] _stringBuffer;
+
+        public ABSaveWriter(Stream writeTo, ABSaveSettings settings) 
+        {
             if (!writeTo.CanWrite)
                 throw new Exception("Cannot use unwriteable stream.");
 
@@ -51,49 +56,188 @@ namespace ABSoftware.ABSave
 
         #endregion
 
-        #region Short/Character Writing
+        #region Character & Short Writing
 
-        public unsafe void FastWriteShorts(short* str, int strLength)
+        unsafe void WriteUTF16(ushort* str, int strLength)
         {
-            int byteCount = strLength * 2;
             WriteInt32((uint)strLength);
+            FastWriteShorts(str, strLength);
+        }
 
+        public unsafe void FastWriteShorts(ushort* shorts, int shortsLength)
+        {
             if (ShouldReverseEndian)
             {
-                byte* dest = stackalloc byte[byteCount];
+                byte* buffer = stackalloc byte[2];
+                byte* strData = (byte*)shorts;
 
-                byte* currentDestPos = dest;
-                byte* strData = (byte*)str;
+                var bufferSpan = new ReadOnlySpan<byte>(buffer, 2);
 
-                for (int i = 0; i < strLength; i++)
+                for (int i = 0; i < shortsLength; i++)
                 {
-                    *currentDestPos++ = strData[1];
-                    *currentDestPos++ = strData[0];
-                    strData += 2;
+                    buffer[1] = *strData++;
+                    buffer[0] = *strData++;
+
+                    Output.Write(bufferSpan);
+                }
+            }
+            else Output.Write(new ReadOnlySpan<byte>((byte*)shorts, shortsLength * 2));
+        }
+
+        unsafe void WriteNullTerminatedUTF8(ushort* data, int length)
+        {
+            int maxSize = Encoding.UTF8.GetMaxByteCount(length);
+            Span<byte> buffer = maxSize <= 128 ? stackalloc byte[maxSize] : GetStringBufferFor(maxSize);
+
+            int actualLength = EncodeUTF8ToStringBuffer(data, buffer, length);
+
+            // Copy the encoded string in, while escaping null characters using overlong sequences.
+            fixed (byte* bufferData = buffer)
+                FastWriteWithNullTermination(bufferData, actualLength);
+
+            Output.WriteByte(0);
+        }
+
+        unsafe void WriteUTF8(ushort* data, int length)
+        {
+            WriteInt32((uint)length);
+
+            int maxSize = Encoding.UTF8.GetMaxByteCount(length);
+            Span<byte> buffer = maxSize <= 128 ? stackalloc byte[maxSize] : GetStringBufferFor(maxSize);
+
+            int actualLength = EncodeUTF8ToStringBuffer(data, buffer, length);
+            Output.Write(buffer.Slice(0, actualLength));
+        }
+
+        private unsafe int EncodeUTF8ToStringBuffer(ushort* data, Span<byte> buffer, int length) => Encoding.UTF8.GetBytes(new ReadOnlySpan<char>((char*)data, length), buffer);
+
+        byte[] GetStringBufferFor(int length)
+        {
+            if (_stringBuffer == null || _stringBuffer.Length < length) return _stringBuffer = new byte[length];
+            else return _stringBuffer;
+        }
+
+        unsafe void FastWriteWithNullTermination(byte* byteData, int sourceLength)
+        {
+            // Copy 4 bytes at a time.
+            // NOTE: There are reasons why we aren't working with 8 bytes. Not only would the library have to be re-compiled for every platform on release (unless we do a runtime check for 64-bit),
+            // but when there are null characters, checking 8 bytes can actually be slower, as it has to manually iterate over all bytes in that much bigger 8-byte chunk
+            // up towards that null character. That being said, it's possible that null handling can be optimized (it checks in smaller chunks 
+            // if it sees a 8-byte chunk contains a null byte), so it might be worth looking into if anyone has the time!
+            while (sourceLength >= 4)
+            {
+                if (ABSaveUtils.ContainsZeroByte(*(uint*)byteData))
+                {
+                    // Write all the non-null characters.
+                    while (*byteData != 0)
+                    {
+                        Output.WriteByte(*byteData++);
+                        sourceLength--;
+                    }
+
+                    WriteOverlongNullSequence();
+                    byteData++;
+                    sourceLength--;
                 }
 
-                Output.Write(new ReadOnlySpan<byte>(dest, byteCount));
+                else
+                {
+                    Output.Write(new ReadOnlySpan<byte>(byteData, 4));
+                    byteData += 4;
+                    sourceLength -= 4;
+                }
             }
-            else Output.Write(new ReadOnlySpan<byte>((byte*)str, byteCount));
+
+            // Copy the rest manually.
+            for (int i = 0; i < sourceLength; i++)
+            {
+                if (*byteData == 0)
+                    WriteOverlongNullSequence();
+                else
+                    Output.WriteByte(*byteData);
+
+                byteData++;
+            }
         }
 
-        public unsafe void WriteText(string str)
+        private unsafe void WriteOverlongNullSequence()
+        {
+            Output.WriteByte(0xC0);
+            Output.WriteByte(0x80);
+        }
+
+        // Using the built-in encoder is faster, even though it requires an extra copy.
+        //unsafe ushort* WriteUTF8Char(ushort* data)
+        //{
+        //    ushort lowSurrogate = *data++;
+
+        //    // UTF-8: 7-bits
+        //    if (lowSurrogate < 0x7F)
+        //        WriteByte((byte)lowSurrogate);
+
+        //    // UTF-8: 11-bits
+        //    else if (lowSurrogate < 2048)
+        //    {
+        //        WriteByte((byte)(0xC0 | (lowSurrogate >> 6)));
+        //        WriteByte((byte)(0x80 | (lowSurrogate & 0b111111)));
+        //    }
+
+        //    // UTF-8: 16-bits
+        //    else if (lowSurrogate < 0xD800 || lowSurrogate >= 0xE000)
+        //    {
+        //        WriteByte((byte)(0xE0 | (lowSurrogate >> 12)));
+        //        WriteByte((byte)(0x80 | ((lowSurrogate >> 6) & 0b111111)));
+        //        WriteByte((byte)(0x80 | (lowSurrogate & 0b111111)));
+        //    }
+
+        //    // UTF-8: 20-bits
+        //    else
+        //    {
+        //        // 2 code points required
+        //        ushort highSurrogate = *data++;
+        //        WriteByte((byte)(0xF0 | ((lowSurrogate >> 8) & 0b11)));
+        //        WriteByte((byte)(0x80 | ((lowSurrogate >> 2) & 0b111111)));
+        //        WriteByte((byte)(0x80 | ((lowSurrogate & 0b11) << 4) | (highSurrogate >> 6)));
+        //        WriteByte((byte)(0x80 | (highSurrogate & 0b111111)));
+        //    }
+
+        //    return data;
+        //}
+
+        unsafe void WriteText(ushort* txt, int length)
+        {
+            switch (Settings.TextMode)
+            {
+                case TextMode.UTF8:
+                    WriteUTF8(txt, length);
+                    break;
+                case TextMode.NullTerminatedUTF8:
+                    WriteNullTerminatedUTF8(txt, length);
+                    break;
+                case TextMode.UTF16:
+                    WriteUTF16(txt, length);
+                    break;
+                default: throw new Exception("Invalid TextMode provided");
+            }
+        }
+
+        public unsafe void WriteString(string str)
         {
             fixed (char* s = str)
-                FastWriteShorts((short*)s, str.Length);
+                WriteText((ushort*)s, str.Length);
         }
 
-        public unsafe void WriteText(char[] chArr)
+        public unsafe void WriteCharArray(char[] chArr)
         {
             fixed (char* s = chArr)
-                FastWriteShorts((short*)s, chArr.Length);
+                WriteText((ushort*)s, chArr.Length);
         }
 
-        public void WriteText(StringBuilder str)
+        public void WriteStringBuilder(StringBuilder str)
         {
             char[] builderContents = new char[str.Length];
             str.CopyTo(0, builderContents, 0, str.Length);
-            WriteText(builderContents);
+            WriteCharArray(builderContents);
         }
 
         #endregion

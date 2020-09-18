@@ -19,10 +19,10 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(1);
-            expected.WriteText("Inside");
+            expected.WriteString("Inside");
             expected.WriteInt32(12);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -41,14 +41,14 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(3);
-            expected.WriteText("Itm1");
+            expected.WriteString("Itm1");
             expected.WriteByte(1);
-            expected.WriteText("Itm2");
+            expected.WriteString("Itm2");
             expected.WriteInt32(12);
-            expected.WriteText("Itm3");
+            expected.WriteString("Itm3");
             ABSaveItemConverter.SerializeWithAttribute("abc", typeof(string), expected);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -71,14 +71,14 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(3);
-            expected.WriteText("Itm1");
+            expected.WriteString("Itm1");
             expected.WriteByte(0);
-            expected.WriteText("Itm2");
+            expected.WriteString("Itm2");
             expected.WriteInt32(3863);
-            expected.WriteText("Itm3");
+            expected.WriteString("Itm3");
             ABSaveItemConverter.SerializeWithAttribute("def", typeof(string), expected);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -101,14 +101,14 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(3);
-            expected.WriteText("Itm1");
+            expected.WriteString("Itm1");
             expected.WriteByte(0);
-            expected.WriteText("Itm2");
+            expected.WriteString("Itm2");
             expected.WriteInt32(1234);
-            expected.WriteText("Itm3");
+            expected.WriteString("Itm3");
             ABSaveItemConverter.SerializeWithAttribute("ghi", typeof(string), expected);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
     }
 }

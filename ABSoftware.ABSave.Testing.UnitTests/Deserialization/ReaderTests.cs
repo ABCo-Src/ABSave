@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -8,7 +9,7 @@ using System.Text;
 namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
 {
     [TestClass]
-    public class ABSaveReaderTests
+    public class ReaderTests
     {
         ABSaveReader _reader;
 
@@ -47,20 +48,91 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
         }
 
         [TestMethod]
+        public void ReadUTF8_NullTerminated()
+        {
+            var src = new List<byte>
+            {
+                65,
+                66,
+                67,
+                0
+            };
+
+            ReadTextAndAssert("ABC", src.ToArray(), TextMode.NullTerminatedUTF8);
+        }
+
+        [TestMethod]
+        public void ReadUTF8_NullTerminated_Large()
+        {
+            var src = new List<byte>();
+            
+            for (int i = 0; i < 200; i++)
+            {
+                src.Add(65);
+                src.Add(66);
+                src.Add(67);
+                src.Add(68);
+            }
+            src.Add(0);
+
+            ReadTextAndAssert(TestUtilities.RepeatString("ABCD", 200), src.ToArray(), TextMode.NullTerminatedUTF8);
+        }
+
+        [TestMethod]
+        public void ReadUTF8_NullTerminated_ContainsNullCharacters()
+        {
+            var src = new List<byte>
+            {
+                65,
+                66,
+                0xC0, 
+                0x80,
+                67,
+                0
+            };
+
+            ReadTextAndAssert("AB\0C", src.ToArray(), TextMode.NullTerminatedUTF8);
+        }
+
+        [TestMethod]
+        public void ReadUTF8()
+        {
+            var src = new List<byte>();
+            AddInt32(src, 3, false);
+            src.Add(65);
+            src.Add(66);
+            src.Add(67);
+
+            ReadTextAndAssert("ABC", src.ToArray(), TextMode.UTF8);
+        }
+
+        [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public void ReadText(bool reversed)
+        public void ReadUTF16(bool reversed)
         {
             var src = new List<byte>();
             AddInt32(src, 3, reversed);
             AddChar(src, 'A', reversed);
             AddChar(src, 'B', reversed);
-            AddChar(src, 'S', reversed);
+            AddChar(src, 'C', reversed);
 
-            InitReader(src.ToArray(), reversed);
+            ReadTextAndAssert("ABC", src.ToArray(), TextMode.UTF16, reversed);
+        }
+
+        void ReadTextAndAssert(string expectedStr, byte[] src, TextMode textMode, bool reversed = false)
+        {
+            var expected = expectedStr.ToCharArray();
+
+            var settings = new ABSaveSettings().SetTextMode(textMode).SetUseLittleEndian(reversed ? !BitConverter.IsLittleEndian : BitConverter.IsLittleEndian);
+            InitReader(src, settings);
             var str = _reader.ReadString();
 
-            Assert.AreEqual("ABS", str);
+            InitReader(src, settings);
+            var chArr = _reader.ReadCharArr();
+
+            CollectionAssert.AreEqual(expected, str.ToCharArray());
+            CollectionAssert.AreEqual(expected, chArr);
         }
 
         [TestMethod]

@@ -25,11 +25,11 @@ namespace ABSoftware.ABSave.Converters
 
             var firstByte = (cultureNeutral ? 2 : 0) | (hasPublicKeyToken ? 1 : 0);
             writer.WriteByte((byte)firstByte);
-            writer.WriteText(assemblyName.Name);
+            writer.WriteString(assemblyName.Name);
             VersionTypeConverter.Instance.Serialize(assemblyName.Version, typeof(Version), writer);
 
             if (!cultureNeutral)
-                writer.WriteText(assemblyName.CultureName);
+                writer.WriteString(assemblyName.CultureName);
             if (hasPublicKeyToken)
                 writer.WriteByteArray(publicKeyToken, false);
         }

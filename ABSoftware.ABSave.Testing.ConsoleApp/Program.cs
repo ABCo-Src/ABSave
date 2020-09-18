@@ -1,5 +1,6 @@
 ﻿
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 using Newtonsoft.Json;
@@ -86,42 +87,47 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         public double Height;
     }
 
-    public static class StreamHolders
-    {
-
-    }
-
     public class TestBenchmark
     {
-        public FileStream ABSaveResult;
+        public MemoryStream ABSaveResult;
+        public MemoryStream NewtonsoftJsonResult;
         public MemoryStream FormatterResult;
-        public FileStream NewtonsoftJsonResult;
         public MemoryStream WhoaResult;
         public Planet TestObj;
+        public ABSaveSettings Settings = ABSaveSettings.PrioritizePerformance;
 
         [GlobalSetup]
         public void Setup()
         {
-            ABSaveResult = File.Open("absave_data", FileMode.Create);
-            NewtonsoftJsonResult = File.Open("json_data.txt", FileMode.Create);
+            ABSaveResult = new MemoryStream();
+            NewtonsoftJsonResult = new MemoryStream();
             FormatterResult = new MemoryStream();
             WhoaResult = new MemoryStream();
             TestObj = new Planet();
         }
 
-        [Benchmark]
-        public void BinaryFormatter()
+        [GlobalCleanup]
+        public void End()
         {
-            FormatterResult.Position = 0;
-            var formatter = new BinaryFormatter();
-            formatter.Serialize(FormatterResult, TestObj);
+            Console.WriteLine(ABSaveResult.Length);
+            Console.WriteLine(NewtonsoftJsonResult.Length);
+            Console.WriteLine(FormatterResult.Length);
+            Console.WriteLine(WhoaResult.Length);
         }
+
+        //[Benchmark]
+        //public void BinaryFormatter()
+        //{
+        //    FormatterResult.Position = 0;
+        //    var formatter = new BinaryFormatter();
+        //    formatter.Serialize(FormatterResult, TestObj);
+        //}
 
         [Benchmark]
         public void ABSave()
         {
             ABSaveResult.Position = 0;
-            var writer = new ABSaveWriter(ABSaveResult, new ABSaveSettings());
+            var writer = new ABSaveWriter(ABSaveResult, Settings);
             ABSaveObjectConverter.Serialize(TestObj, typeof(Planet), writer);
         }
 
@@ -137,29 +143,20 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             serializer.Serialize(writer, TestObj);
         }
 
-        [Benchmark]
-        public void WhoaTest()
-        {
-            WhoaResult.Position = 0;
-            Whoa.Whoa.SerialiseObject(WhoaResult, TestObj, SerialisationOptions.None);
-        }
+        //[Benchmark]
+        //public void WhoaTest()
+        //{
+        //    WhoaResult.Position = 0;
+        //    Whoa.Whoa.SerialiseObject(WhoaResult, TestObj, SerialisationOptions.None);
+        //}
     }
 
     class Program
     {
         static void Main()
         {
-            var t = new TestBenchmark();
-
-            t.Setup();
-            t.BinaryFormatter();
-            t.NewtonsoftJson();
-            t.ABSave();
-            t.WhoaTest();
-            t.ABSaveResult.Close();
-            t.NewtonsoftJsonResult.Close();
-
-            //BenchmarkRunner.Run<TestBenchmark>();
+            //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(new string[0], new DebugInProcessConfig());
+            BenchmarkRunner.Run<TestBenchmark>();
             Console.ReadLine();
         }
     }

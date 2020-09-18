@@ -47,7 +47,7 @@ namespace ABSoftware.ABSave
 
         #endregion
 
-        public static bool HasInterface(Type toCheck, Type theInterface)
+        internal static bool HasInterface(Type toCheck, Type theInterface)
         {
             var interfaces = toCheck.GetInterfaces();
 
@@ -56,6 +56,11 @@ namespace ABSoftware.ABSave
                     return true;
 
             return false;
+        }
+
+        internal static bool ContainsZeroByte(uint l)
+        {
+            return ((l - 0x01010101L) & ~l & 0x80808080L) > 0;
         }
     }
 }

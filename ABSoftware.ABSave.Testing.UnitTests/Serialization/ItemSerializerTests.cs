@@ -17,7 +17,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteNullAttribute();
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -57,7 +57,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteDifferentTypeAttribute();
             TypeTypeConverter.Instance.SerializeClosedType(typeof(ReferenceTypeSub), expected);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -68,9 +68,9 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteMatchingTypeAttribute();
-            expected.WriteText("abcd");
+            expected.WriteString("abcd");
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -82,7 +82,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteSingle(1234f);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -95,7 +95,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteMatchingTypeAttribute();
             expected.WriteInt32(0);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
 
         [TestMethod]
@@ -107,7 +107,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(0);
 
-            WriterComparer.Compare(expected, actual);
+            TestUtilities.Compare(expected, actual);
         }
     }
 }

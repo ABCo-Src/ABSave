@@ -16,7 +16,7 @@ namespace ABSoftware.ABSave
             writer.WriteInt32((uint)info.Length);
             for (int i = 0; i < info.Length; i++)
             {
-                writer.WriteText(info[i].Name);
+                writer.WriteString(info[i].Name);
                 ABSaveItemConverter.SerializeWithAttribute(info[i].GetValue(obj), info[i].FieldType, writer);
             }
         }
@@ -27,7 +27,7 @@ namespace ABSoftware.ABSave
             
             for (int i = 0; i < item.NumberOfItems; i++)
             {
-                writer.WriteText(item.Items[i].Name);
+                writer.WriteString(item.Items[i].Name);
 
                 if (item.Items[i].UseReflection)
                 {

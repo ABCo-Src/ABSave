@@ -93,13 +93,65 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
+        public unsafe void WriteUTF8_NullTerminated()
+        {
+            var expectedRes = new byte[] { 65, 66, 67, 1, 68, 69, 70, 0 };
+
+            InitWriter(new ABSaveSettings().SetTextMode(TextMode.NullTerminatedUTF8));
+            _writer.WriteString("ABC\u0001DEF");
+            TestBytes(expectedRes);
+        }
+
+        [TestMethod]
+        public unsafe void WriteUTF8_NullTerminated_Large()
+        {
+            var expectedRes = new byte[] { 65, 66, 67, 1, 68, 69, 70, 0 };
+
+            InitWriter(new ABSaveSettings().SetTextMode(TextMode.NullTerminatedUTF8));
+            _writer.WriteString("ABC\u0001DEF");
+            TestBytes(expectedRes);
+        }
+
+        [TestMethod]
+        public unsafe void WriteUTF8_NullTerminated_ContainsNullCharacters()
+        {
+            var expectedRes = new byte[] { 65, 66, 67, 68, 0xC0, 0x80, 69, 70, 0 };
+
+            InitWriter(new ABSaveSettings().SetTextMode(TextMode.NullTerminatedUTF8));
+            _writer.WriteString("ABCD\0EF");
+            TestBytes(expectedRes);
+        }
+
+        [TestMethod]
+        public unsafe void WriteUTF8()
+        {
+            var testStr = "ABC\u0001DEF";
+            var expectedRes = new byte[] { 7, 0, 0, 0, 65, 66, 67, 1, 68, 69, 70 };
+
+            InitWriter(new ABSaveSettings().SetTextMode(TextMode.UTF8));
+            _writer.WriteString(testStr);
+            TestBytes(expectedRes);
+
+            InitWriter(new ABSaveSettings().SetTextMode(TextMode.UTF8));
+            _writer.WriteCharArray(testStr.ToCharArray());
+            TestBytes(expectedRes);
+        }
+
+        [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public unsafe void WriteText(bool reversed)
+        public unsafe void WriteUTF16(bool reversed)
         {
-            InitWriter(reversed);
-            _writer.WriteText("ABC\u0001DEF");
-            TestBytes(GetBytes(7, reversed).Concat(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70)));
+            var testStr = "ABC\u0001DEF";
+            var expectedRes = GetBytes(7, reversed).Concat(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70));
+
+            InitWriter(new ABSaveSettings().SetTextMode(TextMode.UTF16).SetUseLittleEndian(reversed ? !BitConverter.IsLittleEndian : BitConverter.IsLittleEndian));
+            _writer.WriteString(testStr);
+            TestBytes(expectedRes);
+
+            InitWriter(new ABSaveSettings().SetTextMode(TextMode.UTF16).SetUseLittleEndian(reversed ? !BitConverter.IsLittleEndian : BitConverter.IsLittleEndian));
+            _writer.WriteCharArray(testStr.ToCharArray());
+            TestBytes(expectedRes);
         }
 
         [TestMethod]
@@ -135,32 +187,6 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
                 Array.Copy(GetBytes(parts[i], reversed).ToArray(), 0, bits, i * 4, 4);
 
             TestBytes(bits);
-        }
-
-        [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Combo(bool reversed)
-        {
-            InitWriter(reversed);
-
-            var arr = GenerateByteArr(600);
-
-            _writer.WriteByte(9);
-            _writer.WriteByte(48);
-            _writer.WriteByteArray(arr, false);
-            _writer.WriteText("ABC\u0001DEF");
-
-            var expected = new List<byte>()
-            {
-                9, 48
-            };
-
-            expected.AddRange(arr);
-            expected.AddRange(GetBytes(7, reversed));
-            expected.AddRange(GetBytesOfShorts(reversed, 65, 66, 67, 1, 68, 69, 70));
-
-            TestBytes(expected);
         }
 
         #region Helpers
@@ -199,26 +225,6 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
                 bytes.CopyTo(res, i * 2);
             }
-            return res;
-        }
-
-        public string RepeatString(string str, int noIterations)
-        {
-            char[] ch = new char[str.Length * noIterations];
-
-            for (int i = 0; i < noIterations; i++)
-                str.CopyTo(0, ch, i * str.Length, str.Length);
-
-            return new string(ch);
-        }
-
-        public byte[] RepeatBytes(byte[] shorts, int noIterations)
-        {
-            byte[] res = new byte[shorts.Length * noIterations];
-
-            for (int i = 0; i < noIterations; i++)
-                shorts.CopyTo(res, i * shorts.Length);
-
             return res;
         }
 
