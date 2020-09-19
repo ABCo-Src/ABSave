@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
@@ -29,7 +30,8 @@ namespace ABSoftware.ABSave.Converters
             { typeof(string), StringTypeConverter.Instance },
             { typeof(Version), VersionTypeConverter.Instance },
             { typeof(DateTime), DateTimeTypeConverter.Instance },
-            { typeof(TimeSpan), TimeSpanTypeConverter.Instance }
+            { typeof(TimeSpan), TimeSpanTypeConverter.Instance },
+            { typeof(DictionaryEntry), DictionaryEntryConverter.Instance }
         };
 
         internal static List<ABSaveTypeConverter> BuiltInNonExact = new List<ABSaveTypeConverter>()

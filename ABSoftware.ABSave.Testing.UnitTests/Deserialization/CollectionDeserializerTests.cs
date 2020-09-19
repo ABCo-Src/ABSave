@@ -174,10 +174,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
             CollectionAssert.AreEqual(expected, actual);
         }
 
+
         [TestMethod]
         public void DeserializeIList_NonGeneric_Map()
         {
-            var map = new CollectionMapItem(false, typeof(int), () => new NonGenericIListWrapper(), new TypeConverterMapItem(false, NumberTypeConverter.Instance));
+            var map = new CollectionMapItem(false, typeof(int), CollectionInfo.NonGenericIList, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
             var memoryStream = new MemoryStream();
             var writer = new ABSaveWriter(memoryStream, new ABSaveSettings());
 
@@ -188,6 +189,40 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
             memoryStream.Position = 0;
             var reader = new ABSaveReader(memoryStream, new ABSaveSettings());
             var actual = (ArrayList)map.Deserialize(typeof(ArrayList), reader);
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void DeserializeIDictionary_Generic()
+        {
+            var memoryStream = new MemoryStream();
+            var writer = new ABSaveWriter(memoryStream, new ABSaveSettings());
+
+            var expected = new Dictionary<string, int>() { { "First", 1 }, { "Second", 2 } };
+
+            CollectionTypeConverter.Instance.Serialize(expected, typeof(Dictionary<string, int>), writer);
+
+            memoryStream.Position = 0;
+            var reader = new ABSaveReader(memoryStream, new ABSaveSettings());
+            var actual = (Dictionary<string, int>)CollectionTypeConverter.Instance.Deserialize(typeof(Dictionary<string, int>), reader);
+
+            CollectionAssert.AreEqual(expected, actual);
+        }
+
+        [TestMethod]
+        public void DeserializeIDictionary_NonGeneric()
+        {
+            var memoryStream = new MemoryStream();
+            var writer = new ABSaveWriter(memoryStream, new ABSaveSettings());
+
+            var expected = new Hashtable() { { "First", 1 }, { "Second", 2 } };
+
+            CollectionTypeConverter.Instance.Serialize(expected, typeof(Hashtable), writer);
+
+            memoryStream.Position = 0;
+            var reader = new ABSaveReader(memoryStream, new ABSaveSettings());
+            var actual = (Hashtable)CollectionTypeConverter.Instance.Deserialize(typeof(Hashtable), reader);
 
             CollectionAssert.AreEqual(expected, actual);
         }

@@ -21,11 +21,8 @@ namespace ABSoftware.ABSave.Converters
 
             dynamic pair = (dynamic)obj;
 
-            var keyVal = pair.Key;
-            ABSaveItemConverter.SerializeWithAttribute(keyVal, keySpecifiedType, writer);
-
-            var valueVal = pair.Value;
-            ABSaveItemConverter.SerializeWithAttribute(valueVal, valueSpecifiedType, writer);
+            ABSaveItemConverter.SerializeWithAttribute(pair.Key, keySpecifiedType, writer);
+            ABSaveItemConverter.SerializeWithAttribute(pair.Value, valueSpecifiedType, writer);
         }
 
         public override object Deserialize(Type type, ABSaveReader reader)

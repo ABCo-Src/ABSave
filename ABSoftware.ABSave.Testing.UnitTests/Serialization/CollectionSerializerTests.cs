@@ -29,7 +29,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -49,7 +49,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             ABSaveObjectConverter.Serialize(arr[0], typeof(SimpleStruct), expected);
             ABSaveObjectConverter.Serialize(arr[1], typeof(SimpleStruct), expected);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -69,7 +69,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             ABSaveItemConverter.SerializeWithAttribute(so[0], typeof(SimpleClass), expected);
             ABSaveItemConverter.SerializeWithAttribute(so[1], typeof(SimpleClass), expected);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -97,7 +97,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -119,7 +119,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -149,7 +149,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -168,7 +168,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -182,28 +182,19 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(4);
+            ABSaveItemConverter.SerializeWithAttribute(1, typeof(int), typeof(object), expected);
+            ABSaveItemConverter.SerializeWithAttribute(2, typeof(int), typeof(object), expected);
+            ABSaveItemConverter.SerializeWithAttribute(3, typeof(int), typeof(object), expected);
+            ABSaveItemConverter.SerializeWithAttribute(4, typeof(int), typeof(object), expected);
 
-            ABSaveItemConverter.SerializeAttribute(1, typeof(int), typeof(object), expected);
-            expected.WriteInt32(1);
-
-            ABSaveItemConverter.SerializeAttribute(2, typeof(int), typeof(object), expected);
-            expected.WriteInt32(2);
-
-            ABSaveItemConverter.SerializeAttribute(3, typeof(int), typeof(object), expected);
-            expected.WriteInt32(3);
-
-            ABSaveItemConverter.SerializeAttribute(4, typeof(int), typeof(object), expected);
-            expected.WriteInt32(4);
-
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
         public void SerializeIList_NonGeneric_Map()
         {
-            var map = new CollectionMapItem(false, typeof(int), () => new NonGenericIListWrapper(), new TypeConverterMapItem(false, NumberTypeConverter.Instance));
+            var map = new CollectionMapItem(false, typeof(int), CollectionInfo.NonGenericIList, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            var arrType = typeof(ArrayList);
 
             map.Serialize(new ArrayList() { 1, 2, 3, 4 }, typeof(ArrayList), actual);
 
@@ -214,7 +205,26 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
+        }
+
+        [TestMethod]
+        public void SerializeIDictionary_Generic()
+        {
+            var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
+            var arrType = typeof(Dictionary<string, int>);
+
+            Assert.IsTrue(CollectionTypeConverter.Instance.CheckCanConvertType(arrType));
+            CollectionTypeConverter.Instance.Serialize(new Dictionary<string, int>() { { "First", 1 }, { "Second", 2 } }, arrType, actual);
+
+            var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
+            expected.WriteInt32(2);
+            ABSaveItemConverter.SerializeWithAttribute("First", typeof(string), expected);
+            ABSaveItemConverter.SerializeWithAttribute(1, typeof(int), expected);
+            ABSaveItemConverter.SerializeWithAttribute("Second", typeof(string), expected);
+            ABSaveItemConverter.SerializeWithAttribute(2, typeof(int), expected);
+
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -233,7 +243,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(3);
             expected.WriteInt32(4);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
     }
 }

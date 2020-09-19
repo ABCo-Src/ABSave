@@ -22,7 +22,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteString("Inside");
             expected.WriteInt32(12);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -48,7 +48,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteString("Itm3");
             ABSaveItemConverter.SerializeWithAttribute("abc", typeof(string), expected);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -78,7 +78,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteString("Itm3");
             ABSaveItemConverter.SerializeWithAttribute("def", typeof(string), expected);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -108,7 +108,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteString("Itm3");
             ABSaveItemConverter.SerializeWithAttribute("ghi", typeof(string), expected);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
     }
 }

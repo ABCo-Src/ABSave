@@ -6,7 +6,7 @@ namespace ABSoftware.ABSave.Converters
 {
     public class AssemblyTypeConverter : ABSaveTypeConverter
     {
-        public static AssemblyTypeConverter Instance = new AssemblyTypeConverter();
+        public readonly static AssemblyTypeConverter Instance = new AssemblyTypeConverter();
         private AssemblyTypeConverter() { }
 
         public override bool HasExactType => false;

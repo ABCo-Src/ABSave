@@ -7,43 +7,36 @@ using System.Collections.Generic;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public enum CollectionType
-    {
-        Array,
-        GenericICollections,
-        NonGenericIList,
-        None
-    }
-
     public class CollectionTypeConverter : ABSaveTypeConverter
     {
         public readonly static CollectionTypeConverter Instance = new CollectionTypeConverter();
         private CollectionTypeConverter() { }
 
         public override bool HasExactType => false;
-        public override bool CheckCanConvertType(Type type) => type.IsArray || ABSaveUtils.HasInterface(type, typeof(IEnumerable));
+        public override bool CheckCanConvertType(Type type) => typeof(IEnumerable).IsAssignableFrom(type);
 
         #region Serialization
 
         public override void Serialize(object obj, Type type, ABSaveWriter writer)
         {
-            var wrapper = GetCollectionWrapper(type);
-            SerializeWrapper(obj, wrapper, wrapper.ElementType, writer, null);
+            var info = GetCollectionInfo(type, out Type elementType);
+            SerializeWrapper(obj, info, elementType, writer, null);
         }
 
-        public void Serialize(object obj, ABSaveWriter writer, CollectionMapItem map) => SerializeWrapper(obj, map.CreateWrapper(), map.ElementType, writer, map);
+        public void Serialize(object obj, ABSaveWriter writer, CollectionMapItem map) => SerializeWrapper(obj, map.Info, map.ElementType, writer, map);
 
-        void SerializeWrapper(object obj, ICollectionWrapper wrapper, Type itemType, ABSaveWriter writer, CollectionMapItem map)
+        void SerializeWrapper(object obj, CollectionInfo info, Type itemType, ABSaveWriter writer, CollectionMapItem map)
         {
-            wrapper.SetCollection(obj);
+            var enumerable = (IEnumerable)obj;
 
             var perItem = CollectionHelpers.GetSerializeCorrectPerItemOperation(itemType, writer.Settings, map?.AreElementsSameType);
+            var perItemMap = map?.PerItem;
 
-            var size = wrapper.Count;
+            var size = info.GetCount(obj);
             writer.WriteInt32((uint)size);
 
-            foreach (object item in wrapper)
-                perItem(item, itemType, writer, map?.PerItem);
+            foreach (object item in enumerable)
+                perItem(item, itemType, writer, perItemMap);
         }
 
         #endregion
@@ -52,20 +45,21 @@ namespace ABSoftware.ABSave.Converters
 
         public override object Deserialize(Type type, ABSaveReader reader) 
         {
-            var wrapper = GetCollectionWrapper(type);
-            return DeserializeWrapper(wrapper, type, wrapper.ElementType, reader, null);
+            var info = GetCollectionInfo(type, out Type elementType);
+            return DeserializeWrapper(info, type, elementType, reader, null);
         }
-        public object Deserialize(Type type, ABSaveReader reader, CollectionMapItem map) => DeserializeWrapper(map.CreateWrapper(), type, map.ElementType, reader, map);
+        public object Deserialize(Type type, ABSaveReader reader, CollectionMapItem map) => DeserializeWrapper(map.Info, type, map.ElementType, reader, map);
 
-        object DeserializeWrapper(ICollectionWrapper wrapper, Type type, Type itemType, ABSaveReader reader, CollectionMapItem map)
+        object DeserializeWrapper(CollectionInfo info, Type type, Type itemType, ABSaveReader reader, CollectionMapItem map)
         {
             var size = (int)reader.ReadInt32();
-            var collection = wrapper.CreateCollection(size, type);
+            var collection = info.CreateCollection(type, size);
 
             var perItem = CollectionHelpers.GetDeserializeCorrectPerItemOperation(itemType, reader.Settings, map?.PerItem);
+            var perItemMap = map?.PerItem;
 
             for (int i = 0; i < size; i++)
-                wrapper.AddItem(perItem(itemType, reader, map?.PerItem));
+                info.AddItem(collection, perItem(itemType, reader, perItemMap));
 
             return collection;
         }
@@ -74,24 +68,97 @@ namespace ABSoftware.ABSave.Converters
 
         #region Helpers
 
-        internal ICollectionWrapper GetCollectionWrapper(Type type)
+        internal CollectionInfo GetCollectionInfo(Type type, out Type elementType)
         {
-            var interfaces = type.GetInterfaces();
-            var detectedType = CollectionType.None;
+            DetectedType detectedType = DetectCollectionType(type.GetInterfaces(), new DetectedType(CollectionCategory.None, null));
 
+            // Get the correct info for the given type.
+            switch (detectedType.TypeCategory)
+            {
+                case CollectionCategory.GenericICollection:
+                    elementType = detectedType.FullType.GetGenericArguments()[0];
+                    return CollectionInfo.GenericICollection;
+
+                case CollectionCategory.NonGenericIList:
+                    elementType = typeof(object);
+                    return CollectionInfo.NonGenericIList;
+
+                case CollectionCategory.GenericIDictionary:
+                    elementType = type.GetInterface(typeof(IEnumerable<>).Name).GetGenericArguments()[0]; // Consider optimizing?
+                    return CollectionInfo.GenericIDictionary;
+
+                case CollectionCategory.NonGenericIDictionary:
+                    elementType = typeof(DictionaryEntry);
+                    return CollectionInfo.NonGenericIDictionary;
+
+                default:
+                    throw new ABSaveUnrecognizedCollectionException();
+            }
+        }
+
+        static DetectedType DetectCollectionType(Type[] interfaces, DetectedType detectedType)
+        {
             for (int i = 0; i < interfaces.Length; i++)
             {
-                // Determine whether it's a generic ICollection or just an IList.
-                if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == typeof(ICollection<>))
-                    return (ICollectionWrapper)Activator.CreateInstance(typeof(GenericICollectionWrapper<>).MakeGenericType(interfaces[i].GetGenericArguments()[0]));
+                switch (detectedType.TypeCategory)
+                {
+                    case CollectionCategory.NonGenericIDictionary:
 
-                else if (interfaces[i] == typeof(IList)) detectedType = CollectionType.NonGenericIList;
+                        if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == typeof(IDictionary<,>)) return new DetectedType(CollectionCategory.GenericIDictionary, interfaces[i]);
+
+                        break;
+
+                    case CollectionCategory.GenericICollection:
+
+                        if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == typeof(IDictionary<,>)) return new DetectedType(CollectionCategory.GenericIDictionary, interfaces[i]);
+                        else if (interfaces[i] == typeof(IDictionary)) detectedType = new DetectedType(CollectionCategory.NonGenericIDictionary, interfaces[i]);
+
+                        break;
+
+                    case CollectionCategory.None:
+
+                        if (!interfaces[i].IsGenericType && interfaces[i] == typeof(IList)) detectedType = new DetectedType(CollectionCategory.NonGenericIList, interfaces[i]);
+                        else goto case CollectionCategory.NonGenericIList;
+
+                        break;
+
+                    case CollectionCategory.NonGenericIList:
+
+                        if (interfaces[i].IsGenericType)
+                        {
+                            var gtd = interfaces[i].GetGenericTypeDefinition();
+
+                            if (gtd == typeof(ICollection<>)) detectedType = new DetectedType(CollectionCategory.GenericICollection, interfaces[i]);
+                            else if (gtd == typeof(IDictionary<,>)) return new DetectedType(CollectionCategory.GenericIDictionary, interfaces[i]);
+                        }
+                        else if (interfaces[i] == typeof(IDictionary)) detectedType = new DetectedType(CollectionCategory.NonGenericIDictionary, interfaces[i]);
+
+                        break;
+                }
             }
 
-            if (detectedType == CollectionType.NonGenericIList)
-                return new NonGenericIListWrapper();
+            return detectedType;
+        }
 
-            throw new ABSaveUnrecognizedCollectionException();
+        struct DetectedType
+        {
+            public CollectionCategory TypeCategory;
+            public Type FullType;
+
+            public DetectedType(CollectionCategory typeCategory, Type fullType)
+            {
+                TypeCategory = typeCategory;
+                FullType = fullType;
+            }
+        }
+
+        enum CollectionCategory
+        {
+            GenericIDictionary,
+            NonGenericIDictionary,
+            GenericICollection,
+            NonGenericIList,
+            None
         }
 
         #endregion

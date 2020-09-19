@@ -10,7 +10,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
 {
     public static class TestUtilities
     {
-        public static void Compare(ABSaveWriter expected, ABSaveWriter actual)
+        public static void CompareWriters(ABSaveWriter expected, ABSaveWriter actual)
         {
             CollectionAssert.AreEqual(((MemoryStream)expected.Output).ToArray(), ((MemoryStream)actual.Output).ToArray());
         }

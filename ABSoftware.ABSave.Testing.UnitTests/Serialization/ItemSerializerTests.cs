@@ -17,7 +17,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteNullAttribute();
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -57,7 +57,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteDifferentTypeAttribute();
             TypeTypeConverter.Instance.SerializeClosedType(typeof(ReferenceTypeSub), expected);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -70,7 +70,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteMatchingTypeAttribute();
             expected.WriteString("abcd");
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -82,7 +82,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteSingle(1234f);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -95,7 +95,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteMatchingTypeAttribute();
             expected.WriteInt32(0);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
 
         [TestMethod]
@@ -107,7 +107,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(0);
 
-            TestUtilities.Compare(expected, actual);
+            TestUtilities.CompareWriters(expected, actual);
         }
     }
 }

@@ -6,20 +6,18 @@ using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
-using Whoa;
 
 namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
     [Serializable]
     public class Planet
     {
-        [Order(0)]
         public string PlanetName = "Earth";
 
-        [Order(1)]
         public Person[] People = new Person[]
         {
             new Person(),
@@ -27,7 +25,6 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             new Person()
         };
 
-        [Order(2)]
         public City[] Towns = new City[]
         {
             new City(),
@@ -38,13 +35,10 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
     [Serializable]
     public class Person
     {
-        [Order(0)]
         public string Name = "Alex";
 
-        [Order(1)]
         public int Age = 15;
 
-        [Order(2)]
         public string[] Hobbies = new string[]
         {
             "Programming",
@@ -55,11 +49,9 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
     [Serializable]
     public class City
     {
-        [Order(0)]
         public string Name = "ABTown";
 
-        [Order(1)]
-        public List<Building> Buildings = new List<Building>
+        public List<Building> Buildings = new List<Building>()
         {
             new Building(),
             new Building()
@@ -69,10 +61,8 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
     [Serializable]
     public class Building
     {
-        [Order(0)]
         public string Name = "ABBuilding";
 
-        [Order(1)]
         public Size BuildingSize = new Size()
         {
             Width = 25196.16161d,
@@ -92,9 +82,8 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         public MemoryStream ABSaveResult;
         public MemoryStream NewtonsoftJsonResult;
         public MemoryStream FormatterResult;
-        public MemoryStream WhoaResult;
         public Planet TestObj;
-        public ABSaveSettings Settings = ABSaveSettings.PrioritizePerformance;
+        public ABSaveSettings Settings = ABSaveSettings.PrioritizeSize;
 
         [GlobalSetup]
         public void Setup()
@@ -102,17 +91,23 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             ABSaveResult = new MemoryStream();
             NewtonsoftJsonResult = new MemoryStream();
             FormatterResult = new MemoryStream();
-            WhoaResult = new MemoryStream();
             TestObj = new Planet();
         }
 
         [GlobalCleanup]
         public void End()
         {
+            //if (ABSaveResult.Length > 0)
+            //    File.WriteAllBytes("absave_data", ABSaveResult.ToArray());
+
+            //if (NewtonsoftJsonResult.Length > 0)
+            //    File.WriteAllBytes("json_data", NewtonsoftJsonResult.ToArray());
+
             Console.WriteLine(ABSaveResult.Length);
             Console.WriteLine(NewtonsoftJsonResult.Length);
             Console.WriteLine(FormatterResult.Length);
-            Console.WriteLine(WhoaResult.Length);
+            ABSaveResult.Close();
+            NewtonsoftJsonResult.Close();
         }
 
         //[Benchmark]
@@ -127,20 +122,23 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         public void ABSave()
         {
             ABSaveResult.Position = 0;
+
             var writer = new ABSaveWriter(ABSaveResult, Settings);
             ABSaveObjectConverter.Serialize(TestObj, typeof(Planet), writer);
+            //var reader = new ABSaveReader(ABSaveResult, Settings);
+            //return (Planet)ABSaveObjectConverter.Deserialize(typeof(Planet), reader);
         }
 
-        [Benchmark]
+        [Benchmark(Baseline = true)]
         public void NewtonsoftJson()
         {
             NewtonsoftJsonResult.Position = 0;
             JsonSerializer serializer = new JsonSerializer();
 
-            using StreamWriter sw = new StreamWriter(NewtonsoftJsonResult, Encoding.UTF8, 1024, true);
-            using JsonWriter writer = new JsonTextWriter(sw);
+            using StreamWriter sr = new StreamWriter(NewtonsoftJsonResult, Encoding.UTF8, 1024, true);
+            using JsonWriter writer = new JsonTextWriter(sr);
 
-            serializer.Serialize(writer, TestObj);
+            serializer.Serialize(writer, TestObj, typeof(Planet));
         }
 
         //[Benchmark]
@@ -156,7 +154,15 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         static void Main()
         {
             //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(new string[0], new DebugInProcessConfig());
-            BenchmarkRunner.Run<TestBenchmark>();
+            //BenchmarkRunner.Run<TestBenchmark>();
+            var t = new TestBenchmark();
+            t.Setup();
+
+            Debugger.Break();
+            t.ABSave();
+            Debugger.Break();
+
+            t.End();
             Console.ReadLine();
         }
     }

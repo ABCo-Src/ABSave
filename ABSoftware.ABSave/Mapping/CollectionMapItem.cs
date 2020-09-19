@@ -7,15 +7,15 @@ namespace ABSoftware.ABSave.Mapping
 {
     public class CollectionMapItem : ABSaveMapItem
     {
-        public Func<ICollectionWrapper> CreateWrapper;
         public ABSaveMapItem PerItem;
+        public CollectionInfo Info;
 
         public Type ElementType;
         public bool AreElementsSameType;
 
-        public CollectionMapItem(bool canBeNull, Type elementType, Func<ICollectionWrapper> createWrapper, ABSaveMapItem perItem) : base(canBeNull)
+        public CollectionMapItem(bool canBeNull, Type elementType, CollectionInfo info, ABSaveMapItem perItem) : base(canBeNull)
         {
-            CreateWrapper = createWrapper;
+            Info = info;
             ElementType = elementType;
             PerItem = perItem;
         }
