@@ -64,7 +64,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_ExactTypeConverter()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeWithAttribute("abcd", typeof(string), actual);
+            ABSaveItemConverter.Serialize("abcd", typeof(string), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteMatchingTypeAttribute();
@@ -77,7 +77,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_NonExactTypeConverter()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeWithAttribute(1234f, typeof(float), actual);
+            ABSaveItemConverter.Serialize(1234f, typeof(float), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteSingle(1234f);
@@ -89,7 +89,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_ReferenceTypeObject()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeWithAttribute(new ReferenceTypeSub(), typeof(ReferenceTypeSub), actual);
+            ABSaveItemConverter.Serialize(new ReferenceTypeSub(), typeof(ReferenceTypeSub), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteMatchingTypeAttribute();
@@ -102,7 +102,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         public void SerializeItem_ValueTypeObject()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            ABSaveItemConverter.SerializeWithAttribute(new ValueTypeObj(), typeof(ValueTypeObj), actual);
+            ABSaveItemConverter.Serialize(new ValueTypeObj(), typeof(ValueTypeObj), actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(0);

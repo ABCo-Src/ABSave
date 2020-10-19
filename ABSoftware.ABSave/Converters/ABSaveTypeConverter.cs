@@ -39,7 +39,7 @@ namespace ABSoftware.ABSave.Converters
             AssemblyTypeConverter.Instance,
             TypeTypeConverter.Instance,
             KeyValueConverter.Instance,
-            CollectionTypeConverter.Instance,
+            EnumerableTypeConverter.Instance,
             ArrayTypeConverter.Instance,
             NumberTypeConverter.Instance
         };

@@ -17,8 +17,8 @@ namespace ABSoftware.ABSave.Converters
         {
             var pair = (DictionaryEntry)obj;
 
-            ABSaveItemConverter.SerializeWithAttribute(pair.Key, typeof(object), writer);
-            ABSaveItemConverter.SerializeWithAttribute(pair.Value, typeof(object), writer);
+            ABSaveItemConverter.Serialize(pair.Key, typeof(object), writer);
+            ABSaveItemConverter.Serialize(pair.Value, typeof(object), writer);
         }
         public override object Deserialize(Type type, ABSaveReader reader)
         {

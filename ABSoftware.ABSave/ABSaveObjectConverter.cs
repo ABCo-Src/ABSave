@@ -17,7 +17,7 @@ namespace ABSoftware.ABSave
             for (int i = 0; i < info.Length; i++)
             {
                 writer.WriteString(info[i].Name);
-                ABSaveItemConverter.SerializeWithAttribute(info[i].GetValue(obj), info[i].FieldType, writer);
+                ABSaveItemConverter.Serialize(info[i].GetValue(obj), info[i].FieldType, writer);
             }
         }
 

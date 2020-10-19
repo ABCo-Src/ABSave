@@ -66,8 +66,8 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteByte(0);
             expected.WriteInt32(2);
-            ABSaveItemConverter.SerializeWithAttribute(so[0], typeof(SimpleClass), expected);
-            ABSaveItemConverter.SerializeWithAttribute(so[1], typeof(SimpleClass), expected);
+            ABSaveItemConverter.Serialize(so[0], typeof(SimpleClass), expected);
+            ABSaveItemConverter.Serialize(so[1], typeof(SimpleClass), expected);
 
             TestUtilities.CompareWriters(expected, actual);
         }
@@ -153,13 +153,13 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         }
 
         [TestMethod]
-        public void SerializeICollection_Generic()
+        public void SerializeIDictionary_Generic()
         {
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             var arrType = typeof(Dictionary<int, int>);
 
-            Assert.IsTrue(CollectionTypeConverter.Instance.CheckCanConvertType(arrType));
-            CollectionTypeConverter.Instance.Serialize(new Dictionary<int, int>() { { 1, 2 }, { 3, 4 } }, arrType, actual);
+            Assert.IsTrue(EnumerableTypeConverter.Instance.CheckCanConvertType(arrType));
+            EnumerableTypeConverter.Instance.Serialize(new Dictionary<int, int>() { { 1, 2 }, { 3, 4 } }, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(2);
@@ -177,15 +177,15 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             var arrType = typeof(ArrayList);
 
-            Assert.IsTrue(CollectionTypeConverter.Instance.CheckCanConvertType(arrType));
-            CollectionTypeConverter.Instance.Serialize(new ArrayList() { 1, 2, 3, 4 }, arrType, actual);
+            Assert.IsTrue(EnumerableTypeConverter.Instance.CheckCanConvertType(arrType));
+            EnumerableTypeConverter.Instance.Serialize(new ArrayList() { 1, 2, 3, 4 }, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             expected.WriteInt32(4);
-            ABSaveItemConverter.SerializeWithAttribute(1, typeof(int), typeof(object), expected);
-            ABSaveItemConverter.SerializeWithAttribute(2, typeof(int), typeof(object), expected);
-            ABSaveItemConverter.SerializeWithAttribute(3, typeof(int), typeof(object), expected);
-            ABSaveItemConverter.SerializeWithAttribute(4, typeof(int), typeof(object), expected);
+            ABSaveItemConverter.Serialize(1, typeof(int), typeof(object), expected);
+            ABSaveItemConverter.Serialize(2, typeof(int), typeof(object), expected);
+            ABSaveItemConverter.Serialize(3, typeof(int), typeof(object), expected);
+            ABSaveItemConverter.Serialize(4, typeof(int), typeof(object), expected);
 
             TestUtilities.CompareWriters(expected, actual);
         }
@@ -193,7 +193,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [TestMethod]
         public void SerializeIList_NonGeneric_Map()
         {
-            var map = new CollectionMapItem(false, typeof(int), CollectionInfo.NonGenericIList, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
+            var map = new CollectionMapItem(false, typeof(int), ABSaveCollectionInfo.NonGenericIList, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
 
             map.Serialize(new ArrayList() { 1, 2, 3, 4 }, typeof(ArrayList), actual);
@@ -204,25 +204,6 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteInt32(2);
             expected.WriteInt32(3);
             expected.WriteInt32(4);
-
-            TestUtilities.CompareWriters(expected, actual);
-        }
-
-        [TestMethod]
-        public void SerializeIDictionary_Generic()
-        {
-            var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            var arrType = typeof(Dictionary<string, int>);
-
-            Assert.IsTrue(CollectionTypeConverter.Instance.CheckCanConvertType(arrType));
-            CollectionTypeConverter.Instance.Serialize(new Dictionary<string, int>() { { "First", 1 }, { "Second", 2 } }, arrType, actual);
-
-            var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
-            expected.WriteInt32(2);
-            ABSaveItemConverter.SerializeWithAttribute("First", typeof(string), expected);
-            ABSaveItemConverter.SerializeWithAttribute(1, typeof(int), expected);
-            ABSaveItemConverter.SerializeWithAttribute("Second", typeof(string), expected);
-            ABSaveItemConverter.SerializeWithAttribute(2, typeof(int), expected);
 
             TestUtilities.CompareWriters(expected, actual);
         }

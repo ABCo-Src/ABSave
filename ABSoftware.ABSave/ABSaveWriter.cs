@@ -123,7 +123,7 @@ namespace ABSoftware.ABSave
             // NOTE: There are reasons why we aren't working with 8 bytes. Not only would the library have to be re-compiled for every platform on release (unless we do a runtime check for 64-bit),
             // but when there are null characters, checking 8 bytes can actually be slower, as it has to manually iterate over all bytes in that much bigger 8-byte chunk
             // up towards that null character. That being said, it's possible that null handling can be optimized (it checks in smaller chunks 
-            // if it sees a 8-byte chunk contains a null byte), so it might be worth looking into if anyone has the time!
+            // if it sees a 8-byte chunk contains a null byte), so it might be worth looking into.
             while (sourceLength >= 4)
             {
                 if (ABSaveUtils.ContainsZeroByte(*(uint*)byteData))

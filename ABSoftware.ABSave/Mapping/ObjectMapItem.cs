@@ -42,17 +42,8 @@ namespace ABSoftware.ABSave.Mapping
             return AddItem(name, mapItem);
         }
 
-        public override void Serialize(object obj, Type type, ABSaveWriter writer)
-        {
-            if (SerializeNullAttribute(obj, writer)) return;
-            ABSaveObjectConverter.Serialize(obj, type, writer, this);
-        }
-
-        public override object Deserialize(Type type, ABSaveReader reader)
-        {
-            if (DeserializeNullAttribute(reader)) return null;
-            return ABSaveObjectConverter.Deserialize(type, reader, this);
-        }
+        protected override void DoSerialize(object obj, Type specifiedType, ABSaveWriter writer) => ABSaveObjectConverter.Serialize(obj, specifiedType, writer, this);
+        protected override object DoDeserialize(Type specifiedType, ABSaveReader reader) => ABSaveObjectConverter.Deserialize(specifiedType, reader, this);
     }
 
     internal class ObjectSubMapItemCustom

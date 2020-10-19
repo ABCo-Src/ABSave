@@ -38,10 +38,13 @@ namespace ABSoftware.ABSave.Converters
 
             writer.WriteInt32((uint)arr.Length);
 
-            var perItem = CollectionHelpers.GetSerializeCorrectPerItemOperation(itemType, writer.Settings, map?.AreElementsSameType);
             int endIndex = lowerBound + arr.Length;
 
-            for (int i = lowerBound; i < endIndex; i++) perItem(arr.GetValue(i), itemType, writer, map?.PerItem);
+            if (map == null)
+            {
+                var perItem = CollectionHelpers.GetSerializeCorrectPerItemOperation(itemType, writer.Settings, map?.AreElementsSameType);
+                for (int i = lowerBound; i < endIndex; i++) perItem(arr.GetValue(i), itemType, writer, map?.PerItem);
+            }
         }
 
         unsafe void SerializeMultiDimensionalArray(Array arr, Type itemType, ABSaveWriter writer, ArrayMapItem map)

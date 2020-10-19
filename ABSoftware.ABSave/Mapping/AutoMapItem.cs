@@ -8,7 +8,7 @@ namespace ABSoftware.ABSave.Mapping
     {
         public AutoMapItem() : base(false) { }
 
-        public override void Serialize(object obj, Type type, ABSaveWriter writer) => ABSaveItemConverter.SerializeWithAttribute(obj, type, writer);
-        public override object Deserialize(Type type, ABSaveReader reader) => ABSaveItemConverter.DeserializeWithAttribute(type, reader);
+        protected override void DoSerialize(object obj, Type specifiedType, ABSaveWriter writer) => ABSaveItemConverter.Serialize(obj, specifiedType, writer);
+        protected override object DoDeserialize(Type specifiedType, ABSaveReader reader) => ABSaveItemConverter.DeserializeWithAttribute(specifiedType, reader);
     }
 }

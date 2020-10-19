@@ -148,11 +148,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
 
             var expected = new Dictionary<int, int>() { { 1, 2 }, { 3, 4 } };
 
-            CollectionTypeConverter.Instance.Serialize(expected, typeof(Dictionary<int, int>), writer);
+            EnumerableTypeConverter.Instance.Serialize(expected, typeof(Dictionary<int, int>), writer);
 
             memoryStream.Position = 0;
             var reader = new ABSaveReader(memoryStream, new ABSaveSettings());
-            var actual = (Dictionary<int, int>)CollectionTypeConverter.Instance.Deserialize(typeof(Dictionary<int, int>), reader);
+            var actual = (Dictionary<int, int>)EnumerableTypeConverter.Instance.Deserialize(typeof(Dictionary<int, int>), reader);
 
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -165,11 +165,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
 
             var expected = new ArrayList() { 1, 2, 3, 4 };
 
-            CollectionTypeConverter.Instance.Serialize(expected, typeof(ArrayList), writer);
+            EnumerableTypeConverter.Instance.Serialize(expected, typeof(ArrayList), writer);
 
             memoryStream.Position = 0;
             var reader = new ABSaveReader(memoryStream, new ABSaveSettings());
-            var actual = (ArrayList)CollectionTypeConverter.Instance.Deserialize(typeof(ArrayList), reader);
+            var actual = (ArrayList)EnumerableTypeConverter.Instance.Deserialize(typeof(ArrayList), reader);
 
             CollectionAssert.AreEqual(expected, actual);
         }
@@ -178,7 +178,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
         [TestMethod]
         public void DeserializeIList_NonGeneric_Map()
         {
-            var map = new CollectionMapItem(false, typeof(int), CollectionInfo.NonGenericIList, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
+            var map = new CollectionMapItem(false, typeof(int), ABSaveCollectionInfo.NonGenericIList, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
             var memoryStream = new MemoryStream();
             var writer = new ABSaveWriter(memoryStream, new ABSaveSettings());
 
@@ -201,28 +201,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
 
             var expected = new Dictionary<string, int>() { { "First", 1 }, { "Second", 2 } };
 
-            CollectionTypeConverter.Instance.Serialize(expected, typeof(Dictionary<string, int>), writer);
+            EnumerableTypeConverter.Instance.Serialize(expected, typeof(Dictionary<string, int>), writer);
 
             memoryStream.Position = 0;
             var reader = new ABSaveReader(memoryStream, new ABSaveSettings());
-            var actual = (Dictionary<string, int>)CollectionTypeConverter.Instance.Deserialize(typeof(Dictionary<string, int>), reader);
-
-            CollectionAssert.AreEqual(expected, actual);
-        }
-
-        [TestMethod]
-        public void DeserializeIDictionary_NonGeneric()
-        {
-            var memoryStream = new MemoryStream();
-            var writer = new ABSaveWriter(memoryStream, new ABSaveSettings());
-
-            var expected = new Hashtable() { { "First", 1 }, { "Second", 2 } };
-
-            CollectionTypeConverter.Instance.Serialize(expected, typeof(Hashtable), writer);
-
-            memoryStream.Position = 0;
-            var reader = new ABSaveReader(memoryStream, new ABSaveSettings());
-            var actual = (Hashtable)CollectionTypeConverter.Instance.Deserialize(typeof(Hashtable), reader);
+            var actual = (Dictionary<string, int>)EnumerableTypeConverter.Instance.Deserialize(typeof(Dictionary<string, int>), reader);
 
             CollectionAssert.AreEqual(expected, actual);
         }
