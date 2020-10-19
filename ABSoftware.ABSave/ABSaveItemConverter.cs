@@ -12,9 +12,9 @@ namespace ABSoftware.ABSave
     /// </summary>
     public static class ABSaveItemConverter
     {
-        public static void SerializeWithAttribute(object obj, Type specifiedType, ABSaveWriter writer) => SerializeWithAttribute(obj, obj?.GetType(), specifiedType, writer);
+        public static void Serialize(object obj, Type specifiedType, ABSaveWriter writer) => Serialize(obj, obj?.GetType(), specifiedType, writer);
 
-        public static void SerializeWithAttribute(object obj, Type actualType, Type specifiedType, ABSaveWriter writer)
+        public static void Serialize(object obj, Type actualType, Type specifiedType, ABSaveWriter writer)
         {
             if (SerializeAttribute(obj, actualType, specifiedType, writer)) return;
             SerializeWithoutAttribute(obj, actualType, writer);

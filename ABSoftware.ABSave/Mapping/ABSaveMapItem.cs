@@ -17,29 +17,28 @@ namespace ABSoftware.ABSave.Mapping
 
         public ABSaveMapItem(bool canBeNull) => CanBeNull = canBeNull;
 
-        public bool SerializeNullAttribute(object obj, ABSaveWriter writer)
+        public void Serialize(object obj, Type specifiedType, ABSaveWriter writer)
         {
             if (CanBeNull)
             {
                 if (obj == null)
                 {
                     writer.WriteNullAttribute();
-                    return true;
+                    return;
                 }
-
-                writer.WriteMatchingTypeAttribute();
+                else writer.WriteMatchingTypeAttribute();
             }
 
-            return false;
+            DoSerialize(obj, specifiedType, writer);
         }
 
-        public bool DeserializeNullAttribute(ABSaveReader reader)
+        public object Deserialize(Type specifiedType, ABSaveReader reader)
         {
-            if (CanBeNull) return reader.ReadByte() == 1;
-            return false;
+            if (CanBeNull && reader.ReadByte() == 1) return null;
+            return DoDeserialize(specifiedType, reader);
         }
 
-        public abstract void Serialize(object obj, Type type, ABSaveWriter writer);
-        public abstract object Deserialize(Type type, ABSaveReader reader);
+        protected abstract void DoSerialize(object obj, Type specifiedType, ABSaveWriter writer);
+        protected abstract object DoDeserialize(Type specifiedType, ABSaveReader reader);        
     }
 }

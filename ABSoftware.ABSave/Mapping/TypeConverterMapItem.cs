@@ -10,16 +10,7 @@ namespace ABSoftware.ABSave.Mapping
         public readonly ABSaveTypeConverter TypeConverter;
         public TypeConverterMapItem(bool canBeNull, ABSaveTypeConverter typeConverter) : base(canBeNull) => TypeConverter = typeConverter;
 
-        public override void Serialize(object obj, Type type, ABSaveWriter writer)
-        {
-            if (SerializeNullAttribute(obj, writer)) return;
-            TypeConverter.Serialize(obj, type, writer);
-        }
-
-        public override object Deserialize(Type type, ABSaveReader reader)
-        {
-            if (DeserializeNullAttribute(reader)) return null;
-            return TypeConverter.Deserialize(type, reader);
-        }
+        protected override void DoSerialize(object obj, Type specifiedType, ABSaveWriter writer) => TypeConverter.Serialize(obj, specifiedType, writer);
+        protected override object DoDeserialize(Type specifiedType, ABSaveReader reader) => TypeConverter.Deserialize(specifiedType, reader);
     }
 }

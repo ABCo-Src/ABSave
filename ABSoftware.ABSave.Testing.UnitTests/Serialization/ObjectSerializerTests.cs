@@ -46,7 +46,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteString("Itm2");
             expected.WriteInt32(12);
             expected.WriteString("Itm3");
-            ABSaveItemConverter.SerializeWithAttribute("abc", typeof(string), expected);
+            ABSaveItemConverter.Serialize("abc", typeof(string), expected);
 
             TestUtilities.CompareWriters(expected, actual);
         }
@@ -76,7 +76,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteString("Itm2");
             expected.WriteInt32(3863);
             expected.WriteString("Itm3");
-            ABSaveItemConverter.SerializeWithAttribute("def", typeof(string), expected);
+            ABSaveItemConverter.Serialize("def", typeof(string), expected);
 
             TestUtilities.CompareWriters(expected, actual);
         }
@@ -106,7 +106,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             expected.WriteString("Itm2");
             expected.WriteInt32(1234);
             expected.WriteString("Itm3");
-            ABSaveItemConverter.SerializeWithAttribute("ghi", typeof(string), expected);
+            ABSaveItemConverter.Serialize("ghi", typeof(string), expected);
 
             TestUtilities.CompareWriters(expected, actual);
         }
