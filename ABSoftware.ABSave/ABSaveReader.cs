@@ -137,10 +137,11 @@ namespace ABSoftware.ABSave
                     return Encoding.UTF8.GetString(nullTerminatedBuffer);
                 case TextMode.UTF16:
                     uint utf16Size = ReadInt32();
-                    var str = new string('\0', (int)utf16Size);
-
-                    fixed (char* strData = str)
-                        FastReadShorts((ushort*)strData, utf16Size);
+                    var str = string.Create<object>((int)utf16Size, null, (chars, buf) =>
+                    {
+                        fixed (char* strData = chars)
+                            FastReadShorts((ushort*)strData, utf16Size);
+                    }); 
 
                     return str;
                 default: throw new Exception("Invalid TextMode provided");
