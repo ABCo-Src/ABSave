@@ -21,11 +21,11 @@ namespace ABSoftware.ABSave.Converters
 
         void SerializeArray(Array arr, ABSaveWriter writer, Type itemType, ArrayMapItem map)
         {
-            if (arr.Rank == 1) SerializeSingleDimensionalArray(arr, itemType, writer, map);
-            else SerializeMultiDimensionalArray(arr, itemType, writer, map);
+            if (arr.Rank == 1) SerializeSingleDimensionalArray(arr, itemType, writer, map?.PerItem);
+            else SerializeMultiDimensionalArray(arr, itemType, writer, map?.PerItem);
         }
 
-        void SerializeSingleDimensionalArray(Array arr, Type itemType, ABSaveWriter writer, ArrayMapItem map)
+        void SerializeSingleDimensionalArray(Array arr, Type itemType, ABSaveWriter writer, ABSaveMapItem perItemMap)
         {
             int lowerBound = arr.GetLowerBound(0);
             var defaultLowerBound = lowerBound == 0;
@@ -40,16 +40,13 @@ namespace ABSoftware.ABSave.Converters
 
             int endIndex = lowerBound + arr.Length;
 
-            if (map == null)
-            {
-                var perItem = CollectionHelpers.GetSerializeCorrectPerItemOperation(itemType, writer.Settings, map?.AreElementsSameType);
-                for (int i = lowerBound; i < endIndex; i++) perItem(arr.GetValue(i), itemType, writer, map?.PerItem);
-            }
+            var perItem = GetSerializePerItemAction(itemType, writer.Settings, out ABSaveTypeConverter converter, perItemMap);
+            for (int i = lowerBound; i < endIndex; i++) perItem(arr.GetValue(i), itemType, writer, converter, perItemMap);
         }
 
-        unsafe void SerializeMultiDimensionalArray(Array arr, Type itemType, ABSaveWriter writer, ArrayMapItem map)
+        void SerializeMultiDimensionalArray(Array arr, Type itemType, ABSaveWriter writer, ABSaveMapItem perItemMap)
         {
-            int* lengths = stackalloc int[arr.Rank];
+            Span<int> lengths = stackalloc int[arr.Rank];
             var lowerBounds = GetLowerBounds(arr, arr.Rank, out bool defaultLowerBounds);
 
             // Write the control byte and number of ranks.
@@ -70,10 +67,11 @@ namespace ABSoftware.ABSave.Converters
                 writer.WriteInt32((uint)lengths[i]);
             }
 
-            SerializeDimension(0, lengths, lowerBounds, arr, itemType, writer, map);
+            var perItem = GetSerializePerItemAction(itemType, writer.Settings, out ABSaveTypeConverter converter, perItemMap);
+            SerializeDimension(0, lengths, lowerBounds, new SerializationArrayInfo(arr, itemType, writer, converter, perItemMap, perItem));
         }
 
-        unsafe void SerializeDimension(int dimension, int* lengths, int[] currentPos, Array arr, Type itemType, ABSaveWriter reader, ArrayMapItem map)
+        void SerializeDimension(int dimension, Span<int> lengths, int[] currentPos, SerializationArrayInfo info)
         {
             int oldPos = currentPos[dimension];
 
@@ -81,14 +79,13 @@ namespace ABSoftware.ABSave.Converters
             int nextDimension = dimension + 1;
 
             // If this is the deepest we can get, serialize the items in this dimension.
-            if (nextDimension == arr.Rank)
+            if (nextDimension == info.Array.Rank)
             {
-                var perItem = CollectionHelpers.GetSerializeCorrectPerItemOperation(itemType, reader.Settings, map?.AreElementsSameType);
-                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) perItem(arr.GetValue(currentPos), itemType, reader, map?.PerItem);
+                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) info.PerItem(info.Array.GetValue(currentPos), info.ItemType, info.Writer, info.Converter, info.PerItemMap);
             }
             else
                 for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
-                    SerializeDimension(nextDimension, lengths, currentPos, arr, itemType, reader, map);
+                    SerializeDimension(nextDimension, lengths, currentPos, info);
 
             currentPos[dimension] = oldPos;
         }
@@ -108,6 +105,115 @@ namespace ABSoftware.ABSave.Converters
 
             return res;
         }
+
+        Action<object, Type, ABSaveWriter, ABSaveTypeConverter, ABSaveMapItem> GetSerializePerItemAction(Type itemType, ABSaveSettings settings, out ABSaveTypeConverter converter, ABSaveMapItem mapItem)
+        {
+            if (mapItem == null)
+                return CollectionHelpers.GetSerializePerItemAction(itemType, settings, out converter);
+            else
+            {
+                converter = null;
+                return (item, itemType, writer, _, map) => map.Serialize(item, itemType, writer);
+            }
+        }
+
+        #endregion
+
+        #region Deserialization
+
+        public override object Deserialize(Type type, ABSaveReader reader) => DeserializeArray(type.GetElementType(), reader, null);
+        public Array Deserialize(ABSaveReader reader, ArrayMapItem map) => (Array)DeserializeArray(map.ElementType, reader, map);
+
+        public object DeserializeArray(Type elementType, ABSaveReader reader, ArrayMapItem map)
+        {
+            var firstByte = reader.ReadByte();
+            var isMultidimension = (firstByte & 2) > 0;
+            var hasCustomLowerBounds = (firstByte & 1) > 0;
+
+            int rank = isMultidimension ? (int)reader.ReadInt32() : 1;
+
+            int[] lowerBounds = null;
+            if (hasCustomLowerBounds)
+            {
+                lowerBounds = new int[rank];
+                for (int i = 0; i < rank; i++)
+                    lowerBounds[i] = (int)reader.ReadInt32();
+            }
+
+            if (isMultidimension) return DeserializeMultiDimensionalArray(lowerBounds, rank, elementType, reader, map?.PerItem); 
+            else return DeserializeSingleDimensionalArray(lowerBounds, elementType, reader, map?.PerItem);
+        }
+
+        object DeserializeSingleDimensionalArray(int[] lowerBounds, Type itemType, ABSaveReader reader, ABSaveMapItem perItemMap)
+        {
+            var arrLength = (int)reader.ReadInt32();
+
+            if (TryFastReadArray(arrLength, reader, itemType, out Array arr)) return arr;
+
+            int lowerBound = 0;
+            Array res;
+
+            if (lowerBounds == null)
+                res = Array.CreateInstance(itemType, arrLength);
+            else
+            {
+                lowerBound = lowerBounds[0];
+                res = Array.CreateInstance(itemType, new int[] { arrLength }, lowerBounds);
+            }
+
+            int endIndex = lowerBound + arrLength;
+
+            var perItem = GetDeserializePerItemAction(itemType, reader.Settings, out ABSaveTypeConverter converter, perItemMap);
+            for (int i = lowerBound; i < endIndex; i++) res.SetValue(perItem(itemType, reader, converter, perItemMap), i);
+
+            return res;
+        }
+
+        unsafe object DeserializeMultiDimensionalArray(int[] lowerBounds, int rank, Type itemType, ABSaveReader reader, ABSaveMapItem perItemMap)
+        {
+            int[] lengths = new int[rank];
+            for (int i = 0; i < rank; i++)
+                lengths[i] = (int)reader.ReadInt32();
+
+            Array res = lowerBounds == null ? Array.CreateInstance(itemType, lengths) : Array.CreateInstance(itemType, lengths, lowerBounds);
+
+            var perItem = GetDeserializePerItemAction(itemType, reader.Settings, out ABSaveTypeConverter converter, perItemMap);
+            DeserializeDimension(0, lengths, lowerBounds ?? new int[rank], new DeserializationArrayInfo(res, itemType, reader, converter, perItemMap, perItem));
+            return res;
+        }
+
+        void DeserializeDimension(int dimension, int[] lengths, int[] currentPos, DeserializationArrayInfo info)
+        {
+            int oldPos = currentPos[dimension];
+
+            int endIndex = currentPos[dimension] + lengths[dimension];
+            int nextDimension = dimension + 1;
+
+            // If this is the deepest we can get, deserialize the items in this dimension.
+            if (nextDimension == info.Result.Rank)
+                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) info.Result.SetValue(info.PerItem(info.ItemType, info.Reader, info.Converter, info.PerItemMap), currentPos);
+            else
+                for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
+                    DeserializeDimension(nextDimension, lengths, currentPos, info);
+
+            currentPos[dimension] = oldPos;
+        }
+
+        Func<Type, ABSaveReader, ABSaveTypeConverter, ABSaveMapItem, object> GetDeserializePerItemAction(Type itemType, ABSaveSettings settings, out ABSaveTypeConverter converter, ABSaveMapItem mapItem)
+        {
+            if (mapItem == null)
+                return CollectionHelpers.GetDeserializePerItemAction(itemType, settings, out converter);
+            else
+            {
+                converter = null;
+                return (itemType, writer, _, map) => map.Deserialize(itemType, writer);
+            }
+        }
+
+
+        #endregion
+
+        #region Primitive Optimization
 
         // TODO: BENCHMARK THIS - IS IT REALLY FASTER WITH ALL THE CHECKS?
         unsafe bool TryFastWriteArray(Array arr, ABSaveWriter writer, Type itemType)
@@ -144,88 +250,6 @@ namespace ABSoftware.ABSave.Converters
                 default:
                     return false;
             }
-        }
-
-        #endregion
-
-        #region Deserialization
-
-        public override object Deserialize(Type type, ABSaveReader reader) => DeserializeArray(type.GetElementType(), reader, null);
-        public Array Deserialize(ABSaveReader reader, ArrayMapItem map) => (Array)DeserializeArray(map.ElementType, reader, map);
-
-        public object DeserializeArray(Type elementType, ABSaveReader reader, ArrayMapItem map)
-        {
-            var firstByte = reader.ReadByte();
-            var isMultidimension = (firstByte & 2) > 0;
-            var hasCustomLowerBounds = (firstByte & 1) > 0;
-
-            int rank = isMultidimension ? (int)reader.ReadInt32() : 1;
-
-            int[] lowerBounds = null;
-            if (hasCustomLowerBounds)
-            {
-                lowerBounds = new int[rank];
-                for (int i = 0; i < rank; i++)
-                    lowerBounds[i] = (int)reader.ReadInt32();
-            }
-
-            if (rank == 1) return DeserializeSingleDimensionalArray(lowerBounds, elementType, reader, map?.PerItem);
-            else return DeserializeMultiDimensionalArray(lowerBounds, rank, elementType, reader, map?.PerItem);
-        }
-
-        object DeserializeSingleDimensionalArray(int[] lowerBounds, Type itemType, ABSaveReader reader, ABSaveMapItem perItemMap)
-        {
-            var arrLength = (int)reader.ReadInt32();
-
-            if (TryFastReadArray(arrLength, reader, itemType, out Array arr)) return arr;
-
-            var perItem = CollectionHelpers.GetDeserializeCorrectPerItemOperation(itemType, reader.Settings, perItemMap);
-
-            int lowerBound = 0;
-            Array res;
-
-            if (lowerBounds == null)
-                res = Array.CreateInstance(itemType, arrLength);
-            else
-            {
-                lowerBound = lowerBounds[0];
-                res = Array.CreateInstance(itemType, new int[] { arrLength }, lowerBounds);
-            }
-
-            int endIndex = lowerBound + arrLength;
-            for (int i = lowerBound; i < endIndex; i++) res.SetValue(perItem(itemType, reader, perItemMap), i);
-
-            return res;
-        }
-
-        unsafe object DeserializeMultiDimensionalArray(int[] lowerBounds, int rank, Type itemType, ABSaveReader reader, ABSaveMapItem perItemMap)
-        {
-            int[] lengths = new int[rank];
-            for (int i = 0; i < rank; i++)
-                lengths[i] = (int)reader.ReadInt32();
-
-            var perItem = CollectionHelpers.GetDeserializeCorrectPerItemOperation(itemType, reader.Settings, perItemMap);
-
-            Array res = lowerBounds == null ? Array.CreateInstance(itemType, lengths) : Array.CreateInstance(itemType, lengths, lowerBounds);
-            DeserializeDimension(0, lengths, lowerBounds ?? new int[rank], new DeserializationArrayInfo(res, reader, itemType, perItem, perItemMap));
-            return res;
-        }
-
-        void DeserializeDimension(int dimension, int[] lengths, int[] currentPos, DeserializationArrayInfo info)
-        {
-            int oldPos = currentPos[dimension];
-
-            int endIndex = currentPos[dimension] + lengths[dimension];
-            int nextDimension = dimension + 1;
-
-            // If this is the deepest we can get, deserialize the items in this dimension.
-            if (nextDimension == info.Result.Rank)
-                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) info.Result.SetValue(info.PerItem(info.ItemType, info.Reader, info.PerItemMap), currentPos);
-            else
-                for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
-                    DeserializeDimension(nextDimension, lengths, currentPos, info);
-
-            currentPos[dimension] = oldPos;
         }
 
         unsafe bool TryFastReadArray(int length, ABSaveReader reader, Type itemType, out Array arr)
@@ -272,17 +296,21 @@ namespace ABSoftware.ABSave.Converters
 
         struct SerializationArrayInfo
         {
+            public Array Array;
             public Type ItemType;
-            public ABSaveReader Reader;
-            public Action<object, Type, ABSaveReader, ABSaveMapItem> PerItem;
+            public ABSaveWriter Writer;
+            public ABSaveTypeConverter Converter;
             public ABSaveMapItem PerItemMap;
+            public Action<object, Type, ABSaveWriter, ABSaveTypeConverter, ABSaveMapItem> PerItem;
 
-            public SerializationArrayInfo(Array result, ABSaveReader reader, Type itemType, Action<object, Type, ABSaveReader, ABSaveMapItem> perItem, ABSaveMapItem perItemMap)
+            public SerializationArrayInfo(Array arr, Type itemType, ABSaveWriter writer, ABSaveTypeConverter converter, ABSaveMapItem perItemMap, Action<object, Type, ABSaveWriter, ABSaveTypeConverter, ABSaveMapItem> perItem)
             {
+                Array = arr;
                 ItemType = itemType;
-                Reader = reader;
-                PerItem = perItem;
+                Writer = writer;
+                Converter = converter;
                 PerItemMap = perItemMap;
+                PerItem = perItem;
             }
         }
 
@@ -291,16 +319,18 @@ namespace ABSoftware.ABSave.Converters
             public Array Result;
             public Type ItemType;
             public ABSaveReader Reader;
-            public Func<Type, ABSaveReader, ABSaveMapItem, object> PerItem;
+            public ABSaveTypeConverter Converter;
             public ABSaveMapItem PerItemMap;
+            public Func<Type, ABSaveReader, ABSaveTypeConverter, ABSaveMapItem, object> PerItem;
 
-            public DeserializationArrayInfo(Array result, ABSaveReader reader, Type itemType, Func<Type, ABSaveReader, ABSaveMapItem, object> perItem, ABSaveMapItem perItemMap)
+            public DeserializationArrayInfo(Array result, Type itemType, ABSaveReader reader, ABSaveTypeConverter converter, ABSaveMapItem perItemMap, Func<Type, ABSaveReader, ABSaveTypeConverter, ABSaveMapItem, object> perItem)
             {
                 Result = result;
                 ItemType = itemType;
                 Reader = reader;
-                PerItem = perItem;
+                Converter = converter;
                 PerItemMap = perItemMap;
+                PerItem = perItem;
             }
         }
     }

@@ -16,55 +16,58 @@ namespace ABSoftware.ABSave.Testing.UnitTests
         [TestMethod]
         public void GetCollectionInfo_GenericICollection_NonGenericIList()
         {
-            var info = EnumerableTypeConverter.Instance.GetCollectionInfo(typeof(List<string>), out Type elementType);
+            var details = EnumerableTypeConverter.Instance.GetCollectionDetails(typeof(List<string>));
 
-            Assert.AreEqual(typeof(NonGenericIListInfo), info.GetType());
-            Assert.AreEqual(typeof(string), elementType);
+            Assert.AreEqual(typeof(NonGenericIListInfo), details.Info.GetType());
+            Assert.AreEqual(typeof(string), details.ElementTypeOrKeyType);
         }
 
         [TestMethod]
         public void GetCollectionInfo_GenericICollection()
         {
-            var info = EnumerableTypeConverter.Instance.GetCollectionInfo(typeof(GenericICollection), out Type elementType);
+            var details = EnumerableTypeConverter.Instance.GetCollectionDetails(typeof(GenericICollection));
 
-            Assert.AreEqual(typeof(GenericICollectionInfo), info.GetType());
-            Assert.AreEqual(typeof(string), elementType);
+            Assert.AreEqual(typeof(GenericICollectionInfo), details.Info.GetType());
+            Assert.AreEqual(typeof(string), details.ElementTypeOrKeyType);
         }
 
         [TestMethod]
         public void GetCollectionInfo_NonGenericIList()
         {
-            var info = EnumerableTypeConverter.Instance.GetCollectionInfo(typeof(ArrayList), out Type elementType);
+            var details = EnumerableTypeConverter.Instance.GetCollectionDetails(typeof(ArrayList));
 
-            Assert.AreEqual(typeof(NonGenericIListInfo), info.GetType());
-            Assert.AreEqual(typeof(object), elementType);
+            Assert.AreEqual(typeof(NonGenericIListInfo), details.Info.GetType());
+            Assert.AreEqual(typeof(object), details.ElementTypeOrKeyType);
         }
 
         [TestMethod]
         public void GetCollectionInfo_GenericIDictionary_NonGenericIDictionary()
         {
-            var info = EnumerableTypeConverter.Instance.GetCollectionInfo(typeof(Dictionary<string, string>), out Type elementType);
+            var details = EnumerableTypeConverter.Instance.GetCollectionDetails(typeof(Dictionary<string, string>));
 
-            Assert.AreEqual(typeof(NonGenericIDictionaryInfo), info.GetType());
-            Assert.AreEqual(typeof(DictionaryEntry), elementType);
+            Assert.AreEqual(typeof(NonGenericIDictionaryInfo), details.Info.GetType());
+            Assert.AreEqual(typeof(string), details.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(string), details.ValueType);
         }
 
         [TestMethod]
         public void GetCollectionInfo_GenericIDictionary()
         {
-            var info = EnumerableTypeConverter.Instance.GetCollectionInfo(typeof(GenericIDictionary), out Type elementType);
+            var details = EnumerableTypeConverter.Instance.GetCollectionDetails(typeof(GenericIDictionary));
 
-            Assert.AreEqual(typeof(GenericIDictionaryInfo), info.GetType());
-            Assert.AreEqual(typeof(KeyValuePair<string, int>), elementType);
+            Assert.AreEqual(typeof(GenericIDictionaryInfo), details.Info.GetType());
+            Assert.AreEqual(typeof(string), details.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(int), details.ValueType);
         }
 
         [TestMethod]
         public void GetCollectionInfo_NonGenericIDictionary()
         {
-            var info = EnumerableTypeConverter.Instance.GetCollectionInfo(typeof(Hashtable), out Type elementType);
+            var details = EnumerableTypeConverter.Instance.GetCollectionDetails(typeof(Hashtable));
 
-            Assert.AreEqual(typeof(NonGenericIDictionaryInfo), info.GetType());
-            Assert.AreEqual(typeof(DictionaryEntry), elementType);
+            Assert.AreEqual(typeof(NonGenericIDictionaryInfo), details.Info.GetType());
+            Assert.AreEqual(typeof(object), details.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(object), details.ValueType);
         }
 
         [TestMethod]
@@ -72,7 +75,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
         {
             try
             {
-                var result = EnumerableTypeConverter.Instance.GetCollectionInfo(typeof(CollectionHandlingTests), out Type elementType);
+                var result = EnumerableTypeConverter.Instance.GetCollectionDetails(typeof(CollectionHandlingTests));
             }
             catch (ABSaveUnrecognizedCollectionException) { return; }
 

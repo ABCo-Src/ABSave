@@ -6,6 +6,6 @@ namespace ABSoftware.ABSave.Exceptions
 {
     public class ABSaveInvalidDictionaryException : Exception
     {
-        public ABSaveInvalidDictionaryException(Type typeName) : base($"ABSave cannot convert a dictionary of type '{typeName.Name}'. ABSave can only convert dictionaries that provide an 'IDictionaryEnumerator' via 'GetEnumerator'. Consider making a custom converter for the type if you cannot adjust this.") { }
+        public ABSaveInvalidDictionaryException(Type typeName) : base($"ABSave cannot convert a dictionary of type '{typeName.Name}'. ABSave can only convert dictionaries that provide an 'IDictionaryEnumerator' via 'GetEnumerator'. Consider making a custom converter for the type if you cannot change this.") { }
     }
 }

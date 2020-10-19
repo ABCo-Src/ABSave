@@ -32,13 +32,13 @@ namespace ABSoftware.ABSave.Converters
 
         void SerializeCollection(object obj, ABSaveCollectionInfo info, Type itemType, ABSaveWriter writer)
         {
-            var perItem = CollectionHelpers.GetSerializeCorrectPerItemOperation(itemType, writer.Settings, out ABSaveTypeConverter converter);
+            var perItem = CollectionHelpers.GetSerializePerItemAction(itemType, writer.Settings, out ABSaveTypeConverter converter);
 
             var size = info.GetCount(obj);
             writer.WriteInt32((uint)size);
 
             var enumerator = info.GetEnumerator(obj);
-            while (enumerator.MoveNext()) perItem(enumerator.Current, itemType, writer, converter);
+            while (enumerator.MoveNext()) perItem(enumerator.Current, itemType, writer, converter, null);
         }
 
         public void SerializeCollectionMap(object obj, ABSaveWriter writer, CollectionMapItem map)
@@ -47,13 +47,13 @@ namespace ABSoftware.ABSave.Converters
             writer.WriteInt32((uint)size);
 
             var enumerator = map.Info.GetEnumerator(obj);
-            while (enumerator.MoveNext()) map.PerItem.Serialize(obj, map.ElementType, writer);
+            while (enumerator.MoveNext()) map.PerItem.Serialize(enumerator.Current, map.ElementType, writer);
         }
 
         void SerializeDictionary(object obj, ABSaveDictionaryInfo info, Type keyType, Type valueType, ABSaveWriter writer)
         {
-            var perKey = CollectionHelpers.GetSerializeCorrectPerItemOperation(keyType, writer.Settings, out ABSaveTypeConverter keyConverter);
-            var perValue = CollectionHelpers.GetSerializeCorrectPerItemOperation(valueType, writer.Settings, out ABSaveTypeConverter valueConverter);
+            var perKey = CollectionHelpers.GetSerializePerItemAction(keyType, writer.Settings, out ABSaveTypeConverter keyConverter);
+            var perValue = CollectionHelpers.GetSerializePerItemAction(valueType, writer.Settings, out ABSaveTypeConverter valueConverter);
 
             var size = info.GetCount(obj);
             writer.WriteInt32((uint)size);
@@ -61,8 +61,8 @@ namespace ABSoftware.ABSave.Converters
             var enumerator = info.GetEnumerator(obj);
             while (enumerator.MoveNext())
             {
-                perKey(enumerator.Key, keyType, writer, keyConverter);
-                perValue(enumerator.Value, valueType, writer, valueConverter);
+                perKey(enumerator.Key, keyType, writer, keyConverter, null);
+                perValue(enumerator.Value, valueType, writer, valueConverter, null);
             }
         }
 
@@ -96,13 +96,13 @@ namespace ABSoftware.ABSave.Converters
 
         object DeserializeCollection(ABSaveCollectionInfo info, Type collectionType, Type itemType, ABSaveReader reader)
         {
-            var perItem = CollectionHelpers.GetDeserializeCorrectPerItemOperation(itemType, reader.Settings, out ABSaveTypeConverter converter);
+            var perItem = CollectionHelpers.GetDeserializePerItemAction(itemType, reader.Settings, out ABSaveTypeConverter converter);
 
             var size = (int)reader.ReadInt32();
             var collection = info.CreateCollection(collectionType, size);
 
             for (int i = 0; i < size; i++)
-                info.AddItem(collection, perItem(itemType, reader, converter));
+                info.AddItem(collection, perItem(itemType, reader, converter, null));
 
             return collection;
         }
@@ -120,16 +120,16 @@ namespace ABSoftware.ABSave.Converters
 
         object DeserializeDictionary(ABSaveDictionaryInfo info, Type type, Type keyType, Type valueType, ABSaveReader reader)
         {
-            var perKey = CollectionHelpers.GetDeserializeCorrectPerItemOperation(keyType, reader.Settings, out ABSaveTypeConverter keyConverter);
-            var perValue = CollectionHelpers.GetDeserializeCorrectPerItemOperation(valueType, reader.Settings, out ABSaveTypeConverter valueConverter);
+            var perKey = CollectionHelpers.GetDeserializePerItemAction(keyType, reader.Settings, out ABSaveTypeConverter keyConverter);
+            var perValue = CollectionHelpers.GetDeserializePerItemAction(valueType, reader.Settings, out ABSaveTypeConverter valueConverter);
 
             var size = (int)reader.ReadInt32();
             var collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
             {
-                var key = perKey(keyType, reader, keyConverter);
-                var value = perValue(valueType, reader, valueConverter);
+                var key = perKey(keyType, reader, keyConverter, null);
+                var value = perValue(valueType, reader, valueConverter, null);
 
                 info.AddItem(collection, key, value);
             }
@@ -137,20 +137,17 @@ namespace ABSoftware.ABSave.Converters
             return collection;
         }
 
-        object DeserializeDictionaryMap(ABSaveDictionaryInfo info, Type type, Type keyType, Type valueType, ABSaveReader reader)
+        public object DeserializeDictionaryMap(Type type, ABSaveReader reader, DictionaryMapItem map)
         {
-            var perKey = CollectionHelpers.GetDeserializeCorrectPerItemOperation(keyType, reader.Settings, out ABSaveTypeConverter keyConverter);
-            var perValue = CollectionHelpers.GetDeserializeCorrectPerItemOperation(valueType, reader.Settings, out ABSaveTypeConverter valueConverter);
-
             var size = (int)reader.ReadInt32();
-            var collection = info.CreateCollection(type, size);
+            var collection = map.Info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
             {
-                var key = perKey(keyType, reader, keyConverter);
-                var value = perValue(valueType, reader, valueConverter);
+                var key = map.PerKey.Deserialize(map.KeyType, reader);
+                var value = map.PerValue.Deserialize(map.ValueType, reader);
 
-                info.AddItem(collection, key, value);
+                map.Info.AddItem(collection, key, value);
             }
 
             return collection;
@@ -162,6 +159,8 @@ namespace ABSoftware.ABSave.Converters
 
         public CollectionDetails GetCollectionDetails(Type type)
         {
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(List<>)) return new CollectionDetails(ABSaveCollectionInfo.NonGenericIList, type.GetGenericArguments()[0], typeof(object));
+
             CollectionCategory category = DetectCollectionType(type.GetInterfaces(), out Type elementOrKeyType, out Type valueType);
 
             // Get the correct info for the given type.
@@ -187,7 +186,7 @@ namespace ABSoftware.ABSave.Converters
             {
                 Type gtd = null;
 
-                // If we haven't found the "ICollection<>" this collection has yet, try to get it.
+                // If we haven't found the "ICollection<>" this collection has yet, try to get it. This will help us extract the type if there isn't anything more specific.
                 if (needsToFindICollection && interfaces[i].IsGenericType)
                 {
                     gtd = interfaces[i].GetGenericTypeDefinition();
@@ -196,6 +195,8 @@ namespace ABSoftware.ABSave.Converters
                     {
                         needsToFindICollection = false;
                         genericICollectionType = interfaces[i];
+
+                        if (category == CollectionCategory.None) category = CollectionCategory.GenericICollection;
                         continue;
                     }
                 }
@@ -206,7 +207,7 @@ namespace ABSoftware.ABSave.Converters
                     case CollectionCategory.NonGenericIDictionary:
 
                         // Try to see if there's a generic variant to get the types from.
-                        if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == typeof(ICollection<>))
+                        if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == typeof(IDictionary<,>))
                         {
                             var args = interfaces[i].GetGenericArguments();
                             elementOrKeyType = args[0];
@@ -214,13 +215,14 @@ namespace ABSoftware.ABSave.Converters
 
                             return CollectionCategory.NonGenericIDictionary;
                         }
+
                         break;
 
                     case CollectionCategory.GenericIDictionary:
 
                         if (interfaces[i] == typeof(IDictionary))
                         {
-                            // We have everything we need: We have the key/value types and we know it's also got a non-generic varient we can use, so we can stop here.
+                            // We have everything we need: We have the key/value types and we know it's also got a non-generic varient we can use for better performance, so we can stop here.
                             return CollectionCategory.NonGenericIDictionary;
                         }
 
@@ -237,6 +239,7 @@ namespace ABSoftware.ABSave.Converters
 
                         break;
 
+                    case CollectionCategory.GenericICollection:
                     case CollectionCategory.None:
 
                         if (interfaces[i] == typeof(IList)) category = CollectionCategory.NonGenericIList;
@@ -268,7 +271,7 @@ namespace ABSoftware.ABSave.Converters
                 category = CollectionCategory.NonGenericIDictionary;
             }
 
-            // Try to extract the element type from the collection interface if we don't have one.
+            // Try to extract the element type from the "ICollection<>" we found if we don't have one.
             if (elementOrKeyType == null)
             {
                 if (genericICollectionType == null) elementOrKeyType = typeof(object);

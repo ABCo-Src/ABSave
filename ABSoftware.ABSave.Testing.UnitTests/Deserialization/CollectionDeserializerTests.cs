@@ -47,7 +47,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Deserialization
         [TestMethod]
         public void DeserializeArray_Map()
         {
-            var map = new ArrayMapItem(false, typeof(int), true, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
+            var map = new ArrayMapItem(false, typeof(int), new TypeConverterMapItem(false, NumberTypeConverter.Instance));
 
             var expected = new int[] { 1, 2, 3, 4 };
 

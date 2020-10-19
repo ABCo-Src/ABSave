@@ -211,7 +211,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
         [TestMethod]
         public void SerializeArray_Map()
         {
-            var map = new ArrayMapItem(false, typeof(int), true, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
+            var map = new ArrayMapItem(false, typeof(int), new TypeConverterMapItem(false, NumberTypeConverter.Instance));
 
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             map.Serialize(new int[] { 1, 2, 3, 4 }, typeof(int[]), actual);

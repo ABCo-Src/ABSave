@@ -10,10 +10,9 @@ namespace ABSoftware.ABSave.Mapping
         public Type ElementType;
         public ABSaveMapItem PerItem;
 
-        public ArrayMapItem(bool canBeNull, Type elementType, bool elementSameType, ABSaveMapItem perItem) : base(canBeNull)
+        public ArrayMapItem(bool canBeNull, Type elementType, ABSaveMapItem perItem) : base(canBeNull)
         {
             ElementType = elementType;
-            AreElementsSameType = elementSameType;
             PerItem = perItem;
         }
 

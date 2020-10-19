@@ -8,11 +8,9 @@ using System.Text;
 
 namespace ABSoftware.ABSave
 {
-    public interface IABSaveEnumerableInfo
-    {
+    public interface IABSaveEnumerableInfo { }
 
-    }
-
+    // Collections:
     /// <summary>
     /// Represents a standard way to do things for different types of collections.
     /// </summary>
