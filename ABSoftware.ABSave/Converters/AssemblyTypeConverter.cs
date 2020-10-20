@@ -6,11 +6,16 @@ namespace ABSoftware.ABSave.Converters
 {
     public class AssemblyTypeConverter : ABSaveTypeConverter
     {
+        internal static readonly Type RuntimeAssembly = typeof(string).Assembly.GetType("System.RuntimeAssembly") ?? typeof(Assembly); // Fallback to harmless "Assembly"
+
         public readonly static AssemblyTypeConverter Instance = new AssemblyTypeConverter();
         private AssemblyTypeConverter() { }
 
-        public override bool HasExactType => false;
-        public override bool CheckCanConvertType(Type type) => type.IsSubclassOf(typeof(Assembly));
+        public override bool HasNonExactTypes => true;
+
+        public override Type[] ExactTypes { get; } = new Type[] { RuntimeAssembly };
+
+        public override bool CheckCanConvertNonExact(Type type) => type.IsSubclassOf(typeof(Assembly));
 
         public override void Serialize(object obj, Type type, ABSaveWriter writer)
         {

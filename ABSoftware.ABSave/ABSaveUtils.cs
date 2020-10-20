@@ -35,7 +35,7 @@ namespace ABSoftware.ABSave
             }
             else
                 for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
-                    if (settings.NonExactConverters[i].CheckCanConvertType(type))
+                    if (settings.NonExactConverters[i].CheckCanConvertNonExact(type))
                     {
                         converter = settings.NonExactConverters[i];
                         return true;
@@ -56,6 +56,11 @@ namespace ABSoftware.ABSave
                     return true;
 
             return false;
+        }
+
+        internal static bool ContainsZeroByteLong(ulong l)
+        {
+            return ((l - 0x0101010101010101L) & ~l & 0x8080808080808080L) > 0;
         }
 
         internal static bool ContainsZeroByte(uint l)

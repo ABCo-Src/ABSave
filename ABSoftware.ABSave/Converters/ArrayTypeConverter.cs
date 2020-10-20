@@ -9,10 +9,18 @@ namespace ABSoftware.ABSave.Converters
     public class ArrayTypeConverter : ABSaveTypeConverter
     {
         public readonly static ArrayTypeConverter Instance = new ArrayTypeConverter();
+
         private ArrayTypeConverter() { }
 
-        public override bool HasExactType => false;
-        public override bool CheckCanConvertType(Type type) => type.IsArray;
+        public override bool HasNonExactTypes => true;
+        public override Type[] ExactTypes { get; } = new Type[]
+        {
+            typeof(Array),
+            typeof(string[]),
+            typeof(int[]),
+        };
+
+        public override bool CheckCanConvertNonExact(Type type) => type.IsArray;
 
         #region Serialization
 

@@ -8,28 +8,23 @@ namespace ABSoftware.ABSave.Converters
         public static NumberTypeConverter Instance = new NumberTypeConverter();
         private NumberTypeConverter() { }
 
-        public override bool HasExactType => false;
-        public override bool CheckCanConvertType(Type type)
+        public override bool HasNonExactTypes => false;
+
+        public override Type[] ExactTypes { get; } = new Type[]
         {
-            switch (Type.GetTypeCode(type))
-            {
-                case TypeCode.Byte:
-                case TypeCode.SByte:
-                case TypeCode.Char:
-                case TypeCode.UInt16:
-                case TypeCode.Int16:
-                case TypeCode.UInt32:
-                case TypeCode.Int32:
-                case TypeCode.UInt64:
-                case TypeCode.Int64:
-                case TypeCode.Single:
-                case TypeCode.Double:
-                case TypeCode.Decimal:
-                    return true;
-                default:
-                    return false;
-            }
-        }
+            typeof(byte),
+            typeof(sbyte),
+            typeof(char), 
+            typeof(ushort),
+            typeof(short),
+            typeof(uint), 
+            typeof(int),
+            typeof(ulong),
+            typeof(long), 
+            typeof(float),
+            typeof(double),
+            typeof(decimal)
+        };
 
         public override void Serialize(object obj, Type type, ABSaveWriter writer) => writer.WriteNumber(obj, Type.GetTypeCode(type));
         public override object Deserialize(Type type, ABSaveReader reader) => reader.ReadNumber(Type.GetTypeCode(type));

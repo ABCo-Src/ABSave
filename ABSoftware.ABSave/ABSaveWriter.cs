@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
@@ -91,6 +92,8 @@ namespace ABSoftware.ABSave
 
             int actualLength = EncodeUTF8ToStringBuffer(data, buffer, length);
 
+            var info = typeof(string).GetTypeInfo();
+
             // Copy the encoded string in, while escaping null characters using overlong sequences.
             fixed (byte* bufferData = buffer)
                 FastWriteWithNullTermination(bufferData, actualLength);
@@ -119,12 +122,31 @@ namespace ABSoftware.ABSave
 
         unsafe void FastWriteWithNullTermination(byte* byteData, int sourceLength)
         {
-            // Copy 4 bytes at a time.
-            // NOTE: There are reasons why we aren't working with 8 bytes. Not only would the library have to be re-compiled for every platform on release (unless we do a runtime check for 64-bit),
-            // but when there are null characters, checking 8 bytes can actually be slower, as it has to manually iterate over all bytes in that much bigger 8-byte chunk
-            // up towards that null character. That being said, it's possible that null handling can be optimized (it checks in smaller chunks 
-            // if it sees a 8-byte chunk contains a null byte), so it might be worth looking into.
-            while (sourceLength >= 4)
+            // If our system allows it, copy in 8-byte chunks.
+            if (IntPtr.Size >= 8)
+            {
+                while (sourceLength >= 8)
+                {
+                    if (ABSaveUtils.ContainsZeroByteLong(*(ulong*)byteData))
+                    {
+                        // Now check in smaller 4-byte chunks to narrow down where the null character is.
+                        if (Check4ByteChunk()) return;
+                        else Check4ByteChunk();
+                    }
+
+                    else
+                    {
+                        Output.Write(new ReadOnlySpan<byte>(byteData, 8));
+                        byteData += 8;
+                        sourceLength -= 8;
+                    }
+                }
+            }
+
+            // Copy in smaller 4-byte chunks.
+            while (sourceLength >= 4) Check4ByteChunk();
+
+            bool Check4ByteChunk()
             {
                 if (ABSaveUtils.ContainsZeroByte(*(uint*)byteData))
                 {
@@ -138,6 +160,7 @@ namespace ABSoftware.ABSave
                     WriteOverlongNullSequence();
                     byteData++;
                     sourceLength--;
+                    return false;
                 }
 
                 else
@@ -145,11 +168,13 @@ namespace ABSoftware.ABSave
                     Output.Write(new ReadOnlySpan<byte>(byteData, 4));
                     byteData += 4;
                     sourceLength -= 4;
+                    return true;
                 }
             }
 
             // Copy the rest manually.
-            for (int i = 0; i < sourceLength; i++)
+            byte* endPoint = byteData + sourceLength;
+            while (byteData == endPoint)
             {
                 if (*byteData == 0)
                     WriteOverlongNullSequence();

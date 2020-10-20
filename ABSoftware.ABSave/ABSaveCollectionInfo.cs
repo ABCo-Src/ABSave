@@ -18,6 +18,7 @@ namespace ABSoftware.ABSave
     {
         public static ABSaveCollectionInfo GenericICollection { get; } = new GenericICollectionInfo();
         public static ABSaveCollectionInfo NonGenericIList { get; } = new NonGenericIListInfo();
+        public static ABSaveCollectionInfo List { get; } = new ListInfo();
 
         public abstract int GetCount(object obj);
         public abstract IEnumerator GetEnumerator(object obj);
@@ -26,6 +27,14 @@ namespace ABSoftware.ABSave
     }
 
     // Regular Collections:
+    internal class ListInfo : ABSaveCollectionInfo
+    {
+        public override int GetCount(object obj) => ((ICollection)obj).Count;
+        public override IEnumerator GetEnumerator(object obj) => ((IEnumerable)obj).GetEnumerator();
+        public override object CreateCollection(Type type, int count) => Activator.CreateInstance(type, count);
+        public override void AddItem(object obj, object itm) => ((IList)obj).Add(itm);
+    }
+
     internal class GenericICollectionInfo : ABSaveCollectionInfo
     {
         public override int GetCount(object obj) => ((dynamic)obj).Count;

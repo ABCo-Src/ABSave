@@ -10,8 +10,8 @@ namespace ABSoftware.ABSave.Converters
         public readonly static DictionaryEntryConverter Instance = new DictionaryEntryConverter();
         private DictionaryEntryConverter() { }
 
-        public override bool HasExactType => true;
-        public override Type ExactType => typeof(DictionaryEntry);
+        public override bool HasNonExactTypes => false;
+        public override Type[] ExactTypes { get; } = new Type[] { typeof(DictionaryEntry) };
 
         public override void Serialize(object obj, Type type, ABSaveWriter writer)
         {

@@ -18,7 +18,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             var arrType = typeof(int[]);
 
-            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertType(arrType));
+            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertNonExact(arrType));
             ArrayTypeConverter.Instance.Serialize(new int[] { 1, 2, 3, 4 }, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
@@ -40,7 +40,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             var arr = new SimpleStruct[] { new SimpleStruct(1134), new SimpleStruct(5678) };
 
-            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertType(arrType));
+            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertNonExact(arrType));
             ArrayTypeConverter.Instance.Serialize(arr, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
@@ -60,7 +60,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
 
             var so = new SimpleClass[] { new SimpleClass(), new SimpleClass() };
 
-            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertType(arrType));
+            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertNonExact(arrType));
             ArrayTypeConverter.Instance.Serialize(so, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
@@ -85,7 +85,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             arr.SetValue(3, 4);
             arr.SetValue(4, 5);
 
-            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertType(arrType));
+            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertNonExact(arrType));
             ArrayTypeConverter.Instance.Serialize(arr, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
@@ -106,7 +106,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             var arrType = typeof(int[,]);
 
-            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertType(arrType));
+            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertNonExact(arrType));
             ArrayTypeConverter.Instance.Serialize(new int[2, 2] { { 1, 2 }, { 3, 4 } }, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
@@ -134,7 +134,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             arr.SetValue(3, 8, 8);
             arr.SetValue(4, 8, 9);
 
-            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertType(arrType));
+            Assert.IsTrue(ArrayTypeConverter.Instance.CheckCanConvertNonExact(arrType));
             ArrayTypeConverter.Instance.Serialize(arr, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
@@ -158,7 +158,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             var arrType = typeof(Dictionary<int, int>);
 
-            Assert.IsTrue(EnumerableTypeConverter.Instance.CheckCanConvertType(arrType));
+            Assert.IsTrue(EnumerableTypeConverter.Instance.CheckCanConvertNonExact(arrType));
             EnumerableTypeConverter.Instance.Serialize(new Dictionary<int, int>() { { 1, 2 }, { 3, 4 } }, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
@@ -177,7 +177,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Serialization
             var actual = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());
             var arrType = typeof(ArrayList);
 
-            Assert.IsTrue(EnumerableTypeConverter.Instance.CheckCanConvertType(arrType));
+            Assert.IsTrue(EnumerableTypeConverter.Instance.CheckCanConvertNonExact(arrType));
             EnumerableTypeConverter.Instance.Serialize(new ArrayList() { 1, 2, 3, 4 }, arrType, actual);
 
             var expected = new ABSaveWriter(new MemoryStream(), new ABSaveSettings());

@@ -14,69 +14,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
-    [Serializable]
-    public class Planet
-    {
-        public string PlanetName { get; set; } = "Earth";
-
-        public Person[] People { get; set; }  = new Person[]
-        {
-            new Person(),
-            new Person(),
-            new Person()
-        };
-
-        public City[] Towns { get; set; }  = new City[]
-        {
-            new City(),
-            new City()
-        };
-    }
-    
-    [Serializable]
-    public class Person
-    {
-        public string Name { get; set; } = "Alex";
-
-        public int Age { get; set; } = 15;
-
-        public string[] Hobbies { get; set; } = new string[]
-        {
-            "Programming",
-            "SomethingElse"
-        };
-    }
-
-    [Serializable]
-    public class City
-    {
-        public string Name { get; set; } = "ABTown";
-
-        public List<Building> Buildings { get; set; } = new List<Building>()
-        {
-            new Building(),
-            new Building()
-        };
-    }
-
-    [Serializable]
-    public class Building
-    {
-        public string Name { get; set; } = "ABBuilding";
-
-        public Size BuildingSize { get; set; } = new Size()
-        {
-            Width = 25196.16161d,
-            Height = 25681.16141d
-        };
-    }
-
-    [Serializable]
-    public class Size
-    {
-        public double Width { get; set; }
-        public double Height { get; set; }
-    }
+   
 
     public class TestBenchmark
     {
@@ -84,8 +22,8 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         public MemoryStream NewtonsoftJsonResult;
         public MemoryStream Utf8JsonResult;
         public MemoryStream TextJsonResult;
-        public Planet TestObj;
-        public ABSaveSettings Settings = ABSaveSettings.PrioritizePerformance;
+        public Universe TestObj;
+        public ABSaveSettings Settings = ABSaveSettings.PrioritizeSize;
 
         [GlobalSetup]
         public void Setup()
@@ -95,7 +33,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             Utf8JsonResult = new MemoryStream();
             TextJsonResult = new MemoryStream();
 
-            TestObj = new Planet();
+            TestObj = Universe.GenerateUniverse();
         }
 
         [GlobalCleanup]
@@ -129,7 +67,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             ABSaveResult.Position = 0;
 
             var writer = new ABSaveWriter(ABSaveResult, Settings);
-            ABSaveObjectConverter.Serialize(TestObj, typeof(Planet), writer);
+            ABSaveObjectConverter.Serialize(TestObj, typeof(Universe), writer);
             //var reader = new ABSaveReader(ABSaveResult, Settings);
             //return (Planet)ABSaveObjectConverter.Deserialize(typeof(Planet), reader);
         }
@@ -143,7 +81,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             using StreamWriter sr = new StreamWriter(NewtonsoftJsonResult, Encoding.UTF8, 1024, true);
             using JsonWriter writer = new JsonTextWriter(sr);
 
-            serializer.Serialize(writer, TestObj, typeof(Planet));
+            serializer.Serialize(writer, TestObj, typeof(Universe));
         }
 
         [Benchmark]
@@ -151,6 +89,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         {
             Utf8JsonResult.Position = 0;
             Utf8Json.JsonSerializer.Serialize(Utf8JsonResult, TestObj);
+            Utf8JsonResult.Flush();
         }
 
         [Benchmark]
@@ -160,6 +99,8 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
 
             using var writer = new System.Text.Json.Utf8JsonWriter(TextJsonResult, new System.Text.Json.JsonWriterOptions());
             System.Text.Json.JsonSerializer.Serialize(writer, TestObj);
+
+            TextJsonResult.Flush();
         }
 
         //[Benchmark]
@@ -175,17 +116,17 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         static void Main()
         {
             //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(new string[0], new DebugInProcessConfig());
-            BenchmarkRunner.Run<TestBenchmark>();
-            //var t = new TestBenchmark();
-            //t.Setup();
-            //t.ABSave();
+            //BenchmarkRunner.Run<TestBenchmark>();
+            var t = new TestBenchmark();
+            t.Setup();
 
-            //Debugger.Break();
-            //t.ABSave();
-            //Debugger.Break();
+            t.ABSave();
+            Debugger.Break();
+            t.ABSave();
+            Debugger.Break();
 
-            //t.End();
-            //Console.ReadLine();
+            t.End();
+            Console.ReadLine();
         }
     }
 }

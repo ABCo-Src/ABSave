@@ -14,8 +14,8 @@ namespace ABSoftware.ABSave.Converters
         public readonly static EnumerableTypeConverter Instance = new EnumerableTypeConverter();
         private EnumerableTypeConverter() { }
 
-        public override bool HasExactType => false;
-        public override bool CheckCanConvertType(Type type) => typeof(IEnumerable).IsAssignableFrom(type);
+        public override bool HasNonExactTypes => true;
+        public override bool CheckCanConvertNonExact(Type type) => typeof(IEnumerable).IsAssignableFrom(type);
 
         #region Serialization
 

@@ -7,8 +7,8 @@ namespace ABSoftware.ABSave.Converters
         public static VersionTypeConverter Instance = new VersionTypeConverter();
         private VersionTypeConverter() { }
 
-        public override bool HasExactType => true;
-        public override Type ExactType => typeof(Version);
+        public override bool HasNonExactTypes => false;
+        public override Type[] ExactTypes { get; } = new Type[] { typeof(Version) };
 
         public override void Serialize(object obj, Type type, ABSaveWriter writer)
         {

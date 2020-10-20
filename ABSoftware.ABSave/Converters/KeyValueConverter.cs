@@ -10,8 +10,8 @@ namespace ABSoftware.ABSave.Converters
 
         private KeyValueConverter() { }
 
-        public override bool HasExactType => false;
-        public override bool CheckCanConvertType(Type type) => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
+        public override bool HasNonExactTypes => true;
+        public override bool CheckCanConvertNonExact(Type type) => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
 
         public override void Serialize(object obj, Type type, ABSaveWriter writer)
         {

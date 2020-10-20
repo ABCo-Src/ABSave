@@ -25,7 +25,10 @@ namespace ABSoftware.ABSave
         public bool UseLittleEndian = BitConverter.IsLittleEndian;
         public BindingFlags MemberReflectionFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
+        private bool _exactConvertersAreCached = true; // Whether the "ExactConverters" is the readonly cached version from "ABSaveTypeConverter".
         internal Dictionary<Type, ABSaveTypeConverter> ExactConverters;
+
+        private bool _nonExactConvertersAreCached = true; // Whether the "NonExactConverters" is the readonly cached version from "ABSaveTypeConverter".
         internal List<ABSaveTypeConverter> NonExactConverters;
 
         public static ABSaveSettings PrioritizePerformance => new ABSaveSettings();
@@ -79,12 +82,43 @@ namespace ABSoftware.ABSave
 
         public ABSaveSettings AddTypeConverter(ABSaveTypeConverter converter)
         {
-            if (converter.HasExactType)
-                ExactConverters[converter.ExactType] = converter;
-            else
+            var exactTypes = converter.ExactTypes;
+
+            if (exactTypes.Length > 0)
+            {
+                EnsureNotCachedExactConverters();
+
+                ExactConverters.EnsureCapacity(ExactConverters.Count + exactTypes.Length);
+                for (int i = 0; i < exactTypes.Length; i++)
+                    ExactConverters.Add(exactTypes[i], converter);
+            }
+
+            if (converter.HasNonExactTypes)
+            {
+                EnsureNotCachedNonExactConverters();
+
                 NonExactConverters.Add(converter);
+            }
 
             return this;
-        } 
+        }
+
+        private void EnsureNotCachedExactConverters()
+        {
+            if (_exactConvertersAreCached)
+            {
+                ExactConverters = new Dictionary<Type, ABSaveTypeConverter>(ExactConverters);
+                _exactConvertersAreCached = false;
+            }
+        }
+
+        private void EnsureNotCachedNonExactConverters()
+        {
+            if (_nonExactConvertersAreCached)
+            {
+                ExactConverters = new Dictionary<Type, ABSaveTypeConverter>(ExactConverters);
+                _exactConvertersAreCached = false;
+            }
+        }
     }
 }
