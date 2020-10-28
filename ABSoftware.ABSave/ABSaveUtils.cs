@@ -11,6 +11,7 @@ namespace ABSoftware.ABSave
     internal static class ABSaveUtils
     {
         internal const int UNSIGNED_24BIT_MAX = 16777215;
+        internal const BindingFlags DefaultBindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
 
         #region Numerical
 
@@ -35,7 +36,7 @@ namespace ABSoftware.ABSave
             }
             else
                 for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
-                    if (settings.NonExactConverters[i].CheckCanConvertNonExact(type))
+                    if (settings.NonExactConverters[i].TryGenerateContext(type))
                     {
                         converter = settings.NonExactConverters[i];
                         return true;

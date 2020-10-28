@@ -4,25 +4,25 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    public class ObjectMapItem : ABSaveMapItem
+    public class ObjectMapItem : ABSaveMapItemOLD
     {
         private int _itemsAdded = 0;
         public int NumberOfItems;
         public Func<object> Constructor;
 
         internal bool Initialized;
-        internal ABSaveMapItem[] Items;
-        internal Dictionary<string, ABSaveMapItem> HashedItems;
+        internal ABSaveMapItemOLD[] Items;
+        internal Dictionary<string, ABSaveMapItemOLD> HashedItems;
 
         public ObjectMapItem(bool canBeNull, Func<object> constructor, int numberOfItems) : base(canBeNull)
         {
             NumberOfItems = numberOfItems;
             Constructor = constructor;
-            Items = new ABSaveMapItem[numberOfItems];
-            HashedItems = new Dictionary<string, ABSaveMapItem>(numberOfItems);
+            Items = new ABSaveMapItemOLD[numberOfItems];
+            HashedItems = new Dictionary<string, ABSaveMapItemOLD>(numberOfItems);
         }
 
-        public ObjectMapItem AddItem(string name, ABSaveMapItem mapItem)
+        public ObjectMapItem AddItem(string name, ABSaveMapItemOLD mapItem)
         {
             if (_itemsAdded == NumberOfItems) throw new Exception("ABSAVE: Too many items added to an object map, make sure to set the correct size in the constructor.");
 
@@ -33,7 +33,7 @@ namespace ABSoftware.ABSave.Mapping
             return this;
         }
 
-        public ObjectMapItem AddItem<TObject, TItem>(string name, Func<TObject, TItem> getter, Action<TObject, TItem> setter, ABSaveMapItem mapItem)
+        public ObjectMapItem AddItem<TObject, TItem>(string name, Func<TObject, TItem> getter, Action<TObject, TItem> setter, ABSaveMapItemOLD mapItem)
         {
             mapItem.UseReflection = false;
             mapItem.Getter = container => getter((TObject)container);
@@ -53,7 +53,7 @@ namespace ABSoftware.ABSave.Mapping
 
     internal class ObjectSubMapItem
     {
-        internal ABSaveMapItem BaseItem;
+        internal ABSaveMapItemOLD BaseItem;
         internal string Name;
         internal bool UseReflection = true;
         internal Func<object, object> Getter = null;

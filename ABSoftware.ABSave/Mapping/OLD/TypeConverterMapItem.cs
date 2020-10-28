@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    public class TypeConverterMapItem : ABSaveMapItem
+    public class TypeConverterMapItem : ABSaveMapItemOLD
     {
         public readonly ABSaveTypeConverter TypeConverter;
         public TypeConverterMapItem(bool canBeNull, ABSaveTypeConverter typeConverter) : base(canBeNull) => TypeConverter = typeConverter;

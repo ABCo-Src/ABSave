@@ -5,14 +5,14 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    public class CollectionMapItem : ABSaveMapItem
+    public class CollectionMapItem : ABSaveMapItemOLD
     {
-        public ABSaveMapItem PerItem;
+        public ABSaveMapItemOLD PerItem;
         public ABSaveCollectionInfo Info;
 
         public Type ElementType;
 
-        public CollectionMapItem(bool canBeNull, Type elementType, ABSaveCollectionInfo info, ABSaveMapItem perItem) : base(canBeNull)
+        public CollectionMapItem(bool canBeNull, Type elementType, ABSaveCollectionInfo info, ABSaveMapItemOLD perItem) : base(canBeNull)
         {
             Info = info;
             ElementType = elementType;

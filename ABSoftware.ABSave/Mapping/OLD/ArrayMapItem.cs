@@ -5,12 +5,12 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    public class ArrayMapItem : ABSaveMapItem
+    public class ArrayMapItem : ABSaveMapItemOLD
     {
         public Type ElementType;
-        public ABSaveMapItem PerItem;
+        public ABSaveMapItemOLD PerItem;
 
-        public ArrayMapItem(bool canBeNull, Type elementType, ABSaveMapItem perItem) : base(canBeNull)
+        public ArrayMapItem(bool canBeNull, Type elementType, ABSaveMapItemOLD perItem) : base(canBeNull)
         {
             ElementType = elementType;
             PerItem = perItem;

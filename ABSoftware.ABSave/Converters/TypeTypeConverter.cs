@@ -13,7 +13,7 @@ namespace ABSoftware.ABSave.Converters
 
         public override bool HasNonExactTypes => true;
         public override Type[] ExactTypes { get; } = new Type[] { RuntimeType };
-        public override bool CheckCanConvertNonExact(Type type) => type.IsSubclassOf(typeof(Type));
+        public override bool TryGenerateContext(Type type) => type.IsSubclassOf(typeof(Type));
 
         public override void Serialize(object obj, Type type, ABSaveWriter writer) => SerializeType((Type)obj, writer);
         public override object Deserialize(Type type, ABSaveReader reader) => DeserializeType(reader);

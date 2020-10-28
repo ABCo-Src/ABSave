@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    public abstract class ABSaveMapItem
+    public abstract class ABSaveMapItemOLD
     {
         internal string Name;
         internal bool UseReflection = true;
@@ -15,7 +15,7 @@ namespace ABSoftware.ABSave.Mapping
         internal Type FieldType = null;
         internal bool CanBeNull = false;
 
-        public ABSaveMapItem(bool canBeNull) => CanBeNull = canBeNull;
+        public ABSaveMapItemOLD(bool canBeNull) => CanBeNull = canBeNull;
 
         public void Serialize(object obj, Type specifiedType, ABSaveWriter writer)
         {

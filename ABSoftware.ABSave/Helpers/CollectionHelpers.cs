@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Representation;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -8,7 +9,7 @@ namespace ABSoftware.ABSave.Helpers
 {
     internal static class CollectionHelpers
     {
-        public static Action<object, Type, ABSaveWriter, ABSaveTypeConverter, ABSaveMapItem> GetSerializePerItemAction(Type itemType, ABSaveSettings settings, out ABSaveTypeConverter converter)
+        public static ABSaveMapItem GetSerializePerItemMap(Type itemType, ABSaveSettings settings, out ABSaveTypeConverter converter)
         {
             converter = null;
 
@@ -21,7 +22,7 @@ namespace ABSoftware.ABSave.Helpers
             return (item, specifiedType, writer, c, _) => ABSaveItemConverter.Serialize(item, specifiedType, writer);
         }
 
-        public static Func<Type, ABSaveReader, ABSaveTypeConverter, ABSaveMapItem, object> GetDeserializePerItemAction(Type itemType, ABSaveSettings settings, out ABSaveTypeConverter converter)
+        public static Func<Type, ABSaveReader, ABSaveTypeConverter, ABSaveMapItemOLD, object> GetDeserializePerItemAction(Type itemType, ABSaveSettings settings, out ABSaveTypeConverter converter)
         {
             converter = null;
 

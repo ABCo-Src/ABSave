@@ -1,10 +1,11 @@
-﻿using System;
+﻿using ABSoftware.ABSave.Converters;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace ABSoftware.ABSave.Converters
+namespace ABSoftware.ABSave
 {
     public abstract class ABSaveTypeConverter
     {
@@ -19,11 +20,17 @@ namespace ABSoftware.ABSave.Converters
         public virtual Type[] ExactTypes { get; } = new Type[0];
 
         /// <summary>
-        /// Manually checks whether this converter can convert a certain type.
+        /// Whether this converter has custom data to write to the map.
         /// </summary>
-        public virtual bool CheckCanConvertNonExact(Type type) => throw new NotImplementedException("ABSAVE: This type converter has marked 'HasNonExactTypes', but has not implemented 'CheckCanConvertNonExact'.");
-        public abstract void Serialize(object obj, Type type, ABSaveWriter writer);
-        public abstract object Deserialize(Type type, ABSaveReader reader);
+        public virtual bool HasCustomMapData { get; } = false;
+
+        /// <summary>
+        /// Attempts to generate a context. If the converter has non-exact types, this will be used to determine if the converter is available too.
+        /// </summary>
+        public abstract IABSaveConverterContext TryGenerateContext(ABSaveSettings settings, Type type);
+        public abstract void SerializeData(object obj, Type actualType, IABSaveConverterContext context, ABSaveWriter writer);
+        public abstract object DeserializeData(Type type, IABSaveConverterContext context, ABSaveReader reader);
+        public virtual void SerializeMap(object obj, Type actualType, IABSaveConverterContext context, ABSaveWriter writer) { }
 
         internal static readonly Dictionary<Type, ABSaveTypeConverter> BuiltInExact = new Dictionary<Type, ABSaveTypeConverter>()
         {

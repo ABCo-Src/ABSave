@@ -23,7 +23,7 @@ namespace ABSoftware.ABSave
         public bool ErrorOnUnknownItem = true;
         public TextMode TextMode = TextMode.UTF16;
         public bool UseLittleEndian = BitConverter.IsLittleEndian;
-        public BindingFlags MemberReflectionFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        public BindingFlags MemberReflectionFlags = ABSaveUtils.DefaultBindingFlags;
 
         private bool _exactConvertersAreCached = true; // Whether the "ExactConverters" is the readonly cached version from "ABSaveTypeConverter".
         internal Dictionary<Type, ABSaveTypeConverter> ExactConverters;
@@ -117,7 +117,7 @@ namespace ABSoftware.ABSave
             if (_nonExactConvertersAreCached)
             {
                 ExactConverters = new Dictionary<Type, ABSaveTypeConverter>(ExactConverters);
-                _exactConvertersAreCached = false;
+                _nonExactConvertersAreCached = false;
             }
         }
     }

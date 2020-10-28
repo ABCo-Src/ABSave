@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Representation;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,18 +10,6 @@ namespace ABSoftware.ABSave
 {
     public static class ABSaveObjectConverter
     {
-        public static void Serialize(object obj, Type type, ABSaveWriter writer)
-        {
-            var info = GetObjectMemberInfos(type, writer.Settings);
-
-            writer.WriteInt32((uint)info.Length);
-            for (int i = 0; i < info.Length; i++)
-            {
-                writer.WriteString(info[i].Name);
-                ABSaveItemConverter.Serialize(info[i].GetValue(obj), info[i].FieldType, writer);
-            }
-        }
-
         internal static void Serialize(object obj, Type type, ABSaveWriter writer, ObjectMapItem item)
         {
             writer.WriteInt32((uint)item.NumberOfItems);
@@ -66,7 +55,7 @@ namespace ABSoftware.ABSave
             {
                 var itemName = reader.ReadString();
 
-                if (item.HashedItems.TryGetValue(itemName, out ABSaveMapItem mapItem))
+                if (item.HashedItems.TryGetValue(itemName, out ABSaveMapItemOLD mapItem))
                     if (mapItem.UseReflection)
                     {
                         var field = type.GetField(mapItem.Name, reader.Settings.MemberReflectionFlags);
@@ -79,7 +68,5 @@ namespace ABSoftware.ABSave
 
             return obj;
         }
-
-        public static FieldInfo[] GetObjectMemberInfos(Type typ, ABSaveSettings settings) => typ.GetFields(settings.MemberReflectionFlags);
     }
 }

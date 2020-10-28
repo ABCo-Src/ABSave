@@ -4,7 +4,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    public class AutoMapItem : ABSaveMapItem
+    public class AutoMapItem : ABSaveMapItemOLD
     {
         public AutoMapItem() : base(false) { }
 

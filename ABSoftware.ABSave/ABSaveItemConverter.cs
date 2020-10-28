@@ -13,13 +13,6 @@ namespace ABSoftware.ABSave
     /// </summary>
     public static class ABSaveItemConverter
     {
-        public static void Serialize(object obj, Type specifiedType, ABSaveWriter writer) => Serialize(obj, obj?.GetType(), specifiedType, writer);
-
-        public static void Serialize(object obj, Type actualType, Type specifiedType, ABSaveWriter writer)
-        {
-            if (SerializeAttribute(obj, actualType, specifiedType, writer)) return;
-            SerializeWithoutAttribute(obj, actualType, writer);
-        }
 
         public static object DeserializeWithAttribute(Type specifiedType, ABSaveReader reader)
         {
@@ -27,14 +20,6 @@ namespace ABSoftware.ABSave
             if (actualType == null) return null;
 
             return DeserializeWithoutAttribute(actualType, reader);
-        }
-
-        public static void SerializeWithoutAttribute(object obj, Type actualType, ABSaveWriter writer)
-        {
-            if (ABSaveUtils.TryFindConverterForType(writer.Settings, actualType, out ABSaveTypeConverter typeConverter))
-                typeConverter.Serialize(obj, actualType, writer);
-
-            else ABSaveObjectConverter.Serialize(obj, actualType, writer);
         }
 
         public static object DeserializeWithoutAttribute(Type actualType, ABSaveReader reader)

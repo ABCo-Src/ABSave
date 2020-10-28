@@ -15,7 +15,7 @@ namespace ABSoftware.ABSave.Converters
         private EnumerableTypeConverter() { }
 
         public override bool HasNonExactTypes => true;
-        public override bool CheckCanConvertNonExact(Type type) => typeof(IEnumerable).IsAssignableFrom(type);
+        public override bool TryGenerateContext(Type type) => typeof(IEnumerable).IsAssignableFrom(type);
 
         #region Serialization
 
@@ -32,7 +32,7 @@ namespace ABSoftware.ABSave.Converters
 
         void SerializeCollection(object obj, ABSaveCollectionInfo info, Type itemType, ABSaveWriter writer)
         {
-            var perItem = CollectionHelpers.GetSerializePerItemAction(itemType, writer.Settings, out ABSaveTypeConverter converter);
+            var perItem = CollectionHelpers.GetSerializePerItemMap(itemType, writer.Settings, out ABSaveTypeConverter converter);
 
             var size = info.GetCount(obj);
             writer.WriteInt32((uint)size);
@@ -52,8 +52,8 @@ namespace ABSoftware.ABSave.Converters
 
         void SerializeDictionary(object obj, ABSaveDictionaryInfo info, Type keyType, Type valueType, ABSaveWriter writer)
         {
-            var perKey = CollectionHelpers.GetSerializePerItemAction(keyType, writer.Settings, out ABSaveTypeConverter keyConverter);
-            var perValue = CollectionHelpers.GetSerializePerItemAction(valueType, writer.Settings, out ABSaveTypeConverter valueConverter);
+            var perKey = CollectionHelpers.GetSerializePerItemMap(keyType, writer.Settings, out ABSaveTypeConverter keyConverter);
+            var perValue = CollectionHelpers.GetSerializePerItemMap(valueType, writer.Settings, out ABSaveTypeConverter valueConverter);
 
             var size = info.GetCount(obj);
             writer.WriteInt32((uint)size);
