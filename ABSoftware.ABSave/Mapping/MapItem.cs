@@ -10,5 +10,6 @@ namespace ABSoftware.ABSave.Mapping
     public abstract class MapItem
     {        
         public Type ItemType { get; set; }
+        public bool IsValueType { get; set; }
     }
 }

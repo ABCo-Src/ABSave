@@ -12,6 +12,6 @@ namespace ABSoftware.ABSave.Mapping.Items
         public MapItem InnerItem;
 
         public RuntimeMapItem(MapItem innerItem) =>
-            (InnerItem, ItemType) = (innerItem, innerItem.ItemType);
+            (InnerItem, IsValueType, ItemType) = (innerItem, innerItem.IsValueType, innerItem.ItemType);
     }
 }

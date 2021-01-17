@@ -44,10 +44,15 @@ namespace ABSoftware.ABSave.Deserialization
     
         public MapItem GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
 
+        public T DeserializeMap<T>(ABSaveMap map)
+        {
+            return (T)DeserializeItem(map.RootItem);
+        }
+
         public object DeserializeItem(MapItem map)
         {
             // Do null checks
-            if (map.ItemType.IsValueType)
+            if (map.IsValueType)
             {
                 _currentHeader = new BitSource() { Deserializer = this };
                 _readHeader = false;
@@ -60,7 +65,7 @@ namespace ABSoftware.ABSave.Deserialization
                 _readHeader = true;
             }
             
-            return DeserializeItemNoSetup(map, map.ItemType.IsValueType);
+            return DeserializeItemNoSetup(map, map.IsValueType);
         }
 
         public object DeserializeExactNonNullItem(MapItem map)
@@ -73,11 +78,11 @@ namespace ABSoftware.ABSave.Deserialization
         public object DeserializeItem(MapItem map, ref BitSource header)
         {
             // Do null checks
-            if (!map.ItemType.IsValueType && !header.ReadBit()) return null;
+            if (!map.IsValueType && !header.ReadBit()) return null;
             
             _currentHeader = header;
             _readHeader = true;
-            return DeserializeItemNoSetup(map, map.ItemType.IsValueType);
+            return DeserializeItemNoSetup(map, map.IsValueType);
         }
 
         public object DeserializeExactNonNullItem(MapItem map, ref BitSource header)

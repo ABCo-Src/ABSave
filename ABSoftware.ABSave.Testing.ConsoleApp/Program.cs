@@ -6,7 +6,7 @@ using BenchmarkDotNet.Running;
 using BinaryPack;
 using MessagePack;
 using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -14,57 +14,83 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Serialization;
+using ABSoftware.ABSave.Serialization;
 
 namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
     public class TestBenchmark
     {
-        public MemoryStream ABSaveResult;
+        public MemoryStream ABSaveNewResult;
+        public MemoryStream ABSaveOldResult;
         public MemoryStream NewtonsoftJsonResult;
         public MemoryStream Utf8JsonResult;
         public MemoryStream TextJsonResult;
+        public MemoryStream BinaryFormatterResult;
         public MemoryStream ZeroFormatterResult;
         public MemoryStream XMLResult;
         public MemoryStream MessagePackResult;
         public MemoryStream BinaryPackResult;
-        public Universe TestObj;
+        public JsonResponseModel TestObj;
+        public ABSaveMap Map;
         public ABSaveSettings Settings = ABSaveSettings.PrioritizeSize;
 
         [GlobalSetup]
         public void Setup()
         {
-            ABSaveResult = new MemoryStream();
+            ABSaveOldResult = new MemoryStream();
+            ABSaveNewResult = new MemoryStream();
             NewtonsoftJsonResult = new MemoryStream();
             Utf8JsonResult = new MemoryStream();
             TextJsonResult = new MemoryStream();
-            ZeroFormatterResult = new MemoryStream();
+            BinaryFormatterResult = new MemoryStream();
             XMLResult = new MemoryStream();
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            TestObj = Universe.GenerateUniverse();
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.PrioritizeSize);
+
+            TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText(@"C:\Users\alexb\Documents\model.txt"));
         }
 
-        //[Benchmark]
-        //public void ABSave()
-        //{
-        //    ABSaveResult.Position = 0;
+        [Benchmark]
+        public void ABSaveNew()
+        {
+            ABSaveNewResult.Position = 0;
 
-        //    var writer = new ABSaveWriter(ABSaveResult, Settings);
-        //    ABSaveObjectConverter.Serialize(TestObj, typeof(Universe), writer);
-        //}
+            var serializer = new ABSaveSerializer(ABSaveNewResult, Map);
+            serializer.Serialize(TestObj);
+        }
+
+        [Benchmark]
+        public void ABSaveOld()
+        {
+            ABSaveOldResult.Position = 0;
+
+            var serializer = new OLD.ABSaveWriter(ABSaveOldResult, OLD.ABSaveSettings.PrioritizeSize);
+            OLD.ABSaveItemConverter.Serialize(TestObj, typeof(JsonResponseModel), serializer);
+        }
 
 
         [Benchmark]
         public void NewtonsoftJson()
         {
             NewtonsoftJsonResult.Position = 0;
-            JsonSerializer serializer = new JsonSerializer();
+            Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer();
 
             using StreamWriter sr = new StreamWriter(NewtonsoftJsonResult, Encoding.UTF8, 1024, true);
-            using JsonWriter writer = new JsonTextWriter(sr);
+            using Newtonsoft.Json.JsonWriter writer = new Newtonsoft.Json.JsonTextWriter(sr);
 
-            serializer.Serialize(writer, TestObj, typeof(Universe));
+            serializer.Serialize(writer, TestObj, typeof(JsonResponseModel));
+        }
+
+        [Benchmark]
+        public void BinaryFormat()
+        {
+            BinaryFormatterResult.Position = 0;
+            var formatter = new BinaryFormatter();
+#pragma warning disable SYSLIB0011 // Type or member is obsolete
+            formatter.Serialize(BinaryFormatterResult, TestObj);
+#pragma warning restore SYSLIB0011 // Type or member is obsolete
         }
 
         [Benchmark]
@@ -72,7 +98,6 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         {
             Utf8JsonResult.Position = 0;
             Utf8Json.JsonSerializer.Serialize(Utf8JsonResult, TestObj);
-            Utf8JsonResult.Flush();
         }
 
         [Benchmark]
@@ -80,25 +105,16 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         {
             TextJsonResult.Position = 0;
 
-            using var writer = new System.Text.Json.Utf8JsonWriter(TextJsonResult, new System.Text.Json.JsonWriterOptions());
-            System.Text.Json.JsonSerializer.Serialize(writer, TestObj);
-
-            TextJsonResult.Flush();
+            using var writer = new Utf8JsonWriter(TextJsonResult, new System.Text.Json.JsonWriterOptions());
+            JsonSerializer.Serialize(writer, TestObj);
         }
-
-        //[Benchmark]
-        //public void ZeroFormatter()
-        //{
-        //    ZeroFormatterResult.Position = 0;
-        //    ZeroFormatterSerializer.Serialize(TestObj);
-        //}
 
         [Benchmark]
         public void XML()
         {
             XMLResult.Position = 0;
 
-            var serializer = new XmlSerializer(typeof(Universe));
+            var serializer = new XmlSerializer(typeof(JsonResponseModel));
             serializer.Serialize(XMLResult, TestObj);
         }
 
@@ -106,7 +122,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         public void MessagePack()
         {
             MessagePackResult.Position = 0;
-            MessagePackSerializer.Serialize(typeof(Universe), MessagePackResult, TestObj);
+            MessagePackSerializer.Serialize(typeof(JsonResponseModel), MessagePackResult, TestObj);
         }
 
         [Benchmark(Baseline = true)]
@@ -116,16 +132,25 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             BinaryConverter.Serialize(TestObj, BinaryPackResult);
         }
 
+        //[Benchmark]
+        //public void WhoaTest()
+        //{
+        //    WhoaResult.Position = 0;
+        //    Whoa.Whoa.SerialiseObject(WhoaResult, TestObj, SerialisationOptions.None);
+        //}
+
+
         [GlobalCleanup]
         public void Finish()
         {
             Console.WriteLine("OUTPUT SIZES:");
 
-            //Print(ABSave, ABSaveResult);
+            Print(ABSaveOld, ABSaveOldResult);
+            Print(ABSaveNew, ABSaveNewResult);
             Print(NewtonsoftJson, NewtonsoftJsonResult);
             Print(UTF8Json, Utf8JsonResult);
             Print(TextJson, TextJsonResult);
-            //Print(ZeroFormatter, ZeroFormatterResult);
+            Print(BinaryFormat, BinaryFormatterResult);
             Print(XML, XMLResult);
             Print(MessagePack, MessagePackResult);
             Print(BinaryPack, BinaryPackResult);
@@ -135,23 +160,53 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
                 a();
                 Console.WriteLine(a.Method.Name + ": " + stream.Length);
             }
-
         }
-
-        //[Benchmark]
-        //public void WhoaTest()
-        //{
-        //    WhoaResult.Position = 0;
-        //    Whoa.Whoa.SerialiseObject(WhoaResult, TestObj, SerialisationOptions.None);
-        //}
     }
 
     class Program
     {
         static void Main()
         {
-            //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(new string[0], new DebugInProcessConfig());
+            GenerateAndSaveNewModel();
+            Debugger.Break();
+            TestOutputSize();
             BenchmarkRunner.Run<TestBenchmark>();
+            Console.ReadLine();
+
+
+            var benchmarks = new TestBenchmark();
+            benchmarks.Setup();
+
+            for (int i = 0; i < 100; i++)
+                benchmarks.ABSaveNew();
+
+            GC.Collect();
+
+            Debugger.Break();
+
+            for (int i = 0; i < 307; i++)
+                benchmarks.ABSaveNew();
+
+            Debugger.Break();
+        }
+
+        static void TestOutputSize()
+        {
+            var benchmarks = new TestBenchmark();
+            benchmarks.Setup();
+            benchmarks.Finish();
+        }
+
+        static void GenerateAndSaveNewModel()
+        {
+            JsonResponseModel model = new JsonResponseModel();
+            model.Initialize();
+
+            var options = new JsonSerializerOptions
+            {
+                WriteIndented = true
+            };
+            File.WriteAllText("model.txt", JsonSerializer.Serialize(model, options));
         }
     }
 }

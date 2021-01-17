@@ -176,7 +176,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
             }            
 
             // Object to converter - With header
-            ResetOutputWithMapItem(new ObjectMapItem(Array.Empty<ObjectFieldInfo>(), typeof(object)));
+            ResetOutputWithMapItem(new ObjectMapItem(Array.Empty<ObjectFieldInfo>(), typeof(object), false));
             {
                 Serializer.SerializeItem(new SubWithHeader(), CurrentMapItem);
                 AssertAndGoToStart(160, 128, SubTypeConverter.OUTPUT_BYTE);

@@ -52,6 +52,11 @@ namespace ABSoftware.ABSave.Serialization
 
         public MapItem GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
 
+        public void Serialize(object obj)
+        {
+            SerializeItem(obj, Map.RootItem);
+        }
+
         public void SerializeItem(object obj, MapItem item)
         {
             if (obj == null)
@@ -60,8 +65,8 @@ namespace ABSoftware.ABSave.Serialization
             else
             {
                 var currentHeader = new BitTarget(this);
-                if (!item.ItemType.IsValueType) currentHeader.WriteBitOn();
-                SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, item.ItemType.IsValueType);
+                if (!item.IsValueType) currentHeader.WriteBitOn();
+                SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, item.IsValueType);
             }
         }
 
@@ -74,8 +79,8 @@ namespace ABSoftware.ABSave.Serialization
             }
             else
             {
-                if (!item.ItemType.IsValueType) target.WriteBitOn();
-                SerializeItemNoSetup(obj, obj.GetType(), item, ref target, item.ItemType.IsValueType);
+                if (!item.IsValueType) target.WriteBitOn();
+                SerializeItemNoSetup(obj, obj.GetType(), item, ref target, item.IsValueType);
             }
         }
 

@@ -8,7 +8,7 @@ namespace ABSoftware.ABSave.Mapping.Items
     {
         public MapItem InnerItem;
 
-        public NullableMapItem(Type itemType, MapItem innerItem) =>
-            (ItemType, InnerItem) = (itemType, innerItem);
+        public NullableMapItem(Type itemType, bool isValueType, MapItem innerItem) =>
+            (ItemType, IsValueType, InnerItem) = (itemType, isValueType, innerItem);
     }
 }

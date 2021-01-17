@@ -13,21 +13,24 @@ namespace ABSoftware.ABSave.Mapping
     {
         internal static MapItem Generate(Type type, ABSaveMap root)
         {
+            bool isValueType = type.IsValueType;
+
             // Nullable
             if (IsNullable(type))
-                return new NullableMapItem(type, Generate(type.GetGenericArguments()[0], root));
+                return new NullableMapItem(type, isValueType, Generate(type.GetGenericArguments()[0], root));
 
             // Converter
             var isConverter = TryFindConverterForType(root, type, out ABSaveConverter converter, out IABSaveConverterContext context);
-            if (isConverter) return new ConverterMapItem(type, converter, context);
+            if (isConverter) return new ConverterMapItem(type, isValueType, converter, context);
 
             // Object
-            return GenerateObjectMap(type, root);
+            var items = GenerateObjectMap(type, root);
+            return new ObjectMapItem(items, type, isValueType);
         }
 
         #region Object
 
-        static MapItem GenerateObjectMap(Type objType, ABSaveMap map)
+        static ObjectFieldInfo[] GenerateObjectMap(Type objType, ABSaveMap map)
         {
             if (map.Settings.ConvertFields)
                 return GenerateWithFields(objType, map);
@@ -35,7 +38,7 @@ namespace ABSoftware.ABSave.Mapping
                 return GenerateWithProperties(objType, map);
         }
 
-        static MapItem GenerateWithProperties(Type objType, ABSaveMap map)
+        static ObjectFieldInfo[] GenerateWithProperties(Type objType, ABSaveMap map)
         {
             var bindingFlags = GetFlagsForAccessLevel(map.Settings.IncludePrivate);
             var properties = objType.GetProperties(bindingFlags);
@@ -45,10 +48,10 @@ namespace ABSoftware.ABSave.Mapping
             for (int i = 0; i < ordered.Count; i++)
                 final[i] = PrepareMemberForObject(new Either<PropertyInfo, FieldInfo>(ordered[i]), ordered[i].PropertyType, map);
 
-            return new ObjectMapItem(final, objType);
+            return final;
         }
 
-        static MapItem GenerateWithFields(Type objType, ABSaveMap map)
+        static ObjectFieldInfo[] GenerateWithFields(Type objType, ABSaveMap map)
         {
             var bindingFlags = GetFlagsForAccessLevel(map.Settings.IncludePrivate);
             var fields = objType.GetFields(bindingFlags);
@@ -58,7 +61,7 @@ namespace ABSoftware.ABSave.Mapping
             for (int i = 0; i < ordered.Count; i++)
                 final[i] = PrepareMemberForObject(new Either<PropertyInfo, FieldInfo>(ordered[i]), ordered[i].FieldType, map);
 
-            return new ObjectMapItem(final, objType);
+            return final;
         }
 
         static ObjectFieldInfo PrepareMemberForObject(Either<PropertyInfo, FieldInfo> member, Type itemType, ABSaveMap map)

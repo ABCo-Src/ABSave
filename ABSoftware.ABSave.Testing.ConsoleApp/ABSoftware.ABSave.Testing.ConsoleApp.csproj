@@ -18,4 +18,10 @@
     <ProjectReference Include="..\ABSoftware.ABSave\ABSoftware.ABSave.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="ABSoftware.ABSave.OLD">
+      <HintPath>C:\Users\alexb\Documents\ABSoftware.ABSave.OLD.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
 </Project>

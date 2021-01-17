@@ -2,270 +2,422 @@
 using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
     [MessagePackObject]
     [Serializable]
-    public class Universe
+    public sealed class JsonResponseModel : IEquatable<JsonResponseModel>
     {
-        public static Universe GenerateUniverse()
+        public JsonResponseModel() { }
+
+        public JsonResponseModel(bool initialize)
         {
-            return new Universe()
-            {
-                Planets = new Planet[]
-                {
-                    new Planet()
-                    {
-                        PlanetName = "Earth",
-                        People = new Person[]
-                        {
-                            new Person()
-                            {
-                                Name = "Alex",
-                                Age = 15,
-                                Jobs = new Job[]
-                                {
-                                    new Job()
-                                    {
-                                        Name = "ABSoftware Programmer",
-                                        StartTime = new DateTime(2020, 9, 25),
-                                        WorkTimeLength = new TimeSpan(6, 0, 0),
-                                        Payment = new JobPayment()
-                                        {
-                                            PaymentFrequency = JobPaymentFrequency.Weekly,
-                                            PaymentSize = 50000d
-                                        }
-                                    },
-                                    new Job()
-                                    {
-                                        Name = "ABSoftware Discord Moderator",
-                                        StartTime = new DateTime(2020, 10, 30),
-                                        WorkTimeLength = new TimeSpan(24, 0, 0),
-                                        Payment = new JobPayment()
-                                        {
-                                            PaymentFrequency = JobPaymentFrequency.Yearly,
-                                            PaymentSize = 5d
-                                        }
-                                    },
-                                },
-                                Hobbies = new string[]
-                                {
-                                    "Programming",
-                                    "Video Editing"
-                                }
-                            },
-                            new Person()
-                            {
-                                Name = "Tom",
-                                Age = 48,
-                                Jobs = new Job[]
-                                {
-                                    new Job()
-                                    {
-                                        Name = "ABSoftware Shop Keeper",
-                                        StartTime = new DateTime(2030, 7, 20),
-                                        WorkTimeLength = new TimeSpan(8, 0, 0),
-                                        Payment = new JobPayment()
-                                        {
-                                            PaymentFrequency = JobPaymentFrequency.Yearly,
-                                            PaymentSize = 500d
-                                        }
-                                    }
-                                }
-                            }
-                        },
-                        Plants = new Plant[]
-                        {
-                            new Plant()
-                            {
-                                PlantSize = new ABSize()
-                                {
-                                    Width = 10,
-                                    Height = 300,
-                                },
-                                LeafCount = 50
-                            },
-                            new Plant()
-                            {
-                                PlantSize = new ABSize()
-                                {
-                                    Width = 100,
-                                    Height = 5000,
-                                },
-                                LeafCount = 50
-                            }
-                        },
-                        Cities = new City[]
-                        {
-                            new City()
-                            {
-                                Name = "ABCity",
-                                Buildings = new List<Building>()
-                                {
-                                    new Building()
-                                    {
-                                        Name = "ABBuilding",
-                                        BuildingSize = new ABSize()
-                                        {
-                                            Width = 1000,
-                                            Height = 10000
-                                        }
-                                    },
-                                    new Building()
-                                    {
-                                        Name = "SomethingElse",
-                                        BuildingSize = new ABSize()
-                                        {
-                                            Width = 200,
-                                            Height = 1000
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    new Planet()
-                    {
-                        PlanetName = "Mars",
-                        People = null,
-                        Plants = new Plant[]
-                        {
-                            new Plant()
-                            {
-                                LeafCount = 0,
-                                PlantSize = new ABSize()
-                                {
-                                    Width = 10,
-                                    Height = 50
-                                }
-                            }
-                        },
-                        Cities = null
-                    }
-                }
-            };
+            if (initialize) Initialize();
         }
 
         [Key(0)]
-        public virtual Planet[] Planets { get; set; }
-    }
-
-    [MessagePackObject]
-    [Serializable]
-    public class Planet
-    {
-        [Key(0)]
-        public virtual string PlanetName { get; set; }
+        public string Id { get; set; }
 
         [Key(1)]
-        public virtual Person[] People { get; set; }
+        public string Type { get; set; }
 
         [Key(2)]
-        public virtual Plant[] Plants { get; set; }
+        public int Count { get; set; }
 
         [Key(3)]
-        public virtual City[] Cities { get; set; }
-    }
+        public DateTime CreationTime { get; set; }
 
-    [MessagePackObject]
-    [Serializable]
-    public class Person
-    {
-        [Key(0)]
-        public virtual string Name { get; set; }
+        [Key(4)]
+        public DateTime UpdateTime { get; set; }
 
-        [Key(1)]
-        public virtual int Age { get; set; }
+        [Key(5)]
+        public DateTime ExpirationTime { get; set; }
 
-        [Key(2)]
-        public virtual Job[] Jobs { get; set; }
+        [Key(6)]
+        public string PreviousPageId { get; set; }
 
-        [Key(3)]
-        public virtual string[] Hobbies { get; set; } = new string[]
+        [Key(7)]
+        public string FollowingPageId { get; set; }
+
+        [Key(8)]
+        public List<ApiModelContainer> ModelContainers { get; set; }
+
+        /// <inheritdoc/>
+        public void Initialize()
         {
-            "Programming",
-            "SomethingElse"
-        };
+            Id = Randomizer.NextString(6);
+            Type = nameof(JsonResponseModel);
+            Count = Randomizer.NextInt();
+            CreationTime = Randomizer.NextDateTime();
+            UpdateTime = Randomizer.NextDateTime();
+            ExpirationTime = Randomizer.NextDateTime();
+            PreviousPageId = Randomizer.NextString(6);
+            FollowingPageId = Randomizer.NextString(6);
+            ModelContainers = new List<ApiModelContainer>();
+            for (int i = 0; i < 50; i++)
+            {
+                var model = new ApiModelContainer();
+                model.Initialize();
+                ModelContainers.Add(model);
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(JsonResponseModel other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return
+                Id == other.Id &&
+                Type == other.Type &&
+                Count == other.Count &&
+                CreationTime.Equals(other.CreationTime) &&
+                UpdateTime.Equals(other.UpdateTime) &&
+                ExpirationTime.Equals(other.ExpirationTime) &&
+                PreviousPageId == other.PreviousPageId &&
+                FollowingPageId == other.FollowingPageId &&
+                ModelContainers?.Count == other.ModelContainers?.Count &&
+                ModelContainers.Zip(other.ModelContainers).All(p => p.First.Equals(p.Second));
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as JsonResponseModel);
+        }
+
+        public override int GetHashCode() => base.GetHashCode();
     }
 
     [MessagePackObject]
     [Serializable]
-    public class Job
+    public sealed class ApiModelContainer : IEquatable<ApiModelContainer>
     {
         [Key(0)]
-        public virtual string Name { get; set; }
+        public string Id { get; set; }
 
         [Key(1)]
-        public virtual DateTime StartTime { get; set; }
+        public string Type { get; set; }
 
         [Key(2)]
-        public virtual TimeSpan WorkTimeLength { get; set; }
+        public RestApiModel Model { get; set; }
+
+        /// <inheritdoc/>
+        public void Initialize()
+        {
+            Id = Randomizer.NextString(6);
+            Type = nameof(JsonResponseModel);
+            Model = new RestApiModel();
+            Model.Initialize();
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ApiModelContainer other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) throw new InvalidOperationException();
+            return
+                Id?.Equals(other.Id) == true &&
+                Type?.Equals(other.Type) == true &&
+                Model?.Equals(other.Model) == true;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ApiModelContainer);
+        }
+
+        public override int GetHashCode() => base.GetHashCode();
+    }
+
+    [MessagePackObject]
+    [Serializable]
+    public sealed class RestApiModel : IEquatable<RestApiModel>
+    {
+        [Key(0)]
+        public string Id { get; set; }
+
+        [Key(1)]
+        public string Type { get; set; }
+        
+        [Key(2)]
+        public string Parent { get; set; }
 
         [Key(3)]
-        public virtual JobPayment Payment { get; set; }
+        public string Author { get; set; }
+
+        [Key(4)]
+        public string Title { get; set; }
+
+        [Key(5)]
+        public string Text { get; set; }
+
+        [Key(6)]
+        public string Url { get; set; }
+
+        [Key(7)]
+        public string HtmlContent { get; set; }
+
+        [Key(8)]
+        public int Upvotes { get; set; }
+
+        [Key(9)]
+        public int Downvotes { get; set; }
+
+        [Key(10)]
+        public float VotesRatio { get; set; }
+
+        [Key(11)]
+        public int Views { get; set; }
+
+        [Key(12)]
+        public int Clicks { get; set; }
+
+        [Key(13)]
+        public float ClicksRatio { get; set; }
+
+        [Key(14)]
+        public int NumberOfComments { get; set; }
+
+        [Key(15)]
+        public DateTime CreationTime { get; set; }
+
+        [Key(16)]
+        public DateTime UpdateTime { get; set; }
+
+        [Key(17)]
+        public DateTime ExpirationTime { get; set; }
+
+        [Key(18)]
+        public bool Flag1 { get; set; }
+
+        [Key(19)]
+        public bool Flag2 { get; set; }
+
+        [Key(20)]
+        public bool Flag3 { get; set; }
+
+        [Key(21)]
+        public bool Flag4 { get; set; }
+
+        [Key(22)]
+        public bool Flag5 { get; set; }
+
+        [Key(23)]
+        public string Optional1 { get; set; }
+
+        [Key(24)]
+        public string Optional2 { get; set; }
+
+        [Key(25)]
+        public string Optional3 { get; set; }
+
+        [Key(26)]
+        public MediaInfoModel Info { get; set; }
+
+        /// <inheritdoc/>
+        public void Initialize()
+        {
+            Id = Randomizer.NextString(6);
+            Type = nameof(RestApiModel);
+            Parent = Randomizer.NextString(6);
+            Author = Randomizer.NextString(6);
+            Title = Randomizer.NextString(Randomizer.NextInt(40, 120));
+            if (Randomizer.NextBool())
+            {
+
+                Text = Randomizer.NextString(Randomizer.NextInt(80, 400));
+                Url = null;
+                HtmlContent = Randomizer.NextString(Randomizer.NextInt(100, 600));
+            }
+            else
+            {
+                Text = null;
+                Url = Randomizer.NextString(Randomizer.NextInt(80, 120));
+                HtmlContent = null;
+            }
+            Upvotes = Randomizer.NextInt();
+            Downvotes = Randomizer.NextInt();
+            VotesRatio = Upvotes / (float)Downvotes;
+            Views = Randomizer.NextInt();
+            Clicks = Randomizer.NextInt();
+            ClicksRatio = Views / (float)Clicks;
+            NumberOfComments = Randomizer.NextInt();
+            CreationTime = Randomizer.NextDateTime();
+            UpdateTime = Randomizer.NextDateTime();
+            ExpirationTime = Randomizer.NextDateTime();
+            Flag1 = Randomizer.NextBool();
+            Flag2 = Randomizer.NextBool();
+            Flag3 = Randomizer.NextBool();
+            Flag4 = Randomizer.NextBool();
+            Flag5 = Randomizer.NextBool();
+            if (Randomizer.NextBool()) Optional1 = Randomizer.NextString(Randomizer.NextInt(6, 20));
+            if (Randomizer.NextBool()) Optional2 = Randomizer.NextString(Randomizer.NextInt(6, 20));
+            if (Randomizer.NextBool()) Optional3 = Randomizer.NextString(Randomizer.NextInt(6, 20));
+            if (Randomizer.NextBool())
+            {
+                Info = new MediaInfoModel();
+                Info.Initialize();
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(RestApiModel other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return
+                Id == other.Id &&
+                Type == other.Type &&
+                Parent == other.Parent &&
+                Author == other.Author &&
+                Title == other.Title &&
+                Text == other.Text &&
+                Url == other.Url &&
+                HtmlContent == other.HtmlContent &&
+                Upvotes == other.Upvotes &&
+                Downvotes == other.Downvotes &&
+                MathF.Abs(VotesRatio - other.VotesRatio) < 0.001f &&
+                Views == other.Views &&
+                Clicks == other.Clicks &&
+                MathF.Abs(ClicksRatio - other.ClicksRatio) < 0.001f &&
+                NumberOfComments == other.NumberOfComments &&
+                CreationTime.Equals(other.CreationTime) &&
+                UpdateTime.Equals(other.UpdateTime) &&
+                ExpirationTime.Equals(other.ExpirationTime) &&
+                Flag1 == other.Flag1 &&
+                Flag2 == other.Flag2 &&
+                Flag3 == other.Flag3 &&
+                Flag4 == other.Flag4 &&
+                Flag5 == other.Flag5 &&
+                Optional1 == other.Optional1 &&
+                Optional2 == other.Optional2 &&
+                Optional3 == other.Optional3 &&
+                (Info == null && other.Info == null ||
+                 Info?.Equals(other.Info) == true);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as RestApiModel);
+        }
+
+        public override int GetHashCode() => base.GetHashCode();
     }
 
     [MessagePackObject]
     [Serializable]
-    public struct JobPayment
+    public sealed class MediaInfoModel : IEquatable<MediaInfoModel>
     {
         [Key(0)]
-        public JobPaymentFrequency PaymentFrequency { get; set; }
+        public string Id { get; set; }
 
         [Key(1)]
-        public double PaymentSize { get; set; }
-    }
+        public string AlbumUrl { get; set; }
 
-    public enum JobPaymentFrequency
-    {
-        Weekly,
-        Monthly,
-        Yearly
+        [Key(2)]
+        public bool Property { get; set; }
+
+        [Key(3)]
+        public List<ImageModel> Images { get; set; }
+
+        /// <inheritdoc/>
+        public void Initialize()
+        {
+            Id = Randomizer.NextString(6);
+            AlbumUrl = Randomizer.NextString(100);
+            Property = Randomizer.NextBool();
+            int count = Randomizer.NextInt() % 4 + 1;
+            Images = new List<ImageModel>(count);
+            for (int i = 0; i < count; i++)
+            {
+                var model = new ImageModel();
+                model.Initialize();
+                Images.Add(model);
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(MediaInfoModel other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return
+                Id?.Equals(other.Id) == true &&
+                AlbumUrl?.Equals(other.AlbumUrl) == true &&
+                Property == other.Property &&
+                Images?.Count == other.Images?.Count &&
+                Images.Zip(other.Images).All(p => p.First.Equals(p.Second));
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as MediaInfoModel);
+        }
+
+        public override int GetHashCode() => base.GetHashCode();
     }
 
     [MessagePackObject]
     [Serializable]
-    public class Plant
+    public sealed class ImageModel : IEquatable<ImageModel>
     {
         [Key(0)]
-        public virtual int LeafCount { get; set; }
+        public string Url { get; set; }
 
         [Key(1)]
-        public virtual ABSize PlantSize { get; set; }
+        public int Width { get; set; }
+
+        [Key(2)]
+        public int Height { get; set; }
+
+        [Key(3)]
+        public float AspectRatio { get; set; }
+
+        /// <inheritdoc/>
+        public void Initialize()
+        {
+            Url = Randomizer.NextString(Randomizer.NextInt(140, 200));
+            Width = Randomizer.NextInt();
+            Height = Randomizer.NextInt();
+            AspectRatio = Width / (float)Height;
+        }
+
+        /// <inheritdoc/>
+        public bool Equals(ImageModel other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) throw new InvalidOperationException();
+            return
+                Url?.Equals(other.Url) == true &&
+                Width == other.Width &&
+                Height == other.Height &&
+                MathF.Abs(AspectRatio - other.AspectRatio) < 0.001f;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return Equals(obj as ImageModel);
+        }
+
+        public override int GetHashCode() => base.GetHashCode();
     }
 
-    [MessagePackObject]
-    [Serializable]
-    public class City
+    static class Randomizer
     {
-        [Key(0)]
-        public virtual string Name { get; set; }
+        private static readonly Random Random = new Random();
+        public static bool NextBool() => Random.Next() % 2 == 1;
+        public static int NextInt() => Random.Next();
+        public static int NextInt(int min, int max) => Random.Next(min, max);
+        public static double NextDouble() => Random.NextDouble();
+        public static DateTime NextDateTime() => DateTime.Today.AddSeconds(Random.Next(0, 31536000)).ToUniversalTime();
 
-        [Key(1)]
-        public virtual List<Building> Buildings { get; set; }
-    }
-
-    [MessagePackObject]
-    [Serializable]
-    public class Building
-    {
-        [Key(0)]
-        public virtual string Name { get; set; }
-
-        [Key(1)]
-        public virtual ABSize BuildingSize { get; set; }
-    }
-
-    [MessagePackObject]
-    [Serializable]
-    public struct ABSize
-    {
-        [Key(0)]
-        public double Width { get; set; }
-
-        [Key(1)]
-        public double Height { get; set; }
+        public static string NextString(int length) => string.Create(length, Random, (chars, r) =>
+        {
+            for (int i = 0; i < chars.Length; i++)
+                chars[i] = (char)r.Next(65, 90);
+        });
     }
 }

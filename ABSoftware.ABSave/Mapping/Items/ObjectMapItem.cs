@@ -16,6 +16,6 @@ namespace ABSoftware.ABSave.Mapping.Items
     {
         public ObjectFieldInfo[] Members;
 
-        public ObjectMapItem(ObjectFieldInfo[] members, Type itemType) => (Members, ItemType) = (members, itemType);
+        public ObjectMapItem(ObjectFieldInfo[] members, Type itemType, bool isValueType) => (Members, ItemType, IsValueType) = (members, itemType, isValueType);
     }
 }
