@@ -1,10 +1,13 @@
-﻿using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
+﻿using MessagePack;
+using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
+    [MessagePackObject]
+    [Serializable]
     public class Universe
     {
         public static Universe GenerateUniverse()
@@ -145,49 +148,73 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             };
         }
 
-        public Planet[] Planets { get; set; }
+        [Key(0)]
+        public virtual Planet[] Planets { get; set; }
     }
 
+    [MessagePackObject]
     [Serializable]
     public class Planet
     {
-        public string PlanetName { get; set; }
+        [Key(0)]
+        public virtual string PlanetName { get; set; }
 
-        public Person[] People { get; set; }
+        [Key(1)]
+        public virtual Person[] People { get; set; }
 
-        public Plant[] Plants { get; set; }
+        [Key(2)]
+        public virtual Plant[] Plants { get; set; }
 
-        public City[] Cities { get; set; }
+        [Key(3)]
+        public virtual City[] Cities { get; set; }
     }
 
+    [MessagePackObject]
     [Serializable]
     public class Person
     {
-        public string Name { get; set; }
+        [Key(0)]
+        public virtual string Name { get; set; }
 
-        public int Age { get; set; }
+        [Key(1)]
+        public virtual int Age { get; set; }
 
-        public Job[] Jobs { get; set; }
+        [Key(2)]
+        public virtual Job[] Jobs { get; set; }
 
-        public string[] Hobbies { get; set; } = new string[]
+        [Key(3)]
+        public virtual string[] Hobbies { get; set; } = new string[]
         {
             "Programming",
             "SomethingElse"
         };
     }
 
+    [MessagePackObject]
     [Serializable]
     public class Job
     {
-        public string Name { get; set; }
-        public DateTime StartTime { get; set; }
-        public TimeSpan WorkTimeLength { get; set; }
-        public JobPayment Payment { get; set; }
+        [Key(0)]
+        public virtual string Name { get; set; }
+
+        [Key(1)]
+        public virtual DateTime StartTime { get; set; }
+
+        [Key(2)]
+        public virtual TimeSpan WorkTimeLength { get; set; }
+
+        [Key(3)]
+        public virtual JobPayment Payment { get; set; }
     }
 
+    [MessagePackObject]
+    [Serializable]
     public struct JobPayment
     {
+        [Key(0)]
         public JobPaymentFrequency PaymentFrequency { get; set; }
+
+        [Key(1)]
         public double PaymentSize { get; set; }
     }
 
@@ -198,32 +225,47 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         Yearly
     }
 
+    [MessagePackObject]
+    [Serializable]
     public class Plant
     {
-        public int LeafCount { get; set; }
-        public ABSize PlantSize { get; set; }
+        [Key(0)]
+        public virtual int LeafCount { get; set; }
+
+        [Key(1)]
+        public virtual ABSize PlantSize { get; set; }
     }
 
+    [MessagePackObject]
     [Serializable]
     public class City
     {
-        public string Name { get; set; }
+        [Key(0)]
+        public virtual string Name { get; set; }
 
-        public List<Building> Buildings { get; set; }
+        [Key(1)]
+        public virtual List<Building> Buildings { get; set; }
     }
 
+    [MessagePackObject]
     [Serializable]
     public class Building
     {
-        public string Name { get; set; }
+        [Key(0)]
+        public virtual string Name { get; set; }
 
-        public ABSize BuildingSize { get; set; }
+        [Key(1)]
+        public virtual ABSize BuildingSize { get; set; }
     }
 
+    [MessagePackObject]
     [Serializable]
     public struct ABSize
     {
+        [Key(0)]
         public double Width { get; set; }
+
+        [Key(1)]
         public double Height { get; set; }
     }
 }

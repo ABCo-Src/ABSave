@@ -1,16 +1,67 @@
 ﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Helpers;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text;
 
 namespace ABSoftware.ABSave
 {
-    public enum TextMode
+    public enum SettingsPreset
     {
-        UTF8 = 0,
-        NullTerminatedUTF8 = 1,
-        UTF16 = 2,
+        PrioritizePerformance,
+        PrioritizeSize
+    }
+
+    public struct ABSaveSettingsBuilder
+    {
+        public bool? ConvertFields { get; set; }
+        public bool? IncludePrivate { get; set; }
+        public bool? LazyBitHandling { get; set; }
+        public bool? UseUTF8 { get; set; }
+        public bool? UseLittleEndian { get; set; }
+        public List<ABSaveConverter> CustomConverters { get; set; }
+
+        public ABSaveSettings CreateSettings(ABSaveSettings template)
+        {
+            var convertFields = ConvertFields ?? template.ConvertFields;
+            var includePrivate = IncludePrivate ?? template.IncludePrivate;
+            var lazyBitHandling = LazyBitHandling ?? template.LazyBitHandling;
+            var useUTF8 = UseUTF8 ?? template.UseUTF8;
+            var useLittleEndian = UseLittleEndian ?? template.UseLittleEndian;
+
+            Dictionary<Type, ABSaveConverter> exactConverters = null;
+            List<ABSaveConverter> nonExactConverters = null;
+
+            // Set the custom converters correctly.
+            if (CustomConverters != null)
+            {
+                for (int i = 0; i < CustomConverters.Count; i++)
+                {
+                    var currentConverter = CustomConverters[i];
+                    var exactTypes = CustomConverters[i].ExactTypes;
+
+                    if (exactTypes.Length > 0)
+                    {
+                        exactConverters ??= new Dictionary<Type, ABSaveConverter>(ABSaveConverter.BuiltInExact);
+                        exactConverters.EnsureCapacity(exactConverters.Count + exactTypes.Length);
+
+                        for (int j = 0; j < exactTypes.Length; j++)
+                            exactConverters.Add(exactTypes[j], currentConverter);
+                    }
+
+                    if (currentConverter.AlsoConvertsNonExact)
+                    {
+                        nonExactConverters ??= new List<ABSaveConverter>(ABSaveConverter.BuiltInNonExact);
+                        nonExactConverters.Add(currentConverter);
+                    }
+                }
+            }
+
+            return new ABSaveSettings(convertFields, includePrivate, lazyBitHandling, useUTF8, useLittleEndian, 
+                exactConverters ?? ABSaveConverter.BuiltInExact, nonExactConverters ?? ABSaveConverter.BuiltInNonExact);
+        }
     }
 
     /// <summary>
@@ -18,107 +69,24 @@ namespace ABSoftware.ABSave
     /// </summary>
     public class ABSaveSettings
     {
-        public bool CacheTypesAndAssemblies = true;
-        public bool AutoCheckTypeConverters = true;
-        public bool ErrorOnUnknownItem = true;
-        public TextMode TextMode = TextMode.UTF16;
-        public bool UseLittleEndian = BitConverter.IsLittleEndian;
-        public BindingFlags MemberReflectionFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+        public static ABSaveSettings PrioritizePerformance { get; } = new ABSaveSettings(false, false, true, true, BitConverter.IsLittleEndian, ABSaveConverter.BuiltInExact, ABSaveConverter.BuiltInNonExact);
+        public static ABSaveSettings PrioritizeSize { get; } = new ABSaveSettings(false, false, false, true, BitConverter.IsLittleEndian, ABSaveConverter.BuiltInExact, ABSaveConverter.BuiltInNonExact);
 
-        private bool _exactConvertersAreCached = true; // Whether the "ExactConverters" is the readonly cached version from "ABSaveTypeConverter".
-        internal Dictionary<Type, ABSaveTypeConverter> ExactConverters;
+        public bool ConvertFields { get; } = false;
+        public bool IncludePrivate { get; } = false;
+        public bool LazyBitHandling { get; } = true;
+        public bool UseUTF8 { get; } = true;
+        public bool UseLittleEndian { get; } = BitConverter.IsLittleEndian;
 
-        private bool _nonExactConvertersAreCached = true; // Whether the "NonExactConverters" is the readonly cached version from "ABSaveTypeConverter".
-        internal List<ABSaveTypeConverter> NonExactConverters;
+        public IReadOnlyDictionary<Type, ABSaveConverter> ExactConverters { get; } = ABSaveConverter.BuiltInExact;
+        public IReadOnlyList<ABSaveConverter> NonExactConverters { get; } = ABSaveConverter.BuiltInNonExact;
 
-        public static ABSaveSettings PrioritizePerformance => new ABSaveSettings();
+        public ABSaveSettings() { }
 
-        public static ABSaveSettings PrioritizeSize => new ABSaveSettings()
-        {
-            TextMode = TextMode.NullTerminatedUTF8
-        };
-
-        public ABSaveSettings() 
-        {
-            ExactConverters = ABSaveTypeConverter.BuiltInExact;
-            NonExactConverters = ABSaveTypeConverter.BuiltInNonExact;
-        }
-
-        public ABSaveSettings SetCacheTypesAndAssemblies(bool cacheTypesAndAssemblies)
-        {
-            CacheTypesAndAssemblies = cacheTypesAndAssemblies;
-            return this;
-        }
-
-        public ABSaveSettings SetUseLittleEndian(bool useLittleEndian)
-        {
-            UseLittleEndian = useLittleEndian;
-            return this;
-        }
-
-        public ABSaveSettings SetAutoCheckTypeConverters(bool checkTypeConverters)
-        {
-            AutoCheckTypeConverters = checkTypeConverters;
-            return this;
-        }
-
-        public ABSaveSettings SetErrorOnUnknownItem(bool errorOnUnknown)
-        {
-            ErrorOnUnknownItem = errorOnUnknown;
-            return this;
-        }
-
-        public ABSaveSettings SetTextMode(TextMode textMode)
-        {
-            TextMode = textMode;
-            return this;
-        }
-
-        public ABSaveSettings SetReflectionFlags(BindingFlags flags)
-        {
-            MemberReflectionFlags = flags;
-            return this;
-        }
-
-        public ABSaveSettings AddTypeConverter(ABSaveTypeConverter converter)
-        {
-            var exactTypes = converter.ExactTypes;
-
-            if (exactTypes.Length > 0)
-            {
-                EnsureNotCachedExactConverters();
-
-                ExactConverters.EnsureCapacity(ExactConverters.Count + exactTypes.Length);
-                for (int i = 0; i < exactTypes.Length; i++)
-                    ExactConverters.Add(exactTypes[i], converter);
-            }
-
-            if (converter.HasNonExactTypes)
-            {
-                EnsureNotCachedNonExactConverters();
-
-                NonExactConverters.Add(converter);
-            }
-
-            return this;
-        }
-
-        private void EnsureNotCachedExactConverters()
-        {
-            if (_exactConvertersAreCached)
-            {
-                ExactConverters = new Dictionary<Type, ABSaveTypeConverter>(ExactConverters);
-                _exactConvertersAreCached = false;
-            }
-        }
-
-        private void EnsureNotCachedNonExactConverters()
-        {
-            if (_nonExactConvertersAreCached)
-            {
-                ExactConverters = new Dictionary<Type, ABSaveTypeConverter>(ExactConverters);
-                _exactConvertersAreCached = false;
-            }
-        }
+        public ABSaveSettings(bool convertFields, bool includePrivate, bool lazyBitHandling, bool useUTF8, bool useLittleEndian, 
+            IReadOnlyDictionary<Type, ABSaveConverter> exactConverters, IReadOnlyList<ABSaveConverter> nonExactConverters)
+        =>
+            (ConvertFields, IncludePrivate, LazyBitHandling, UseUTF8, UseLittleEndian, ExactConverters, NonExactConverters) = 
+            (convertFields, includePrivate, lazyBitHandling, useUTF8, useLittleEndian, exactConverters, nonExactConverters);
     }
 }
