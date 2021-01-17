@@ -32,6 +32,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Converters\TickBasedTypeConverter.cs~RF17d2f30.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
   </ItemGroup>
 

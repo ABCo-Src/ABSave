@@ -1,0 +1,103 @@
+ABSAVE "COMPRESSED" STRUCTURE PLAN:
+
+8 bits:
+
+	> 7  (0xxxxxxx)
+	> 14 (10xxxxxx xxxxxxxx)
+	> 21 (110xxxxx xxxxxxxx xxxxxxxx)
+	> 28 (1110xxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 35 (11110xxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 42 (111110xx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 49 (1111110x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 56 (11111110 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 64 (11111111 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+
+7 bits:
+	> 6  (y0xxxxxx)
+	> 13 (y10xxxxx xxxxxxxx)
+	> 20 (y110xxxx xxxxxxxx xxxxxxxx)
+	> 27 (y1110xxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 34 (y11110xx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 41 (y111110x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 48 (y1111110 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 55 (y1111111 0xxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 71 (y1111111 1xxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+
+6 bits:
+	> 5  (yy0xxxxx)
+	> 12 (yy10xxxx xxxxxxxx)
+	> 19 (yy110xxx xxxxxxxx xxxxxxxx)
+	> 26 (yy1110xx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 33 (yy11110x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 40 (yy111110 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 47 (yy111111 0xxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 54 (yy111111 10xxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 70 (yy111111 11xxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+
+5 bits:
+	> 4  (yyy0xxxx)
+	> 11 (yyy10xxx xxxxxxxx)
+	> 18 (yyy110xx xxxxxxxx xxxxxxxx)
+	> 25 (yyy1110x xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 32 (yyy11110 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 39 (yyy11111 0xxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 46 (yyy11111 10xxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 53 (yyy11111 110xxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 69 (yyy11111 111xxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+
+4 bits:
+
+	> 3  (yyyy0xxx)
+	> 10 (yyyy10xx xxxxxxxx)
+	> 17 (yyyy110x xxxxxxxx xxxxxxxx)
+	> 24 (yyyy1110 xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 31 (yyyy1111 0xxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 38 (yyyy1111 10xxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 45 (yyyy1111 110xxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 52 (yyyy1111 1110xxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 64 (yyyy1111 1111xxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+
+-------------------
+These get too small to actually be reasonable to small sizes. So, we add another byte to all of these, and use these spare bits to EXTEND the first byte!
+NOTE: For implementations, notice that the point the extended part gets filled is equal to the "FreeBits".
+
+3 bits:
+	11 bits first byte!	
+
+	> 10 (0xx xxxxxxxx)
+	> 17 (10x xxxxxxxx xxxxxxxx)
+	> 24 (110 xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 31 (111 0xxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 38 (111 10xxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 45 (111 110xxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 53 (111 1110xxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 59 (111 11110xxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 64 (111 11111xxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+
+2 bits:
+
+	> 9  (0x xxxxxxxx)
+	> 16 (10 xxxxxxxx xxxxxxxx)
+	> 23 (11 0xxxxxxx xxxxxxxx xxxxxxxx)
+	> 30 (11 10xxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 37 (11 110xxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 44 (11 1110xxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 51 (11 11110xxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 58 (11 111110xx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 64 (11 111111xx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	
+1 bits:
+
+	> 8  (0 xxxxxxxx)
+	> 15 (1 0xxxxxxx xxxxxxxx)
+	> 22 (1 10xxxxxx xxxxxxxx xxxxxxxx)
+	> 29 (1 110xxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 36 (1 1110xxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 43 (1 11110xxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 50 (1 111110xx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 57 (1 1111110x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+	> 64 (1 1111111x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
+
+67.29 - 6
+
+if ()

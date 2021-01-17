@@ -1,4 +1,5 @@
 ﻿
+using ABSoftware.ABSave.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Buffers;
@@ -10,7 +11,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests
 {
     public static class TestUtilities
     {
-        public static void CompareWriters(ABSaveWriter expected, ABSaveWriter actual)
+        public static void CompareWriters(ABSaveSerializer expected, ABSaveSerializer actual)
         {
             CollectionAssert.AreEqual(((MemoryStream)expected.Output).ToArray(), ((MemoryStream)actual.Output).ToArray());
         }

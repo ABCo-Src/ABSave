@@ -1,36 +1,110 @@
-﻿using System;
+﻿using ABSoftware.ABSave.Deserialization;
+using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Serialization;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public class KeyValueConverter : ABSaveTypeConverter
+    public class KeyValueConverter : ABSaveConverter
     {
-        public static readonly KeyValueConverter Instance = new KeyValueConverter();
-
+        public static KeyValueConverter Instance { get; } = new KeyValueConverter();
         private KeyValueConverter() { }
 
-        public override bool HasNonExactTypes => true;
-        public override bool TryGenerateContext(Type type) => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
-
-        public override void Serialize(object obj, Type type, ABSaveWriter writer)
+        public override bool ConvertsSubTypes => true;
+        public override bool AlsoConvertsNonExact => true;
+        public override Type[] ExactTypes { get; } = new Type[]
         {
-            var genericArgs = type.GetGenericArguments();
-            var keySpecifiedType = genericArgs[0];
-            var valueSpecifiedType = genericArgs[1];
+            typeof(DictionaryEntry)
+        };
 
-            dynamic pair = (dynamic)obj;
+        public override void Serialize(object obj, Type actualType, IABSaveConverterContext context, ref BitTarget header)
+        {
+            var actualContext = (Context)context;
 
-            ABSaveItemConverter.Serialize(pair.Key, keySpecifiedType, writer);
-            ABSaveItemConverter.Serialize(pair.Value, valueSpecifiedType, writer);
+            if (actualContext.IsGeneric)
+                SerializeGeneric((dynamic)obj, actualContext, header.Serializer);
+                
+            else
+                SerializeNonGeneric((DictionaryEntry)obj, header.Serializer);
         }
 
-        public override object Deserialize(Type type, ABSaveReader reader)
+        void SerializeGeneric(dynamic obj, Context context, ABSaveSerializer serializer)
         {
-            var keySpecifiedType = type.GetGenericArguments()[0];
-            var valueSpecifiedType = type.GetGenericArguments()[1];
+            serializer.SerializeItem(obj.Key, context.KeyMap);
+            serializer.SerializeItem(obj.Value, context.ValueMap);
+        }
 
-            return Activator.CreateInstance(type, ABSaveItemConverter.DeserializeWithAttribute(keySpecifiedType, reader), ABSaveItemConverter.DeserializeWithAttribute(valueSpecifiedType, reader));
+        void SerializeNonGeneric(DictionaryEntry obj, ABSaveSerializer serializer)
+        {
+            var keyMap = serializer.GetRuntimeMapItem(obj.Key.GetType());
+            var valueMap = serializer.GetRuntimeMapItem(obj.Value.GetType());
+
+            serializer.WriteClosedType(keyMap.ItemType);
+            serializer.WriteClosedType(valueMap.ItemType);
+
+            serializer.SerializeExactNonNullItem(obj.Key, keyMap);
+            serializer.SerializeExactNonNullItem(obj.Value, valueMap);
+        }
+
+        public override object Deserialize(Type actualType, IABSaveConverterContext context, ref BitSource header)
+        {
+            var actualContext = (Context)context;
+
+            if (actualContext.IsGeneric)
+                return DeserializeGeneric(actualType, actualContext, header.Deserializer);
+            else
+                return DeserializeNonGeneric(header.Deserializer);
+        }
+
+        object DeserializeGeneric(Type actualType, Context context, ABSaveDeserializer deserializer)
+        {
+            var key = deserializer.DeserializeItem(context.KeyMap);
+            var value = deserializer.DeserializeItem(context.ValueMap);
+
+            return Activator.CreateInstance(actualType, key, value);
+        }
+
+        DictionaryEntry DeserializeNonGeneric(ABSaveDeserializer deserializer)
+        {
+            var keyMap = deserializer.GetRuntimeMapItem(deserializer.ReadClosedType());
+            var valueMap = deserializer.GetRuntimeMapItem(deserializer.ReadClosedType());
+
+            var key = deserializer.DeserializeExactNonNullItem(keyMap);
+            var value = deserializer.DeserializeExactNonNullItem(valueMap);
+
+            return new DictionaryEntry(key, value);
+        }
+
+        public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
+        {
+            var context = new Context();
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
+            {
+                var genericArgs = type.GetGenericArguments();
+
+                context.IsGeneric = true;
+                context.KeyMap = map.GetMaptimeSubItem(genericArgs[0]);
+                context.ValueMap = map.GetMaptimeSubItem(genericArgs[1]);
+                return context;
+            }
+            else if (type == typeof(DictionaryEntry))
+            {
+                context.IsGeneric = false;
+                context.KeyMap = context.ValueMap = map.GetMaptimeSubItem(typeof(object));
+                return context;
+            }
+            else return null;
+        }
+
+        class Context : IABSaveConverterContext
+        {
+            public bool IsGeneric;
+            public MapItem KeyMap;
+            public MapItem ValueMap;
         }
     }
 }
