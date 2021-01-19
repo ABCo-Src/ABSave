@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -25,36 +26,54 @@ namespace ABSoftware.ABSave.Deserialization
         public unsafe short ReadInt16()
         {
             short res = 0;
-            NumericalReadBytes((byte*)&res, 2);
-            return res;
+            ReadBytes(new Span<byte>((byte*)&res, 2));
+            return ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
         }
 
         public unsafe int ReadInt32()
         {
-            int data = 0;
-            NumericalReadBytes((byte*)&data, 4);
-            return data;
+            int res = 0;
+            ReadBytes(new Span<byte>((byte*)&res, 4));
+            return ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
         }
 
         public unsafe long ReadInt64()
         {
-            long data = 0;
-            NumericalReadBytes((byte*)&data, 8);
-            return data;
+            long res = 0;
+            ReadBytes(new Span<byte>((byte*)&res, 8));
+            return ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
         }
 
         public unsafe float ReadSingle()
         {
-            float data = 0;
-            NumericalReadBytes((byte*)&data, 4);
-            return data;
+            if (ShouldReverseEndian)
+            {
+                int res = 0;
+                ReadBytes(new Span<byte>((byte*)&res, 4));
+                return BitConverter.Int32BitsToSingle(BinaryPrimitives.ReverseEndianness(res));
+            }
+            else
+            {
+                float res = 0;
+                ReadBytes(new Span<byte>((byte*)&res, 4));
+                return res;
+            }
         }
 
         public unsafe double ReadDouble()
         {
-            double data = 0;
-            NumericalReadBytes((byte*)&data, 8);
-            return data;
+            if (ShouldReverseEndian)
+            {
+                long res = 0;
+                ReadBytes(new Span<byte>((byte*)&res, 8));
+                return BitConverter.Int64BitsToDouble(BinaryPrimitives.ReverseEndianness(res));
+            }
+            else
+            {
+                double res = 0;
+                ReadBytes(new Span<byte>((byte*)&res, 8));
+                return res;
+            }
         }
 
         public decimal ReadDecimal()
@@ -66,42 +85,6 @@ namespace ABSoftware.ABSave.Deserialization
                 bits[i] = ReadInt32();
 
             return new decimal(bits);
-        }
-
-        unsafe void NumericalReadBytes(byte* data, int numberOfBytes)
-        {
-            if (ShouldReverseEndian)
-            {
-                byte* buffer = stackalloc byte[numberOfBytes];
-                Source.Read(new Span<byte>(buffer, numberOfBytes));
-
-                buffer += numberOfBytes;
-
-                for (int i = 0; i < numberOfBytes; i++)
-                    *data++ = *--buffer;
-            }
-
-            else Source.Read(new Span<byte>(data, numberOfBytes));
-        }
-
-        public unsafe int ReadLittleEndianInt32(int significantBytes)
-        {
-            int dest = 0;
-            byte* destPos = (byte*)&dest;
-
-            if (BitConverter.IsLittleEndian)
-                Source.Read(new Span<byte>(destPos, significantBytes));
-            else
-            {
-                byte* src = stackalloc byte[significantBytes];
-                Source.Read(new Span<byte>(src, significantBytes));
-
-                destPos += significantBytes;
-                for (int i = 0; i < significantBytes; i++)
-                    *--destPos = *src++;
-            }
-
-            return dest;
         }
 
         #endregion

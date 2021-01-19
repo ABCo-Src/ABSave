@@ -9,6 +9,7 @@ namespace ABSoftware.ABSave.Mapping
     {
         internal MapItem RootItem;
         internal MapItem AssemblyItem;
+        internal MapGenerationInfo CurrentGenerationInfo;
 
         /// <summary>
         /// The configuration this map uses.
@@ -24,7 +25,7 @@ namespace ABSoftware.ABSave.Mapping
         internal ABSaveMap(ABSaveSettings settings)
         {
             Settings = settings;
-            AssemblyItem = MapGenerator.Generate(typeof(Assembly), this);
+            AssemblyItem = MapGenerator.Generate(MapGenerator.GenerateItemType(typeof(Assembly)), this);
         }
 
         public static ABSaveMap Get<T>(ABSaveSettings settings) => GetNonGeneric(typeof(T), settings);
@@ -32,10 +33,15 @@ namespace ABSoftware.ABSave.Mapping
         public static ABSaveMap GetNonGeneric(Type type, ABSaveSettings settings)
         {
             var map = new ABSaveMap(settings);
-            map.RootItem = MapGenerator.Generate(type, map);
+            map.RootItem = MapGenerator.Generate(MapGenerator.GenerateItemType(type), map);
             return map;
         }
 
-        public MapItem GetMaptimeSubItem(Type type) => MapGenerator.Generate(type, this);
+        public MapItem GetMaptimeSubItem(Type type) => MapGenerator.Generate(MapGenerator.GenerateItemType(type), this);
+    }
+
+    internal struct MapGenerationInfo
+    {
+        public object[] SlowPropSetterParams;
     }
 }

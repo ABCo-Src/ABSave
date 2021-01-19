@@ -44,15 +44,15 @@ namespace ABSoftware.ABSave.Deserialization
     
         public MapItem GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
 
-        public T DeserializeMap<T>(ABSaveMap map)
+        public object DeserializeRoot()
         {
-            return (T)DeserializeItem(map.RootItem);
+            return DeserializeItem(Map.RootItem);
         }
 
         public object DeserializeItem(MapItem map)
         {
             // Do null checks
-            if (map.IsValueType)
+            if (map.ItemType.IsValueType)
             {
                 _currentHeader = new BitSource() { Deserializer = this };
                 _readHeader = false;
@@ -65,7 +65,7 @@ namespace ABSoftware.ABSave.Deserialization
                 _readHeader = true;
             }
             
-            return DeserializeItemNoSetup(map, map.IsValueType);
+            return DeserializeItemNoSetup(map, map.ItemType.IsValueType);
         }
 
         public object DeserializeExactNonNullItem(MapItem map)
@@ -78,11 +78,11 @@ namespace ABSoftware.ABSave.Deserialization
         public object DeserializeItem(MapItem map, ref BitSource header)
         {
             // Do null checks
-            if (!map.IsValueType && !header.ReadBit()) return null;
+            if (!map.ItemType.IsValueType && !header.ReadBit()) return null;
             
             _currentHeader = header;
             _readHeader = true;
-            return DeserializeItemNoSetup(map, map.IsValueType);
+            return DeserializeItemNoSetup(map, map.ItemType.IsValueType);
         }
 
         public object DeserializeExactNonNullItem(MapItem map, ref BitSource header)
@@ -134,8 +134,10 @@ namespace ABSoftware.ABSave.Deserialization
 
             else if (converterItem.Converter.WritesToHeader) EnsureReadHeader();
 
-            return converterItem.Converter.Deserialize(specifiedType, converterItem.Context, ref _currentHeader);
+            return converterItem.Converter.Deserialize(specifiedType.Type, converterItem.Context, ref _currentHeader);
         }
+
+        object[] _tmpPropSetValueInvokeParams = new object[1];
 
         object DeserializeManualObject(ObjectMapItem map, bool skipTypeHandling)
         {
@@ -154,17 +156,20 @@ namespace ABSoftware.ABSave.Deserialization
                 }
             }
 
-            var res = Activator.CreateInstance(map.ItemType);
+            var res = Activator.CreateInstance(map.ItemType.Type);
 
             for (int i = 0; i < map.Members.Length; i++)
-                SetValue(DeserializeItem(map.Members[i].Map), map.Members[i].Info);
+                SetValue(DeserializeItem(map.Members[i].Map), ref map.Members[i]);
 
             return res;
 
-            void SetValue(object val, Either<PropertyInfo, FieldInfo> info)
+            void SetValue(object val, ref ObjectMemberInfo member)
             {
-                if (info.Left != null) info.Left.SetValue(res, val);
-                else info.Right.SetValue(res, val);
+                // Field
+                if (member.Info.Left != null) member.Info.Left.SetValue(res, val);
+
+                // Property
+                else member.Info.Right.Setter(res, val);
             }
         }
 

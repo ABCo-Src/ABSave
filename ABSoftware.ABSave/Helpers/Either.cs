@@ -9,7 +9,6 @@ namespace ABSoftware.ABSave.Helpers
     /// </summary>
     public struct Either<TLeft, TRight>
         where TLeft : class
-        where TRight : class
     {
         public TLeft Left;
         public TRight Right;
@@ -17,7 +16,7 @@ namespace ABSoftware.ABSave.Helpers
         public Either(TLeft left)
         {
             Left = left;
-            Right = null;
+            Right = default;
         }
 
         public Either(TRight right)

@@ -27,7 +27,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Helpers
         public MapItem GetMap<T>() => GetMap(typeof(T));
         public MapItem GetMap(Type itemType)
         {
-            return new ConverterMapItem(itemType, itemType.IsValueType, this, new Context());
+            return new ConverterMapItem(MapGenerator.GenerateItemType(itemType), this, new Context());
         }
 
         public override bool AlsoConvertsNonExact => true;

@@ -5,6 +5,7 @@ using ABSoftware.ABSave.Mapping.Items;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Numerics;
 using System.Reflection;
@@ -52,7 +53,7 @@ namespace ABSoftware.ABSave.Serialization
 
         public MapItem GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
 
-        public void Serialize(object obj)
+        public void SerializeRoot(object obj)
         {
             SerializeItem(obj, Map.RootItem);
         }
@@ -65,8 +66,8 @@ namespace ABSoftware.ABSave.Serialization
             else
             {
                 var currentHeader = new BitTarget(this);
-                if (!item.IsValueType) currentHeader.WriteBitOn();
-                SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, item.IsValueType);
+                if (!item.ItemType.IsValueType) currentHeader.WriteBitOn();
+                SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, item.ItemType.IsValueType);
             }
         }
 
@@ -79,8 +80,8 @@ namespace ABSoftware.ABSave.Serialization
             }
             else
             {
-                if (!item.IsValueType) target.WriteBitOn();
-                SerializeItemNoSetup(obj, obj.GetType(), item, ref target, item.IsValueType);
+                if (!item.ItemType.IsValueType) target.WriteBitOn();
+                SerializeItemNoSetup(obj, obj.GetType(), item, ref target, item.ItemType.IsValueType);
             }
         }
 
@@ -90,7 +91,7 @@ namespace ABSoftware.ABSave.Serialization
             SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, true);
         }
 
-        public void SerializeExactNonNullItem(object obj, MapItem item, ref BitTarget target) => SerializeItemNoSetup(obj, item.ItemType, item, ref target, true);        
+        public void SerializeExactNonNullItem(object obj, MapItem item, ref BitTarget target) => SerializeItemNoSetup(obj, item.ItemType.Type, item, ref target, true);        
 
         void SerializeItemNoSetup(object obj, Type actualType, MapItem item, ref BitTarget target, bool skipTypeHandling)
         {
@@ -128,7 +129,7 @@ namespace ABSoftware.ABSave.Serialization
                 if (!map.Converter.ConvertsSubTypes)
                 {
                     // Matching type
-                    if (map.ItemType == actualType)
+                    if (map.ItemType.Type == actualType)
                         target.WriteBitOn();
 
                     // Different type
@@ -157,7 +158,7 @@ namespace ABSoftware.ABSave.Serialization
             if (!skipTypeHandling)
             {
                 // Matching type
-                if (map.ItemType == actualType)
+                if (map.ItemType.Type == actualType)
                 {
                     target.WriteBitOn();
                     target.Apply();
@@ -178,12 +179,15 @@ namespace ABSoftware.ABSave.Serialization
 
             // Serialize the item
             for (int i = 0; i < map.Members.Length; i++)
-                SerializeItem(GetValue(map.Members[i].Info), map.Members[i].Map);
+                SerializeItem(GetValue(ref map.Members[i]), map.Members[i].Map);
 
-            object GetValue(Either<PropertyInfo, FieldInfo> info)
+            object GetValue(ref ObjectMemberInfo member)
             {
-                if (info.Left != null) return info.Left.GetValue(obj);
-                return info.Right.GetValue(obj);
+                // Field
+                if (member.Info.Left != null) return member.Info.Left.GetValue(obj);
+
+                // Property - reference types are cached at run-time to avoid reflection.
+                else return member.Info.Right.Getter(obj);
             }
         }
 

@@ -42,8 +42,8 @@ namespace ABSoftware.ABSave.Converters
             var keyMap = serializer.GetRuntimeMapItem(obj.Key.GetType());
             var valueMap = serializer.GetRuntimeMapItem(obj.Value.GetType());
 
-            serializer.WriteClosedType(keyMap.ItemType);
-            serializer.WriteClosedType(valueMap.ItemType);
+            serializer.WriteClosedType(keyMap.ItemType.Type);
+            serializer.WriteClosedType(valueMap.ItemType.Type);
 
             serializer.SerializeExactNonNullItem(obj.Key, keyMap);
             serializer.SerializeExactNonNullItem(obj.Value, valueMap);

@@ -17,7 +17,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         {
             if (initialize) Initialize();
         }
-
+        
         [Key(0)]
         public string Id { get; set; }
 

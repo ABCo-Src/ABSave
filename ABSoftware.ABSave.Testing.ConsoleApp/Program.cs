@@ -22,6 +22,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
     {
         public MemoryStream ABSaveNewResult;
         public MemoryStream ABSaveOldResult;
+        public MemoryStream WhoaResult;
         public MemoryStream NewtonsoftJsonResult;
         public MemoryStream Utf8JsonResult;
         public MemoryStream TextJsonResult;
@@ -39,6 +40,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         {
             ABSaveOldResult = new MemoryStream();
             ABSaveNewResult = new MemoryStream();
+            WhoaResult = new MemoryStream();
             NewtonsoftJsonResult = new MemoryStream();
             Utf8JsonResult = new MemoryStream();
             TextJsonResult = new MemoryStream();
@@ -58,30 +60,20 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             ABSaveNewResult.Position = 0;
 
             var serializer = new ABSaveSerializer(ABSaveNewResult, Map);
-            serializer.Serialize(TestObj);
+            serializer.SerializeRoot(TestObj);
         }
 
-        [Benchmark]
-        public void ABSaveOld()
-        {
-            ABSaveOldResult.Position = 0;
+        //[Benchmark]
+        //public void NewtonsoftJson()
+        //{
+        //    NewtonsoftJsonResult.Position = 0;
+        //    Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer();
 
-            var serializer = new OLD.ABSaveWriter(ABSaveOldResult, OLD.ABSaveSettings.PrioritizeSize);
-            OLD.ABSaveItemConverter.Serialize(TestObj, typeof(JsonResponseModel), serializer);
-        }
+        //    using StreamWriter sr = new StreamWriter(NewtonsoftJsonResult, Encoding.UTF8, 1024, true);
+        //    using Newtonsoft.Json.JsonWriter writer = new Newtonsoft.Json.JsonTextWriter(sr);
 
-
-        [Benchmark]
-        public void NewtonsoftJson()
-        {
-            NewtonsoftJsonResult.Position = 0;
-            Newtonsoft.Json.JsonSerializer serializer = new Newtonsoft.Json.JsonSerializer();
-
-            using StreamWriter sr = new StreamWriter(NewtonsoftJsonResult, Encoding.UTF8, 1024, true);
-            using Newtonsoft.Json.JsonWriter writer = new Newtonsoft.Json.JsonTextWriter(sr);
-
-            serializer.Serialize(writer, TestObj, typeof(JsonResponseModel));
-        }
+        //    serializer.Serialize(writer, TestObj, typeof(JsonResponseModel));
+        //}
 
         [Benchmark]
         public void BinaryFormat()
@@ -109,14 +101,14 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             JsonSerializer.Serialize(writer, TestObj);
         }
 
-        [Benchmark]
-        public void XML()
-        {
-            XMLResult.Position = 0;
+        //[Benchmark]
+        //public void XML()
+        //{
+        //    XMLResult.Position = 0;
 
-            var serializer = new XmlSerializer(typeof(JsonResponseModel));
-            serializer.Serialize(XMLResult, TestObj);
-        }
+        //    var serializer = new XmlSerializer(typeof(JsonResponseModel));
+        //    serializer.Serialize(XMLResult, TestObj);
+        //}
 
         [Benchmark]
         public void MessagePack()
@@ -132,28 +124,21 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             BinaryConverter.Serialize(TestObj, BinaryPackResult);
         }
 
-        //[Benchmark]
-        //public void WhoaTest()
-        //{
-        //    WhoaResult.Position = 0;
-        //    Whoa.Whoa.SerialiseObject(WhoaResult, TestObj, SerialisationOptions.None);
-        //}
-
 
         [GlobalCleanup]
         public void Finish()
         {
             Console.WriteLine("OUTPUT SIZES:");
-
-            Print(ABSaveOld, ABSaveOldResult);
+            
             Print(ABSaveNew, ABSaveNewResult);
-            Print(NewtonsoftJson, NewtonsoftJsonResult);
+            //Print(WhoaTest, WhoaResult);
             Print(UTF8Json, Utf8JsonResult);
             Print(TextJson, TextJsonResult);
             Print(BinaryFormat, BinaryFormatterResult);
-            Print(XML, XMLResult);
             Print(MessagePack, MessagePackResult);
             Print(BinaryPack, BinaryPackResult);
+            //Print(NewtonsoftJson, NewtonsoftJsonResult);
+            //Print(XML, XMLResult);
 
             void Print(Action a, Stream stream)
             {
@@ -167,27 +152,25 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
     {
         static void Main()
         {
-            GenerateAndSaveNewModel();
-            Debugger.Break();
+            //GenerateAndSaveNewModel();
             TestOutputSize();
             BenchmarkRunner.Run<TestBenchmark>();
             Console.ReadLine();
 
+            //var benchmarks = new TestBenchmark();
+            //benchmarks.Setup();
 
-            var benchmarks = new TestBenchmark();
-            benchmarks.Setup();
+            //for (int i = 0; i < 100; i++)
+            //    benchmarks.ABSaveNew();
 
-            for (int i = 0; i < 100; i++)
-                benchmarks.ABSaveNew();
+            //GC.Collect();
 
-            GC.Collect();
+            //Debugger.Break();
 
-            Debugger.Break();
+            //for (int i = 0; i < 307; i++)
+            //    benchmarks.ABSaveNew();
 
-            for (int i = 0; i < 307; i++)
-                benchmarks.ABSaveNew();
-
-            Debugger.Break();
+            //Debugger.Break();
         }
 
         static void TestOutputSize()

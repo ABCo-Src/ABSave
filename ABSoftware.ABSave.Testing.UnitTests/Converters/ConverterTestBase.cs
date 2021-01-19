@@ -20,7 +20,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         public void Setup<T>(ABSaveSettings settings, ABSaveConverter converter)
         {
             Initialize(settings);
-            ResetOutputWithMapItem(new ConverterMapItem(typeof(T), typeof(T).IsValueType, converter, converter.TryGenerateContext(CurrentMap, typeof(T))));
+            ResetOutputWithMapItem(new ConverterMapItem(MapGenerator.GenerateItemType(typeof(T)), converter, converter.TryGenerateContext(CurrentMap, typeof(T))));
         }
 
         public void DoSerialize(object obj)

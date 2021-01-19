@@ -40,7 +40,7 @@ namespace ABSoftware.ABSave.Helpers
             if (parent.CachedSubItems.TryGetValue(type, out RuntimeMapItem map)) return map;
 
             // Get the map slowly, and cache it.
-            var itm = new RuntimeMapItem(MapGenerator.Generate(type, parent));
+            var itm = new RuntimeMapItem(MapGenerator.Generate(MapGenerator.GenerateItemType(type), parent));
             parent.CachedSubItems.Add(type, itm);
             return itm;
         }

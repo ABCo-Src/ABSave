@@ -63,6 +63,8 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Helpers
             return false;
         }
 
+        public override string ToString() => $"{A}:{B}";
+
         public override int GetHashCode() => base.GetHashCode();
     }
 

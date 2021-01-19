@@ -8,8 +8,15 @@ using System.Text;
 namespace ABSoftware.ABSave.Mapping
 {
     public abstract class MapItem
-    {        
-        public Type ItemType { get; set; }
+    {
+        public MapItemType ItemType { get; set; }
+    }
+
+    public struct MapItemType
+    {
+        public Type Type { get; set; }
         public bool IsValueType { get; set; }
+
+        public MapItemType(Type type, bool isValueType) => (Type, IsValueType) = (type, isValueType);
     }
 }

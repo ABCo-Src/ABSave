@@ -5,6 +5,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ABSaveStrongName.snk</AssemblyOriginatorKeyFile>
     <Platforms>AnyCPU;x86;x64</Platforms>
+    <Version>1.0.0-beta</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
