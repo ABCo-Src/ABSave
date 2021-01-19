@@ -15,6 +15,18 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
     [TestClass]
     public class ArrayTests : ConverterTestBase
     {
+        static ABSaveSettings Settings;
+
+        [TestInitialize]
+        public void SetupSettings()
+        {
+            var builder = new ABSaveSettingsBuilder
+            {
+                BypassDangerousTypeChecking = true
+            };
+            Settings = builder.CreateSettings(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance));
+        }
+
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
@@ -24,7 +36,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance);
+                Setup<Array>(Settings, ArrayConverter.Instance);
                 DoSerialize(arr);
 
                 Action<ABSaveSerializer> getElemType = s => s.WriteClosedType(typeof(string));
@@ -34,7 +46,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
             }
             else
             {
-                Setup<string[]>(ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance);
+                Setup<string[]>(Settings, ArrayConverter.Instance);
 
                 DoSerialize(arr);
                 AssertAndGoToStart(5, 193, 65, 193, 66, 193, 67, 193, 68, 193, 69);
@@ -51,7 +63,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance);
+                Setup<Array>(Settings, ArrayConverter.Instance);
                 DoSerialize(arr);
 
                 Action<ABSaveSerializer> getElemType = s => s.WriteClosedType(typeof(byte));
@@ -61,7 +73,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
             }
             else
             {
-                Setup<byte[]>(ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance);
+                Setup<byte[]>(Settings, ArrayConverter.Instance);
 
                 DoSerialize(arr);
                 AssertAndGoToStart(5, 2, 7, 167, 43, 32);
@@ -83,7 +95,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance);
+                Setup<Array>(Settings, ArrayConverter.Instance);
 
                 DoSerialize(arr);
 
@@ -97,7 +109,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
                 // Setup<Int32[*]>
                 var method = GetType().GetMethod(nameof(Setup), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 var toCall = method.MakeGenericMethod(typeof(string).Assembly.GetType("System.Byte[*]"));
-                toCall.Invoke(this, new object[] { ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance });
+                toCall.Invoke(this, new object[] { ABSaveSettings.GetPreset(ABSavePresets.SizeFocusInheritance), ArrayConverter.Instance });
 
                 DoSerialize(arr);
                 AssertAndGoToStart(5, 2, 2, 7, 167, 43, 32);
@@ -126,7 +138,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance);
+                Setup<Array>(Settings, ArrayConverter.Instance);
 
                 DoSerialize(arr);
 
@@ -137,7 +149,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
             }
             else
             {
-                Setup<byte[,,]>(ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance);
+                Setup<byte[,,]>(Settings, ArrayConverter.Instance);
 
                 DoSerialize(arr);
                 AssertAndGoToStart(2, 3, 2, 2, 7, 167, 43, 32, 54, 67, 68, 69, 70, 71, 72);
@@ -158,7 +170,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance);
+                Setup<Array>(Settings, ArrayConverter.Instance);
 
                 DoSerialize(arr);
 
@@ -169,7 +181,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
             }
             else
             {
-                Setup<byte[,]>(ABSaveSettings.PrioritizePerformance, ArrayConverter.Instance);
+                Setup<byte[,]>(Settings, ArrayConverter.Instance);
 
                 DoSerialize(arr);
                 AssertAndGoToStart(130, 2, 9, 6, 2, 7, 167, 43);

@@ -23,7 +23,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Guid()
         {
-            Setup<Guid>(ABSaveSettings.PrioritizePerformance, GuidConverter.Instance);
+            Setup<Guid>(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance), GuidConverter.Instance);
             var guid = new Guid("01234567-89ab-0123-4567-89abcdef0123");
 
             DoSerialize(guid);
@@ -35,7 +35,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void DateTime()
         {
-            Setup<DateTime>(ABSaveSettings.PrioritizePerformance, TickBasedConverter.Instance);
+            Setup<DateTime>(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance), TickBasedConverter.Instance);
             var dateTime = new DateTime(1989, 6, 3, 7, 3, 8);
 
             DoSerialize(dateTime);
@@ -47,7 +47,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void TimeSpan()
         {
-            Setup<TimeSpan>(ABSaveSettings.PrioritizePerformance, TickBasedConverter.Instance);
+            Setup<TimeSpan>(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance), TickBasedConverter.Instance);
             var timeSpan = new TimeSpan(19, 7, 3, 8);
 
             DoSerialize(timeSpan);
@@ -59,7 +59,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void KeyValue()
         {
-            Setup<KeyValuePair<byte, bool>>(ABSaveSettings.PrioritizePerformance, KeyValueConverter.Instance);
+            Setup<KeyValuePair<byte, bool>>(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance), KeyValueConverter.Instance);
             var obj = new KeyValuePair<byte, bool>(234, true);
 
             DoSerialize(obj);
@@ -71,7 +71,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void DictionaryEntry()
         {
-            Setup<DictionaryEntry>(ABSaveSettings.PrioritizePerformance, KeyValueConverter.Instance);
+            Setup<DictionaryEntry>(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance), KeyValueConverter.Instance);
             var obj = new DictionaryEntry(new SubNoConverter(5), new SubWithoutHeader());
 
             DoSerialize(obj);
@@ -83,7 +83,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Version()
         {
-            Setup<Version>(ABSaveSettings.PrioritizePerformance, VersionConverter.Instance);
+            Setup<Version>(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance), VersionConverter.Instance);
 
             Version[] versions = new Version[]
             {
@@ -106,7 +106,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Assembly_NoCulture_PublicKeyToken()
         {
-            Setup<Assembly>(ABSaveSettings.PrioritizePerformance, AssemblyConverter.Instance);
+            Setup<Assembly>(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance), AssemblyConverter.Instance);
             var assembly = typeof(OtherTests).Assembly;
 
             // Non-saved
@@ -128,7 +128,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Type()
         {
-            Setup<Type>(ABSaveSettings.PrioritizePerformance, TypeConverter.Instance);
+            Setup<Type>(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance), TypeConverter.Instance);
 
             _typeSerialize = t => DoSerialize(t);
             _typeDeserialize = () => DoDeserialize<Type>();
@@ -156,11 +156,11 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Type_Closed()
         {
-            Setup<Type>(ABSaveSettings.PrioritizePerformance, TypeConverter.Instance);
+            Setup<Type>(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance), TypeConverter.Instance);
             SaveCurrentAssembly();
 
             _typeSerialize = t => Serializer.WriteClosedType(t);
-            _typeDeserialize = () => Deserializer.ReadClosedType();
+            _typeDeserialize = () => Deserializer.ReadClosedType(typeof(object));
 
             // Non-generic
             {

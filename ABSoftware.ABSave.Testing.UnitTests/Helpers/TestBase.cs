@@ -21,7 +21,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Helpers
         public ABSaveSerializer Serializer;
         public ABSaveDeserializer Deserializer;
 
-        public void Initialize() => Initialize(ABSaveSettings.PrioritizePerformance);
+        public void Initialize() => Initialize(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance));
         public void Initialize(ABSaveSettings template)
         {
             var settingsBuilder = new ABSaveSettingsBuilder
@@ -31,7 +31,8 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Helpers
                 {
                     new SubTypeConverter(false),
                     new SubTypeConverter(true)
-                }
+                },
+                BypassDangerousTypeChecking = true
             };
 
             CurrentMap = new ABSaveMap(settingsBuilder.CreateSettings(template));

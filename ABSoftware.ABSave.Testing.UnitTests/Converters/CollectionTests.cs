@@ -17,10 +17,22 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
     [TestClass]
     public class CollectionTests : ConverterTestBase
     {
+        static ABSaveSettings Settings;
+
+        [TestInitialize]
+        public void SetupSettings()
+        {
+            var builder = new ABSaveSettingsBuilder
+            {
+                BypassDangerousTypeChecking = true
+            };
+            Settings = builder.CreateSettings(ABSaveSettings.GetPreset(ABSavePresets.SizeFocusInheritance));
+        }
+
         [TestMethod]
         public void Context_List()
         {
-            CurrentMap = new ABSaveMap(ABSaveSettings.PrioritizePerformance);
+            CurrentMap = new ABSaveMap(Settings);
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(CurrentMap, typeof(List<string>));
 
             Assert.IsInstanceOfType(ctx.Info, typeof(ListInfo));
@@ -30,7 +42,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Context_GenericICollection_NonGenericIList()
         {
-            CurrentMap = new ABSaveMap(ABSaveSettings.PrioritizePerformance);
+            CurrentMap = new ABSaveMap(Settings);
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(CurrentMap, typeof(GenericAndNonGeneric));
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIListInfo));
@@ -40,7 +52,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Context_GenericICollection()
         {
-            CurrentMap = new ABSaveMap(ABSaveSettings.PrioritizePerformance);
+            CurrentMap = new ABSaveMap(Settings);
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(CurrentMap, typeof(GenericICollection));
 
             Assert.IsInstanceOfType(ctx.Info, typeof(GenericICollectionInfo));
@@ -50,7 +62,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Context_NonGenericIList()
         {
-            CurrentMap = new ABSaveMap(ABSaveSettings.PrioritizePerformance);
+            CurrentMap = new ABSaveMap(Settings);
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(CurrentMap, typeof(ArrayList));
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIListInfo));
@@ -60,7 +72,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Context_GenericIDictionary_NonGenericIDictionary()
         {
-            CurrentMap = new ABSaveMap(ABSaveSettings.PrioritizePerformance);
+            CurrentMap = new ABSaveMap(Settings);
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(CurrentMap, typeof(Dictionary<int, bool>));
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIDictionaryInfo));
@@ -71,7 +83,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Context_GenericIDictionary()
         {
-            CurrentMap = new ABSaveMap(ABSaveSettings.PrioritizePerformance);
+            CurrentMap = new ABSaveMap(Settings);
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(CurrentMap, typeof(GenericIDictionary));
 
             Assert.IsInstanceOfType(ctx.Info, typeof(GenericIDictionaryInfo));
@@ -82,7 +94,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Context_NonGenericIDictionary()
         {
-            CurrentMap = new ABSaveMap(ABSaveSettings.PrioritizePerformance);
+            CurrentMap = new ABSaveMap(Settings);
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(CurrentMap, typeof(Hashtable));
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIDictionaryInfo));
@@ -93,7 +105,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Convert_List()
         {
-            Setup<List<byte>>(ABSaveSettings.PrioritizePerformance, EnumerableConverter.Instance);
+            Setup<List<byte>>(Settings, EnumerableConverter.Instance);
 
             var obj = new List<byte> { 1, 2, 3, 4 };
 
@@ -105,7 +117,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Convert_IDictionary_Generic()
         {
-            Setup<Dictionary<byte, byte>>(ABSaveSettings.PrioritizePerformance, EnumerableConverter.Instance);
+            Setup<Dictionary<byte, byte>>(Settings, EnumerableConverter.Instance);
 
             var obj = new Dictionary<byte, byte> { { 1, 2 }, { 3, 4 } };
 
@@ -117,7 +129,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
         [TestMethod]
         public void Convert_IList_NonGeneric()
         {
-            Setup<ArrayList>(ABSaveSettings.PrioritizePerformance, EnumerableConverter.Instance);
+            Setup<ArrayList>(Settings, EnumerableConverter.Instance);
 
             var obj = new ArrayList() { (byte)7 };
 

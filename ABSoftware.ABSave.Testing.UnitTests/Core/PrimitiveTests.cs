@@ -51,31 +51,6 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
         [TestMethod]
         public void Double(bool reversed) => TestNum(d => Serializer.WriteDouble(d), () => Deserializer.ReadDouble(), double.MaxValue, reversed);
 
-        [DataRow(false)]
-        [DataRow(true)]
-        [TestMethod]
-        public void Decimal(bool reversed)
-        {
-            decimal val = 21601.32679M;
-
-            Initialize();
-
-            Serializer.WriteDecimal(val);
-            AssertAndGoToStart(GetDecimalBytes());
-
-            Assert.AreEqual(val, Deserializer.ReadDecimal());
-
-            static byte[] GetDecimalBytes()
-            {
-                var bits = new byte[16];
-
-                Array.Copy(BitConverter.GetBytes(-2134834617).ToArray(), 0, bits, 0, 4);
-                Array.Copy(BitConverter.GetBytes(327680).ToArray(), 0, bits, 12, 4);
-
-                return bits;
-            }
-        }
-
         void TestNum(Action<dynamic> write, Func<dynamic> read, dynamic val, bool reversed)
         {
             if (reversed)
@@ -85,7 +60,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
                     UseLittleEndian = !BitConverter.IsLittleEndian
                 };
 
-                Initialize(builder.CreateSettings(ABSaveSettings.PrioritizePerformance));
+                Initialize(builder.CreateSettings(ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance)));
 
                 write(val);
                 AssertAndGoToStart(((byte[])BitConverter.GetBytes(val)).Reverse().ToArray());

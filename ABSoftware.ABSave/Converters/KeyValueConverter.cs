@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Deserialization;
+using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Serialization;
 using System;
@@ -69,8 +70,8 @@ namespace ABSoftware.ABSave.Converters
 
         DictionaryEntry DeserializeNonGeneric(ABSaveDeserializer deserializer)
         {
-            var keyMap = deserializer.GetRuntimeMapItem(deserializer.ReadClosedType());
-            var valueMap = deserializer.GetRuntimeMapItem(deserializer.ReadClosedType());
+            var keyMap = deserializer.GetRuntimeMapItem(deserializer.ReadClosedType(typeof(object)));
+            var valueMap = deserializer.GetRuntimeMapItem(deserializer.ReadClosedType(typeof(object)));
 
             var key = deserializer.DeserializeExactNonNullItem(keyMap);
             var value = deserializer.DeserializeExactNonNullItem(valueMap);
@@ -93,6 +94,7 @@ namespace ABSoftware.ABSave.Converters
             }
             else if (type == typeof(DictionaryEntry))
             {
+                if (!map.Settings.BypassDangerousTypeChecking) throw new ABSaveDangerousTypeException("a general 'DictionaryEntry' type that could contain any type of element.");
                 context.IsGeneric = false;
                 context.KeyMap = context.ValueMap = map.GetMaptimeSubItem(typeof(object));
                 return context;

@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Deserialization;
+using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Serialization;
 using System;
@@ -263,7 +264,7 @@ namespace ABSoftware.ABSave.Converters
         private object DeserializeUnknown(ref BitSource typeHeader)
         {
             // Get type information.
-            Type elementType = typeHeader.Deserializer.ReadClosedType(ref typeHeader);
+            Type elementType = typeHeader.Deserializer.ReadClosedType(typeof(object), ref typeHeader);
             var perItem = typeHeader.Deserializer.GetRuntimeMapItem(elementType);
 
             // Read the header information
@@ -366,7 +367,12 @@ namespace ABSoftware.ABSave.Converters
 
         public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
         {
-            if (type == typeof(Array)) return Context.Unknown;
+            if (type == typeof(Array))
+            {
+                if (!map.Settings.BypassDangerousTypeChecking) throw new ABSaveDangerousTypeException("a general 'Array' type that could contain any type of element");
+                return Context.Unknown;
+            }
+
             if (!type.IsArray) return null;
 
             var res = new Context();

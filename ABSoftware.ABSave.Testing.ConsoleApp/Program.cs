@@ -33,7 +33,6 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         public MemoryStream BinaryPackResult;
         public JsonResponseModel TestObj;
         public ABSaveMap Map;
-        public ABSaveSettings Settings = ABSaveSettings.PrioritizeSize;
 
         [GlobalSetup]
         public void Setup()
@@ -49,7 +48,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.PrioritizeSize);
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.GetPreset(ABSavePresets.SizeFocusInheritance));
 
             TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText(@"C:\Users\alexb\Documents\model.txt"));
         }

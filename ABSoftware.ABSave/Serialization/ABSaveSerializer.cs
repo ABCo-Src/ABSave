@@ -67,7 +67,7 @@ namespace ABSoftware.ABSave.Serialization
             {
                 var currentHeader = new BitTarget(this);
                 if (!item.ItemType.IsValueType) currentHeader.WriteBitOn();
-                SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, item.ItemType.IsValueType);
+                SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, !Map.Settings.SaveInheritance || item.ItemType.IsValueType);
             }
         }
 
@@ -81,7 +81,7 @@ namespace ABSoftware.ABSave.Serialization
             else
             {
                 if (!item.ItemType.IsValueType) target.WriteBitOn();
-                SerializeItemNoSetup(obj, obj.GetType(), item, ref target, item.ItemType.IsValueType);
+                SerializeItemNoSetup(obj, obj.GetType(), item, ref target, !Map.Settings.SaveInheritance || item.ItemType.IsValueType);
             }
         }
 

@@ -40,7 +40,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
         [DataRow(true)]
         public void ReadInteger(bool lazy)
         {
-            Initialize(lazy ? ABSaveSettings.PrioritizePerformance : ABSaveSettings.PrioritizeSize);
+            Initialize(lazy ? ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance) : ABSaveSettings.GetPreset(ABSavePresets.SizeFocusInheritance));
 
             var source = new BitSource(lazy ? 0b11000000 : 0b11000110, Deserializer);
             // Setup the next byte too

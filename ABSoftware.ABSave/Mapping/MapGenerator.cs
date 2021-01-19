@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping.Items;
 using System;
@@ -17,6 +18,13 @@ namespace ABSoftware.ABSave.Mapping
 
         internal static MapItem Generate(MapItemType typeInfo, ABSaveMap root)
         {
+            // Safety checks
+            if (!root.Settings.BypassDangerousTypeChecking)
+            {
+                if (typeInfo.Type == typeof(object)) throw new ABSaveDangerousTypeException("an 'object' field");
+                if (typeInfo.Type == typeof(ValueType)) throw new ABSaveDangerousTypeException("a 'ValueType' field");
+            }
+
             // Nullable
             if (IsNullable(typeInfo.Type))
                 return new NullableMapItem(typeInfo, Generate(GenerateItemType(typeInfo.Type.GetGenericArguments()[0]), root));

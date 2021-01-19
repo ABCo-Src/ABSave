@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Mapping.Items;
@@ -124,7 +125,7 @@ namespace ABSoftware.ABSave.Deserialization
                 // Different types
                 if (!converterItem.Converter.ConvertsSubTypes && !_currentHeader.ReadBit())
                 {
-                    var actualType = ReadClosedType(ref _currentHeader);
+                    var actualType = ReadClosedType(converterItem.ItemType.Type, ref _currentHeader);
 
                     // The header was used by the type
                     _readHeader = false;
@@ -148,7 +149,7 @@ namespace ABSoftware.ABSave.Deserialization
                 // Different type
                 if (!_currentHeader.ReadBit())
                 {
-                    var actualType = ReadClosedType(ref _currentHeader);
+                    var actualType = ReadClosedType(map.ItemType.Type, ref _currentHeader);
 
                     // The old header was used up by the type.
                     _readHeader = false;
@@ -185,20 +186,36 @@ namespace ABSoftware.ABSave.Deserialization
         #endregion
 
         // TODO: Use map guides to implement proper "Type" handling via map.
-        public Type ReadType()
+        public Type ReadType(Type requiredBaseType)
         {
             var header = new BitSource(this);
-            return ReadType(ref header);
+            return ReadType(requiredBaseType, ref header);
         }
 
-        public Type ReadType(ref BitSource header) => TypeConverter.Instance.DeserializeType(Map.AssemblyItem, ref header);
+        public Type ReadType(Type requiredBaseType, ref BitSource header)
+        {
+            var res = TypeConverter.Instance.DeserializeType(Map.AssemblyItem, ref header);
 
-        public Type ReadClosedType()
+            // Safety check.
+            if (!res.IsSubclassOf(requiredBaseType)) throw new ABSaveUnexpectedTypeException(requiredBaseType, res);
+
+            return res;
+        }
+
+        public Type ReadClosedType(Type requiredBaseType) 
         {
             var header = new BitSource(this);
-            return ReadClosedType(ref header);
+            return ReadClosedType(requiredBaseType, ref header);
         }
 
-        public Type ReadClosedType(ref BitSource header) => TypeConverter.Instance.DeserializeClosedType(Map.AssemblyItem, ref header);
+        public Type ReadClosedType(Type requiredBaseType, ref BitSource header)
+        {
+            var res = TypeConverter.Instance.DeserializeClosedType(Map.AssemblyItem, ref header);
+
+            // Safety check.
+            if (!res.IsSubclassOf(requiredBaseType)) throw new ABSaveUnexpectedTypeException(requiredBaseType, res);
+
+            return res;
+        }
     }
 }
