@@ -1,4 +1,5 @@
-﻿using ABSoftware.ABSave.Converters;
+﻿using ABSoftware.ABSave;
+using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Mapping.Items;
@@ -66,8 +67,7 @@ namespace ABSoftware.ABSave.Serialization
             else
             {
                 var currentHeader = new BitTarget(this);
-                if (!item.ItemType.IsValueType) currentHeader.WriteBitOn();
-                SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, !Map.Settings.SaveInheritance || item.ItemType.IsValueType);
+                SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, false);
             }
         }
 
@@ -78,11 +78,7 @@ namespace ABSoftware.ABSave.Serialization
                 target.WriteBitOff();
                 target.Apply();
             }
-            else
-            {
-                if (!item.ItemType.IsValueType) target.WriteBitOn();
-                SerializeItemNoSetup(obj, obj.GetType(), item, ref target, !Map.Settings.SaveInheritance || item.ItemType.IsValueType);
-            }
+            else SerializeItemNoSetup(obj, obj.GetType(), item, ref target, false);
         }
 
         public void SerializeExactNonNullItem(object obj, MapItem item)
@@ -93,46 +89,57 @@ namespace ABSoftware.ABSave.Serialization
 
         public void SerializeExactNonNullItem(object obj, MapItem item, ref BitTarget target) => SerializeItemNoSetup(obj, item.ItemType.Type, item, ref target, true);        
 
-        void SerializeItemNoSetup(object obj, Type actualType, MapItem item, ref BitTarget target, bool skipTypeHandling)
+        void SerializeItemNoSetup(object obj, Type actualType, MapItem item, ref BitTarget target, bool skipAllHeaderHandling)
         {
+            // Null items are already handled in the setup, however it is our responsibility to say that the item "is not null" if necessary.
             switch (item)
             {
                 case ConverterMapItem converterItem:
 
-                    SerializeConverterMap(obj, actualType, converterItem, ref target, skipTypeHandling);
+                    if (WriteHeader(converterItem.Converter.ConvertsSubTypes, converterItem.Converter.WritesToHeader, ref target)) return;
+                    converterItem.Converter.Serialize(obj, actualType, converterItem.Context, ref target);
+
                     break;
 
                 case ObjectMapItem objItem:
 
-                    SerializeObjectMap(obj, actualType, objItem, ref target, skipTypeHandling);
+                    if (WriteHeader(false, false, ref target)) return;
+                    SerializeObjectItems(obj, objItem);
+
                     break;
 
                 case NullableMapItem nullable:
 
                     target.WriteBitOn(); // This clearly wasn't null.
                     SerializeItemNoSetup(obj, actualType, nullable.InnerItem, ref target, true);
+
                     break;
 
                 case RuntimeMapItem runtime:
-                    SerializeItemNoSetup(obj, actualType, runtime.InnerItem, ref target, skipTypeHandling);
+
+                    // Switch to the item inside.
+                    SerializeItemNoSetup(obj, actualType, runtime.InnerItem, ref target, skipAllHeaderHandling);
                     break;
 
                 default:
                     throw new Exception("ABSAVE: Unrecognized map item.");
             }
-        }
 
-        void SerializeConverterMap(object obj, Type actualType, ConverterMapItem map, ref BitTarget target, bool skipTypeHandling)
-        {
-            if (!skipTypeHandling)
+            // Parameters: The type should not be taken into consideration when choosing parameters, only what the map items themselves support.
+            // Returns: True if the type differed, and has been serialized seperately, false if not.
+            bool WriteHeader(bool convertsSubTypes, bool usesHeader, ref BitTarget target)
             {
-                if (!map.Converter.ConvertsSubTypes)
+                if (skipAllHeaderHandling || item.ItemType.IsValueType) return false;
+
+                // Null
+                target.WriteBitOn();
+
+                // Type checks
+                if (Settings.SaveInheritance && !convertsSubTypes)
                 {
-                    // Matching type
-                    if (map.ItemType.Type == actualType)
+                    if (item.ItemType.Type == actualType)
                         target.WriteBitOn();
 
-                    // Different type
                     else
                     {
                         target.WriteBitOff();
@@ -141,42 +148,20 @@ namespace ABSoftware.ABSave.Serialization
                         // Serialize again, but with the new map. The header got used up by the type so we need to use a new one.
                         var newTarget = new BitTarget(this);
                         SerializeItemNoSetup(obj, actualType, GetRuntimeMapItem(actualType), ref newTarget, true);
-                        return;
+                        return true;
                     }
+                        
                 }
 
-                // Since we've just put data into the header, we must make sure that gets applied properly.
-                if (!map.Converter.WritesToHeader) target.Apply();
-            }
+                // Make sure to apply everything we write if necessary
+                if (!usesHeader) target.Apply();
 
-            // Serialize the item
-            map.Converter.Serialize(obj, actualType, map.Context, ref target);
+                return false;
+            }
         }
 
-        void SerializeObjectMap(object obj, Type actualType, ObjectMapItem map, ref BitTarget target, bool skipTypeHandling)
+        void SerializeObjectItems(object obj, ObjectMapItem map)
         {
-            if (!skipTypeHandling)
-            {
-                // Matching type
-                if (map.ItemType.Type == actualType)
-                {
-                    target.WriteBitOn();
-                    target.Apply();
-                }
-
-                // Different type
-                else
-                {
-                    target.WriteBitOff();
-                    WriteClosedType(actualType, ref target);
-
-                    // Serialize again, but with the new map. The header got used up by the type so we need to use a new one.
-                    var newTarget = new BitTarget(this);
-                    SerializeItemNoSetup(obj, actualType, GetRuntimeMapItem(actualType), ref newTarget, true);
-                    return;
-                }
-            }
-
             // Serialize the item
             for (int i = 0; i < map.Members.Length; i++)
                 SerializeItem(GetValue(ref map.Members[i]), map.Members[i].Map);

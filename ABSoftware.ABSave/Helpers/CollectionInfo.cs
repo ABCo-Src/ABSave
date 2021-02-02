@@ -6,19 +6,19 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace ABSoftware.ABSave
+namespace ABSoftware.ABSave.Helpers
 {
-    public interface IABSaveEnumerableInfo { }
+    public interface IEnumerableInfo { }
 
     // Collections:
     /// <summary>
     /// Represents a standard way to do things for different types of collections.
     /// </summary>
-    public abstract class ABSaveCollectionInfo : IABSaveEnumerableInfo
+    public abstract class CollectionInfo : IEnumerableInfo
     {
-        public static ABSaveCollectionInfo GenericICollection { get; } = new GenericICollectionInfo();
-        public static ABSaveCollectionInfo NonGenericIList { get; } = new NonGenericIListInfo();
-        public static ABSaveCollectionInfo List { get; } = new ListInfo();
+        public static CollectionInfo GenericICollection { get; } = new GenericICollectionInfo();
+        public static CollectionInfo NonGenericIList { get; } = new NonGenericIListInfo();
+        public static CollectionInfo List { get; } = new ListInfo();
 
         public abstract int GetCount(object obj);
         public abstract IEnumerator GetEnumerator(object obj);
@@ -27,7 +27,7 @@ namespace ABSoftware.ABSave
     }
 
     // Regular Collections:
-    internal class ListInfo : ABSaveCollectionInfo
+    internal class ListInfo : CollectionInfo
     {
         public override int GetCount(object obj) => ((ICollection)obj).Count;
         public override IEnumerator GetEnumerator(object obj) => ((IEnumerable)obj).GetEnumerator();
@@ -35,7 +35,7 @@ namespace ABSoftware.ABSave
         public override void AddItem(object obj, object itm) => ((IList)obj).Add(itm);
     }
 
-    internal class GenericICollectionInfo : ABSaveCollectionInfo
+    internal class GenericICollectionInfo : CollectionInfo
     {
         public override int GetCount(object obj) => ((dynamic)obj).Count;
         public override IEnumerator GetEnumerator(object obj) => ((IEnumerable)obj).GetEnumerator();
@@ -43,7 +43,7 @@ namespace ABSoftware.ABSave
         public override void AddItem(object obj, object itm) => ((dynamic)obj).Add(itm);
     }
 
-    internal class NonGenericIListInfo : ABSaveCollectionInfo
+    internal class NonGenericIListInfo : CollectionInfo
     {
         public override int GetCount(object obj) => ((IList)obj).Count;
         public override IEnumerator GetEnumerator(object obj) => ((IEnumerable)obj).GetEnumerator();
@@ -52,7 +52,7 @@ namespace ABSoftware.ABSave
     }
 
     // Dictionaries:
-    public abstract class ABSaveDictionaryInfo : IABSaveEnumerableInfo
+    public abstract class ABSaveDictionaryInfo : IEnumerableInfo
     {
         public static ABSaveDictionaryInfo GenericIDictionary { get; } = new GenericIDictionaryInfo();
         public static ABSaveDictionaryInfo NonGenericIDictionary { get; } = new NonGenericIDictionaryInfo();

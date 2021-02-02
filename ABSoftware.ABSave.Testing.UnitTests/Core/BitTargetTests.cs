@@ -74,7 +74,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
         [DataRow(true)]
         public void WriteInteger_Overflow(bool lazy)
         {
-            Initialize(lazy ? ABSaveSettings.GetPreset(ABSavePresets.SpeedFocusInheritance) : ABSaveSettings.GetPreset(ABSavePresets.SizeFocusInheritance));
+            Initialize(lazy ? ABSaveSettings.GetSpeedFocus(true) : ABSaveSettings.GetSizeFocus(true));
             var target = new BitTarget(Serializer);
 
             target.WriteInteger(0, 4);
@@ -88,7 +88,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
         [TestMethod]       
         public void FreeBits()
         {
-            Initialize(ABSaveSettings.GetPreset(ABSavePresets.SizeFocusInheritance));
+            Initialize(ABSaveSettings.GetSizeFocus(true));
             var target = new BitTarget(Serializer);
 
             target.WriteInteger(0, 4);

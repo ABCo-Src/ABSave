@@ -37,6 +37,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Mapping\**" />
+    <EmbeddedResource Remove="Mapping\**" />
+    <None Remove="Mapping\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="Serialization\ABSaveItemSerializerTests.cs~RFd2e428.TMP" />
   </ItemGroup>
 
@@ -49,10 +55,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ABSoftware.ABSave\ABSoftware.ABSave.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Mapping\" />
   </ItemGroup>
 
 </Project>

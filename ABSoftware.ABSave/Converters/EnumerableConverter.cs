@@ -30,13 +30,13 @@ namespace ABSoftware.ABSave.Converters
         {
             var actualContext = (Context)context;
 
-            if (actualContext.Info is ABSaveCollectionInfo collectionInfo)
+            if (actualContext.Info is CollectionInfo collectionInfo)
                 SerializeCollection(obj, collectionInfo, actualContext, ref header);
             else if (actualContext.Info is ABSaveDictionaryInfo dictionaryInfo)
                 SerializeDictionary(obj, dictionaryInfo, actualContext, ref header);
         }
 
-        void SerializeCollection(object obj, ABSaveCollectionInfo info, Context context, ref BitTarget header)
+        void SerializeCollection(object obj, CollectionInfo info, Context context, ref BitTarget header)
         {
             var size = info.GetCount(obj);
             header.Serializer.WriteCompressed((uint)size, ref header);
@@ -66,14 +66,14 @@ namespace ABSoftware.ABSave.Converters
         {
             var actualContext = (Context)context;
 
-            if (actualContext.Info is ABSaveCollectionInfo collectionInfo)
+            if (actualContext.Info is CollectionInfo collectionInfo)
                 return DeserializeCollection(collectionInfo, actualType, actualContext, ref header);
             else if (actualContext.Info is ABSaveDictionaryInfo dictionaryInfo)
                 return DeserializeDictionary(dictionaryInfo, actualType, actualContext, ref header);
             else throw new Exception("Unrecognized enumerable info.");
         }
 
-        object DeserializeCollection(ABSaveCollectionInfo info, Type type, Context context, ref BitSource header)
+        object DeserializeCollection(CollectionInfo info, Type type, Context context, ref BitSource header)
         {
             int size = (int)header.Deserializer.ReadCompressedInt(ref header);
             var collection = info.CreateCollection(type, size);
@@ -117,7 +117,7 @@ namespace ABSoftware.ABSave.Converters
                     if (gtd == typeof(List<>))
                     {
                         var argType = type.GetGenericArguments()[0];
-                        return new Context(ABSaveCollectionInfo.List, argType, map.GetMaptimeSubItem(argType), null, null);
+                        return new Context(CollectionInfo.List, argType, map.GetMaptimeSubItem(argType), null, null);
                     }
                     else if (type.IsInterface)
                     {
@@ -146,8 +146,8 @@ namespace ABSoftware.ABSave.Converters
             {
                 return category switch
                 {
-                    CollectionCategory.GenericICollection => new Context(ABSaveCollectionInfo.GenericICollection, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), typeof(object), null),
-                    CollectionCategory.NonGenericIList => new Context(ABSaveCollectionInfo.NonGenericIList, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), typeof(object), null),
+                    CollectionCategory.GenericICollection => new Context(CollectionInfo.GenericICollection, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), typeof(object), null),
+                    CollectionCategory.NonGenericIList => new Context(CollectionInfo.NonGenericIList, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), typeof(object), null),
                     CollectionCategory.GenericIDictionary => new Context(ABSaveDictionaryInfo.GenericIDictionary, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), valueType, map.GetMaptimeSubItem(valueType)),
                     CollectionCategory.NonGenericIDictionary => new Context(ABSaveDictionaryInfo.NonGenericIDictionary, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), valueType, map.GetMaptimeSubItem(valueType)),
                     _ => throw new ABSaveUnrecognizedCollectionException(),
@@ -275,13 +275,13 @@ namespace ABSoftware.ABSave.Converters
 
         internal class Context : IABSaveConverterContext // Internal for testing
         {
-            public IABSaveEnumerableInfo Info;
+            public IEnumerableInfo Info;
             public Type ElementTypeOrKeyType;
             public MapItem ElementOrKeyMap;
             public Type ValueType;
             public MapItem ValueMap;
 
-            public Context(IABSaveEnumerableInfo info, Type elementTypeOrKeyType, MapItem elementOrKeyMap, Type valueType, MapItem valueMap)
+            public Context(IEnumerableInfo info, Type elementTypeOrKeyType, MapItem elementOrKeyMap, Type valueType, MapItem valueMap)
             {
                 Info = info;
                 ElementTypeOrKeyType = elementTypeOrKeyType;

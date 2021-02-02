@@ -86,16 +86,20 @@ namespace ABSoftware.ABSave
         static readonly ABSaveSettings _sizeFocusedNoInheritance = new ABSaveSettings(false, false, false, true, false, false, BitConverter.IsLittleEndian, ABSaveConverter.BuiltInExact, ABSaveConverter.BuiltInNonExact);
         static readonly ABSaveSettings _sizeFocusedInheritance = new ABSaveSettings(false, false, false, true, true, false, BitConverter.IsLittleEndian, ABSaveConverter.BuiltInExact, ABSaveConverter.BuiltInNonExact);
 
-        public static ABSaveSettings GetPreset(ABSavePresets presets)
+        public static ABSaveSettings GetSpeedFocus(bool inheritanceEnabled)
         {
-            return presets switch
-            {
-                ABSavePresets.SpeedFocusNoInheritance => _speedFocusedNoInheritance,
-                ABSavePresets.SpeedFocusInheritance => _speedFocusedInheritance,
-                ABSavePresets.SizeFocusNoInheritance => _sizeFocusedNoInheritance,
-                ABSavePresets.SizeFocusInheritance => _sizeFocusedInheritance,
-                _ => throw new Exception("Invalid preset given")
-            };
+            if (inheritanceEnabled)
+                return _speedFocusedInheritance;
+            else
+                return _speedFocusedNoInheritance;
+        }
+
+        public static ABSaveSettings GetSizeFocus(bool inheritanceEnabled)
+        {
+            if (inheritanceEnabled)
+                return _sizeFocusedInheritance;
+            else
+                return _sizeFocusedNoInheritance;
         }
 
         public bool ConvertFields { get; } = false;
@@ -112,10 +116,10 @@ namespace ABSoftware.ABSave
         public ABSaveSettings() { }
 
         public ABSaveSettings(bool convertFields, bool includePrivate, bool lazyBitHandling, bool useUTF8,
-            bool enableInheritance, bool bypassDangerousTypeChecking, bool useLittleEndian,
+            bool saveInheritance, bool bypassDangerousTypeChecking, bool useLittleEndian,
             IReadOnlyDictionary<Type, ABSaveConverter> exactConverters, IReadOnlyList<ABSaveConverter> nonExactConverters)
         =>
-            (ConvertFields, IncludePrivate, LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ExactConverters, NonExactConverters) = 
-            (convertFields, includePrivate, lazyBitHandling, useUTF8, useLittleEndian, bypassDangerousTypeChecking, exactConverters, nonExactConverters);
+            (ConvertFields, IncludePrivate, LazyBitHandling, UseUTF8, UseLittleEndian, SaveInheritance, BypassDangerousTypeChecking, ExactConverters, NonExactConverters) = 
+            (convertFields, includePrivate, lazyBitHandling, useUTF8, useLittleEndian, saveInheritance, bypassDangerousTypeChecking, exactConverters, nonExactConverters);
     }
 }

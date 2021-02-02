@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Mapping.Items;
 using ABSoftware.ABSave.Serialization;
@@ -26,7 +27,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Converters
             {
                 BypassDangerousTypeChecking = true
             };
-            Settings = builder.CreateSettings(ABSaveSettings.GetPreset(ABSavePresets.SizeFocusInheritance));
+            Settings = builder.CreateSettings(ABSaveSettings.GetSizeFocus(true));
         }
 
         [TestMethod]

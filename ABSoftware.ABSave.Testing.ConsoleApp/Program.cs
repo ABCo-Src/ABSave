@@ -20,7 +20,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
     public class TestBenchmark
     {
-        public MemoryStream ABSaveNewResult;
+        public MemoryStream ABSaveResult;
         public MemoryStream ABSaveOldResult;
         public MemoryStream WhoaResult;
         public MemoryStream NewtonsoftJsonResult;
@@ -38,7 +38,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         public void Setup()
         {
             ABSaveOldResult = new MemoryStream();
-            ABSaveNewResult = new MemoryStream();
+            ABSaveResult = new MemoryStream();
             WhoaResult = new MemoryStream();
             NewtonsoftJsonResult = new MemoryStream();
             Utf8JsonResult = new MemoryStream();
@@ -48,17 +48,22 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.GetPreset(ABSavePresets.SizeFocusInheritance));
-
-            TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText(@"C:\Users\alexb\Documents\model.txt"));
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.GetSpeedFocus(true));
+            TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt"));
         }
 
         [Benchmark]
-        public void ABSaveNew()
+        public void Mapping()
         {
-            ABSaveNewResult.Position = 0;
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.GetSpeedFocus(true));
+        }
 
-            var serializer = new ABSaveSerializer(ABSaveNewResult, Map);
+        [Benchmark]
+        public void ABSave()
+        {
+            ABSaveResult.Position = 0;
+
+            var serializer = new ABSaveSerializer(ABSaveResult, Map);
             serializer.SerializeRoot(TestObj);
         }
 
@@ -74,78 +79,78 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         //    serializer.Serialize(writer, TestObj, typeof(JsonResponseModel));
         //}
 
-        [Benchmark]
-        public void BinaryFormat()
-        {
-            BinaryFormatterResult.Position = 0;
-            var formatter = new BinaryFormatter();
-#pragma warning disable SYSLIB0011 // Type or member is obsolete
-            formatter.Serialize(BinaryFormatterResult, TestObj);
-#pragma warning restore SYSLIB0011 // Type or member is obsolete
-        }
+//        [Benchmark]
+//        public void BinaryFormat()
+//        {
+//            BinaryFormatterResult.Position = 0;
+//            var formatter = new BinaryFormatter();
+//#pragma warning disable SYSLIB0011 // Type or member is obsolete
+//            formatter.Serialize(BinaryFormatterResult, TestObj);
+//#pragma warning restore SYSLIB0011 // Type or member is obsolete
+//        }
 
-        [Benchmark]
-        public void UTF8Json()
-        {
-            Utf8JsonResult.Position = 0;
-            Utf8Json.JsonSerializer.Serialize(Utf8JsonResult, TestObj);
-        }
+//        [Benchmark]
+//        public void UTF8Json()
+//        {
+//            Utf8JsonResult.Position = 0;
+//            Utf8Json.JsonSerializer.Serialize(Utf8JsonResult, TestObj);
+//        }
 
-        [Benchmark]
-        public void TextJson()
-        {
-            TextJsonResult.Position = 0;
+//        [Benchmark]
+//        public void TextJson()
+//        {
+//            TextJsonResult.Position = 0;
 
-            using var writer = new Utf8JsonWriter(TextJsonResult, new System.Text.Json.JsonWriterOptions());
-            JsonSerializer.Serialize(writer, TestObj);
-        }
+//            using var writer = new Utf8JsonWriter(TextJsonResult, new System.Text.Json.JsonWriterOptions());
+//            JsonSerializer.Serialize(writer, TestObj);
+//        }
 
-        //[Benchmark]
-        //public void XML()
-        //{
-        //    XMLResult.Position = 0;
+//        //[Benchmark]
+//        //public void XML()
+//        //{
+//        //    XMLResult.Position = 0;
 
-        //    var serializer = new XmlSerializer(typeof(JsonResponseModel));
-        //    serializer.Serialize(XMLResult, TestObj);
-        //}
+//        //    var serializer = new XmlSerializer(typeof(JsonResponseModel));
+//        //    serializer.Serialize(XMLResult, TestObj);
+//        //}
 
-        [Benchmark]
-        public void MessagePack()
-        {
-            MessagePackResult.Position = 0;
-            MessagePackSerializer.Serialize(typeof(JsonResponseModel), MessagePackResult, TestObj);
-        }
+//        [Benchmark]
+//        public void MessagePack()
+//        {
+//            MessagePackResult.Position = 0;
+//            MessagePackSerializer.Serialize(typeof(JsonResponseModel), MessagePackResult, TestObj);
+//        }
 
-        [Benchmark(Baseline = true)]
-        public void BinaryPack()
-        {
-            BinaryPackResult.Position = 0;
-            BinaryConverter.Serialize(TestObj, BinaryPackResult);
-        }
+//        [Benchmark(Baseline = true)]
+//        public void BinaryPack()
+//        {
+//            BinaryPackResult.Position = 0;
+//            BinaryConverter.Serialize(TestObj, BinaryPackResult);
+//        }
 
 
-        [GlobalCleanup]
-        public void Finish()
-        {
-            Console.WriteLine("OUTPUT SIZES:");
+//        [GlobalCleanup]
+//        public void Finish()
+//        {
+//            Console.WriteLine("OUTPUT SIZES:");
             
-            Print(ABSaveNew, ABSaveNewResult);
-            //Print(WhoaTest, WhoaResult);
-            Print(UTF8Json, Utf8JsonResult);
-            Print(TextJson, TextJsonResult);
-            Print(BinaryFormat, BinaryFormatterResult);
-            Print(MessagePack, MessagePackResult);
-            Print(BinaryPack, BinaryPackResult);
-            //Print(NewtonsoftJson, NewtonsoftJsonResult);
-            //Print(XML, XMLResult);
+//            Print(ABSaveNew, ABSaveNewResult);
+//            Print(UTF8Json, Utf8JsonResult);
+//            Print(TextJson, TextJsonResult);
+//            Print(BinaryFormat, BinaryFormatterResult);
+//            Print(MessagePack, MessagePackResult);
+//            Print(BinaryPack, BinaryPackResult);
+//            //Print(NewtonsoftJson, NewtonsoftJsonResult);
+//            //Print(XML, XMLResult);
 
-            void Print(Action a, Stream stream)
-            {
-                a();
-                Console.WriteLine(a.Method.Name + ": " + stream.Length);
-            }
-        }
+//            void Print(Action a, Stream stream)
+//            {
+//                a();
+//                Console.WriteLine(a.Method.Name + ": " + stream.Length);
+//            }
+//        }
     }
+
 
     class Program
     {
@@ -153,30 +158,30 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         {
             //GenerateAndSaveNewModel();
             TestOutputSize();
-            BenchmarkRunner.Run<TestBenchmark>();
-            Console.ReadLine();
 
-            //var benchmarks = new TestBenchmark();
-            //benchmarks.Setup();
+            //BenchmarkRunner.Run<TestBenchmark>();
 
-            //for (int i = 0; i < 100; i++)
-            //    benchmarks.ABSaveNew();
+            var benchmarks = new TestBenchmark();
+            benchmarks.Setup();
 
-            //GC.Collect();
+            for (int i = 0; i < 100; i++)
+                benchmarks.ABSave();
 
-            //Debugger.Break();
+            GC.Collect();
 
-            //for (int i = 0; i < 307; i++)
-            //    benchmarks.ABSaveNew();
+            Debugger.Break();
 
-            //Debugger.Break();
+            for (int i = 0; i < 4463; i++)
+                benchmarks.ABSave();
+
+            Debugger.Break();
         }
 
         static void TestOutputSize()
         {
             var benchmarks = new TestBenchmark();
             benchmarks.Setup();
-            benchmarks.Finish();
+            //benchmarks.Finish();
         }
 
         static void GenerateAndSaveNewModel()

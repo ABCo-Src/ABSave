@@ -17,10 +17,17 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
     [TestClass]
     public class MainTests : TestBase
     {
-        [TestMethod]
-        public void Item_Converter_ValueType()
+        void Setup(bool isInheritanceEnabled)
         {
-            Initialize();
+            Initialize(ABSaveSettings.GetSizeFocus(isInheritanceEnabled));
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Item_Converter_ValueType(bool isInheritanceEnabled)
+        {
+            Setup(isInheritanceEnabled);
 
             // Without header
             ResetOutputWithMapItem(new TestableTypeConverter(false, false).GetMap<int>());
@@ -42,15 +49,17 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
         }
 
         [TestMethod]
-        public void Item_Converter_MatchingRef()
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Item_Converter_MatchingRef(bool isInheritanceEnabled)
         {
-            Initialize();
+            Setup(isInheritanceEnabled);
 
             // Without header
             ResetOutputWithMapItem(new TestableTypeConverter(false, false).GetMap<Base>());
             {
                 Serializer.SerializeItem(new Base(), CurrentMapItem);
-                AssertAndGoToStart(192, TestableTypeConverter.OUTPUT_BYTE);
+                AssertAndGoToStart(isInheritanceEnabled ? 192 : 128, TestableTypeConverter.OUTPUT_BYTE);
 
                 Assert.AreEqual(55, Deserializer.DeserializeItem(CurrentMapItem));
             }
@@ -59,7 +68,7 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
             ResetOutputWithMapItem(new TestableTypeConverter(true, false).GetMap<Base>());
             {
                 Serializer.SerializeItem(new Base(), CurrentMapItem);
-                AssertAndGoToStart(224, TestableTypeConverter.OUTPUT_BYTE);
+                AssertAndGoToStart(isInheritanceEnabled ? 224 : 192, TestableTypeConverter.OUTPUT_BYTE);
 
                 Assert.AreEqual(55, Deserializer.DeserializeItem(CurrentMapItem));
             }
@@ -75,27 +84,32 @@ namespace ABSoftware.ABSave.Testing.UnitTests.Core
         }
 
         [TestMethod]
-        public void Item_Converter_DifferentRef()
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Item_Converter_DifferentRef(bool isInheritanceEnabled)
         {
-            Initialize();
+            Setup(isInheritanceEnabled);
 
             // DIFFERENT CONVERTER:
             // With header
-            ResetOutputWithMapItem(new TestableTypeConverter(false, false).GetMap<Base>());
+            if (isInheritanceEnabled)
             {
-                Serializer.SerializeItem(new SubWithHeader(), CurrentMapItem);
-                AssertAndGoToStart(160, 128, SubTypeConverter.OUTPUT_BYTE);
+                ResetOutputWithMapItem(new TestableTypeConverter(false, false).GetMap<Base>());
+                {
+                    Serializer.SerializeItem(new SubWithHeader(), CurrentMapItem);
+                    AssertAndGoToStart(160, 128, SubTypeConverter.OUTPUT_BYTE);
 
-                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(SubWithHeader));
-            }
+                    Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(SubWithHeader));
+                }
 
-            // Without header
-            ResetOutputWithMapItem(new TestableTypeConverter(false, false).GetMap<Base>());
-            {
-                Serializer.SerializeItem(new SubWithoutHeader(), CurrentMapItem);
-                AssertAndGoToStart(161, SubTypeConverter.OUTPUT_BYTE);
+                // Without header
+                ResetOutputWithMapItem(new TestableTypeConverter(false, false).GetMap<Base>());
+                {
+                    Serializer.SerializeItem(new SubWithoutHeader(), CurrentMapItem);
+                    AssertAndGoToStart(161, SubTypeConverter.OUTPUT_BYTE);
 
-                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(SubWithoutHeader));
+                    Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(SubWithoutHeader));
+                }
             }
 
             // SAME CONVERTER:
