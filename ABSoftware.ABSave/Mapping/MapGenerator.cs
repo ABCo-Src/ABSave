@@ -17,7 +17,6 @@ namespace ABSoftware.ABSave.Mapping
     {
         internal ABSaveMap Map;
         internal MapItemInfo CurrentItem;
-        internal ConcurrentForReadsStack<object> CurrentlyGenerating;
 
         public MapItemInfo GetMap(Type type)
         {

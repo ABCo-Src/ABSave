@@ -18,7 +18,7 @@ namespace ABSoftware.ABSave.UnitTests
         {
             var map = ABSaveMap.Get<string>(ABSaveSettings.GetSizeFocus(false));
 
-            byte[] arr = ABSave.Serialize("A", map);
+            byte[] arr = ABSaveConvert.Serialize("A", map);
             Assert.AreNotEqual(0, arr.Length);
         }
 
@@ -26,9 +26,9 @@ namespace ABSoftware.ABSave.UnitTests
         public void Deserialize_ByteArray()
         {
             var map = ABSaveMap.Get<string>(ABSaveSettings.GetSizeFocus(false));
-            byte[] arr = ABSave.Serialize("A", map);
+            byte[] arr = ABSaveConvert.Serialize("A", map);
 
-            Assert.AreEqual("A", ABSave.Deserialize<string>(arr, map));
+            Assert.AreEqual("A", ABSaveConvert.Deserialize<string>(arr, map));
         }
     }
 }

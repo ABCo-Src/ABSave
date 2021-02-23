@@ -58,7 +58,7 @@ namespace ABSoftware.ABSave.Helpers
             return new T[length];
         }
 
-        internal static T UnsafeFastCast<T>(object obj)
+        internal static T UnsafeFastCast<T>(object obj) where T : class
         {
 #if DEBUG
             return (T)obj;

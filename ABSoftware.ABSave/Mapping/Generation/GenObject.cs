@@ -38,6 +38,8 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     ??= GenerateAccessor(gen, ref currentItem, ref item, memberInfo.Members[i].Info);
             }
 
+            item.IsGenerating = false;
+
             // Sort the items by their names.
             Array.Sort(keys, objItem.Members);
         }

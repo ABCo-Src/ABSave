@@ -12,7 +12,7 @@ namespace ABSoftware.ABSave
     /// <summary>
     /// Converts to and from ABSave.
     /// </summary>
-    public static class ABSave
+    public static class ABSaveConvert
     {
         public static byte[] Serialize<T>(T obj, ABSaveMap map) => SerializeNonGeneric(obj, map);
         public static byte[] SerializeNonGeneric(object obj, ABSaveMap map)
@@ -22,7 +22,7 @@ namespace ABSoftware.ABSave
             return stream.ToArray();
         }
 
-        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream) => Serialize(obj, map, stream);
+        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream) => SerializeNonGeneric(obj, map, stream);
         public static void SerializeNonGeneric(object obj, ABSaveMap map, Stream stream)
         {
             var serializer = LightConcurrentPool<ABSaveSerializer>.TryRent() ?? new ABSaveSerializer();
