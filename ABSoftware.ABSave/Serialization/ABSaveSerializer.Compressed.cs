@@ -9,7 +9,7 @@ namespace ABSoftware.ABSave.Serialization
     // ===============================================
     // This is just an implementation of everything shown there.
     public sealed partial class ABSaveSerializer
-    {        
+    {
         public void WriteCompressed(uint data)
         {
             var target = new BitTarget(this);

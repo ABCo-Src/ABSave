@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
@@ -7,7 +8,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public class TickBasedConverter : ABSaveConverter
+    public class TickBasedConverter : Converter
     {
         public static TickBasedConverter Instance { get; } = new TickBasedConverter();
         private TickBasedConverter() { }
@@ -20,7 +21,7 @@ namespace ABSoftware.ABSave.Converters
             typeof(TimeSpan)
         };
 
-        public override void Serialize(object obj, Type actualType, IABSaveConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
         {
             var asContext = (Context)context;
 
@@ -37,7 +38,7 @@ namespace ABSoftware.ABSave.Converters
 
         public void SerializeTicks(long ticks, ABSaveSerializer serializer) => serializer.WriteInt64(ticks);
 
-        public override object Deserialize(Type actualType, IABSaveConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
         {
             var asContext = (Context)context;
 
@@ -51,14 +52,20 @@ namespace ABSoftware.ABSave.Converters
 
         public long DeserializeTicks(ABSaveDeserializer deserializer) => deserializer.ReadInt64();
 
-        public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
+        public override IConverterContext TryGenerateContext(ref ContextGen gen)
         {
-            if (type == typeof(DateTime))
+            if (gen.Type == typeof(DateTime))
+            {
+                gen.MarkCanConvert();
                 return Context.DateTime;
-            else if (type == typeof(TimeSpan))
+            }
+            else if (gen.Type == typeof(TimeSpan))
+            {
+                gen.MarkCanConvert();
                 return Context.TimeSpan;
-            else
-                return null;
+            }
+
+            else return null;
         }
 
         enum TicksType
@@ -67,7 +74,7 @@ namespace ABSoftware.ABSave.Converters
             TimeSpan
         }
 
-        class Context : IABSaveConverterContext
+        class Context : IConverterContext
         {
             public static Context DateTime = new Context() { Type = TicksType.DateTime };
             public static Context TimeSpan = new Context() { Type = TicksType.TimeSpan };

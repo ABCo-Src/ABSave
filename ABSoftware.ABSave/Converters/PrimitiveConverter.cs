@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Text;
 namespace ABSoftware.ABSave.Converters
 {
     // TODO: Add .NET 5 support for "nint"s
-    public class PrimitiveConverter : ABSaveConverter
+    public class PrimitiveConverter : Converter
     {
         public static PrimitiveConverter Instance { get; } = new PrimitiveConverter();
         private PrimitiveConverter() { }
@@ -36,7 +37,7 @@ namespace ABSoftware.ABSave.Converters
             typeof(bool)
         };
 
-        public override void Serialize(object obj, Type actualType, IABSaveConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
         {
             var serializer = header.Serializer;
 
@@ -49,21 +50,21 @@ namespace ABSoftware.ABSave.Converters
 
                     break;
 
-                case PrimitiveType.IntPtr:
+                //case PrimitiveType.IntPtr:
 
-                    if (IntPtr.Size == 8)
-                        serializer.WriteInt64((long)(IntPtr)obj);
-                    else
-                        serializer.WriteInt32((int)(IntPtr)obj);
-                    break;
+                //    if (IntPtr.Size == 8)
+                //        serializer.WriteInt64((long)(IntPtr)obj);
+                //    else
+                //        serializer.WriteInt32((int)(IntPtr)obj);
+                //    break;
 
-                case PrimitiveType.UIntPtr:
+                //case PrimitiveType.UIntPtr:
 
-                    if (UIntPtr.Size == 8)
-                        serializer.WriteInt64((long)(UIntPtr)obj);
-                    else
-                        serializer.WriteInt32((int)(UIntPtr)obj);
-                    break;
+                //    if (UIntPtr.Size == 8)
+                //        serializer.WriteInt64((long)(UIntPtr)obj);
+                //    else
+                //        serializer.WriteInt32((int)(UIntPtr)obj);
+                //    break;
 
                 case PrimitiveType.Byte:
 
@@ -129,7 +130,7 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public override object Deserialize(Type actualType, IABSaveConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
         {
             var reader = header.Deserializer;
 
@@ -138,8 +139,8 @@ namespace ABSoftware.ABSave.Converters
                 return ((Context)context).Type switch
                 {
                     PrimitiveType.Boolean => reader.ReadByte() > 0,
-                    PrimitiveType.IntPtr => IntPtr.Size == 8 ? (IntPtr)reader.ReadInt64() : (IntPtr)reader.ReadInt32(),
-                    PrimitiveType.UIntPtr => UIntPtr.Size == 8 ? (UIntPtr)reader.ReadInt64() : (UIntPtr)reader.ReadInt32(),
+                    //PrimitiveType.IntPtr => IntPtr.Size == 8 ? (IntPtr)reader.ReadInt64() : (IntPtr)reader.ReadInt32(),
+                    //PrimitiveType.UIntPtr => UIntPtr.Size == 8 ? (UIntPtr)reader.ReadInt64() : (UIntPtr)reader.ReadInt32(),
                     PrimitiveType.Byte => reader.ReadByte(),
                     PrimitiveType.SByte => (sbyte)reader.ReadByte(),
                     PrimitiveType.UInt16 => reader.ReadInt16(),
@@ -157,21 +158,16 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
+        public override IConverterContext TryGenerateContext(ref ContextGen gen)
         {
-            if (!type.IsPrimitive) return null;
+            if (!gen.Type.IsPrimitive) return null;
 
-            var typeCode = Type.GetTypeCode(type);
+            gen.MarkCanConvert();
+            var typeCode = Type.GetTypeCode(gen.Type);
 
             // IntPtr
             if (typeCode == TypeCode.Object)
-            {
-                if (type == typeof(IntPtr))
-                    return new Context(PrimitiveType.IntPtr);
-                else if (type == typeof(UIntPtr))
-                    return new Context(PrimitiveType.UIntPtr);
-                else throw new Exception("Unsupported primitive provided. Please note that ABSave does not currently support .NET 5 and above types.");
-            }
+                throw new Exception("Unsupported primitive provided. Please note that ABSave does not currently support .NET 5 and above types.");
 
             return new Context((PrimitiveType)typeCode);
         }
@@ -195,7 +191,7 @@ namespace ABSoftware.ABSave.Converters
             Decimal = 15,
         }
 
-        class Context : IABSaveConverterContext
+        class Context : IConverterContext
         {
             public PrimitiveType Type;
 

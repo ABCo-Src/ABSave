@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Reflection;
@@ -8,7 +9,7 @@ using System.Runtime.CompilerServices;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public class TypeConverter : ABSaveConverter
+    public class TypeConverter : Converter
     {
         public static TypeConverter Instance = new TypeConverter();
         private TypeConverter() { }
@@ -20,12 +21,12 @@ namespace ABSoftware.ABSave.Converters
 
         #region Serialize
 
-        public override void Serialize(object obj, Type actualType, IABSaveConverterContext context, ref BitTarget header) => SerializeType((Type)obj, ((Context)context).AssemblyMap, ref header);
+        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header) => SerializeType((Type)obj, ref header);
 
-        public void SerializeType(Type type, MapItem assemblyMap, ref BitTarget header) => SerializeType(type, assemblyMap, ref header, SerializeGenerics);
-        public void SerializeClosedType(Type type, MapItem assemblyMap, ref BitTarget header) => SerializeType(type, assemblyMap, ref header, SerializeClosedGenerics);
+        public void SerializeType(Type type, ref BitTarget header) => SerializeType(type, ref header, SerializeGenerics);
+        public void SerializeClosedType(Type type, ref BitTarget header) => SerializeType(type, ref header, SerializeClosedGenerics);
 
-        void SerializeType(Type type, MapItem assemblyMap, ref BitTarget header, Action<Type, MapItem, ABSaveSerializer> genericHandler)
+        void SerializeType(Type type, ref BitTarget header, Action<Type, ABSaveSerializer> genericHandler)
         {
             // Try to use a pre-saved one
             if (HandleSerializeSaved(type, ref header)) return;
@@ -33,45 +34,15 @@ namespace ABSoftware.ABSave.Converters
             // Convert the type
             if (type.IsGenericType)
             {
-                SerializeTypeMainPart(type.GetGenericTypeDefinition(), assemblyMap, ref header);
-                genericHandler(type, assemblyMap, header.Serializer);
+                SerializeTypeMainPart(type.GetGenericTypeDefinition(), ref header);
+                genericHandler(type, header.Serializer);
             }
-            else SerializeTypeMainPart(type, assemblyMap, ref header);
+            else SerializeTypeMainPart(type, ref header);
         }
 
-        //public void SerializeClosedDifferences(Type specifiedType, Type actualType, MapItem assemblyMap, ref BitTarget header)
-        //{
-        //    // Try to use a pre-saved one
-        //    if (HandleSerializeSaved(actualType, ref header)) return;
-
-        //    // Convert the type
-        //    if (actualType.IsGenericType)
-        //    {
-        //        var actualTypeGTD = actualType.GetGenericTypeDefinition();
-
-        //        // Only generic difference
-        //        if (specifiedType.GetGenericTypeDefinition() == actualTypeGTD)
-        //        {
-        //            header.WriteBitOn();
-        //            SerializeClosedDifferencesGeneric(specifiedType, actualType, assemblyMap, ref header);
-        //        }
-
-        //        // Complete difference
-        //        else
-        //        {
-        //            header.WriteBitOff();
-
-        //            SerializeTypeMainPart(actualType.GetGenericTypeDefinition(), assemblyMap, ref header);
-        //            SerializeClosedGenerics(actualType, assemblyMap, header.Serializer);
-        //        }
-        //    }
-
-        //    else SerializeTypeMainPart(actualType, assemblyMap, ref header);
-        //}
-
-        void SerializeTypeMainPart(Type type, MapItem assemblyMap, ref BitTarget header)
+        void SerializeTypeMainPart(Type type, ref BitTarget header)
         {
-            header.Serializer.SerializeExactNonNullItem(type.Assembly, assemblyMap, ref header);
+            header.Serializer.SerializeExactNonNullItem(type.Assembly, header.Serializer.Map.AssemblyItem, ref header);
             header.Serializer.WriteString(type.FullName);
         }
 
@@ -79,7 +50,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Serialize Generics
 
-        void SerializeGenerics(Type type, MapItem assemblyMap, ABSaveSerializer serializer)
+        void SerializeGenerics(Type type, ABSaveSerializer serializer)
         {
             var generics = type.GetGenericArguments();
             var currentTarget = new BitTarget(serializer);
@@ -91,97 +62,46 @@ namespace ABSoftware.ABSave.Converters
                 else
                 {
                     currentTarget.WriteBitOn();
-                    SerializeType(generics[i], assemblyMap, ref currentTarget);
+                    SerializeType(generics[i], ref currentTarget);
                 }
             }
         }
 
-        void SerializeClosedGenerics(Type type, MapItem assemblyMap, ABSaveSerializer serializer)
+        void SerializeClosedGenerics(Type type, ABSaveSerializer serializer)
         {
             var generics = type.GetGenericArguments();
             var target = new BitTarget(serializer);
 
-            for (int i = 0; i < generics.Length; i++) SerializeClosedType(generics[i], assemblyMap, ref target);
+            for (int i = 0; i < generics.Length; i++) SerializeClosedType(generics[i], ref target);
         }
-
-        //void SerializeClosedDifferencesGeneric(Type specifiedType, Type actualType, MapItem assemblyMap, ref BitTarget header)
-        //{
-        //    var specifiedTypeGenerics = specifiedType.GetGenericArguments();
-        //    var actualTypeGenerics = actualType.GetGenericArguments();
-
-        //    for (int i = 0; i < specifiedTypeGenerics.Length; i++)
-        //    {
-        //        if (specifiedTypeGenerics[i] == actualTypeGenerics[i])
-        //            header.WriteBitOff();
-        //        else
-        //        {
-        //            header.WriteBitOn();
-        //            SerializeType(actualTypeGenerics[i], assemblyMap, ref header);
-        //        }
-        //    }
-        //}
 
         #endregion
 
         #region Deserialize
 
-        public override object Deserialize(Type actualType, IABSaveConverterContext context, ref BitSource header) => DeserializeType(((Context)context).AssemblyMap, ref header);
+        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header) => DeserializeType(ref header);
 
-        public Type DeserializeType(MapItem assemblyMap, ref BitSource header) => DeserializeType(ref header, assemblyMap, DeserializeOpenGenerics);
-        public Type DeserializeClosedType(MapItem assemblyMap, ref BitSource header) => DeserializeType(ref header, assemblyMap, DeserializeClosedGenerics);
+        public Type DeserializeType(ref BitSource header) => DeserializeType(ref header, DeserializeOpenGenerics);
+        public Type DeserializeClosedType(ref BitSource header) => DeserializeType(ref header, DeserializeClosedGenerics);
 
-        Type DeserializeType(ref BitSource header, MapItem assemblyMap, Func<Type, MapItem, ABSaveDeserializer, Type> genericAction)
+        Type DeserializeType(ref BitSource header, Func<Type, ABSaveDeserializer, Type> genericAction)
         {
             // Try use a saved value.
             var cachedType = HandleDeserializeSaved(ref header);
             if (cachedType != null) return cachedType;
 
             // Convert the type
-            var mainPart = DeserializeTypeMainPart(assemblyMap, ref header);
-            var withGenerics = mainPart.IsGenericType ? genericAction(mainPart, assemblyMap, header.Deserializer) : mainPart;
+            var mainPart = DeserializeTypeMainPart(ref header);
+            var withGenerics = mainPart.IsGenericType ? genericAction(mainPart, header.Deserializer) : mainPart;
 
             // Save the type
             header.Deserializer.SavedTypes.Add(withGenerics);
             return withGenerics;
         }
 
-        //public Type DeserializeClosedDifferences(Type specifiedType, MapItem assemblyMap, ref BitSource header)
-        //{
-        //    // Try use a saved value.
-        //    var cachedType = HandleDeserializeSaved(ref header);
-        //    if (cachedType != null) return cachedType;
-
-        //    // Convert the type
-        //    var res = ConvertType(ref header);
-
-        //    Type ConvertType(ref BitSource header)
-        //    {
-        //        if (specifiedType.IsGenericType)
-        //        {
-        //            var onlyGenericDifference = header.ReadBit();
-
-        //            // Different Generics
-        //            if (onlyGenericDifference) return DeserializeDifferenceGenerics(specifiedType, assemblyMap, ref header);
-
-        //            // Completely Different Type
-        //            else
-        //            {
-        //                var mainType = DeserializeTypeMainPart(assemblyMap, ref header);
-        //                return DeserializeClosedGenerics(mainType, assemblyMap, header.Deserializer);
-        //            }
-        //        }
-
-        //        return DeserializeTypeMainPart(assemblyMap, ref header);
-        //    }
-
-        //    // Save the type
-        //    header.Deserializer.SavedTypes.Add(res);
-        //    return res;
-        //}
-
-        public Type DeserializeTypeMainPart(MapItem assemblyMap, ref BitSource header)
+        public Type DeserializeTypeMainPart(ref BitSource header)
         {
-            var assembly = (Assembly)header.Deserializer.DeserializeExactNonNullItem(assemblyMap, ref header);
+            var assembly = (Assembly)header.Deserializer.DeserializeExactNonNullItem(header.Deserializer.Map.AssemblyItem, ref header);
             var typeName = header.Deserializer.ReadString();
 
             return assembly.GetType(typeName);
@@ -191,24 +111,24 @@ namespace ABSoftware.ABSave.Converters
 
         #region Deserialize Generics
 
-        public Type DeserializeOpenGenerics(Type mainPart, MapItem assemblyMap, ABSaveDeserializer deserializer)
+        public Type DeserializeOpenGenerics(Type mainPart, ABSaveDeserializer deserializer)
         {
             var parameters = mainPart.GetGenericArguments();
             var currentSource = new BitSource(deserializer);
 
             for (int i = 0; i < parameters.Length; i++)
                 if (currentSource.ReadBit())
-                    parameters[i] = DeserializeType(assemblyMap, ref currentSource);                
+                    parameters[i] = DeserializeType(ref currentSource);
             
             return mainPart.MakeGenericType(parameters);
         }
 
-        public Type DeserializeClosedGenerics(Type mainPart, MapItem assemblyMap, ABSaveDeserializer deserializer)
+        public Type DeserializeClosedGenerics(Type mainPart, ABSaveDeserializer deserializer)
         {
             var parameters = mainPart.GetGenericArguments();
             var header = new BitSource(deserializer);
 
-            for (int i = 0; i < parameters.Length; i++) parameters[i] = DeserializeClosedType(assemblyMap, ref header);            
+            for (int i = 0; i < parameters.Length; i++) parameters[i] = DeserializeClosedType(ref header);
         
             return mainPart.MakeGenericType(parameters);
         }
@@ -256,17 +176,11 @@ namespace ABSoftware.ABSave.Converters
             return null;
         }
 
-        public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
+        public override IConverterContext TryGenerateContext(ref ContextGen gen)
         {
-            if (type == typeof(Type) || type.IsSubclassOf(typeof(Type))) return new Context(map.GetMaptimeSubItem(typeof(Assembly)));
-            else return null;
-        }
-
-        class Context : IABSaveConverterContext
-        {
-            public MapItem AssemblyMap;
-
-            public Context(MapItem asmMap) => AssemblyMap = asmMap;
+            if (gen.Type == typeof(Type) || gen.Type.IsSubclassOf(typeof(Type))) gen.MarkCanConvert();
+            
+            return null;
         }
     }
 }

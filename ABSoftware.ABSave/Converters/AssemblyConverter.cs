@@ -1,6 +1,7 @@
 ﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Globalization;
@@ -8,7 +9,7 @@ using System.Reflection;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public class AssemblyConverter : ABSaveConverter
+    public class AssemblyConverter : Converter
     {
         public readonly static AssemblyConverter Instance = new AssemblyConverter();
         private AssemblyConverter() { }
@@ -19,10 +20,10 @@ namespace ABSoftware.ABSave.Converters
 
         public override Type[] ExactTypes { get; } = new Type[] { typeof(Assembly) };
 
-        public override void Serialize(object obj, Type actualType, IABSaveConverterContext context, ref BitTarget header) =>
-            SerializeAssembly((Assembly)obj, ((Context)context).VersionMapItem, ref header);
+        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header) =>
+            SerializeAssembly((Assembly)obj, ref header);
 
-        public void SerializeAssembly(Assembly assembly, MapItem versionMap, ref BitTarget header)
+        public void SerializeAssembly(Assembly assembly, ref BitTarget header)
         {
             // Try to serialize an already saved version.
             if (HandleSerializeSaved(assembly, ref header)) return;
@@ -36,7 +37,7 @@ namespace ABSoftware.ABSave.Converters
             header.WriteBitWith(hasPublicKeyToken);
 
             // Version
-            header.Serializer.SerializeExactNonNullItem(assemblyName.Version, versionMap, ref header);
+            header.Serializer.SerializeExactNonNullItem(assemblyName.Version, header.Serializer.Map.VersionItem, ref header);
 
             // Name
             header.Serializer.WriteString(assemblyName.Name);
@@ -64,10 +65,10 @@ namespace ABSoftware.ABSave.Converters
             return false;
         }
 
-        public override object Deserialize(Type actualType, IABSaveConverterContext context, ref BitSource header) =>
-            DeserializeAssembly(ref header, ((Context)context).VersionMapItem);
+        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header) =>
+            DeserializeAssembly(ref header);
 
-        public Assembly DeserializeAssembly(ref BitSource header, MapItem versionMap)
+        public Assembly DeserializeAssembly(ref BitSource header)
         {
             // Try to get a saved assembly.
             var saved = TryDeserializeSaved(ref header);
@@ -79,7 +80,7 @@ namespace ABSoftware.ABSave.Converters
             var hasPublicKeyToken = header.ReadBit();
 
             // Version
-            assemblyName.Version = (Version)header.Deserializer.DeserializeExactNonNullItem(versionMap, ref header);
+            assemblyName.Version = (Version)header.Deserializer.DeserializeExactNonNullItem(header.Deserializer.Map.VersionItem, ref header);
 
             // Name
             assemblyName.Name = header.Deserializer.ReadString();
@@ -113,17 +114,11 @@ namespace ABSoftware.ABSave.Converters
             return null;
         }
 
-        public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
+        public override IConverterContext TryGenerateContext(ref ContextGen gen)
         {
-            if (type == typeof(Assembly) || type.IsSubclassOf(typeof(Assembly))) return new Context(map.GetMaptimeSubItem(typeof(Version)));
+            if (gen.Type == typeof(Assembly) || gen.Type.IsSubclassOf(typeof(Assembly))) gen.MarkCanConvert();
+
             return null;
-        }
-
-        class Context : IABSaveConverterContext 
-        {
-            public MapItem VersionMapItem;
-
-            public Context(MapItem versionMapItem) => VersionMapItem = versionMapItem;
         }
     }
 }

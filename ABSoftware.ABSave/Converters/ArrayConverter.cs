@@ -1,6 +1,7 @@
 ﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
@@ -9,7 +10,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public class ArrayConverter : ABSaveConverter
+    public class ArrayConverter : Converter
     {
         public static ArrayConverter Instance { get; } = new ArrayConverter();
         private ArrayConverter() { }
@@ -29,7 +30,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, IABSaveConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
         {
             var arrContext = (Context)context;
             Serialize((Array)obj, actualType, ref arrContext.Info, ref header);
@@ -92,7 +93,7 @@ namespace ABSoftware.ABSave.Converters
         private void SerializeUnknown(Array arr, Type actualType, ref BitTarget typeHeader)
         {
             var context = new ArrayTypeInfo();
-            PopulateTypeInfo(ref context, typeHeader.Serializer.Map, actualType);
+            PopulateTypeInfo(ref context, typeHeader.Serializer.GetRuntimeMapItem(actualType.GetElementType()), typeHeader.Serializer.Map, actualType);
 
             typeHeader.Serializer.WriteClosedType(context.ElementType, ref typeHeader);
 
@@ -216,7 +217,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, IABSaveConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
         {
             var arrContext = (Context)context;
             return Deserialize(ref arrContext.Info, ref header);
@@ -365,26 +366,31 @@ namespace ABSoftware.ABSave.Converters
 
         #region Context Creation
 
-        public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
+        public override IConverterContext TryGenerateContext(ref ContextGen gen)
         {
-            if (type == typeof(Array))
+            if (gen.Type == typeof(Array))
             {
-                if (!map.Settings.BypassDangerousTypeChecking) throw new ABSaveDangerousTypeException("a general 'Array' type that could contain any type of element");
+                if (!gen.Settings.BypassDangerousTypeChecking) throw new ABSaveDangerousTypeException("a general 'Array' type that could contain any type of element");
+
+                gen.MarkCanConvert();
                 return Context.Unknown;
             }
 
-            if (!type.IsArray) return null;
+            if (!gen.Type.IsArray) return null;
 
+            gen.MarkCanConvert();
             var res = new Context();
-            PopulateTypeInfo(ref res.Info, map, type);
+
+            var elemType = gen.Type.GetElementType();
+            PopulateTypeInfo(ref res.Info, gen.GetMap(elemType), gen.Map, gen.Type);
             return res;
         }
 
-        void PopulateTypeInfo(ref ArrayTypeInfo info, ABSaveMap map, Type type)
+        void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, ABSaveMap map, Type type)
         {
             var rank = type.GetArrayRank();
-
-            info.ElementType = type.GetElementType();
+            info.ElementType = map.GetTypeOf(itemInfo);
+            info.PerItem = itemInfo;
 
             if (type.IsSZArray)
             {
@@ -402,8 +408,6 @@ namespace ABSoftware.ABSave.Converters
                 info.Rank = (byte)rank;
                 info.Type = ArrayType.MultiDimensional;
             }
-
-            info.PerItem = map.GetMaptimeSubItem(info.ElementType);
         }
 
         FastConversionType GetFastType(Type elementType) => Type.GetTypeCode(elementType) switch
@@ -544,7 +548,7 @@ namespace ABSoftware.ABSave.Converters
             UShort
         }
 
-        class Context : IABSaveConverterContext
+        class Context : IConverterContext
         {
             public static Context Unknown = new Context { Info = new ArrayTypeInfo() { Type = ArrayType.Unknown } };
 
@@ -558,10 +562,10 @@ namespace ABSoftware.ABSave.Converters
             public byte Rank;
             public FastConversionType FastConversion;
             public Type ElementType;
-            public MapItem PerItem;
+            public MapItemInfo PerItem;
 
             // For multi-dimensional arrays.
-            public ArrayTypeInfo(byte rank, Type elementType, MapItem perItem)
+            public ArrayTypeInfo(byte rank, Type elementType, MapItemInfo perItem)
             {
                 Type = ArrayType.MultiDimensional;
                 FastConversion = FastConversionType.None;

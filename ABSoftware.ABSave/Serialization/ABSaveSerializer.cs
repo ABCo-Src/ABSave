@@ -2,7 +2,6 @@
 using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Items;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,14 +25,14 @@ namespace ABSoftware.ABSave.Serialization
         internal Dictionary<Assembly, int> SavedAssemblies = new Dictionary<Assembly, int>();
         internal Dictionary<Type, int> SavedTypes = new Dictionary<Type, int>();
 
-        public ABSaveMap Map { get; }
-        public ABSaveSettings Settings { get; }
-        public Stream Output { get; }
-        public bool ShouldReverseEndian { get; }
+        public ABSaveMap Map { get; private set; }
+        public ABSaveSettings Settings { get; private set; }
+        public Stream Output { get; private set; }
+        public bool ShouldReverseEndian { get; private set; }
 
         byte[] _stringBuffer;
 
-        public ABSaveSerializer(Stream output, ABSaveMap map) 
+        public void Initialize(Stream output, ABSaveMap map)
         {
             if (!output.CanWrite)
                 throw new Exception("Cannot use unwriteable stream.");
@@ -42,8 +41,10 @@ namespace ABSoftware.ABSave.Serialization
 
             Map = map;
             Settings = map.Settings;
-            
+
             ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
+
+            Reset();
         }
 
         public void Reset()
@@ -52,14 +53,14 @@ namespace ABSoftware.ABSave.Serialization
             SavedTypes.Clear();
         }
 
-        public MapItem GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
+        public MapItemInfo GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
 
         public void SerializeRoot(object obj)
         {
             SerializeItem(obj, Map.RootItem);
         }
 
-        public void SerializeItem(object obj, MapItem item)
+        public void SerializeItem(object obj, MapItemInfo item)
         {
             if (obj == null)
                 WriteByte(0);
@@ -71,7 +72,7 @@ namespace ABSoftware.ABSave.Serialization
             }
         }
 
-        public void SerializeItem(object obj, MapItem item, ref BitTarget target)
+        public void SerializeItem(object obj, MapItemInfo item, ref BitTarget target)
         {
             if (obj == null)
             {
@@ -81,44 +82,53 @@ namespace ABSoftware.ABSave.Serialization
             else SerializeItemNoSetup(obj, obj.GetType(), item, ref target, false);
         }
 
-        public void SerializeExactNonNullItem(object obj, MapItem item)
+        public void SerializeExactNonNullItem(object obj, MapItemInfo item)
         {
             var currentHeader = new BitTarget(this);
             SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, true);
         }
 
-        public void SerializeExactNonNullItem(object obj, MapItem item, ref BitTarget target) => SerializeItemNoSetup(obj, item.ItemType.Type, item, ref target, true);        
+        public void SerializeExactNonNullItem(object obj, MapItemInfo item, ref BitTarget target) => SerializeItemNoSetup(obj, obj.GetType(), item, ref target, true);
 
-        void SerializeItemNoSetup(object obj, Type actualType, MapItem item, ref BitTarget target, bool skipAllHeaderHandling)
+        void SerializeItemNoSetup(object obj, Type actualType, MapItemInfo info, ref BitTarget target, bool skipAllHeaderHandling)
         {
             // Null items are already handled in the setup, however it is our responsibility to say that the item "is not null" if necessary.
-            switch (item)
+            ref MapItem item = ref Map.GetItemAt(info);
+
+            ABSaveUtils.WaitUntilNotGenerating(ref item);
+
+            if (info.IsNullable)
             {
-                case ConverterMapItem converterItem:
+                target.WriteBitOn(); // Clearly wasn't null
+                skipAllHeaderHandling = true;
+            }
 
-                    if (WriteHeader(converterItem.Converter.ConvertsSubTypes, converterItem.Converter.WritesToHeader, ref target)) return;
-                    converterItem.Converter.Serialize(obj, actualType, converterItem.Context, ref target);
+            switch (item.MapType)
+            {
+                case MapItemType.Converter:
 
-                    break;
+                    ref ConverterMapItem converter = ref MapItem.GetConverterData(ref item);
 
-                case ObjectMapItem objItem:
-
-                    if (WriteHeader(false, false, ref target)) return;
-                    SerializeObjectItems(obj, objItem);
-
-                    break;
-
-                case NullableMapItem nullable:
-
-                    target.WriteBitOn(); // This clearly wasn't null.
-                    SerializeItemNoSetup(obj, actualType, nullable.InnerItem, ref target, true);
+                    if (WriteHeader(converter.Converter.ConvertsSubTypes, converter.Converter.WritesToHeader, ref item, ref target)) return;
+                    converter.Converter.Serialize(obj, actualType, converter.Context, ref target);
 
                     break;
 
-                case RuntimeMapItem runtime:
+                case MapItemType.Object:
+
+                    ref ObjectMapItem objItem = ref MapItem.GetObjectData(ref item);
+
+                    if (WriteHeader(false, false, ref item, ref target)) return;
+                    SerializeObjectItems(obj, ref objItem);
+
+                    break;
+
+                case MapItemType.Runtime:
+
+                    MapItemInfo inner = MapItem.GetRuntimeExtraData(ref item);
 
                     // Switch to the item inside.
-                    SerializeItemNoSetup(obj, actualType, runtime.InnerItem, ref target, skipAllHeaderHandling);
+                    SerializeItemNoSetup(obj, actualType, inner, ref target, skipAllHeaderHandling);
                     break;
 
                 default:
@@ -127,9 +137,9 @@ namespace ABSoftware.ABSave.Serialization
 
             // Parameters: The type should not be taken into consideration when choosing parameters, only what the map items themselves support.
             // Returns: True if the type differed, and has been serialized seperately, false if not.
-            bool WriteHeader(bool convertsSubTypes, bool usesHeader, ref BitTarget target)
+            bool WriteHeader(bool convertsSubTypes, bool usesHeader, ref MapItem item, ref BitTarget target)
             {
-                if (skipAllHeaderHandling || item.ItemType.IsValueType) return false;
+                if (skipAllHeaderHandling || item.IsValueType) return false;
 
                 // Null
                 target.WriteBitOn();
@@ -137,7 +147,7 @@ namespace ABSoftware.ABSave.Serialization
                 // Type checks
                 if (Settings.SaveInheritance && !convertsSubTypes)
                 {
-                    if (item.ItemType.Type == actualType)
+                    if (item.ItemType == actualType)
                         target.WriteBitOn();
 
                     else
@@ -160,20 +170,16 @@ namespace ABSoftware.ABSave.Serialization
             }
         }
 
-        void SerializeObjectItems(object obj, ObjectMapItem map)
+        void SerializeObjectItems(object obj, ref ObjectMapItem map)
         {
+            var isField = Map.Settings.ConvertFields;
+
             // Serialize the item
             for (int i = 0; i < map.Members.Length; i++)
                 SerializeItem(GetValue(ref map.Members[i]), map.Members[i].Map);
 
             object GetValue(ref ObjectMemberInfo member)
-            {
-                // Field
-                if (member.Info.Left != null) return member.Info.Left.GetValue(obj);
-
-                // Property - reference types are cached at run-time to avoid reflection.
-                else return member.Info.Right.Getter(obj);
-            }
+                => member.Accessor.Getter(obj);
         }
 
         // TODO: Use map guides to implement proper "Type" handling via map.
@@ -183,7 +189,7 @@ namespace ABSoftware.ABSave.Serialization
             WriteType(type, ref header);
         }
 
-        public void WriteType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeType(type, Map.AssemblyItem, ref header);
+        public void WriteType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeType(type, ref header);
 
         public void WriteClosedType(Type type)
         {
@@ -191,6 +197,6 @@ namespace ABSoftware.ABSave.Serialization
             WriteClosedType(type, ref header);
         }
 
-        public void WriteClosedType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeClosedType(type, Map.AssemblyItem, ref header);
+        public void WriteClosedType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeClosedType(type, ref header);
     }
 }

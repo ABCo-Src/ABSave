@@ -2,6 +2,7 @@
 using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections;
@@ -11,7 +12,7 @@ using System.IO.Pipes;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public class EnumerableConverter : ABSaveConverter
+    public class EnumerableConverter : Converter
     {
         public static EnumerableConverter Instance { get; } = new EnumerableConverter();
         private EnumerableConverter() { }
@@ -26,7 +27,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, IABSaveConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
         {
             var actualContext = (Context)context;
 
@@ -62,7 +63,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, IABSaveConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
         {
             var actualContext = (Context)context;
 
@@ -104,56 +105,57 @@ namespace ABSoftware.ABSave.Converters
 
         #region Context
 
-        public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
+        public override IConverterContext TryGenerateContext(ref ContextGen gen)
         {
-            if (!typeof(IEnumerable).IsAssignableFrom(type)) return null;
+            if (!typeof(IEnumerable).IsAssignableFrom(gen.Type)) return null;
+            gen.MarkCanConvert();
 
             // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
             {
-                if (type.IsGenericType)
+                if (gen.Type.IsGenericType)
                 {
-                    var gtd = type.GetGenericTypeDefinition();
+                    var gtd = gen.Type.GetGenericTypeDefinition();
 
                     if (gtd == typeof(List<>))
                     {
-                        var argType = type.GetGenericArguments()[0];
-                        return new Context(CollectionInfo.List, argType, map.GetMaptimeSubItem(argType), null, null);
+                        var argType = gen.Type.GetGenericArguments()[0];
+
+                        return new Context(CollectionInfo.List, argType, gen.GetMap(argType), null, default);
                     }
-                    else if (type.IsInterface)
+                    else if (gen.Type.IsInterface)
                     {
                         if (gtd == typeof(ICollection<>))
-                            return GetContextForCategory(CollectionCategory.GenericICollection, type.GetGenericArguments()[0], null);
+                            return GetContextForCategory(CollectionCategory.GenericICollection, gen.Type.GetGenericArguments()[0], null, ref gen);
                         else if (gtd == typeof(IDictionary<,>))
-                            return GetContextForCategory(CollectionCategory.GenericIDictionary, type.GetGenericArguments()[0], type.GetGenericArguments()[1]);
+                            return GetContextForCategory(CollectionCategory.GenericIDictionary, gen.Type.GetGenericArguments()[0], gen.Type.GetGenericArguments()[1], ref gen);
                     }
                 }
 
-                if (type.IsInterface)
+                if (gen.Type.IsInterface)
                 {
-                    if (type == typeof(IList))
-                        return GetContextForCategory(CollectionCategory.NonGenericIList, typeof(object), null);
-                    else if (type == typeof(IDictionary))
-                        return GetContextForCategory(CollectionCategory.NonGenericIDictionary, typeof(object), null);
+                    if (gen.Type == typeof(IList))
+                        return GetContextForCategory(CollectionCategory.NonGenericIList, typeof(object), null, ref gen);
+                    else if (gen.Type == typeof(IDictionary))
+                        return GetContextForCategory(CollectionCategory.NonGenericIDictionary, typeof(object), null, ref gen);
                 }
             }
 
             // Work out what category this type falls under.
-            CollectionCategory category = DetectCollectionType(type.GetInterfaces(), out Type elementOrKeyType, out Type valueType);
-            return GetContextForCategory(category, elementOrKeyType, valueType);
+            CollectionCategory category = DetectCollectionType(gen.Type.GetInterfaces(), out Type elementOrKeyType, out Type valueType);
+            return GetContextForCategory(category, elementOrKeyType, valueType, ref gen);
 
             // Get the correct info for the given type.
-            Context GetContextForCategory(CollectionCategory category, Type elementOrKeyType, Type valueType)
+            Context GetContextForCategory(CollectionCategory category, Type elementOrKeyType, Type valueType, ref ContextGen gen)
             {
                 return category switch
                 {
-                    CollectionCategory.GenericICollection => new Context(CollectionInfo.GenericICollection, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), typeof(object), null),
-                    CollectionCategory.NonGenericIList => new Context(CollectionInfo.NonGenericIList, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), typeof(object), null),
-                    CollectionCategory.GenericIDictionary => new Context(ABSaveDictionaryInfo.GenericIDictionary, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), valueType, map.GetMaptimeSubItem(valueType)),
-                    CollectionCategory.NonGenericIDictionary => new Context(ABSaveDictionaryInfo.NonGenericIDictionary, elementOrKeyType, map.GetMaptimeSubItem(elementOrKeyType), valueType, map.GetMaptimeSubItem(valueType)),
+                    CollectionCategory.GenericICollection => new Context(CollectionInfo.GenericICollection, elementOrKeyType, gen.GetMap(elementOrKeyType), typeof(object), default),
+                    CollectionCategory.NonGenericIList => new Context(CollectionInfo.NonGenericIList, elementOrKeyType, gen.GetMap(elementOrKeyType), typeof(object), default),
+                    CollectionCategory.GenericIDictionary => new Context(ABSaveDictionaryInfo.GenericIDictionary, elementOrKeyType, gen.GetMap(elementOrKeyType), valueType, gen.GetMap(valueType)),
+                    CollectionCategory.NonGenericIDictionary => new Context(ABSaveDictionaryInfo.NonGenericIDictionary, elementOrKeyType, gen.GetMap(elementOrKeyType), valueType, gen.GetMap(valueType)),
                     _ => throw new ABSaveUnrecognizedCollectionException(),
                 };
             }
-            
         }
 
         static CollectionCategory DetectCollectionType(Type[] interfaces, out Type elementOrKeyType, out Type valueType)
@@ -273,15 +275,15 @@ namespace ABSoftware.ABSave.Converters
             None
         }
 
-        internal class Context : IABSaveConverterContext // Internal for testing
+        internal class Context : IConverterContext // Internal for testing
         {
             public IEnumerableInfo Info;
             public Type ElementTypeOrKeyType;
-            public MapItem ElementOrKeyMap;
+            public MapItemInfo ElementOrKeyMap;
             public Type ValueType;
-            public MapItem ValueMap;
+            public MapItemInfo ValueMap;
 
-            public Context(IEnumerableInfo info, Type elementTypeOrKeyType, MapItem elementOrKeyMap, Type valueType, MapItem valueMap)
+            public Context(IEnumerableInfo info, Type elementTypeOrKeyType, MapItemInfo elementOrKeyMap, Type valueType, MapItemInfo valueMap)
             {
                 Info = info;
                 ElementTypeOrKeyType = elementTypeOrKeyType;

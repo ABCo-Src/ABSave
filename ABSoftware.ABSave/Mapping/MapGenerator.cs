@@ -1,7 +1,7 @@
 ﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping.Items;
+using ABSoftware.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,178 +9,179 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    internal static class MapGenerator
+    public class MapGenerator
     {
-        internal static MapItemType GenerateItemType(Type type) => new MapItemType(type, type.IsValueType);
+        internal ABSaveMap Map;
+        internal MapItemInfo CurrentItem;
+        internal ConcurrentForReadsStack<object> CurrentlyGenerating;
 
-        internal static MapItem Generate(MapItemType typeInfo, ABSaveMap root)
+        public MapItemInfo GetMap(Type type)
         {
-            // Safety checks
-            if (!root.Settings.BypassDangerousTypeChecking)
-            {
-                if (typeInfo.Type == typeof(object)) throw new ABSaveDangerousTypeException("an 'object' field");
-                if (typeInfo.Type == typeof(ValueType)) throw new ABSaveDangerousTypeException("a 'ValueType' field");
-            }
+            // Expand it if it's a nullable.
+            bool isNullable = TryExpandNullable(ref type);
 
-            // Nullable
-            if (IsNullable(typeInfo.Type))
-                return new NullableMapItem(typeInfo, Generate(GenerateItemType(typeInfo.Type.GetGenericArguments()[0]), root));
+            // Try to get it from the dictionary, and start generating if we can't.
+            bool alreadyGenerated = GetOrStartGenerating(type, out MapItemInfo pos, Map.GenInfo.AllTypes);
+            pos.IsNullable = isNullable;
+            if (alreadyGenerated) return pos;
 
-            // Converter
-            var isConverter = TryFindConverterForType(root, typeInfo.Type, out ABSaveConverter converter, out IABSaveConverterContext context);
-            if (isConverter) return new ConverterMapItem(typeInfo, converter, context);
+            EnsureTypeSafety(type);
 
-            // Object
-            var items = GenerateObjectMap(typeInfo, root);
-            return new ObjectMapItem(items, typeInfo);
+            // Try to use a converter, and fallback to manually mapping an object if we can't.
+            if (!GenConverter.TryGenerateConvert(type, this, pos))
+                GenerateObject(type, this, pos);
+
+            return pos;
         }
 
-        #region Object
-
-        static ObjectMemberInfo[] GenerateObjectMap(MapItemType objType, ABSaveMap map)
+        internal MapItemInfo GetRuntimeMap(Type type)
         {
-            if (map.Settings.ConvertFields)
-                return GenerateWithFields(objType.Type, map);
-            else
-                return GenerateWithProperties(objType, map);
+            if (GetOrStartGenerating(type, out MapItemInfo pos, Map.GenInfo.RuntimeMapItems)) return pos;
+
+            ref MapItem item = ref FillItemWith(MapItemType.Runtime, pos);
+            MapItem.GetRuntimeExtraData(ref item) = GetMap(type);
+            item.IsGenerating = false;
+
+            return pos;
         }
 
-        static ObjectMemberInfo[] GenerateWithProperties(MapItemType objType, ABSaveMap map)
+        // ABSave Concurrent Generation System:
+        //
+        // The way this system works is when an item is currently being generated, or is already generated,
+        // it will get added to "AllTypes". When added to "AllTypes", it's given a state, these are all the
+        // scearios and the states they get assigned.
+        //
+        // READY:
+        // ------
+        // The type has been fully generated.
+        // 
+        // READY:
+        // ------
+        // If an object is currently in the middle of being generated, it will be put in "AllTypes" under
+        // a "Ready" state, because we are able to use items while they're being generated, provided they've
+        // been allocated a place already.
+        //
+        // ALLOCATING:
+        // -----------
+        // If an object is ABOUT to start generating, but just hasn't quite been allocated a place yet, we're
+        // going to wait (keep retrying again and again) until it's finally been allocated a place.
+        //
+        // PLANNED:
+        // -----------
+        // If a new type is found in the members of an object, a generator will mark the type and say:
+        // "I plan on generating this a little later, right now I just want to get through all the members". 
+        // If we encounter a "planned" type that's been marked like this, we can take up the generation ourselves.
+
+        // Try to get the item already generated, if we can't, make a new one with an "Allocating" state.
+        //
+        // We don't want to allocate inside the lock because that holds EVERYONE up waiting. 
+        // So that's why we mark it "Allocating" first, and then finish the
+        // allocation below (outside the lock) if needed.
+
+        /// <summary>
+        /// Attempts to get the already generated type from the dictionary. If it is currently being generated
+        /// on another thread, we will wait for that to complete. If it is not being generated or does not
+        /// exist in the dictionary at all, we will start generating it.
+        /// </summary>
+        /// <returns>Whether it was already generated or not</returns>
+        internal bool GetOrStartGenerating(Type type, out MapItemInfo pos, Dictionary<Type, GenMapItemInfo> collection)
         {
-            var bindingFlags = GetFlagsForAccessLevel(map.Settings.IncludePrivate);
-            var properties = objType.Type.GetProperties(bindingFlags);
-            var ordered = properties.Where(p => p.CanRead && p.CanWrite).OrderBy(f => f.Name).ToList();
-
-            var final = new ObjectMemberInfo[ordered.Count];
-            for (int i = 0; i < ordered.Count; i++)
-            {
-                var typeInfo = GenerateItemType(ordered[i].PropertyType);
-                var either = new Either<FieldInfo, PropertyMapInfo>();
-
-                // Put the correct getter and setter for the type.
-                either.Right.Getter = GenerateFastPropertyGetter(objType, typeInfo, ordered[i].GetGetMethod());
-                either.Right.Setter = GenerateFastPropertySetter(objType, typeInfo, ordered[i].GetSetMethod());
-
-                final[i].Info = either;
-                AdjustMember(ref final[i], typeInfo, map);
-            }
-
-            return final;
-        }
-
-        static ObjectMemberInfo[] GenerateWithFields(Type objType, ABSaveMap map)
-        {
-            var bindingFlags = GetFlagsForAccessLevel(map.Settings.IncludePrivate);
-            var fields = objType.GetFields(bindingFlags);
-            var ordered = fields.OrderBy(f => f.Name).ToList();
-
-            var final = new ObjectMemberInfo[ordered.Count];
-
-            for (int i = 0; i < ordered.Count; i++)
-            {
-                final[i].Info = new Either<FieldInfo, PropertyMapInfo>(ordered[i]);
-                AdjustMember(ref final[i], GenerateItemType(ordered[i].FieldType), map);
-            }    
-
-            return final;
-        }
-
-        static void AdjustMember(ref ObjectMemberInfo member, MapItemType itemType, ABSaveMap map)
-        {
-            member.Map = Generate(itemType, map);
-        }
-
-        #endregion
-
-        #region Fast Property Access
-
-        static readonly Type[] FastGetterParams = new Type[] { typeof(object) };
-        static readonly Type[] FastSetterParams = new Type[] { typeof(object), typeof(object) };
-
-        static Func<object, object> GenerateFastPropertyGetter(MapItemType parentType, MapItemType propertyType, MethodInfo info)
-        {
-            if (RuntimeFeature.IsDynamicCodeSupported)
-            {
-                var dynMethod = new DynamicMethod("ABSaveFastPropertyGetter", typeof(object), FastGetterParams);
-                var ilGenerator = dynMethod.GetILGenerator();
-
-                EmitLoadParent(parentType, ilGenerator);
-                ilGenerator.EmitCall(OpCodes.Callvirt, info, null);
-
-                if (propertyType.IsValueType) ilGenerator.Emit(OpCodes.Box, propertyType.Type);
-                ilGenerator.Emit(OpCodes.Ret);
-
-                return (Func<object, object>)dynMethod.CreateDelegate(typeof(Func<object, object>));
-            }
-
-            else return (v) => info.Invoke(v, null);
-        }
-
-        static Action<object, object> GenerateFastPropertySetter(MapItemType parentType, MapItemType propertyType, MethodInfo info)
-        {
-            if (RuntimeFeature.IsDynamicCodeSupported)
-            {
-                var dynMethod = new DynamicMethod("ABSaveFastPropertySetter", null, FastSetterParams);
-                var ilGenerator = dynMethod.GetILGenerator();
-
-                EmitLoadParent(parentType, ilGenerator);
-
-                ilGenerator.Emit(OpCodes.Ldarg_1);
-                if (propertyType.IsValueType) ilGenerator.Emit(OpCodes.Unbox_Any, propertyType.Type);
-
-                ilGenerator.EmitCall(OpCodes.Callvirt, info, null);
-                ilGenerator.Emit(OpCodes.Ret);
-
-                return (Action<object, object>)dynMethod.CreateDelegate(typeof(Action<object, object>));
-            }
-
-            else return (o, v) => info.Invoke(o, new object[] { v }); // TODO: Optimize array allocation
-        }
-
-        static void EmitLoadParent(MapItemType parentType, ILGenerator gen)
-        {
-            gen.Emit(OpCodes.Ldarg_0);
-            gen.Emit(parentType.IsValueType ? OpCodes.Unbox : OpCodes.Castclass, parentType.Type);            
-        }
-
-        #endregion
-
-        #region Helpers
-
-        static bool TryFindConverterForType(ABSaveMap map, Type type, out ABSaveConverter converter, out IABSaveConverterContext context)
-        {
-            var settings = map.Settings;
-            if (settings.ExactConverters.TryGetValue(type, out ABSaveConverter val))
-            {
-                converter = val;
-                context = val.TryGenerateContext(map, type);
+            if (TryGetItemFromDict(collection, type, MapItemState.Allocating, out pos))
                 return true;
-            }
-            else
-                for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
-                {
-                    context = settings.NonExactConverters[i].TryGenerateContext(map, type);
 
-                    if (context != null)
-                    {
-                        converter = settings.NonExactConverters[i];
-                        return true;
-                    }
-                }
-
-            context = null;
-            converter = null;
+            // Generate a new item, since we failed to get anything from the dict.
+            pos = CreateItem(type, collection);
             return false;
         }
 
-        static bool IsNullable(Type type) => type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+        internal bool TryGetItemFromDict(Dictionary<Type, GenMapItemInfo> collection, Type type, MapItemState stateToAddIfNotIn, out MapItemInfo info)
+        {
+            info = default;
 
-        static BindingFlags GetFlagsForAccessLevel(bool includePrivate) =>
-            includePrivate ? BindingFlags.Public | BindingFlags.Instance : BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            while (true)
+            {
+                // We must lock here to ensure two threads don't both try to generate the same thing twice.
+                lock (collection)
+                {
+                    if (collection.TryGetValue(type, out GenMapItemInfo val))
+                    {
+                        // Let "Planned" items fall through to generating for ourselves
+                        switch (val.State)
+                        {
+                            case MapItemState.Ready:
+                                info = val.Info;
+                                return true;
+                            case MapItemState.Allocating:
+                                goto Retry;
+                        }
+                    }
 
-        #endregion
+                    // Start generating this item. 
+                    collection[type] = new GenMapItemInfo(stateToAddIfNotIn);
+                    return false;
+                }
+
+            Retry:
+                Thread.Yield(); // Wait a little bit before retrying.
+            }
+        }
+
+        internal MapItemInfo CreateItem(Type type, Dictionary<Type, GenMapItemInfo> collection)
+        {
+            ref MapItem item = ref Map.Items.CreateItemAndGet(out NonReallocatingListPos pos);
+            item.ItemType = type;
+            item.IsValueType = type.IsValueType;
+            item.IsGenerating = true;
+
+            var info = new MapItemInfo(pos);
+
+            lock (collection)
+                collection[type] = new GenMapItemInfo(info);
+
+            return info;
+        }
+
+        internal ref MapItem FillItemWith(MapItemType mapType, MapItemInfo info)
+        {
+            ref MapItem item = ref Map.Items.GetItemRef(info.Pos);
+            item.MapType = mapType;
+            return ref item;
+        }
+
+        void EnsureTypeSafety(Type type)
+        {
+            if (!Map.Settings.BypassDangerousTypeChecking)
+            {
+                if (type == typeof(object)) throw new ABSaveDangerousTypeException("an 'object' member");
+                if (type == typeof(ValueType)) throw new ABSaveDangerousTypeException("a 'ValueType' member");
+            }
+        }
+
+        bool TryExpandNullable(ref Type expanded)
+        {
+            if (expanded.IsGenericType && expanded.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                expanded = expanded.GetGenericArguments()[0];
+                return true;
+            }
+
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void GenerateObject(Type type, MapGenerator gen, MapItemInfo dest)
+        {
+            var memberInfo = new ObjectReflectorInfo();
+
+            GenObjectReflector.GetAllMembersInfo(ref memberInfo, type, gen);
+            GenObject.GenerateObject(ref memberInfo, gen, dest);
+            GenObjectReflector.Release(ref memberInfo);
+        }
+
+        internal void Initialize(ABSaveMap map) => (Map) = (map);
     }
 }

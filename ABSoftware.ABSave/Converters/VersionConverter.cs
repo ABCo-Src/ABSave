@@ -1,11 +1,12 @@
 ﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public class VersionConverter : ABSaveConverter
+    public class VersionConverter : Converter
     {
         public static VersionConverter Instance = new VersionConverter();
         private VersionConverter() { }
@@ -15,7 +16,7 @@ namespace ABSoftware.ABSave.Converters
         public override bool WritesToHeader => true;
         public override Type[] ExactTypes { get; } = new Type[] { typeof(Version) };
 
-        public override void Serialize(object obj, Type actualType, IABSaveConverterContext context, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
+        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
 
         public void SerializeVersion(Version version, ref BitTarget header)
         {
@@ -38,7 +39,7 @@ namespace ABSoftware.ABSave.Converters
             if (header.FreeBits < 8) header.Apply();
         }
 
-        public override object Deserialize(Type actualType, IABSaveConverterContext context, ref BitSource header) => DeserializeVersion(ref header);
+        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header) => DeserializeVersion(ref header);
 
         public Version DeserializeVersion(ref BitSource header)
         {
@@ -55,15 +56,11 @@ namespace ABSoftware.ABSave.Converters
             return new Version(major, minor, build, revision);
         }
 
-        public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
+        public override IConverterContext TryGenerateContext(ref ContextGen gen)
         {
-            if (type != typeof(Version)) return null;
-            return Context.Empty;
-        }
+            if (gen.Type == typeof(Version)) gen.MarkCanConvert();
 
-        class Context : IABSaveConverterContext
-        {
-            public static Context Empty = new Context();
+            return null;
         }
     }
 }

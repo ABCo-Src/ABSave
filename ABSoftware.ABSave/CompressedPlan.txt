@@ -97,7 +97,3 @@ NOTE: For implementations, notice that the point the extended part gets filled i
 	> 50 (1 111110xx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
 	> 57 (1 1111110x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
 	> 64 (1 1111111x xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx)
-
-67.29 - 6
-
-if ()

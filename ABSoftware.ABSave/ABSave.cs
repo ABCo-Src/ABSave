@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Deserialization;
+using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Serialization;
 using System;
@@ -24,8 +25,10 @@ namespace ABSoftware.ABSave
         public static void Serialize<T>(T obj, ABSaveMap map, Stream stream) => Serialize(obj, map, stream);
         public static void SerializeNonGeneric(object obj, ABSaveMap map, Stream stream)
         {
-            var serializer = new ABSaveSerializer(stream, map);
+            var serializer = LightConcurrentPool<ABSaveSerializer>.TryRent() ?? new ABSaveSerializer();
+            serializer.Initialize(stream, map);
             serializer.SerializeRoot(obj);
+            LightConcurrentPool<ABSaveSerializer>.Release(serializer);
         }
 
         public static T Deserialize<T>(byte[] arr, ABSaveMap map) => (T)DeserializeNonGeneric(arr, map);
@@ -38,8 +41,9 @@ namespace ABSoftware.ABSave
         public static T Deserialize<T>(Stream stream, ABSaveMap map) => (T)DeserializeNonGeneric(stream, map);
         public static object DeserializeNonGeneric(Stream stream, ABSaveMap map)
         {
-            var serializer = new ABSaveDeserializer(stream, map);
-            return serializer.DeserializeRoot();
+            var deserializer = LightConcurrentPool<ABSaveDeserializer>.TryRent() ?? new ABSaveDeserializer();
+            deserializer.Initialize(stream, map);
+            return deserializer.DeserializeRoot();
         }
     }
 }

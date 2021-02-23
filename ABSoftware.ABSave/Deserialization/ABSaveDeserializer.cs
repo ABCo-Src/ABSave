@@ -2,7 +2,6 @@
 using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Items;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -17,14 +16,14 @@ namespace ABSoftware.ABSave.Deserialization
         internal List<Assembly> SavedAssemblies = new List<Assembly>();
         internal List<Type> SavedTypes = new List<Type>();
 
-        public ABSaveMap Map { get; }
-        public ABSaveSettings Settings { get; }
-        public Stream Source { get; }
-        public bool ShouldReverseEndian { get; }
+        public ABSaveMap Map { get; private set; }
+        public ABSaveSettings Settings { get; private set; }
+        public Stream Source { get; private set; }
+        public bool ShouldReverseEndian { get; private set; }
 
         byte[] _stringBuffer;
 
-        public ABSaveDeserializer(Stream source, ABSaveMap map)
+        public void Initialize(Stream source, ABSaveMap map)
         {
             Map = map;
             Settings = map.Settings;
@@ -38,22 +37,22 @@ namespace ABSoftware.ABSave.Deserialization
             SavedTypes.Clear();
         }
 
-        #region Type Conversion + Attributes
-
         BitSource _currentHeader;
         bool _readHeader;
     
-        public MapItem GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
+        public MapItemInfo GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
 
         public object DeserializeRoot()
         {
             return DeserializeItem(Map.RootItem);
         }
 
-        public object DeserializeItem(MapItem map)
+        public object DeserializeItem(MapItemInfo info)
         {
+            ref MapItem item = ref Map.GetItemAt(info);
+
             // Do null checks
-            if (map.ItemType.IsValueType)
+            if (item.IsValueType)
             {
                 _currentHeader = new BitSource() { Deserializer = this };
                 _readHeader = false;
@@ -66,67 +65,76 @@ namespace ABSoftware.ABSave.Deserialization
                 _readHeader = true;
             }
             
-            return DeserializeItemNoSetup(map, false);
+            return DeserializeItemNoSetup(ref Map.GetItemAt(info), info.Pos.Flag, false);
         }
 
-        public object DeserializeExactNonNullItem(MapItem map)
+        public object DeserializeExactNonNullItem(MapItemInfo info)
         {
             _currentHeader = new BitSource() { Deserializer = this };
             _readHeader = false;
-            return DeserializeItemNoSetup(map, true);
+            return DeserializeItemNoSetup(ref Map.GetItemAt(info), info.Pos.Flag, true);
         }
 
-        public object DeserializeItem(MapItem map, ref BitSource header)
+        public object DeserializeItem(MapItemInfo info, ref BitSource header)
         {
+            ref MapItem item = ref Map.GetItemAt(info);
+
             // Do null checks
-            if (!map.ItemType.IsValueType && !header.ReadBit()) return null;
+            if (!item.IsValueType && !header.ReadBit()) return null;
             
             _currentHeader = header;
             _readHeader = true;
-            return DeserializeItemNoSetup(map, false);
+            return DeserializeItemNoSetup(ref item, info.Pos.Flag, false);
         }
 
-        public object DeserializeExactNonNullItem(MapItem map, ref BitSource header)
+        public object DeserializeExactNonNullItem(MapItemInfo info, ref BitSource header)
         {
             _currentHeader = header;
             _readHeader = true;
-            return DeserializeItemNoSetup(map, true);
+            return DeserializeItemNoSetup(ref Map.GetItemAt(info), info.Pos.Flag, true);
         }
 
-        object DeserializeItemNoSetup(MapItem map, bool skipHeaderHandling)
+        object DeserializeItemNoSetup(ref MapItem item, bool isNullable, bool skipHeaderHandling)
         {
-            // Null has already been handled.
-            switch (map)
+            // Null has already been handled in the setup.
+            if (isNullable)
             {
-                case ConverterMapItem converterItem:
+                EnsureReadHeader();
+                if (!_currentHeader.ReadBit()) return null;
+                skipHeaderHandling = true;
+            }
 
-                    object actual = ReadHeader(converterItem.Converter.ConvertsSubTypes, converterItem.Converter.WritesToHeader);
+            switch (item.MapType)
+            {
+                case MapItemType.Converter:
+
+                    ref ConverterMapItem converter = ref MapItem.GetConverterData(ref item);
+
+                    object actual = ReadHeader(converter.Converter.ConvertsSubTypes, converter.Converter.WritesToHeader, ref item);
                     if (actual != null) return actual;
 
-                    return converterItem.Converter.Deserialize(map.ItemType.Type, converterItem.Context, ref _currentHeader);
+                    return converter.Converter.Deserialize(item.ItemType, converter.Context, ref _currentHeader);
 
-                case ObjectMapItem objectItem:
-                    object actualObj = ReadHeader(false, false);
+                case MapItemType.Object:
+
+                    ref ObjectMapItem objItem = ref MapItem.GetObjectData(ref item);
+
+                    object actualObj = ReadHeader(false, false, ref item);
                     if (actualObj != null) return actualObj;
 
-                    return DeserializeObjectItems(objectItem);
+                    return DeserializeObjectItems(item.ItemType, ref objItem);
 
-                case NullableMapItem nullableItem:
-
-                    EnsureReadHeader();
-                    if (!_currentHeader.ReadBit()) return null;
-                    return DeserializeItemNoSetup(nullableItem.InnerItem, true);
-
-                case RuntimeMapItem runtime:
-                    return DeserializeItemNoSetup(runtime.InnerItem, skipHeaderHandling);
+                case MapItemType.Runtime:
+                    ref MapItemInfo nullableInner = ref MapItem.GetRuntimeExtraData(ref item);
+                    return DeserializeItemNoSetup(ref Map.GetItemAt(nullableInner), nullableInner.Pos.Flag, skipHeaderHandling);
 
                 default:
                     throw new Exception("Unrecognized map item");
             }
 
-            object ReadHeader(bool mapSupportsSub, bool mapUsesHeader)
+            object ReadHeader(bool mapSupportsSub, bool mapUsesHeader, ref MapItem item)
             {
-                if (skipHeaderHandling || map.ItemType.IsValueType)
+                if (skipHeaderHandling || item.IsValueType)
                 {
                     if (mapUsesHeader) EnsureReadHeader();
                     return null;
@@ -140,33 +148,36 @@ namespace ABSoftware.ABSave.Deserialization
                     // Matching type
                     if (_currentHeader.ReadBit()) return null;
 
-                    var actualType = ReadClosedType(map.ItemType.Type, ref _currentHeader);
+                    var actualType = ReadClosedType(item.ItemType, ref _currentHeader);
 
                     // The header was used by the type
                     _readHeader = false;
-                    return DeserializeItemNoSetup(GetRuntimeMapItem(actualType), true);
+
+                    var info = GetRuntimeMapItem(actualType);
+                    return DeserializeItemNoSetup(ref Map.GetItemAt(info), info.Pos.Flag, true);
                 }
 
                 return null;
             }
         }
 
-        object DeserializeObjectItems(ObjectMapItem map)
+        object DeserializeObjectItems(Type type, ref ObjectMapItem item)
         {
-            var res = Activator.CreateInstance(map.ItemType.Type);
+            var res = Activator.CreateInstance(type);
 
-            for (int i = 0; i < map.Members.Length; i++)
-                SetValue(DeserializeItem(map.Members[i].Map), ref map.Members[i]);
+            for (int i = 0; i < item.Members.Length; i++)
+                SetValue(DeserializeItem(item.Members[i].Map), ref item.Members[i]);
 
             return res;
 
             void SetValue(object val, ref ObjectMemberInfo member)
             {
+                member.Accessor.Setter(res, val);
                 // Field
-                if (member.Info.Left != null) member.Info.Left.SetValue(res, val);
+                //if (member.Info.Left != null) member.Info.Left.SetValue(res, val);
 
-                // Property
-                else member.Info.Right.Setter(res, val);
+                //// Property
+                //else member.Info.Right.Setter(res, val);
             }
         }
 
@@ -179,8 +190,6 @@ namespace ABSoftware.ABSave.Deserialization
             }
         }
 
-        #endregion
-
         // TODO: Use map guides to implement proper "Type" handling via map.
         public Type ReadType(Type requiredBaseType)
         {
@@ -190,7 +199,7 @@ namespace ABSoftware.ABSave.Deserialization
 
         public Type ReadType(Type requiredBaseType, ref BitSource header)
         {
-            var res = TypeConverter.Instance.DeserializeType(Map.AssemblyItem, ref header);
+            var res = TypeConverter.Instance.DeserializeType(ref header);
 
             // Safety check.
             if (!res.IsSubclassOf(requiredBaseType)) throw new ABSaveUnexpectedTypeException(requiredBaseType, res);
@@ -206,7 +215,7 @@ namespace ABSoftware.ABSave.Deserialization
 
         public Type ReadClosedType(Type requiredBaseType, ref BitSource header)
         {
-            var res = TypeConverter.Instance.DeserializeClosedType(Map.AssemblyItem, ref header);
+            var res = TypeConverter.Instance.DeserializeClosedType(ref header);
 
             // Safety check.
             if (!res.IsSubclassOf(requiredBaseType)) throw new ABSaveUnexpectedTypeException(requiredBaseType, res);

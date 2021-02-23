@@ -1,12 +1,12 @@
 ﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Items;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 
 namespace ABSoftware.ABSave.Helpers
 {
@@ -34,21 +34,37 @@ namespace ABSoftware.ABSave.Helpers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool ContainsZeroByte(uint l) => ((l - 0x01010101L) & ~l & 0x80808080L) > 0;
 
-        internal static MapItem GetRuntimeMapItem(Type type, ABSaveMap parent)
+        internal static MapItemInfo GetRuntimeMapItem(Type type, ABSaveMap parent)
         {
-            // Try and get the map quickly.
-            if (parent.CachedSubItems.TryGetValue(type, out RuntimeMapItem map)) return map;
+            var generator = parent.RentGenerator();
+            var res = generator.GetRuntimeMap(type);
+            parent.ReleaseGenerator(generator);
+            return res;
+        }
 
-            // Get the map slowly, and cache it.
-            var itm = new RuntimeMapItem(MapGenerator.Generate(MapGenerator.GenerateItemType(type), parent));
-            parent.CachedSubItems.Add(type, itm);
-            return itm;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static void WaitUntilNotGenerating(ref MapItem item)
+        {
+            if (item.IsGenerating)
+            {
+                var waiter = new SpinWait();
+                while (item.IsGenerating) waiter.SpinOnce();
+            }
         }
 
         internal static T[] CreateUninitializedArray<T>(int length)
         {
             // TODO: Add .NET 5 GC.GetUnintiailizedArray support
             return new T[length];
+        }
+
+        internal static T UnsafeFastCast<T>(object obj)
+        {
+#if DEBUG
+            return (T)obj;
+#else
+            return Unsafe.As<T>(obj);
+#endif
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
 using System.Buffers;
@@ -9,7 +10,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Converters
 {
-    public class TextConverter : ABSaveConverter
+    public class TextConverter : Converter
     {
         public static TextConverter Instance { get; } = new TextConverter();
         private TextConverter() { }
@@ -21,7 +22,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, IABSaveConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
         {
             var info = (Context)context;
 
@@ -47,7 +48,7 @@ namespace ABSoftware.ABSave.Converters
         public void SerializeStringBuilder(StringBuilder obj, ref BitTarget header)
         {
             // TODO: Use "GetChunks" with .NET 5!
-            char[] tmp = obj.Length > 1000 ? new char[obj.Length] : ArrayPool<char>.Shared.Rent(obj.Length);
+            char[] tmp = obj.Length > ABSaveUtils.MAX_STACK_SIZE ? new char[obj.Length] : ArrayPool<char>.Shared.Rent(obj.Length);
             obj.CopyTo(0, tmp, 0, obj.Length);
 
             SerializeCharacters(new ReadOnlySpan<char>(tmp), ref header);
@@ -69,7 +70,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, IABSaveConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
         {
             var info = (Context)context;
 
@@ -102,11 +103,24 @@ namespace ABSoftware.ABSave.Converters
         #endregion
 
         #region Context
-        public override IABSaveConverterContext TryGenerateContext(ABSaveMap map, Type type)
+        public override IConverterContext TryGenerateContext(ref ContextGen gen)
         {
-            if (type == typeof(string)) return Context.String;
-            else if (type == typeof(StringBuilder)) return Context.StringBuilder;
-            else if (type == typeof(char[])) return Context.CharArray;
+            if (gen.Type == typeof(string))
+            {
+                gen.MarkCanConvert();
+                return Context.String;
+            }
+            else if (gen.Type == typeof(StringBuilder))
+            {
+                gen.MarkCanConvert();
+                return Context.StringBuilder;
+            }
+            else if (gen.Type == typeof(char[])) 
+            {
+                gen.MarkCanConvert();
+                return Context.CharArray;
+            }
+
             else return null;
         }
 
@@ -117,7 +131,7 @@ namespace ABSoftware.ABSave.Converters
             CharArray
         }
 
-        class Context : IABSaveConverterContext
+        class Context : IConverterContext
         {
             public static readonly Context String = new Context() { Type = StringType.String };
             public static readonly Context StringBuilder = new Context() { Type = StringType.StringBuilder };
