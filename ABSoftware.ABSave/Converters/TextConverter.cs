@@ -48,7 +48,7 @@ namespace ABSoftware.ABSave.Converters
         public void SerializeStringBuilder(StringBuilder obj, ref BitTarget header)
         {
             // TODO: Use "GetChunks" with .NET 5!
-            char[] tmp = obj.Length > ABSaveUtils.MAX_STACK_SIZE ? new char[obj.Length] : ArrayPool<char>.Shared.Rent(obj.Length);
+            char[] tmp = obj.Length < ABSaveUtils.MAX_STACK_SIZE ? new char[obj.Length] : ArrayPool<char>.Shared.Rent(obj.Length);
             obj.CopyTo(0, tmp, 0, obj.Length);
 
             SerializeCharacters(new ReadOnlySpan<char>(tmp), ref header);
