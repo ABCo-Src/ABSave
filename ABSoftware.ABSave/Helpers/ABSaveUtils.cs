@@ -55,7 +55,11 @@ namespace ABSoftware.ABSave.Helpers
         internal static T[] CreateUninitializedArray<T>(int length)
         {
             // TODO: Add .NET 5 GC.GetUnintiailizedArray support
+#if NET5_0
+            return GC.AllocateUninitializedArray<T>(length);
+#else
             return new T[length];
+#endif
         }
 
         internal static T UnsafeFastCast<T>(object obj) where T : class

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ABSoftware.ABSave.UnitTests.Helpers
@@ -117,6 +118,96 @@ namespace ABSoftware.ABSave.UnitTests.Helpers
             // Overflow into a new chunk.
             _list.CreateItemAndGet(out NonReallocatingListPos overflowPos);
             Assert.AreEqual(3, overflowPos.Chunk);
+        }
+
+        // THREAD TESTS:
+        class ThreadTestingInfo
+        {
+            public NonReallocatingList<TestClass> List = new NonReallocatingList<TestClass>();
+            public HashSet<NonReallocatingListPos> DuplicateChecker = new HashSet<NonReallocatingListPos>();
+
+            public ThreadTestingInfo()
+            {
+                List.Initialize();
+            }
+
+            public void AddThreads()
+            {
+                for (int i = 0; i < 100; i++)
+                {
+                    List.CreateItemAndGet(out NonReallocatingListPos currentPos);
+
+                    lock (DuplicateChecker)
+                    {
+                        if (!DuplicateChecker.Add(currentPos)) throw new Exception("Two threads retrieved the same item!");
+                    }
+                }
+            }
+
+            public void EnsureCapacity()
+            {
+                // Yield 5 times before we finally try to ensure the capacity.
+                for (int i = 0; i < 5; i++)
+                    Thread.Yield();
+
+                List.EnsureCapacity(127);
+            }
+        }
+
+        [TestMethod]
+        public async Task Add_MultipleThreads()
+        {
+            ThreadTestingInfo test = new ThreadTestingInfo();
+
+            Task adder1 = new Task(test.AddThreads);
+            Task adder2 = new Task(test.AddThreads);
+            Task adder3 = new Task(test.AddThreads);
+
+            adder1.Start();
+            adder2.Start();
+            adder3.Start();
+
+            await adder1;
+            await adder2;
+            await adder3;
+        }
+
+        [TestMethod]
+        public async Task EnsureCapacity_MultipleThreads()
+        {
+            ThreadTestingInfo test = new ThreadTestingInfo();
+
+            Task task1 = new Task(test.EnsureCapacity);
+            Task task2 = new Task(test.EnsureCapacity);
+            Task task3 = new Task(test.EnsureCapacity);
+
+            task1.Start();
+            task2.Start();
+            task3.Start();
+
+            await task1;
+            await task2;
+            await task3;
+
+            Assert.AreEqual(143, test.List._totalCapacity);
+        }
+
+        [TestMethod]
+        public async Task AllOperations_MultipleThreads()
+        {
+            ThreadTestingInfo test = new ThreadTestingInfo();
+
+            Task task1 = new Task(test.AddThreads);
+            Task task2 = new Task(test.EnsureCapacity);
+            Task task3 = new Task(test.AddThreads);
+
+            task1.Start();
+            task2.Start();
+            task3.Start();
+
+            await task1;
+            await task2;
+            await task3;
         }
     }
 }

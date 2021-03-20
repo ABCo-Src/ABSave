@@ -79,6 +79,8 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
             convItm.Converter = converter;
 
             var genContext = new ContextGen(type, CurrentGenerator);
+
+            item.IsGenerating = false;
             convItm.Context = converter.TryGenerateContext(ref genContext);
 
             CurrentMapItem = pos;

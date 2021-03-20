@@ -14,10 +14,13 @@ using System.Text;
 using System.Xml.Serialization;
 using ABSoftware.ABSave.Serialization;
 using System.Reflection;
+using BenchmarkDotNet.Diagnostics.Windows.Configs;
 
 namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
     [MemoryDiagnoser]
+    [InliningDiagnoser(true, true)]
+    [TailCallDiagnoser]
     public class TestBenchmark
     {
         public MemoryStream ABSaveResult;

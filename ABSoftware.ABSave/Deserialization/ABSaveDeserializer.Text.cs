@@ -82,7 +82,8 @@ namespace ABSoftware.ABSave.Deserialization
 
         public byte[] GetStringBuffer(int length)
         {
-            if (_stringBuffer == null || _stringBuffer.Length < length) return _stringBuffer = new byte[length];
+            if (_stringBuffer == null || _stringBuffer.Length < length)
+                return _stringBuffer = ABSaveUtils.CreateUninitializedArray<byte>(length);
             else return _stringBuffer;
         }
 

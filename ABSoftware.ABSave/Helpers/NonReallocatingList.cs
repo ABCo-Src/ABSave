@@ -5,16 +5,18 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 
 namespace ABSoftware.ABSave.Helpers
 {
     /// <summary>
-    /// A list that's able to grow with reallocations, by organising the data into individually allocated, variable-sized chunks. New chunks are added necessary.
+    /// A list that's able to grow with reallocations, by organising the data into individually allocated, variable-sized chunks. New chunks are added as necessary.
     /// Access speed is prioritized over 
     /// </summary>
     /// <typeparam name="T"></typeparam>
     internal struct NonReallocatingList<T> where T : struct
     {
+        // A single chunk can never be smaller than 16 items or bigger than 256 items.
         struct FixedCapacityList
         {
             public int Filled;
@@ -23,7 +25,12 @@ namespace ABSoftware.ABSave.Helpers
             public FixedCapacityList(T[] data) => (Filled, _data) = (0, data);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ref T CreateAndGet() => ref _data[Filled++];
+            public ref T CreateAndGet()
+            {
+                ref T d = ref _data[Filled];
+                Interlocked.Increment(ref Filled);
+                return ref d;
+            }
 
             public int Capacity => _data.Length;
             public bool IsFilled => Filled == Capacity;
@@ -33,19 +40,24 @@ namespace ABSoftware.ABSave.Helpers
         // And if does, it's not a big deal to do one more allocation. So this should be plenty.
         public const int BaseChunkSize = 16;
 
-        int _totalCapacity;
+        internal int _totalCapacity; // Internal for testing
         int _capacityBeforeCurrentChunk;
 
-        int _currentChunkIndex;
+        object _chunkStateChangingLock;
+
+        volatile int _currentChunkIndex;
         FixedCapacityList _currentChunk;
 
-        List<T[]> _chunks; // A single chunk can never be smaller than 16 items or bigger than 256 items.
+        int _noOfChunks;
+        T[][] _chunks;
 
         public void Initialize()
         {
             T[] firstChunk = new T[BaseChunkSize];
 
-            _chunks = new List<T[]>() { firstChunk };
+            _chunks = new T[][] { firstChunk };
+            _noOfChunks = 1;
+            _chunkStateChangingLock = new object();
             _currentChunk = new FixedCapacityList(firstChunk);
             _totalCapacity = BaseChunkSize;
         }
@@ -55,21 +67,78 @@ namespace ABSoftware.ABSave.Helpers
             return ref _chunks[info.Chunk][info.ChunkPos];
         }
 
-        // Make sure we're actually inside a chunk we can put items into.
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void EnsureInChunk()
+        public void EnsureCapacity(int requiredSpace)
         {
-            if (_currentChunk.IsFilled)
-            {
-                // Make sure there's at least 1 free byte in the next chunk.
-                EnsureCapacityHas1();
+        Retry:
+            int requiredIndex = _capacityBeforeCurrentChunk + _currentChunk.Filled + requiredSpace;
+            int currentTotalCapacity = _totalCapacity;
 
-                // Move to the next chunk.
-                _currentChunkIndex++;
-                _capacityBeforeCurrentChunk += _currentChunk.Capacity;
-                _currentChunk = new FixedCapacityList(_chunks[_currentChunkIndex]);
-                
+            if (requiredIndex > currentTotalCapacity)
+            {
+                lock (_chunkStateChangingLock)
+                {
+                    // If something changed while we were waiting, try again.
+                    if (currentTotalCapacity != _totalCapacity) goto Retry;
+
+                    int needed = requiredIndex - _totalCapacity;
+                    int toAllocate = needed + BaseChunkSize;
+
+                    // Chunks can't be more than 256 items big. So if we do try to allocate more than that, 
+                    // we need to make multiple chunks.
+                    if (toAllocate > 256)
+                    {
+                        var quot = Math.DivRem(toAllocate, 256, out int remainder);
+
+                        // Allocate all the 256-size chunks we need.
+                        for (int i = 0; i < quot; i++) AddChunk(new T[256]);
+
+                        // Allocate one last chunk with the left over data, if there is any.
+                        if (remainder != 0) AddChunk(new T[remainder]);
+                    }
+                    else AddChunk(new T[toAllocate]);
+
+                    _totalCapacity += toAllocate;
+                }
             }
+        }
+
+        public ref T CreateItemAndGet(out NonReallocatingListPos pos)
+        {
+            GetNewPos(out int chunk, out int chunkPos);
+
+            pos = new NonReallocatingListPos((ushort)chunk, (byte)chunkPos);
+            return ref _chunks[chunk][chunkPos];
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe void GetNewPos(out int chunk, out int subPos)
+        {
+        Retry:
+            chunk = _currentChunkIndex;
+
+            if (_currentChunk.Filled >= _chunks[chunk].Length)
+            {
+                lock (_chunkStateChangingLock)
+                {
+                    // Now that we've taken the lock, see if the situation was resolved by someone
+                    // else while we were waiting. Start again if it has.
+                    if (chunk != _currentChunkIndex) goto Retry;
+
+                    // Make sure there's at least 1 free space in the next chunk.
+                    EnsureCapacityHas1();
+
+                    // Move to the next chunk.
+                    chunk = ++_currentChunkIndex;
+                    _capacityBeforeCurrentChunk += _currentChunk.Capacity;
+                    _currentChunk = new FixedCapacityList(_chunks[_currentChunkIndex])
+                    {
+                        Filled = 1
+                    };
+                }
+
+                subPos = 0;
+            }
+            else subPos = Interlocked.Increment(ref _currentChunk.Filled) - 1;
         }
 
         void EnsureCapacityHas1()
@@ -77,48 +146,22 @@ namespace ABSoftware.ABSave.Helpers
             int totalIndex = _capacityBeforeCurrentChunk + _currentChunk.Filled;
             if (totalIndex == _totalCapacity)
             {
-                _chunks.Add(new T[BaseChunkSize]);
+                // Add a new chunk
+                AddChunk(new T[BaseChunkSize]);
                 _totalCapacity += BaseChunkSize;
             }
         }
 
-        public void EnsureCapacity(int requiredSpace)
+        void AddChunk(T[] arr)
         {
-            int requiredIndex = _capacityBeforeCurrentChunk + _currentChunk.Filled + requiredSpace;
-            if (requiredIndex > _totalCapacity)
+            if (_noOfChunks == _chunks.Length)
             {
-                int needed = requiredIndex - _totalCapacity;
-                int toAllocate = needed + BaseChunkSize;
-
-                // Chunks can't be more than 256 items big. So if we do try to allocate more than that, we need to make multiple chunks.
-                if (toAllocate > 256)
-                {
-                    var quot = Math.DivRem(toAllocate, 256, out int remainder);
-
-                    // Allocate all the 256-size chunks we need.
-                    for (int i = 0; i < quot; i++) _chunks.Add(new T[256]);
-
-                    // Allocate one last chunk with the left over data, if there is any.
-                    if (remainder != 0) _chunks.Add(new T[remainder]);
-                }
-                else _chunks.Add(new T[toAllocate]);
-
-                _totalCapacity += toAllocate;
+                T[][] newChunks = new T[_chunks.Length * 2][];
+                Array.Copy(_chunks, newChunks, _chunks.Length);
+                _chunks = newChunks;
             }
-        }
 
-        public NonReallocatingListPos CreateItem()
-        {
-            EnsureInChunk();            
-            return new NonReallocatingListPos((ushort)_currentChunkIndex, (byte)_currentChunk.Filled++);
-        }
-
-        public ref T CreateItemAndGet(out NonReallocatingListPos pos)
-        {
-            EnsureInChunk();
-
-            pos = new NonReallocatingListPos((ushort)_currentChunkIndex, (byte)_currentChunk.Filled);
-            return ref _currentChunk.CreateAndGet();
+            _chunks[_noOfChunks++] = arr;
         }
     }
 

@@ -92,11 +92,10 @@ namespace ABSoftware.ABSave.Serialization
 
         void SerializeItemNoSetup(object obj, Type actualType, MapItemInfo info, ref BitTarget target, bool skipAllHeaderHandling)
         {
-            // Null items are already handled in the setup, however it is our responsibility to say that the item "is not null" if necessary.
             ref MapItem item = ref Map.GetItemAt(info);
-
             ABSaveUtils.WaitUntilNotGenerating(ref item);
 
+            // Null items are already handled in the setup, however it is our responsibility to say that the item "is not null" if necessary.
             if (info.IsNullable)
             {
                 target.WriteBitOn(); // Clearly wasn't null
@@ -172,8 +171,6 @@ namespace ABSoftware.ABSave.Serialization
 
         void SerializeObjectItems(object obj, ref ObjectMapItem map)
         {
-            var isField = Map.Settings.ConvertFields;
-
             // Serialize the item
             for (int i = 0; i < map.Members.Length; i++)
                 SerializeItem(GetValue(ref map.Members[i]), map.Members[i].Map);
