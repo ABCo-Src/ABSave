@@ -95,7 +95,7 @@ namespace ABSoftware.ABSave.Converters
             var context = new ArrayTypeInfo();
             PopulateTypeInfo(ref context, typeHeader.Serializer.GetRuntimeMapItem(actualType.GetElementType()), typeHeader.Serializer.Map, actualType);
 
-            typeHeader.Serializer.WriteClosedType(context.ElementType, ref typeHeader);
+            ABSaveSerializer.WriteClosedType(context.ElementType, ref typeHeader);
 
             var header = new BitTarget(typeHeader.Serializer);
 

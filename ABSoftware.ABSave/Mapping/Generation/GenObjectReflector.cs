@@ -59,7 +59,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             currentItem.MemberType = memberType;
 
             // Handle mapping
-            if (gen.TryGetItemFromDict(gen.Map.GenInfo.AllTypes, memberType, MapItemState.Planned, out MapItemInfo val))
+            if (MapGenerator.TryGetItemFromDict(gen.Map.GenInfo.AllTypes, memberType, MapItemState.Planned, out MapItemInfo val))
                 currentItem.ExistingMap = val;
             else
                 dest.UnmappedMembers++;

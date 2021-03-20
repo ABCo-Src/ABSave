@@ -137,7 +137,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
                 Action<ABSaveSerializer> convAsm = s =>
                 {
                     var header = new BitTarget(s, 7);
-                    AssemblyConverter.Instance.SerializeAssembly(typeof(Base).Assembly, ref header);
+                    AssemblyConverter.SerializeAssembly(typeof(Base).Assembly, ref header);
                 };
 
                 TestType(typeof(Base), GetByteArr(new object[] { convAsm, typeof(Base).FullName }, (short)GenType.Action, 44, (short)GenType.String));

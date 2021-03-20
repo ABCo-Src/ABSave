@@ -59,7 +59,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             });
 
             // Make an "Allocating" item.
-            Generator.TryGetItemFromDict(Map.GenInfo.AllTypes, typeof(int), MapItemState.Allocating, out MapItemInfo info);
+            MapGenerator.TryGetItemFromDict(Map.GenInfo.AllTypes, typeof(int), MapItemState.Allocating, out MapItemInfo info);
 
             waiter.Start();
 
@@ -104,7 +104,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            Generator.TryGetItemFromDict(Map.GenInfo.AllTypes, typeof(int), MapItemState.Planned, out _);
+            MapGenerator.TryGetItemFromDict(Map.GenInfo.AllTypes, typeof(int), MapItemState.Planned, out _);
 
             // See if we take up the generation of this item:
             Assert.IsFalse(Generator.GetOrStartGenerating(typeof(int), out _, Map.GenInfo.AllTypes));

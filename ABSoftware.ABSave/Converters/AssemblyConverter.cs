@@ -23,7 +23,7 @@ namespace ABSoftware.ABSave.Converters
         public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header) =>
             SerializeAssembly((Assembly)obj, ref header);
 
-        public void SerializeAssembly(Assembly assembly, ref BitTarget header)
+        public static void SerializeAssembly(Assembly assembly, ref BitTarget header)
         {
             // Try to serialize an already saved version.
             if (HandleSerializeSaved(assembly, ref header)) return;
@@ -49,7 +49,7 @@ namespace ABSoftware.ABSave.Converters
             if (hasPublicKeyToken) header.Serializer.WriteBytes(publicKeyToken);
         }
 
-        bool HandleSerializeSaved(Assembly assembly, ref BitTarget header)
+        static bool HandleSerializeSaved(Assembly assembly, ref BitTarget header)
         {
             var isSaved = header.Serializer.SavedAssemblies.TryGetValue(assembly, out int key);
 
@@ -101,7 +101,7 @@ namespace ABSoftware.ABSave.Converters
             return assembly;
         }
 
-        Assembly TryDeserializeSaved(ref BitSource header)
+        static Assembly TryDeserializeSaved(ref BitSource header)
         {
             var isSaved = header.ReadBit();
 

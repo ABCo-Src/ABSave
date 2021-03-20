@@ -186,7 +186,7 @@ namespace ABSoftware.ABSave.Serialization
             WriteType(type, ref header);
         }
 
-        public void WriteType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeType(type, ref header);
+        public static void WriteType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeType(type, ref header);
 
         public void WriteClosedType(Type type)
         {
@@ -194,6 +194,6 @@ namespace ABSoftware.ABSave.Serialization
             WriteClosedType(type, ref header);
         }
 
-        public void WriteClosedType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeClosedType(type, ref header);
+        public static void WriteClosedType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeClosedType(type, ref header);
     }
 }

@@ -97,7 +97,7 @@ namespace ABSoftware.ABSave.Mapping
             return false;
         }
 
-        internal bool TryGetItemFromDict(Dictionary<Type, GenMapItemInfo> collection, Type type, MapItemState stateToAddIfNotIn, out MapItemInfo info)
+        internal static bool TryGetItemFromDict(Dictionary<Type, GenMapItemInfo> collection, Type type, MapItemState stateToAddIfNotIn, out MapItemInfo info)
         {
             info = default;
 
