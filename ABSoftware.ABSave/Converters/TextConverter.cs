@@ -40,10 +40,8 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public unsafe void SerializeCharArray(char[] obj, ref BitTarget header)
-        {
-             SerializeCharacters(obj.AsSpan(), ref header);
-        }
+        public unsafe void SerializeCharArray(char[] obj, ref BitTarget header) =>
+            header.Serializer.WriteText(obj.AsSpan(), ref header);
 
         public void SerializeStringBuilder(StringBuilder obj, ref BitTarget header)
         {
@@ -51,19 +49,8 @@ namespace ABSoftware.ABSave.Converters
             char[] tmp = obj.Length < ABSaveUtils.MAX_STACK_SIZE ? new char[obj.Length] : ArrayPool<char>.Shared.Rent(obj.Length);
             obj.CopyTo(0, tmp, 0, obj.Length);
 
-            SerializeCharacters(new ReadOnlySpan<char>(tmp), ref header);
+            header.Serializer.WriteText(new ReadOnlySpan<char>(tmp), ref header);
             ArrayPool<char>.Shared.Return(tmp);
-        }
-
-        public unsafe void SerializeCharacters(ReadOnlySpan<char> txt, ref BitTarget header)
-        {
-            if (header.Serializer.Settings.UseUTF8)
-                header.Serializer.WriteUTF8(txt, ref header);
-            else
-            {
-                header.Serializer.WriteCompressed((uint)txt.Length, ref header);
-                header.Serializer.FastWriteShorts(MemoryMarshal.Cast<char, short>(txt));
-            }
         }
 
         #endregion
