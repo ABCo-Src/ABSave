@@ -107,6 +107,7 @@ namespace ABSoftware.ABSave
         public bool LazyBitHandling { get; } = true;
         public bool UseUTF8 { get; } = true;
         public bool SaveInheritance { get; set; } = true;
+        public bool AllowConvertUnmarkedTypes { get; set; } = false;
         public bool BypassDangerousTypeChecking { get; set; } = false;
         public bool UseLittleEndian { get; } = BitConverter.IsLittleEndian;
 

@@ -6,6 +6,6 @@ namespace ABSoftware.ABSave.Exceptions
 {
     public class ABSaveInvalidDocumentException : ABSaveException
     {
-        public ABSaveInvalidDocumentException(long pos) : base($"The document given is invalid. Failed to read at position '{pos}'.") { }
+        public ABSaveInvalidDocumentException(string msg) : base($"The document given is invalid. " + msg) { }
     }
 }

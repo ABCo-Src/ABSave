@@ -165,9 +165,8 @@ namespace ABSoftware.ABSave.Helpers
         }
     }
 
-    internal struct NonReallocatingListPos
+    internal struct NonReallocatingListPos : IEquatable<NonReallocatingListPos>
     {
-        // 65535, 255 => None
         public ushort Chunk;
         public byte ChunkPos;
 
@@ -176,5 +175,10 @@ namespace ABSoftware.ABSave.Helpers
 
         public NonReallocatingListPos(ushort chunk, byte chunkPos) => (Chunk, ChunkPos, Flag) = (chunk, chunkPos, false);
         public NonReallocatingListPos(bool flag) => (Chunk, ChunkPos, Flag) = (0, 0, flag);
+
+        public override int GetHashCode() => (Chunk << 16) | (Flag ? 256 : 0) | ChunkPos;
+        public override bool Equals(object obj) => obj is NonReallocatingListPos pos && Equals(pos);
+        public bool Equals(NonReallocatingListPos other) =>
+            Chunk == other.Chunk && ChunkPos == other.ChunkPos && Flag == other.Flag;
     }
 }

@@ -2,6 +2,7 @@
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
 using ABSoftware.ABSave.Mapping.Generation;
+using ABSoftware.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -20,7 +21,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             MapItemInfo info = Generator.CreateItem(typeof(SimpleClass), Map.GenInfo.AllTypes);
-            Assert.IsFalse(GenConverter.TryGenerateConvert(typeof(SimpleClass), Generator, info));
+            Assert.IsFalse(ConverterMapper.TryGenerateConvert(typeof(SimpleClass), Generator, info));
         }
 
         [TestMethod]
@@ -29,10 +30,10 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             MapItemInfo info = Generator.CreateItem(typeof(string), Map.GenInfo.AllTypes);
-            Assert.IsTrue(GenConverter.TryGenerateConvert(typeof(string), Generator, info));
+            Assert.IsTrue(ConverterMapper.TryGenerateConvert(typeof(string), Generator, info));
 
             ref MapItem item = ref Map.GetItemAt(info);
-            ref ConverterMapItem converterItem = ref MapItem.GetConverterData(ref item);
+            ref ConverterMapItem converterItem = ref item.Main.Converter;
 
             Assert.AreEqual(TextConverter.Instance, converterItem.Converter);
             Assert.IsNotNull(converterItem.Context);
@@ -44,10 +45,10 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             MapItemInfo info = Generator.CreateItem(typeof(KeyValuePair<int, int>), Map.GenInfo.AllTypes);
-            Assert.IsTrue(GenConverter.TryGenerateConvert(typeof(KeyValuePair<int, int>), Generator, info));
+            Assert.IsTrue(ConverterMapper.TryGenerateConvert(typeof(KeyValuePair<int, int>), Generator, info));
 
             ref MapItem item = ref Map.GetItemAt(info);
-            ref ConverterMapItem converterItem = ref MapItem.GetConverterData(ref item);
+            ref ConverterMapItem converterItem = ref item.Main.Converter;
 
             Assert.AreEqual(KeyValueConverter.Instance, converterItem.Converter);
             Assert.IsNotNull(converterItem.Context);

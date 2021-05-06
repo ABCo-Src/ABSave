@@ -13,6 +13,8 @@ namespace ABSoftware.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {
+        readonly Dictionary<MapItemInfo, ObjectMemberInfo[]> _typeVersions = new Dictionary<MapItemInfo, ObjectMemberInfo[]>();
+
         internal List<Assembly> SavedAssemblies = new List<Assembly>();
         internal List<Type> SavedTypes = new List<Type>();
 
@@ -35,6 +37,7 @@ namespace ABSoftware.ABSave.Deserialization
         {
             SavedAssemblies.Clear();
             SavedTypes.Clear();
+            _typeVersions.Clear();
         }
 
         BitSource _currentHeader;
@@ -65,14 +68,14 @@ namespace ABSoftware.ABSave.Deserialization
                 _readHeader = true;
             }
             
-            return DeserializeItemNoSetup(ref Map.GetItemAt(info), info.Pos.Flag, false);
+            return DeserializeItemNoSetup(info, ref Map.GetItemAt(info), info.Pos.Flag, false);
         }
 
         public object DeserializeExactNonNullItem(MapItemInfo info)
         {
             _currentHeader = new BitSource() { Deserializer = this };
             _readHeader = false;
-            return DeserializeItemNoSetup(ref Map.GetItemAt(info), info.Pos.Flag, true);
+            return DeserializeItemNoSetup(info, ref Map.GetItemAt(info), info.Pos.Flag, true);
         }
 
         public object DeserializeItem(MapItemInfo info, ref BitSource header)
@@ -84,17 +87,17 @@ namespace ABSoftware.ABSave.Deserialization
             
             _currentHeader = header;
             _readHeader = true;
-            return DeserializeItemNoSetup(ref item, info.Pos.Flag, false);
+            return DeserializeItemNoSetup(info, ref item, info.Pos.Flag, false);
         }
 
         public object DeserializeExactNonNullItem(MapItemInfo info, ref BitSource header)
         {
             _currentHeader = header;
             _readHeader = true;
-            return DeserializeItemNoSetup(ref Map.GetItemAt(info), info.Pos.Flag, true);
+            return DeserializeItemNoSetup(info, ref Map.GetItemAt(info), info.Pos.Flag, true);
         }
 
-        object DeserializeItemNoSetup(ref MapItem item, bool isNullable, bool skipHeaderHandling)
+        object DeserializeItemNoSetup(MapItemInfo itemPos, ref MapItem item, bool isNullable, bool skipHeaderHandling)
         {
             // Null has already been handled in the setup.
             if (isNullable)
@@ -106,27 +109,29 @@ namespace ABSoftware.ABSave.Deserialization
 
             switch (item.MapType)
             {
+                // Converter
                 case MapItemType.Converter:
 
-                    ref ConverterMapItem converter = ref MapItem.GetConverterData(ref item);
+                    ref ConverterMapItem converter = ref item.Main.Converter;
 
                     object actual = ReadHeader(converter.Converter.ConvertsSubTypes, converter.Converter.WritesToHeader, ref item);
                     if (actual != null) return actual;
 
                     return converter.Converter.Deserialize(item.ItemType, converter.Context, ref _currentHeader);
 
+                // Object
                 case MapItemType.Object:
 
-                    ref ObjectMapItem objItem = ref MapItem.GetObjectData(ref item);
-
-                    object actualObj = ReadHeader(false, false, ref item);
+                    object actualObj = ReadHeader(false, true, ref item);
                     if (actualObj != null) return actualObj;
 
-                    return DeserializeObjectItems(item.ItemType, ref objItem);
+                    return DeserializeObjectItems(item.ItemType, itemPos, ref item);
 
+                // Runtime
                 case MapItemType.Runtime:
-                    ref MapItemInfo nullableInner = ref MapItem.GetRuntimeExtraData(ref item);
-                    return DeserializeItemNoSetup(ref Map.GetItemAt(nullableInner), nullableInner.Pos.Flag, skipHeaderHandling);
+
+                    MapItemInfo inner = item.Extra.RuntimeInnerItem;
+                    return DeserializeItemNoSetup(inner, ref Map.GetItemAt(inner), inner.Pos.Flag, skipHeaderHandling);
 
                 default:
                     throw new Exception("Unrecognized map item");
@@ -154,30 +159,35 @@ namespace ABSoftware.ABSave.Deserialization
                     _readHeader = false;
 
                     var info = GetRuntimeMapItem(actualType);
-                    return DeserializeItemNoSetup(ref Map.GetItemAt(info), info.Pos.Flag, true);
+                    return DeserializeItemNoSetup(info, ref Map.GetItemAt(info), info.Pos.Flag, true);
                 }
 
                 return null;
             }
         }
 
-        object DeserializeObjectItems(Type type, ref ObjectMapItem item)
+        object DeserializeObjectItems(Type type, MapItemInfo itemPos, ref MapItem item)
         {
             var res = Activator.CreateInstance(type);
 
-            for (int i = 0; i < item.Members.Length; i++)
-                SetValue(DeserializeItem(item.Members[i].Map), ref item.Members[i]);
+            if (_typeVersions.TryGetValue(itemPos, out ObjectMemberInfo[] val))
+                DeserializeFromMembers(val);
+            else
+            {
+                // Deserialize the version in the file.
+                int version = (int)ReadCompressedInt(ref _currentHeader);
+
+                ObjectMemberInfo[] info = Map.GetMembersForVersion(ref item, version);
+                _typeVersions.Add(itemPos, info);
+                DeserializeFromMembers(info);
+            }
 
             return res;
 
-            void SetValue(object val, ref ObjectMemberInfo member)
+            void DeserializeFromMembers(ObjectMemberInfo[] members)
             {
-                member.Accessor.Setter(res, val);
-                // Field
-                //if (member.Info.Left != null) member.Info.Left.SetValue(res, val);
-
-                //// Property
-                //else member.Info.Right.Setter(res, val);
+                for (int i = 0; i < members.Length; i++)
+                    members[i].Accessor.Setter(res, DeserializeItem(members[i].Map));
             }
         }
 

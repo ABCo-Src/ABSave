@@ -19,7 +19,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         public void Setup<T>(ABSaveSettings settings, Converter converter)
         {
             Initialize(settings);
-            ResetOutputWithConverter<T>(converter);
+            ResetStateWithConverter<T>(converter);
         }
 
         public void DoSerialize(object obj)

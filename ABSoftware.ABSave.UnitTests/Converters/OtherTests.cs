@@ -74,7 +74,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             var obj = new DictionaryEntry(new SubNoConverter(5), new SubWithoutHeader());
 
             DoSerialize(obj);
-            AssertAndGoToStart(162, 5, 161, SubTypeConverter.OUTPUT_BYTE);
+            AssertAndGoToStart(162, 0, 5, 161, SubTypeConverter.OUTPUT_BYTE);
 
             Assert.AreEqual(obj, DoDeserialize<DictionaryEntry>());
         }
@@ -116,7 +116,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             }
 
             // Saved
-            ResetOutput();
+            ResetPosition();
             {
                 DoSerialize(assembly);
                 AssertAndGoToStart(128);
@@ -177,7 +177,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         void TestType(Type type, params byte[] expected)
         {
             // Saved
-            ResetOutput();
+            ResetPosition();
             {
                 _typeSerialize(type);
                 AssertAndGoToStart(expected);
@@ -185,7 +185,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             }
 
             // Non-saved
-            ResetOutput();
+            ResetPosition();
             {
                 _typeSerialize(type);
                 AssertAndGoToStart((byte)(127 + Serializer.SavedTypes.Count));

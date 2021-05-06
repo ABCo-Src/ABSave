@@ -1,5 +1,6 @@
 ﻿using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -134,7 +135,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             ref var itm = ref Map.GetItemAt(pos);
 
             Assert.AreEqual(MapItemType.Runtime, itm.MapType);
-            Assert.AreEqual(MapItemType.Object, Map.GetItemAt(MapItem.GetRuntimeExtraData(ref itm)).MapType);
+            Assert.AreEqual(MapItemType.Object, Map.GetItemAt(itm.Extra.RuntimeInnerItem).MapType);
 
             // Runtime item already exists
             var pos2 = Generator.GetRuntimeMap(typeof(SimpleClass));
@@ -147,7 +148,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             ref MapItem pos3Itm = ref Map.GetItemAt(pos3Actual);
 
-            Assert.AreEqual(pos3Expected, MapItem.GetRuntimeExtraData(ref pos3Itm));
+            Assert.AreEqual(pos3Expected, pos3Itm.Extra.RuntimeInnerItem);
         }
 
         [TestMethod]

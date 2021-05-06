@@ -14,6 +14,8 @@ namespace ABSoftware.ABSave
     /// </summary>
     public static class ABSaveConvert
     {
+        readonly static LightConcurrentPool<ABSaveSerializer> SerializerPool = new LightConcurrentPool<ABSaveSerializer>(2);
+        readonly static LightConcurrentPool<ABSaveDeserializer> DeserializerPool = new LightConcurrentPool<ABSaveDeserializer>(2);
         public static byte[] Serialize<T>(T obj, ABSaveMap map) => SerializeNonGeneric(obj, map);
         public static byte[] SerializeNonGeneric(object obj, ABSaveMap map)
         {
@@ -25,10 +27,10 @@ namespace ABSoftware.ABSave
         public static void Serialize<T>(T obj, ABSaveMap map, Stream stream) => SerializeNonGeneric(obj, map, stream);
         public static void SerializeNonGeneric(object obj, ABSaveMap map, Stream stream)
         {
-            var serializer = LightConcurrentPool<ABSaveSerializer>.TryRent() ?? new ABSaveSerializer();
+            var serializer = SerializerPool.TryRent() ?? new ABSaveSerializer();
             serializer.Initialize(stream, map);
             serializer.SerializeRoot(obj);
-            LightConcurrentPool<ABSaveSerializer>.Release(serializer);
+            SerializerPool.Release(serializer);
         }
 
         public static T Deserialize<T>(byte[] arr, ABSaveMap map) => (T)DeserializeNonGeneric(arr, map);
@@ -41,7 +43,7 @@ namespace ABSoftware.ABSave
         public static T Deserialize<T>(Stream stream, ABSaveMap map) => (T)DeserializeNonGeneric(stream, map);
         public static object DeserializeNonGeneric(Stream stream, ABSaveMap map)
         {
-            var deserializer = LightConcurrentPool<ABSaveDeserializer>.TryRent() ?? new ABSaveDeserializer();
+            var deserializer = DeserializerPool.TryRent() ?? new ABSaveDeserializer();
             deserializer.Initialize(stream, map);
             return deserializer.DeserializeRoot();
         }

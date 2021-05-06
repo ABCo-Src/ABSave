@@ -41,11 +41,11 @@ namespace ABSoftware.ABSave.UnitTests.Core
                 "ABC".AsSpan().SequenceEqual(Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header));
             }
 
-            ResetOutput();
+            ResetState();
 
             // Heap buffer. (Trying twice to make sure getting an already used buffer works)
             TestHeapBuffer();
-            ResetOutput();
+            ResetState();
             TestHeapBuffer();
 
             void TestHeapBuffer()

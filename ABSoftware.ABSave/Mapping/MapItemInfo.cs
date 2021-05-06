@@ -5,7 +5,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    public struct MapItemInfo
+    public struct MapItemInfo : IEquatable<MapItemInfo>
     {
         internal static MapItemInfo None => new MapItemInfo(new NonReallocatingListPos(ushort.MaxValue, 255));
 
@@ -23,6 +23,10 @@ namespace ABSoftware.ABSave.Mapping
             pos.Flag = isNullable;
             Pos = pos;
         }
+
+        public override int GetHashCode() => Pos.GetHashCode();
+        public override bool Equals(object obj) => obj is MapItemInfo info && Equals(info);
+        public bool Equals(MapItemInfo other) => Pos.Equals(other.Pos);
     }
 
     struct GenMapItemInfo

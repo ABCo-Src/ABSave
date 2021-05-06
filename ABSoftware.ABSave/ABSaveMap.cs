@@ -1,5 +1,7 @@
 ﻿using ABSoftware.ABSave.Converters;
+using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -10,6 +12,7 @@ namespace ABSoftware.ABSave.Mapping
 {
     public class ABSaveMap
     {
+        internal LightConcurrentPool<MapGenerator> GeneratorPool = new LightConcurrentPool<MapGenerator>(4);
         internal NonReallocatingList<MapItem> Items;
         internal MapItemInfo RootItem;
         internal MapItemInfo AssemblyItem;
@@ -52,14 +55,32 @@ namespace ABSoftware.ABSave.Mapping
 
         internal MapGenerator RentGenerator()
         {
-            var res = LightConcurrentPool<MapGenerator>.TryRent() ?? new MapGenerator();
+            var res = GeneratorPool.TryRent() ?? new MapGenerator();
             res.Initialize(this);
             return res;
         }
 
         internal void ReleaseGenerator(MapGenerator gen)
         {
-            LightConcurrentPool<MapGenerator>.Release(gen);
+            GeneratorPool.Release(gen);
+        }
+
+        internal ObjectMemberInfo[] GetMembersForVersion(ref MapItem item, int version)
+        {
+            ref ObjectMapItem obj = ref item.Main.Object;
+
+            // Try to get the version if it already exists.
+            var existing = ObjectMapper.GetVersionOrAddNull(version, ref obj);
+            if (existing != null) return existing;
+
+            // If it doesn't, generate it.
+            {
+                var gen = RentGenerator();
+                var res = ObjectMapper.GenerateVersion(gen, version, ref item, ref obj);
+                ReleaseGenerator(gen);
+
+                return res;
+            }
         }
 
         public Type GetTypeOf(MapItemInfo info) => Items.GetItemRef(info.Pos).ItemType;

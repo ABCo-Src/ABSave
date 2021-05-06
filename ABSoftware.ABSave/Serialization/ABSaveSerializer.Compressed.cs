@@ -22,10 +22,8 @@ namespace ABSoftware.ABSave.Serialization
             WriteCompressed(data, ref target);
         }
 
-        public void WriteCompressed(uint data, ref BitTarget target) => WriteCompressedAndApply(data, ref target);
-        public void WriteCompressed(ulong data, ref BitTarget target) => WriteCompressedAndApply(data, ref target);
-
-        void WriteCompressedAndApply(ulong data, ref BitTarget target)
+        public void WriteCompressed(uint data, ref BitTarget target) => WriteCompressed((ulong)data, ref target);
+        public void WriteCompressed(ulong data, ref BitTarget target)
         {
             if (target.FreeBits == 0) target.Apply();
 
@@ -87,8 +85,6 @@ namespace ABSoftware.ABSave.Serialization
                 _ => throw new Exception("ABSAVE: Invalid 'contBytesRequired' given to 'WriteVariableData'")
             };
         }
-
-        // Methods to get the number of extra continuation bytes required after the header byte, for each of the supported "vriable" sizes. This does NOT include the header.
 
         byte GetContBytesNo(ulong num, byte bitsFree)
         {

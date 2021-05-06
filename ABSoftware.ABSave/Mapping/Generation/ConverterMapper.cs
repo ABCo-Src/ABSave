@@ -6,7 +6,7 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
-    internal static class GenConverter
+    internal static class ConverterMapper
     {
         internal static bool TryGenerateConvert(Type type, MapGenerator gen, MapItemInfo dest)
         {
@@ -17,7 +17,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
 
             // Place the converter and its context into the item. 
             ref MapItem item = ref gen.FillItemWith(MapItemType.Converter, dest);
-            ref ConverterMapItem convInfo = ref MapItem.GetConverterData(ref item);
+            ref ConverterMapItem convInfo = ref item.Main.Converter;
 
             (convInfo.Converter, convInfo.Context) = (converter, context);
             item.IsGenerating = false;

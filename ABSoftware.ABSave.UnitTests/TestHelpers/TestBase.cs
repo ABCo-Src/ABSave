@@ -38,7 +38,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
                 BypassDangerousTypeChecking = true
             };
 
-            CurrentMap = ABSaveMap.Get<object>(settingsBuilder.CreateSettings(template));
+            CurrentMap = ABSaveMap.Get<EmptyClass>(settingsBuilder.CreateSettings(template));
 
             CurrentGenerator = new MapGenerator();
             CurrentGenerator.Initialize(CurrentMap);
@@ -51,6 +51,11 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
             Deserializer.Initialize(Stream, CurrentMap);
 
             // NOTE: To make testing easier, add some test types as saved so they have a consistent single byte for type writing.
+            InitializeSerializerSavedTypes();
+        }
+
+        private void InitializeSerializerSavedTypes()
+        {
             Serializer.SavedTypes.Add(typeof(SubWithHeader), 0);
             Deserializer.SavedTypes.Add(typeof(SubWithHeader));
 
@@ -66,16 +71,16 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
 
         public void GoToStart() => Stream.Position = 0;
 
-        public void ResetOutputWithConverter<T>(Converter converter) => ResetOutputWithConverter(typeof(T), converter);
+        public void ResetStateWithConverter<T>(Converter converter) => ResetStateWithConverter(typeof(T), converter);
 
-        public void ResetOutputWithConverter(Type type, Converter converter)
+        public void ResetStateWithConverter(Type type, Converter converter)
         {
-            ResetOutput();
+            ResetState();
 
             var pos = CurrentGenerator.CreateItem(type, CurrentMap.GenInfo.AllTypes);
 
             ref MapItem item = ref CurrentGenerator.FillItemWith(MapItemType.Converter, pos);
-            ref ConverterMapItem convItm = ref MapItem.GetConverterData(ref item);
+            ref ConverterMapItem convItm = ref item.Main.Converter;
             convItm.Converter = converter;
 
             var genContext = new ContextGen(type, CurrentGenerator);
@@ -86,13 +91,23 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
             CurrentMapItem = pos;
         }
 
-        public void ResetOutputWithMapFor(Type type)
+        public void ResetStateWithMapFor(Type type)
         {
-            ResetOutput();
+            ResetState();
             CurrentMapItem = CurrentGenerator.GetMap(type);
         }
 
-        public void ResetOutput()
+        public void ResetState()
+        {
+            // Reset the serializer and deserializer
+            Serializer.Reset();
+            Deserializer.Reset();
+            InitializeSerializerSavedTypes();
+
+            ResetPosition();
+        }
+
+        public void ResetPosition()
         {
             GoToStart();
             Stream.SetLength(0);

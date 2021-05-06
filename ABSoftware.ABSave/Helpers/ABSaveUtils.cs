@@ -28,10 +28,8 @@ namespace ABSoftware.ABSave.Helpers
             0b11111111
         };
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool ContainsZeroByteLong(ulong l) => ((l - 0x0101010101010101L) & ~l & 0x8080808080808080L) > 0;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static bool ContainsZeroByte(uint l) => ((l - 0x01010101L) & ~l & 0x80808080L) > 0;
 
         internal static MapItemInfo GetRuntimeMapItem(Type type, ABSaveMap parent)
@@ -42,7 +40,6 @@ namespace ABSoftware.ABSave.Helpers
             return res;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void WaitUntilNotGenerating(ref MapItem item)
         {
             if (item.IsGenerating)
@@ -52,6 +49,10 @@ namespace ABSoftware.ABSave.Helpers
             }
         }
 
+        // This will almost definitely be inlined anyway, but we may as well specifically mark it to
+        // as it is VERY important that it does, so as to elide the possible generic overhead of "new T",
+        // (if "T" is a reference type and won't get its own JIT instantiation anyway)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static T[] CreateUninitializedArray<T>(int length)
         {
             // TODO: Add .NET 5 GC.GetUnintiailizedArray support

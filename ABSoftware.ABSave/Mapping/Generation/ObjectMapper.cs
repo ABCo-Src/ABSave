@@ -1,69 +1,185 @@
-﻿using ABSoftware.ABSave.Helpers;
+﻿using ABSoftware.ABSave.Exceptions;
+using ABSoftware.ABSave.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
     /// <summary>
-    /// Creates a final map of an object using intermediate information from <see cref="GenObjectReflector"/>
+    /// Creates a final map of an object using intermediate information from <see cref="GenObjectTranslator"/>
     /// </summary>
-    internal static class GenObject
-    {        
-        internal static void GenerateObject(ref ObjectReflectorInfo memberInfo, MapGenerator gen, MapItemInfo dest)
+    internal static class ObjectMapper
+    {
+        struct Context
         {
-            gen.Map.Items.EnsureCapacity(memberInfo.UnmappedMembers);
+            public int TargetVersion;
+            public IntermediateObjInfo Intermediate;
+            public MapGenerator Gen;
 
-            ref MapItem item = ref gen.FillItemWith(MapItemType.Object, dest);
-            ref ObjectMapItem objItem = ref MapItem.GetObjectData(ref item);
+            public Context(int targetVersion, IntermediateObjInfo info, MapGenerator gen)
+                => (TargetVersion, Intermediate, Gen) = (targetVersion, info, gen);
+        }
 
-            string[] keys = new string[memberInfo.Members.Length];
-            objItem.Members = new ObjectMemberInfo[memberInfo.Members.Length];
-
-            // Move the members to the map
-            for (int i = 0; i < memberInfo.Members.Length; i++)
+        internal static ObjectMemberInfo[] GetVersionOrAddNull(int version, ref ObjectMapItem parentObj)
+        {
+            while (true)
             {
-                ref ObjectReflectorItemInfo currentInfo = ref memberInfo.Members[i];
-                keys[i] = currentInfo.NameKey;
+                lock (parentObj.Versions)
+                {
+                    // Does not exist - Has not and is not generating.
+                    // Exists but is null - Is currently generating.
+                    // Exists and is not null - Is ready to use.
+                    if (parentObj.Versions.TryGetValue(version, out ObjectMemberInfo[] info))
+                    {
+                        if (info != null) return info;
+                    }
+                    else
+                    {
+                        parentObj.Versions.Add(version, null);
+                        return null;
+                    }
+                }
 
-                // Get or create the details needed to have a complete map.
-                objItem.Members[i].Map = currentInfo.ExistingMap ??= gen.GetMap(memberInfo.Members[i].MemberType);
-
-                ref MapItem currentItem = ref gen.Map.GetItemAt(objItem.Members[i].Map);
-
-                // Create an accessor for the item if there isn't already one.
-                objItem.Members[i].Accessor = memberInfo.Members[i].Accessor
-                    ??= GenerateAccessor(gen, ref currentItem, ref item, memberInfo.Members[i].Info);
+                Thread.Yield();
             }
+        }
 
-            // Sort the items by their names.
-            Array.Sort(keys, objItem.Members);
+        internal static ObjectMemberInfo[] GenerateVersion(MapGenerator gen, int version, ref MapItem parent, ref ObjectMapItem parentObj)
+        {
+            int latestVer = parent.Extra.ObjectHighestVersion;
 
-            item.IsGenerating = false;
+            if (version > latestVer)
+                throw new UnsupportedVersionException(parent.ItemType, version);
+
+            var ctx = new Context(version, parentObj.IntermediateInfo, gen);
+            var newVer = GenerateNewVersion(ref ctx, ref parent);
+           
+            lock (parentObj.Versions)
+            {
+                parentObj.Versions[version] = newVer;
+                if (parentObj.Versions.Count > parent.Extra.ObjectHighestVersion)
+                {
+                    IntermediateObjInfoMapper.Release(parentObj.IntermediateInfo);
+                    parentObj.IntermediateInfo = null;
+                }
+            }
+                
+            return newVer;
+        }
+
+        internal static void GenerateNewObject(Type type, MapGenerator gen, MapItemInfo dest)
+            => GenerateNewObject(IntermediateObjInfoMapper.CreateInfo(type, gen), gen, dest);
+
+        internal static void GenerateNewObject(IntermediateObjInfo info, MapGenerator gen, MapItemInfo dest)
+        {
+            gen.Map.Items.EnsureCapacity(info.UnmappedCount + 1);
+
+            // Create the item
+            ref MapItem parent = ref gen.FillItemWith(MapItemType.Object, dest);
+            ref ObjectMapItem parentObj = ref parent.Main.Object;
+
+            try
+            {
+                // If there's literally zero members, just do nothing.
+                if (info.RawMembers.Length == 0)
+                {
+                    parentObj.IntermediateInfo = null;
+                    parentObj.Versions = new Dictionary<int, ObjectMemberInfo[]>() { { 0, Array.Empty<ObjectMemberInfo>() } };
+                    parent.Extra.ObjectHighestVersion = 0;
+                    return;
+                }
+
+                parent.Extra.ObjectHighestVersion = info.HighestVersion;
+
+                // Handle objects with only one version quickly without any extra work.
+                if (info.HighestVersion == 0)
+                {
+                    var ctx = new Context(0, info, gen);
+                    GenerateForOneVersion(ref ctx, ref parent, ref parentObj);
+
+                    // There are no more versions here, release the translated.
+                    parentObj.IntermediateInfo = null;
+                    IntermediateObjInfoMapper.Release(info);
+                }
+                else
+                {
+                    parentObj.IntermediateInfo = info;
+                    parentObj.Versions = new Dictionary<int, ObjectMemberInfo[]>();
+                }
+            }
+            finally { parent.IsGenerating = false; }
+        }
+
+        static ObjectMemberInfo[] GenerateNewVersion(ref Context ctx, ref MapItem parent)
+        {
+            var lst = new LoadOnceList<ObjectMemberInfo>();
+            lst.Initialize();
+
+            int version = ctx.TargetVersion;
+            var iterator = new IntermediateObjInfo.MemberIterator(ctx.Intermediate);
+
+            do
+            {
+                ref ObjectTranslatedItemInfo tranItm = ref iterator.GetCurrent();
+
+                if (version >= tranItm.StartVer && version <= tranItm.EndVer)
+                    CreateItem(ctx.Gen, ref parent, ref lst.CreateAndGet(), ref tranItm);
+            }
+            while (iterator.MoveNext());
+
+            return lst.ReleaseAndGetArray();
+        }
+
+        private static void GenerateForOneVersion(ref Context ctx, ref MapItem parent, ref ObjectMapItem parentObj)
+        {
+            var iterator = new IntermediateObjInfo.MemberIterator(ctx.Intermediate);
+
+            // No need to do any checks at all - just copy the items right across!
+            ObjectMemberInfo[] dest = new ObjectMemberInfo[ctx.Intermediate.RawMembers.Length];
+
+            do
+                CreateItem(ctx.Gen, ref parent, ref dest[iterator.Index], ref iterator.GetCurrent());
+            while (iterator.MoveNext());
+
+            parentObj.Versions = new Dictionary<int, ObjectMemberInfo[]>(1) { { ctx.TargetVersion, dest } };
+        }
+
+        static void CreateItem(MapGenerator gen, ref MapItem parent, ref ObjectMemberInfo dest, ref ObjectTranslatedItemInfo translated)
+        {
+            // Get or create the details needed to have a complete map.
+            dest.Map = translated.ExistingMap ??= gen.GetMap(translated.MemberType);
+
+            ref MapItem newItem = ref gen.Map.GetItemAt(dest.Map);
+
+            // Create an accessor for the item if there isn't already one.
+            dest.Accessor = translated.Accessor
+                ??= GenerateAccessor(ref newItem, ref parent, translated.Info);
         }
 
         // Internal for testing:
         /// <summary>
         /// Generate the fastest possible accessor for this member. See more details on <see cref="MemberAccessor"/>
         /// </summary>
-        internal static MemberAccessor GenerateAccessor(MapGenerator gen, ref MapItem item, ref MapItem parentItem, MemberInfo memberInfo)
+        internal static MemberAccessor GenerateAccessor(ref MapItem item, ref MapItem parentItem, MemberInfo memberInfo)
         {
             var accessor = new MemberAccessor();
 
-            // Fields
-            if (GenObjectReflector.IsField(gen))
+            // Field
+            if (memberInfo is FieldInfo field)
             {
                 accessor.Initialize(memberInfo, null, accessor.FieldGetter, accessor.FieldSetter);
                 return accessor;
             }
 
-            // All property optimizations rely on the parent being a reference-type.
+            // Property - All property optimizations rely on the parent being a reference-type.
             else if (!parentItem.IsValueType)
             {
                 var property = ABSaveUtils.UnsafeFastCast<PropertyInfo>(memberInfo);
-
+               
                 // Value type property - Just support some basic primitives.
                 if (item.IsValueType)
                 {

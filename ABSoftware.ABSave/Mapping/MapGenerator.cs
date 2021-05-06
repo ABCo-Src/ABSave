@@ -1,19 +1,14 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Exceptions;
+﻿using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    public class MapGenerator
+    public unsafe class MapGenerator
     {
         internal ABSaveMap Map;
         internal MapItemInfo CurrentItem;
@@ -31,7 +26,7 @@ namespace ABSoftware.ABSave.Mapping
             EnsureTypeSafety(type);
 
             // Try to use a converter, and fallback to manually mapping an object if we can't.
-            if (!GenConverter.TryGenerateConvert(type, this, pos))
+            if (!ConverterMapper.TryGenerateConvert(type, this, pos))
                 GenerateObject(type, this, pos);
 
             return pos;
@@ -42,7 +37,7 @@ namespace ABSoftware.ABSave.Mapping
             if (GetOrStartGenerating(type, out MapItemInfo pos, Map.GenInfo.RuntimeMapItems)) return pos;
 
             ref MapItem item = ref FillItemWith(MapItemType.Runtime, pos);
-            MapItem.GetRuntimeExtraData(ref item) = GetMap(type);
+            item.Extra.RuntimeInnerItem = GetMap(type);
             item.IsGenerating = false;
 
             return pos;
@@ -119,7 +114,7 @@ namespace ABSoftware.ABSave.Mapping
                         }
                     }
 
-                    // Start generating this item. 
+                    // Start generating this item.
                     collection[type] = new GenMapItemInfo(stateToAddIfNotIn);
                     return false;
                 }
@@ -160,7 +155,7 @@ namespace ABSoftware.ABSave.Mapping
             }
         }
 
-        bool TryExpandNullable(ref Type expanded)
+        static bool TryExpandNullable(ref Type expanded)
         {
             if (expanded.IsGenericType && expanded.GetGenericTypeDefinition() == typeof(Nullable<>))
             {
@@ -172,15 +167,11 @@ namespace ABSoftware.ABSave.Mapping
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void GenerateObject(Type type, MapGenerator gen, MapItemInfo dest)
+        static void GenerateObject(Type type, MapGenerator gen, MapItemInfo dest)
         {
-            var memberInfo = new ObjectReflectorInfo();
-
-            GenObjectReflector.GetAllMembersInfo(ref memberInfo, type, gen);
-            GenObject.GenerateObject(ref memberInfo, gen, dest);
-            GenObjectReflector.Release(ref memberInfo);
+            ObjectMapper.GenerateNewObject(type, gen, dest);
         }
 
-        internal void Initialize(ABSaveMap map) => (Map) = (map);
+        internal void Initialize(ABSaveMap map) => Map = map;
     }
 }

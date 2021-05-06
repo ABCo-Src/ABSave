@@ -22,6 +22,8 @@ namespace ABSoftware.ABSave.Serialization
     /// </summary>
     public sealed partial class ABSaveSerializer
     {
+        readonly Dictionary<MapItemInfo, ObjectMemberInfo[]> _typeVersions = new Dictionary<MapItemInfo, ObjectMemberInfo[]>();
+
         internal Dictionary<Assembly, int> SavedAssemblies = new Dictionary<Assembly, int>();
         internal Dictionary<Type, int> SavedTypes = new Dictionary<Type, int>();
 
@@ -51,6 +53,7 @@ namespace ABSoftware.ABSave.Serialization
         {
             SavedAssemblies.Clear();
             SavedTypes.Clear();
+            _typeVersions.Clear();
         }
 
         public MapItemInfo GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
@@ -106,7 +109,7 @@ namespace ABSoftware.ABSave.Serialization
             {
                 case MapItemType.Converter:
 
-                    ref ConverterMapItem converter = ref MapItem.GetConverterData(ref item);
+                    ref ConverterMapItem converter = ref item.Main.Converter;
 
                     if (WriteHeader(converter.Converter.ConvertsSubTypes, converter.Converter.WritesToHeader, ref item, ref target)) return;
                     converter.Converter.Serialize(obj, actualType, converter.Context, ref target);
@@ -115,16 +118,14 @@ namespace ABSoftware.ABSave.Serialization
 
                 case MapItemType.Object:
 
-                    ref ObjectMapItem objItem = ref MapItem.GetObjectData(ref item);
-
-                    if (WriteHeader(false, false, ref item, ref target)) return;
-                    SerializeObjectItems(obj, ref objItem);
+                    if (WriteHeader(false, true, ref item, ref target)) return;
+                    SerializeObjectItems(obj, info, ref item, ref target);
 
                     break;
 
                 case MapItemType.Runtime:
 
-                    MapItemInfo inner = MapItem.GetRuntimeExtraData(ref item);
+                    MapItemInfo inner = item.Extra.RuntimeInnerItem;
 
                     // Switch to the item inside.
                     SerializeItemNoSetup(obj, actualType, inner, ref target, skipAllHeaderHandling);
@@ -159,7 +160,6 @@ namespace ABSoftware.ABSave.Serialization
                         SerializeItemNoSetup(obj, actualType, GetRuntimeMapItem(actualType), ref newTarget, true);
                         return true;
                     }
-                        
                 }
 
                 // Make sure to apply everything we write if necessary
@@ -169,14 +169,26 @@ namespace ABSoftware.ABSave.Serialization
             }
         }
 
-        void SerializeObjectItems(object obj, ref ObjectMapItem map)
+        void SerializeObjectItems(object obj, MapItemInfo mapPos, ref MapItem item, ref BitTarget target)
         {
-            // Serialize the item
-            for (int i = 0; i < map.Members.Length; i++)
-                SerializeItem(GetValue(ref map.Members[i]), map.Members[i].Map);
+            if (_typeVersions.TryGetValue(mapPos, out ObjectMemberInfo[] val))
+                SerializeFromMembers(val);
+            else
+            {
+                // Serialize the latest version of the object.
+                int latestVersion = item.Extra.ObjectHighestVersion;
+                WriteCompressed((uint)latestVersion, ref target);
 
-            object GetValue(ref ObjectMemberInfo member)
-                => member.Accessor.Getter(obj);
+                ObjectMemberInfo[] info = Map.GetMembersForVersion(ref item, latestVersion);
+                SerializeFromMembers(info);
+                _typeVersions.Add(mapPos, info);
+            }
+
+            void SerializeFromMembers(ObjectMemberInfo[] members)
+            {
+                for (int i = 0; i < members.Length; i++)
+                    SerializeItem(members[i].Accessor.Getter(obj), members[i].Map);
+            }
         }
 
         // TODO: Use map guides to implement proper "Type" handling via map.

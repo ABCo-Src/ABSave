@@ -6,27 +6,29 @@ using System.Threading;
 
 namespace ABSoftware.ABSave.Helpers
 {
-    internal static class LightConcurrentPool<T> where T : class
+    internal class LightConcurrentPool<T> where T : class
     {
-        static int _itemCount;
-        static ConcurrentQueue<T> _items = new ConcurrentQueue<T>();
+        int _itemCount;
+        readonly T[] _items;
 
-        public static T TryRent()
+        public LightConcurrentPool(int maxCapacity) => _items = new T[maxCapacity];
+
+        public T TryRent()
         {
-            if (_items.TryDequeue(out T res))
+            lock (_items)
             {
-                Interlocked.Decrement(ref _itemCount);
-                return res;
+                if (_itemCount == 0) return null;
+                return _items[_itemCount--];
             }
-            return null;
         }
 
-        public static void Release(T item)
+        public void Release(T item)
         {
-            if (_itemCount == 4) return;
-
-            Interlocked.Increment(ref _itemCount);
-            _items.Enqueue(item);
+            lock (_items)
+            {
+                if (_itemCount == _items.Length) return;
+                _items[_itemCount++] = item;
+            }
         }
     }
 }

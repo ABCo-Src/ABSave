@@ -68,7 +68,7 @@ namespace ABSoftware.ABSave.Converters
         public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header) =>
             DeserializeAssembly(ref header);
 
-        public Assembly DeserializeAssembly(ref BitSource header)
+        public static Assembly DeserializeAssembly(ref BitSource header)
         {
             // Try to get a saved assembly.
             var saved = TryDeserializeSaved(ref header);

@@ -20,7 +20,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
             var source = new BitSource(0b11000100, Deserializer);
             // Setup the next byte too
             Stream.WriteByte(0b10000000);
-            ResetOutput();
+            ResetState();
 
             Assert.IsTrue(source.ReadBit());
             Assert.IsTrue(source.ReadBit());
@@ -42,9 +42,9 @@ namespace ABSoftware.ABSave.UnitTests.Core
         {
             Initialize(lazy ? ABSaveSettings.GetSpeedFocus(false) : ABSaveSettings.GetSizeFocus(false));
 
-            var source = new BitSource(lazy ? 0b11000000 : 0b11000110, Deserializer);
+            var source = new BitSource(lazy ? (byte)0b11000000 : (byte)0b11000110, Deserializer);
             // Setup the next byte too
-            Stream.WriteByte(lazy ? 0b01100100 : 0b01000000);
+            Stream.WriteByte(lazy ? (byte)0b01100100 : (byte)0b01000000);
             GoToStart();
 
             Assert.AreEqual(12, source.ReadInteger(4));

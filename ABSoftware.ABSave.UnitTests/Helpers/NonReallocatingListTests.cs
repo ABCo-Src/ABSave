@@ -123,8 +123,8 @@ namespace ABSoftware.ABSave.UnitTests.Helpers
         // THREAD TESTS:
         class ThreadTestingInfo
         {
-            public NonReallocatingList<TestClass> List = new NonReallocatingList<TestClass>();
-            public HashSet<NonReallocatingListPos> DuplicateChecker = new HashSet<NonReallocatingListPos>();
+            public NonReallocatingList<TestClass> List = new();
+            public HashSet<NonReallocatingListPos> DuplicateChecker = new();
 
             public ThreadTestingInfo()
             {
