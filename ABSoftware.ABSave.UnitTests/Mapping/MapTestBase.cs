@@ -13,15 +13,9 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         public ABSaveMap Map;
         public MapGenerator Generator;
 
-        public void Setup(bool withFields = false)
+        public void Setup()
         {
-            var builder = new ABSaveSettingsBuilder
-            {
-                ConvertFields = withFields,
-                IncludePrivate = true
-            };
-
-            var settings = builder.CreateSettings(ABSaveSettings.GetSizeFocus(false));
+            var settings = ABSaveSettings.ForSize;
 
             Map = new ABSaveMap(settings);
             Generator = new MapGenerator();

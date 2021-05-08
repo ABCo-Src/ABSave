@@ -206,16 +206,28 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         // Version 1: A, B, C
         // Version 2: A, C, D
         [Save(0)]
-        public string A { get; set; }
+        public DateTime A { get; set; } = new DateTime(3);
 
         [Save(1, FromVer = 1, ToVer = 1)]
-        public bool B { get; set; }
+        public bool B { get; set; } = true;
 
         [Save(2, FromVer = 1)]
-        public int C { get; set; }
+        public int C { get; set; } = 5;
 
         [Save(3, FromVer = 2)]
-        public long D { get; set; }
+        public long D { get; set; } = 7;
+
+        public override bool Equals(object obj)
+        {
+            if (obj is VersionedPropertyClass cl)
+            {
+                return A == cl.A && B == cl.B && C == cl.C && D == cl.D;
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode() => base.GetHashCode();
     }
 
     [SaveMembers]

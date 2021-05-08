@@ -22,7 +22,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         [TestMethod]
         public void Guid()
         {
-            Setup<Guid>(ABSaveSettings.GetSpeedFocus(true), GuidConverter.Instance);
+            Setup<Guid>(ABSaveSettings.ForSpeed, GuidConverter.Instance);
             var guid = new Guid("01234567-89ab-0123-4567-89abcdef0123");
 
             DoSerialize(guid);
@@ -34,7 +34,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         [TestMethod]
         public void DateTime()
         {
-            Setup<DateTime>(ABSaveSettings.GetSpeedFocus(true), TickBasedConverter.Instance);
+            Setup<DateTime>(ABSaveSettings.ForSpeed, TickBasedConverter.Instance);
             var dateTime = new DateTime(1989, 6, 3, 7, 3, 8);
 
             DoSerialize(dateTime);
@@ -46,7 +46,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         [TestMethod]
         public void TimeSpan()
         {
-            Setup<TimeSpan>(ABSaveSettings.GetSpeedFocus(true), TickBasedConverter.Instance);
+            Setup<TimeSpan>(ABSaveSettings.ForSpeed, TickBasedConverter.Instance);
             var timeSpan = new TimeSpan(19, 7, 3, 8);
 
             DoSerialize(timeSpan);
@@ -58,7 +58,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         [TestMethod]
         public void KeyValue()
         {
-            Setup<KeyValuePair<byte, bool>>(ABSaveSettings.GetSpeedFocus(true), KeyValueConverter.Instance);
+            Setup<KeyValuePair<byte, bool>>(ABSaveSettings.ForSpeed, KeyValueConverter.Instance);
             var obj = new KeyValuePair<byte, bool>(234, true);
 
             DoSerialize(obj);
@@ -70,7 +70,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         [TestMethod]
         public void DictionaryEntry()
         {
-            Setup<DictionaryEntry>(ABSaveSettings.GetSpeedFocus(true), KeyValueConverter.Instance);
+            Setup<DictionaryEntry>(ABSaveSettings.ForSpeed, KeyValueConverter.Instance);
             var obj = new DictionaryEntry(new SubNoConverter(5), new SubWithoutHeader());
 
             DoSerialize(obj);
@@ -82,7 +82,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         [TestMethod]
         public void Version()
         {
-            Setup<Version>(ABSaveSettings.GetSpeedFocus(true), VersionConverter.Instance);
+            Setup<Version>(ABSaveSettings.ForSpeed, VersionConverter.Instance);
 
             Version[] versions = new Version[]
             {
@@ -105,7 +105,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         [TestMethod]
         public void Assembly_NoCulture_PublicKeyToken()
         {
-            Setup<Assembly>(ABSaveSettings.GetSpeedFocus(true), AssemblyConverter.Instance);
+            Setup<Assembly>(ABSaveSettings.ForSpeed, AssemblyConverter.Instance);
             var assembly = typeof(OtherTests).Assembly;
 
             // Non-saved
@@ -127,7 +127,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         [TestMethod]
         public void Type()
         {
-            Setup<Type>(ABSaveSettings.GetSpeedFocus(true), TypeConverter.Instance);
+            Setup<Type>(ABSaveSettings.ForSpeed, TypeConverter.Instance);
 
             _typeSerialize = t => DoSerialize(t);
             _typeDeserialize = () => DoDeserialize<Type>();
@@ -153,9 +153,9 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
-        public void Type_Closed()
+        public unsafe void Type_Closed()
         {
-            Setup<Type>(ABSaveSettings.GetSpeedFocus(true), TypeConverter.Instance);
+            Setup<Type>(ABSaveSettings.ForSpeed, TypeConverter.Instance);
             SaveCurrentAssembly();
 
             _typeSerialize = t => Serializer.WriteClosedType(t);

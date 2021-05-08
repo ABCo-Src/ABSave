@@ -89,7 +89,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
 
             static SaveMembersMode GetClassMode(Type classType)
             {
-                // TODO: This is jsut to temporarily support "object" until proper settings mapping comes in.
+                // TODO: This is just to temporarily support "object" until proper settings mapping comes in.
                 if (classType == typeof(object)) return SaveMembersMode.Fields;
 
                 var attribute = classType.GetCustomAttribute<SaveMembersAttribute>(false);
@@ -180,12 +180,6 @@ namespace ABSoftware.ABSave.Mapping.Generation
 
             Array.Sort(dest.SortedMembers);
         }
-
-        internal static bool IsField(MapGenerator gen)
-        {
-            return gen.Map.Settings.ConvertFields;
-        }
-
 
         static IntermediateObjInfo Rent()
         {

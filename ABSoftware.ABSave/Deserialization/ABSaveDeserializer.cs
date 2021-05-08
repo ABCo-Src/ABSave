@@ -146,7 +146,7 @@ namespace ABSoftware.ABSave.Deserialization
                 }
 
                 // Type checks
-                if (Settings.SaveInheritance && !mapSupportsSub)
+                if (!mapSupportsSub)
                 {
                     EnsureReadHeader();
 

@@ -16,19 +16,20 @@ namespace ABSoftware.ABSave
     {
         readonly static LightConcurrentPool<ABSaveSerializer> SerializerPool = new LightConcurrentPool<ABSaveSerializer>(2);
         readonly static LightConcurrentPool<ABSaveDeserializer> DeserializerPool = new LightConcurrentPool<ABSaveDeserializer>(2);
-        public static byte[] Serialize<T>(T obj, ABSaveMap map) => SerializeNonGeneric(obj, map);
-        public static byte[] SerializeNonGeneric(object obj, ABSaveMap map)
+        public static byte[] Serialize<T>(T obj, ABSaveMap map, Dictionary<Type, int> targetVersions = null) => SerializeNonGeneric(obj, map, targetVersions);
+        public static byte[] SerializeNonGeneric(object obj, ABSaveMap map, Dictionary<Type, int> targetVersions = null)
         {
             var stream = new MemoryStream(); // Use pooling for "MemoryStream"s?
-            SerializeNonGeneric(obj, map, stream);
+            SerializeNonGeneric(obj, map, stream, targetVersions);
             return stream.ToArray();
         }
 
-        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream) => SerializeNonGeneric(obj, map, stream);
-        public static void SerializeNonGeneric(object obj, ABSaveMap map, Stream stream)
+        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream, Dictionary<Type, int> targetVersions = null) => 
+            SerializeNonGeneric(obj, map, stream, targetVersions);
+        public static void SerializeNonGeneric(object obj, ABSaveMap map, Stream stream, Dictionary<Type, int> targetVersions = null)
         {
             var serializer = SerializerPool.TryRent() ?? new ABSaveSerializer();
-            serializer.Initialize(stream, map);
+            serializer.Initialize(stream, map, targetVersions);
             serializer.SerializeRoot(obj);
             SerializerPool.Release(serializer);
         }

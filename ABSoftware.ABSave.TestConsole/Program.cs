@@ -51,7 +51,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.GetSpeedFocus(true));
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
             TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt"));
         }
 
@@ -197,14 +197,14 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             Debugger.Break();
         }
 
-        static void TestOutputSize()
+        public static void TestOutputSize()
         {
             //var benchmarks = new TestBenchmark();
             //benchmarks.Setup();
             //benchmarks.Finish();
         }
 
-        static void GenerateAndSaveNewModel()
+        public static void GenerateAndSaveNewModel()
         {
             JsonResponseModel model = new JsonResponseModel();
             model.Initialize();

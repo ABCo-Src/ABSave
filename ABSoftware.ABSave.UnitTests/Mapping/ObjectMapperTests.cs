@@ -45,7 +45,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void GetAccessor_Field()
         {
-            Setup(true);
+            Setup();
 
             var memberInfo = typeof(SimpleClass).GetField(nameof(SimpleClass.Itm1), BindingFlags.NonPublic | BindingFlags.Instance);
             var accessor = RunGenerateAccessor(typeof(bool), typeof(SimpleClass), memberInfo);
@@ -206,7 +206,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
                 var members = Map.GetMembersForVersion(ref item, 1);
 
                 Assert.AreEqual(3, members.Length);
-                Assert.AreEqual(Generator.GetMap(typeof(string)), members[0].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), members[0].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(bool)), members[1].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(int)), members[2].Map);
 
@@ -220,7 +220,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
                 var members = Map.GetMembersForVersion(ref item, 0);
 
                 Assert.AreEqual(1, members.Length);
-                Assert.AreEqual(Generator.GetMap(typeof(string)), members[0].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), members[0].Map);
 
                 var membersAgain = Map.GetMembersForVersion(ref item, 0);
                 Assert.AreEqual(members, membersAgain);
@@ -231,7 +231,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
                 var members = Map.GetMembersForVersion(ref item, 2);
 
                 Assert.AreEqual(3, members.Length);
-                Assert.AreEqual(Generator.GetMap(typeof(string)), members[0].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), members[0].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(int)), members[1].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(long)), members[2].Map);
 

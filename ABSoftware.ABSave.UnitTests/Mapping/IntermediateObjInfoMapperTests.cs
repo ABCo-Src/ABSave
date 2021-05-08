@@ -18,7 +18,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void FillMainInfo_CorrectContext_Ordered()
         {
-            Setup(true);
+            Setup();
 
             var dest = new IntermediateObjInfo();
 
@@ -44,7 +44,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void FillMainInfo_CorrectContext_Unordered()
         {
-            Setup(true);
+            Setup();
 
             var dest = new IntermediateObjInfo();
 
@@ -70,7 +70,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void OrderMembers()
         {
-            Setup(true);
+            Setup();
 
             var dest = new IntermediateObjInfo();
             var ctx = new IntermediateObjInfoMapper.TranslationContext(dest);
@@ -96,7 +96,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void NoAttribute()
         {
-            Setup(true);
+            Setup();
 
             Assert.ThrowsException<ABSaveUnserializableType>(() => IntermediateObjInfoMapper.CreateInfo(typeof(UnserializableClass), Generator));
         }
@@ -106,7 +106,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [DataRow(true)]
         public void Fields(bool isValueTypeParent)
         {
-            Setup(true);
+            Setup();
 
             var strMap = Generator.GetMap(typeof(string));
             var info = IntermediateObjInfoMapper.CreateInfo(isValueTypeParent ? typeof(SimpleStruct) : typeof(SimpleClass), Generator);
@@ -148,7 +148,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [DataRow(true)]
         public void Properties(bool isValueTypeParent)
         {
-            Setup(false);
+            Setup();
 
             var info = IntermediateObjInfoMapper.CreateInfo(isValueTypeParent ? typeof(PropertyStruct) : typeof(PropertyClass), Generator);
 
@@ -184,7 +184,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void Properties_Unordered()
         {
-            Setup(false);
+            Setup();
 
             var info = IntermediateObjInfoMapper.CreateInfo(typeof(UnorderedPropertyClass), Generator);
 

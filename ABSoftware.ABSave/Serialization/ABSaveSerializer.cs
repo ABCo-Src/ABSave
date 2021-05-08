@@ -27,6 +27,7 @@ namespace ABSoftware.ABSave.Serialization
         internal Dictionary<Assembly, int> SavedAssemblies = new Dictionary<Assembly, int>();
         internal Dictionary<Type, int> SavedTypes = new Dictionary<Type, int>();
 
+        public Dictionary<Type, int> TargetVersions { get; private set; }
         public ABSaveMap Map { get; private set; }
         public ABSaveSettings Settings { get; private set; }
         public Stream Output { get; private set; }
@@ -34,7 +35,7 @@ namespace ABSoftware.ABSave.Serialization
 
         byte[] _stringBuffer;
 
-        public void Initialize(Stream output, ABSaveMap map)
+        public void Initialize(Stream output, ABSaveMap map, Dictionary<Type, int> targetVersions)
         {
             if (!output.CanWrite)
                 throw new Exception("Cannot use unwriteable stream.");
@@ -43,6 +44,7 @@ namespace ABSoftware.ABSave.Serialization
 
             Map = map;
             Settings = map.Settings;
+            TargetVersions = targetVersions;
 
             ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
 
@@ -145,7 +147,7 @@ namespace ABSoftware.ABSave.Serialization
                 target.WriteBitOn();
 
                 // Type checks
-                if (Settings.SaveInheritance && !convertsSubTypes)
+                if (!convertsSubTypes)
                 {
                     if (item.ItemType == actualType)
                         target.WriteBitOn();
@@ -175,11 +177,15 @@ namespace ABSoftware.ABSave.Serialization
                 SerializeFromMembers(val);
             else
             {
-                // Serialize the latest version of the object.
-                int latestVersion = item.Extra.ObjectHighestVersion;
-                WriteCompressed((uint)latestVersion, ref target);
+                int targetVersion = 0;
 
-                ObjectMemberInfo[] info = Map.GetMembersForVersion(ref item, latestVersion);
+                // Try to get the custom target version and if there is none use the latest.
+                if (TargetVersions?.TryGetValue(item.ItemType, out targetVersion) != true)
+                    targetVersion = item.Extra.ObjectHighestVersion;
+
+                WriteCompressed((uint)targetVersion, ref target);
+
+                ObjectMemberInfo[] info = Map.GetMembersForVersion(ref item, targetVersion);
                 SerializeFromMembers(info);
                 _typeVersions.Add(mapPos, info);
             }

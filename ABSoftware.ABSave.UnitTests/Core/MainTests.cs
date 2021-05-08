@@ -16,19 +16,15 @@ namespace ABSoftware.ABSave.UnitTests.Core
     [TestClass]
     public class MainTests : TestBase
     {
-        void Setup(bool isInheritanceEnabled)
+        [TestInitialize]
+        public void Setup()
         {
-            Initialize(ABSaveSettings.GetSizeFocus(isInheritanceEnabled));
+            Initialize();
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Item_Converter_ValueType(bool isInheritanceEnabled)
+        public void Converter_ValueType_WithoutHeader()
         {
-            Setup(isInheritanceEnabled);
-
-            // Without header
             ResetStateWithConverter<int>(new TestableTypeConverter(false, false));
             {
                 Serializer.SerializeItem(1, CurrentMapItem);
@@ -36,8 +32,11 @@ namespace ABSoftware.ABSave.UnitTests.Core
 
                 Assert.AreEqual(55, Deserializer.DeserializeItem(CurrentMapItem));
             }
+        }
 
-            // With header
+        [TestMethod]
+        public void Converter_ValueType_WithHeader()
+        {
             ResetStateWithConverter<int>(new TestableTypeConverter(true, false));
             {
                 Serializer.SerializeItem(1, CurrentMapItem);
@@ -48,31 +47,32 @@ namespace ABSoftware.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void Item_Converter_MatchingRef(bool isInheritanceEnabled)
+        public void Converter_MatchingRef_WithoutHeader()
         {
-            Setup(isInheritanceEnabled);
-
-            // Without header
             ResetStateWithConverter<Base>(new TestableTypeConverter(false, false));
             {
                 Serializer.SerializeItem(new Base(), CurrentMapItem);
-                AssertAndGoToStart(isInheritanceEnabled ? (byte)192 : (byte)128, TestableTypeConverter.OUTPUT_BYTE);
+                AssertAndGoToStart((byte)192, TestableTypeConverter.OUTPUT_BYTE);
 
                 Assert.AreEqual(55, Deserializer.DeserializeItem(CurrentMapItem));
             }
+        }
 
-            // With header
+        [TestMethod]
+        public void Converter_MatchingRef_WithHeader()
+        {
             ResetStateWithConverter<Base>(new TestableTypeConverter(true, false));
             {
                 Serializer.SerializeItem(new Base(), CurrentMapItem);
-                AssertAndGoToStart(isInheritanceEnabled ? (byte)224 : (byte)192, TestableTypeConverter.OUTPUT_BYTE);
+                AssertAndGoToStart((byte)224, TestableTypeConverter.OUTPUT_BYTE);
 
                 Assert.AreEqual(55, Deserializer.DeserializeItem(CurrentMapItem));
             }
+        }
 
-            // Null
+        [TestMethod]
+        public void Converter_MatchingRef_Null()
+        {
             ResetStateWithConverter<Base>(new TestableTypeConverter(true, false));
             {
                 Serializer.SerializeItem(null, CurrentMapItem);
@@ -87,8 +87,6 @@ namespace ABSoftware.ABSave.UnitTests.Core
         [DataRow(true)]
         public void Item_Converter_DifferentRef(bool isInheritanceEnabled)
         {
-            Setup(isInheritanceEnabled);
-
             // DIFFERENT CONVERTER:
             // With header
             if (isInheritanceEnabled)
@@ -132,20 +130,8 @@ namespace ABSoftware.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        public void Item_Object()
+        public void Object_Null()
         {
-            Initialize();
-
-            // Value type
-            ResetStateWithMapFor(typeof(MyStruct));
-            {
-                Serializer.SerializeItem(new MyStruct(7, 3), CurrentMapItem);
-                AssertAndGoToStart(0, 7, 3);
-
-                Assert.AreEqual(new MyStruct(7, 3), Deserializer.DeserializeItem(CurrentMapItem));
-            }
-
-            // Null
             ResetStateWithMapFor(typeof(GeneralClass));
             {
                 Serializer.SerializeItem(null, CurrentMapItem);
@@ -153,8 +139,23 @@ namespace ABSoftware.ABSave.UnitTests.Core
 
                 Assert.AreEqual(null, Deserializer.DeserializeItem(CurrentMapItem));
             }
+        }
 
-            // Matching type
+        [TestMethod]
+        public void Object_ValueType()
+        {
+            ResetStateWithMapFor(typeof(MyStruct));
+            {
+                Serializer.SerializeItem(new MyStruct(7, 3), CurrentMapItem);
+                AssertAndGoToStart(0, 7, 3);
+
+                Assert.AreEqual(new MyStruct(7, 3), Deserializer.DeserializeItem(CurrentMapItem));
+            }
+        }
+
+        [TestMethod]
+        public void Object_MatchingRefType()
+        {
             ResetStateWithMapFor(typeof(GeneralClass));
             {
                 Serializer.SerializeItem(new GeneralClass(100), CurrentMapItem);
@@ -162,8 +163,11 @@ namespace ABSoftware.ABSave.UnitTests.Core
 
                 Assert.AreEqual(new GeneralClass(100), Deserializer.DeserializeItem(CurrentMapItem));
             }
+        }
 
-            // Different type
+        [TestMethod]
+        public void Object_DifferentRefType()
+        {
             ResetStateWithMapFor(typeof(Base));
             {
                 Serializer.SerializeItem(new GeneralClass(150), CurrentMapItem);
@@ -173,13 +177,24 @@ namespace ABSoftware.ABSave.UnitTests.Core
             }
         }
 
+        [TestMethod]
+        public void Object_CustomVersion()
+        {
+            Initialize(ABSaveSettings.ForSpeed, new Dictionary<Type, int>() { { typeof(VersionedPropertyClass), 1 } });
+            ResetStateWithMapFor(typeof(VersionedPropertyClass));
+            {
+                var targetObj = new VersionedPropertyClass();
+                Serializer.SerializeItem(targetObj, CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { 3L, 5 }, 193, (short)GenType.Numerical, 1, (short)GenType.Numerical));
+
+                Assert.AreEqual(targetObj, Deserializer.DeserializeItem(CurrentMapItem));
+            }
+        }
+
         // When a different type is detected and it changes from a converter to a object or a converter to an object.
         [TestMethod]
-        public void Item_CrossType()
+        public void CrossType_ConvToObj()
         {
-            Initialize();
-
-            // Converter to object
             ResetStateWithConverter<Base>(new TestableTypeConverter(false, false));
             {
                 Serializer.SerializeItem(new SubNoConverter(150), CurrentMapItem);
@@ -187,8 +202,11 @@ namespace ABSoftware.ABSave.UnitTests.Core
 
                 Assert.AreEqual(new SubNoConverter(150), Deserializer.DeserializeItem(CurrentMapItem));
             }
+        }
 
-            // Object to converter - With header
+        [TestMethod]
+        public void CrossType_ObjToConv()
+        {
             ResetStateWithMapFor(typeof(Base));
             {
                 Serializer.SerializeItem(new SubWithHeader(), CurrentMapItem);

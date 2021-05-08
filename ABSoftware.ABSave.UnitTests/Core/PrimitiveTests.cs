@@ -60,7 +60,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
                     UseLittleEndian = !BitConverter.IsLittleEndian
                 };
 
-                Initialize(builder.CreateSettings(ABSaveSettings.GetSpeedFocus(true)));
+                Initialize(builder.CreateSettings(ABSaveSettings.ForSpeed));
 
                 write(val);
                 AssertAndGoToStart(((byte[])BitConverter.GetBytes(val)).Reverse().ToArray());

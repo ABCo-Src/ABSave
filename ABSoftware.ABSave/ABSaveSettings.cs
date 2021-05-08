@@ -16,23 +16,17 @@ namespace ABSoftware.ABSave
 
     public struct ABSaveSettingsBuilder
     {
-        public bool? ConvertFields { get; set; }
-        public bool? IncludePrivate { get; set; }
         public bool? LazyBitHandling { get; set; }
         public bool? UseUTF8 { get; set; }
         public bool? UseLittleEndian { get; set; }
-        public bool? SaveInheritance { get; set; }
         public bool? BypassDangerousTypeChecking { get; set; }
         public List<Converter> CustomConverters { get; set; }
 
         public ABSaveSettings CreateSettings(ABSaveSettings template)
         {
-            var convertFields = ConvertFields ?? template.ConvertFields;
-            var includePrivate = IncludePrivate ?? template.IncludePrivate;
             var lazyBitHandling = LazyBitHandling ?? template.LazyBitHandling;
             var useUTF8 = UseUTF8 ?? template.UseUTF8;
             var useLittleEndian = UseLittleEndian ?? template.UseLittleEndian;
-            var saveInheritance = SaveInheritance ?? template.SaveInheritance;
             var bypassDangerousTypeChecking = BypassDangerousTypeChecking ?? template.BypassDangerousTypeChecking;
 
             Dictionary<Type, Converter> exactConverters = null;
@@ -63,7 +57,7 @@ namespace ABSoftware.ABSave
                 }
             }
 
-            return new ABSaveSettings(convertFields, includePrivate, lazyBitHandling, useUTF8, saveInheritance, bypassDangerousTypeChecking, useLittleEndian,
+            return new ABSaveSettings(lazyBitHandling, useUTF8, bypassDangerousTypeChecking, useLittleEndian,
                 exactConverters ?? Converter.BuiltInExact, nonExactConverters ?? Converter.BuiltInNonExact);
         }
     }
@@ -81,46 +75,23 @@ namespace ABSoftware.ABSave
     /// </summary>
     public class ABSaveSettings
     {
-        static readonly ABSaveSettings _speedFocusedNoInheritance = new ABSaveSettings(false, false, true, true, false, false, BitConverter.IsLittleEndian, Converter.BuiltInExact, Converter.BuiltInNonExact);
-        static readonly ABSaveSettings _speedFocusedInheritance = new ABSaveSettings(false, false, true, true, true, false, BitConverter.IsLittleEndian, Converter.BuiltInExact, Converter.BuiltInNonExact);
-        static readonly ABSaveSettings _sizeFocusedNoInheritance = new ABSaveSettings(false, false, false, true, false, false, BitConverter.IsLittleEndian, Converter.BuiltInExact, Converter.BuiltInNonExact);
-        static readonly ABSaveSettings _sizeFocusedInheritance = new ABSaveSettings(false, false, false, true, true, false, BitConverter.IsLittleEndian, Converter.BuiltInExact, Converter.BuiltInNonExact);
+        public static ABSaveSettings ForSpeed { get; } = new ABSaveSettings(true, true, false, true, Converter.BuiltInExact, Converter.BuiltInNonExact);
+        public static ABSaveSettings ForSize { get; } = new ABSaveSettings(false, true, false, true, Converter.BuiltInExact, Converter.BuiltInNonExact);
 
-        public static ABSaveSettings GetSpeedFocus(bool inheritanceEnabled)
-        {
-            if (inheritanceEnabled)
-                return _speedFocusedInheritance;
-            else
-                return _speedFocusedNoInheritance;
-        }
-
-        public static ABSaveSettings GetSizeFocus(bool inheritanceEnabled)
-        {
-            if (inheritanceEnabled)
-                return _sizeFocusedInheritance;
-            else
-                return _sizeFocusedNoInheritance;
-        }
-
-        public bool ConvertFields { get; } = false;
-        public bool IncludePrivate { get; } = false;
         public bool LazyBitHandling { get; } = true;
         public bool UseUTF8 { get; } = true;
-        public bool SaveInheritance { get; set; } = true;
-        public bool AllowConvertUnmarkedTypes { get; set; } = false;
         public bool BypassDangerousTypeChecking { get; set; } = false;
-        public bool UseLittleEndian { get; } = BitConverter.IsLittleEndian;
+        public bool UseLittleEndian { get; } = true;
 
         public IReadOnlyDictionary<Type, Converter> ExactConverters { get; } = Converter.BuiltInExact;
         public IReadOnlyList<Converter> NonExactConverters { get; } = Converter.BuiltInNonExact;
 
         public ABSaveSettings() { }
 
-        public ABSaveSettings(bool convertFields, bool includePrivate, bool lazyBitHandling, bool useUTF8,
-            bool saveInheritance, bool bypassDangerousTypeChecking, bool useLittleEndian,
+        public ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian,
             IReadOnlyDictionary<Type, Converter> exactConverters, IReadOnlyList<Converter> nonExactConverters)
         =>
-            (ConvertFields, IncludePrivate, LazyBitHandling, UseUTF8, UseLittleEndian, SaveInheritance, BypassDangerousTypeChecking, ExactConverters, NonExactConverters) = 
-            (convertFields, includePrivate, lazyBitHandling, useUTF8, useLittleEndian, saveInheritance, bypassDangerousTypeChecking, exactConverters, nonExactConverters);
+            (LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ExactConverters, NonExactConverters) = 
+            (lazyBitHandling, useUTF8, useLittleEndian, bypassDangerousTypeChecking, exactConverters, nonExactConverters);
     }
 }

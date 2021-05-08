@@ -19,7 +19,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
     public class CollectionTests : ConverterTestBase
     {
         static ABSaveSettings Settings;
-        ContextGen ContextGenInfo = new ContextGen();
+        ContextGen ContextGenInfo = new();
 
         [TestInitialize]
         public void Setup()
@@ -29,7 +29,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
                 BypassDangerousTypeChecking = true
             };
 
-            Settings = builder.CreateSettings(ABSaveSettings.GetSizeFocus(true));
+            Settings = builder.CreateSettings(ABSaveSettings.ForSize);
             CurrentMap = new ABSaveMap(Settings);
             CurrentGenerator = new MapGenerator();
             CurrentGenerator.Initialize(CurrentMap);

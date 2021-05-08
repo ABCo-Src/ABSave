@@ -116,7 +116,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
 
         void Test(ulong data, byte bitsFree)
         {
-            Initialize(ABSaveSettings.GetSizeFocus(true));
+            Initialize(ABSaveSettings.ForSize);
 
             // Serialization
             {

@@ -24,7 +24,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             {
                 BypassDangerousTypeChecking = true
             };
-            Settings = builder.CreateSettings(ABSaveSettings.GetSpeedFocus(true));
+            Settings = builder.CreateSettings(ABSaveSettings.ForSpeed);
         }
 
         [TestMethod]
@@ -109,7 +109,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
                 // Setup<Int32[*]>
                 var method = GetType().GetMethod(nameof(Setup), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 var toCall = method.MakeGenericMethod(typeof(string).Assembly.GetType("System.Byte[*]"));
-                toCall.Invoke(this, new object[] { ABSaveSettings.GetSizeFocus(true), ArrayConverter.Instance });
+                toCall.Invoke(this, new object[] { ABSaveSettings.ForSize, ArrayConverter.Instance });
 
                 DoSerialize(arr);
                 AssertAndGoToStart(5, 2, 2, 7, 167, 43, 32);

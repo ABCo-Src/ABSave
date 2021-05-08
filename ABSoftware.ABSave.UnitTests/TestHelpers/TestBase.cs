@@ -24,8 +24,8 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public ABSaveSerializer Serializer;
         public ABSaveDeserializer Deserializer;
 
-        public void Initialize() => Initialize(ABSaveSettings.GetSpeedFocus(true));
-        public void Initialize(ABSaveSettings template)
+        public void Initialize() => Initialize(ABSaveSettings.ForSpeed);
+        public void Initialize(ABSaveSettings template, Dictionary<Type, int> targetVersions = null)
         {
             var settingsBuilder = new ABSaveSettingsBuilder
             {
@@ -45,7 +45,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
 
             Stream = new MemoryStream();
             Serializer = new ABSaveSerializer();
-            Serializer.Initialize(Stream, CurrentMap);
+            Serializer.Initialize(Stream, CurrentMap, targetVersions);
 
             Deserializer = new ABSaveDeserializer();
             Deserializer.Initialize(Stream, CurrentMap);
@@ -184,7 +184,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
                 if (serializer == null)
                 {
                     serializer = new ABSaveSerializer();
-                    serializer.Initialize(new MemoryStream(), CurrentMap);
+                    serializer.Initialize(new MemoryStream(), CurrentMap, null);
                 }
                 else
                 {
