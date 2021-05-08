@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.UnitTests.Mapping;
 using ABSoftware.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -13,6 +14,20 @@ namespace ABSoftware.ABSave.UnitTests
     [TestClass]
     public class ABSaveTests : TestBase
     {
+        [TestMethod]
+        public void Temporary()
+        {
+            var map = new IntermediateObjInfoMapperTests();
+
+            map.Properties_Unordered();
+
+            var map2 = new MapGeneratorTests();
+
+            map2.Generate_Runtime();
+            map2.Get();
+            map2.GetOrStartGenerating_Existing();
+        }
+
         [TestMethod]
         public void Serialize_ByteArray()
         {

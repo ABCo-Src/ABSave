@@ -36,7 +36,7 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public void SerializeTicks(long ticks, ABSaveSerializer serializer) => serializer.WriteInt64(ticks);
+        public static void SerializeTicks(long ticks, ABSaveSerializer serializer) => serializer.WriteInt64(ticks);
 
         public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
         {
@@ -50,9 +50,9 @@ namespace ABSoftware.ABSave.Converters
             };
         }
 
-        public long DeserializeTicks(ABSaveDeserializer deserializer) => deserializer.ReadInt64();
+        public static long DeserializeTicks(ABSaveDeserializer deserializer) => deserializer.ReadInt64();
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(DateTime))
             {

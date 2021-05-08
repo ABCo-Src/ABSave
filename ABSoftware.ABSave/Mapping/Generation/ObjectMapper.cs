@@ -24,7 +24,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 => (TargetVersion, Intermediate, Gen) = (targetVersion, info, gen);
         }
 
-        internal static ObjectMemberInfo[] GetVersionOrAddNull(int version, ref ObjectMapItem parentObj)
+        internal static ObjectMemberInfo[]? GetVersionOrAddNull(int version, ref ObjectMapItem parentObj)
         {
             while (true)
             {
@@ -33,7 +33,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     // Does not exist - Has not and is not generating.
                     // Exists but is null - Is currently generating.
                     // Exists and is not null - Is ready to use.
-                    if (parentObj.Versions.TryGetValue(version, out ObjectMemberInfo[] info))
+                    if (parentObj.Versions.TryGetValue(version, out ObjectMemberInfo[]? info))
                     {
                         if (info != null) return info;
                     }
@@ -55,7 +55,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             if (version > latestVer)
                 throw new UnsupportedVersionException(parent.ItemType, version);
 
-            var ctx = new Context(version, parentObj.IntermediateInfo, gen);
+            var ctx = new Context(version, parentObj.IntermediateInfo!, gen);
             var newVer = GenerateNewVersion(ref ctx, ref parent);
            
             lock (parentObj.Versions)
@@ -63,7 +63,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 parentObj.Versions[version] = newVer;
                 if (parentObj.Versions.Count > parent.Extra.ObjectHighestVersion)
                 {
-                    IntermediateObjInfoMapper.Release(parentObj.IntermediateInfo);
+                    IntermediateObjInfoMapper.Release(parentObj.IntermediateInfo!);
                     parentObj.IntermediateInfo = null;
                 }
             }
@@ -88,7 +88,9 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 if (info.RawMembers.Length == 0)
                 {
                     parentObj.IntermediateInfo = null;
-                    parentObj.Versions = new Dictionary<int, ObjectMemberInfo[]>() { { 0, Array.Empty<ObjectMemberInfo>() } };
+                    IntermediateObjInfoMapper.Release(info);
+
+                    parentObj.Versions = new Dictionary<int, ObjectMemberInfo[]?>() { { 0, Array.Empty<ObjectMemberInfo>() } };
                     parent.Extra.ObjectHighestVersion = 0;
                     return;
                 }
@@ -108,7 +110,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 else
                 {
                     parentObj.IntermediateInfo = info;
-                    parentObj.Versions = new Dictionary<int, ObjectMemberInfo[]>();
+                    parentObj.Versions = new Dictionary<int, ObjectMemberInfo[]?>();
                 }
             }
             finally { parent.IsGenerating = false; }
@@ -145,7 +147,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 CreateItem(ctx.Gen, ref parent, ref dest[iterator.Index], ref iterator.GetCurrent());
             while (iterator.MoveNext());
 
-            parentObj.Versions = new Dictionary<int, ObjectMemberInfo[]>(1) { { ctx.TargetVersion, dest } };
+            parentObj.Versions = new Dictionary<int, ObjectMemberInfo[]?>(1) { { ctx.TargetVersion, dest } };
         }
 
         static void CreateItem(MapGenerator gen, ref MapItem parent, ref ObjectMemberInfo dest, ref ObjectTranslatedItemInfo translated)
@@ -228,8 +230,8 @@ namespace ABSoftware.ABSave.Mapping.Generation
 
             bool ApplyPrimitiveAccessorFor<T>() where T : struct
             {
-                var getter = property.GetGetMethod().CreateDelegate(GenericPropertyGetterDelegate.MakeGenericType(parentType, type));
-                var setter = property.GetSetMethod().CreateDelegate(GenericPropertySetterDelegate.MakeGenericType(parentType, type));
+                var getter = property.GetGetMethod()!.CreateDelegate(GenericPropertyGetterDelegate.MakeGenericType(parentType, type));
+                var setter = property.GetSetMethod()!.CreateDelegate(GenericPropertySetterDelegate.MakeGenericType(parentType, type));
 
                 accessor.Initialize(getter, setter, accessor.PrimitiveGetter<T>, accessor.PrimitiveSetter<T>);
                 return true;
@@ -238,10 +240,10 @@ namespace ABSoftware.ABSave.Mapping.Generation
 
         private static MemberAccessor GetAllRefTypePropertyAccessor(MemberAccessor accessor, Type parent, MapItem item, PropertyInfo property)
         {
-            var propGetter = property.GetGetMethod().CreateDelegate(
+            var propGetter = property.GetGetMethod()!.CreateDelegate(
                 GenericPropertyGetterDelegate.MakeGenericType(parent, item.ItemType));
 
-            var propSetter = property.GetSetMethod().CreateDelegate(
+            var propSetter = property.GetSetMethod()!.CreateDelegate(
                 GenericPropertySetterDelegate.MakeGenericType(parent, item.ItemType));
 
             accessor.Initialize(propGetter, propSetter, accessor.AllRefGetter, accessor.AllRefSetter);
@@ -258,38 +260,38 @@ namespace ABSoftware.ABSave.Mapping.Generation
     /// </summary>
     internal class MemberAccessor
     {
-        public Func<object, object> Getter;
-        public Action<object, object> Setter;
+        public Func<object, object?> Getter = null!;
+        public Action<object, object?> Setter = null!;
 
-        // These objects are used by the getter and setter as they want.
-        public object Object1;
-        public object Object2;
+        // These objects are used by the getter and setter as they want. Object2 may be left unused.
+        public object Object1 = null!;
+        public object? Object2 = null;
 
-        public void Initialize(object obj1, object obj2, Func<object, object> getter, Action<object, object> setter) =>
+        public void Initialize(object obj1, object? obj2, Func<object, object?> getter, Action<object, object?> setter) =>
             (Object1, Object2, Getter, Setter) = (obj1, obj2, getter, setter);
 
-        internal object FieldGetter(object parent) =>
+        internal object? FieldGetter(object parent) =>
             ABSaveUtils.UnsafeFastCast<FieldInfo>(Object1).GetValue(parent);
 
-        internal void FieldSetter(object parent, object value) =>
+        internal void FieldSetter(object parent, object? value) =>
             ABSaveUtils.UnsafeFastCast<FieldInfo>(Object1).SetValue(parent, value);
 
-        internal object SlowGetter(object parent) =>
+        internal object? SlowGetter(object parent) =>
             ABSaveUtils.UnsafeFastCast<PropertyInfo>(Object1).GetValue(parent);
 
-        internal void SlowSetter(object parent, object value) =>
+        internal void SlowSetter(object parent, object? value) =>
             ABSaveUtils.UnsafeFastCast<PropertyInfo>(Object1).SetValue(parent, value);
 
-        internal object PrimitiveGetter<T>(object parent) =>
+        internal object? PrimitiveGetter<T>(object parent) =>
             Unsafe.As<Func<object, T>>(Object1)(parent);
 
-        internal void PrimitiveSetter<T>(object parent, object value) where T : struct
-            => Unsafe.As<Action<object, T>>(Object2)(parent, Unsafe.Unbox<T>(value));
+        internal void PrimitiveSetter<T>(object parent, object? value) where T : struct =>
+            Unsafe.As<Action<object, T>>(Object2!)(parent, (T)value!);
 
-        internal object AllRefGetter(object parent) =>
-            Unsafe.As<Func<object, object>>(Object1)(parent);
+        internal object? AllRefGetter(object parent) =>
+            Unsafe.As<Func<object, object?>>(Object1)(parent);
 
-        internal void AllRefSetter(object parent, object value) =>
-            Unsafe.As<Action<object, object>>(Object2)(parent, value);
+        internal void AllRefSetter(object parent, object? value) =>
+            Unsafe.As<Action<object, object?>>(Object2!)(parent, value);
     }
 }

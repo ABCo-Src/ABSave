@@ -10,7 +10,7 @@ namespace ABSoftware.ABSave.Mapping
 {
     public unsafe class MapGenerator
     {
-        internal ABSaveMap Map;
+        internal ABSaveMap Map = null!;
         internal MapItemInfo CurrentItem;
 
         public MapItemInfo GetMap(Type type)
@@ -40,6 +40,7 @@ namespace ABSoftware.ABSave.Mapping
             item.Extra.RuntimeInnerItem = GetMap(type);
             item.IsGenerating = false;
 
+            pos.IsNullable = item.Extra.RuntimeInnerItem.IsNullable;
             return pos;
         }
 
@@ -150,8 +151,8 @@ namespace ABSoftware.ABSave.Mapping
         {
             if (!Map.Settings.BypassDangerousTypeChecking)
             {
-                if (type == typeof(object)) throw new ABSaveDangerousTypeException("an 'object' member");
-                if (type == typeof(ValueType)) throw new ABSaveDangerousTypeException("a 'ValueType' member");
+                if (type == typeof(object)) throw new DangerousTypeException("an 'object' member");
+                if (type == typeof(ValueType)) throw new DangerousTypeException("a 'ValueType' member");
             }
         }
 

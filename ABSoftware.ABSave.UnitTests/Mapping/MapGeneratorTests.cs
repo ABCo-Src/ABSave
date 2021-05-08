@@ -15,6 +15,20 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
     public class MapGeneratorTests : MapTestBase
     {
         [TestMethod]
+        public void Get()
+        {
+            Setup();
+
+            // Generate it once.
+            var pos = Generator.GetMap(typeof(SimpleClass));
+
+            ref MapItem item = ref Map.GetItemAt(pos);
+
+            // See if it picks up on the existing item.
+            Assert.AreEqual(MapItemType.Object, item.MapType);
+        }
+
+        [TestMethod]
         public void Get_Existing()
         {
             Setup();
@@ -154,10 +168,10 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void Generate_SafetyChecks()
         {
-            Setup();
+            Setup(); 
 
-            Assert.ThrowsException<ABSaveDangerousTypeException>(() => Generator.GetMap(typeof(object)));
-            Assert.ThrowsException<ABSaveDangerousTypeException>(() => Generator.GetMap(typeof(ValueType)));
+            Assert.ThrowsException<DangerousTypeException>(() => Generator.GetMap(typeof(object)));
+            Assert.ThrowsException<DangerousTypeException>(() => Generator.GetMap(typeof(ValueType)));
         }
     }
 }

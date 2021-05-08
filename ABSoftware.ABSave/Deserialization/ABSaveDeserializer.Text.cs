@@ -33,7 +33,7 @@ namespace ABSoftware.ABSave.Deserialization
             else
             {
                 int size = (int)header.Deserializer.ReadCompressedInt(ref header);
-                return string.Create<object>(size, null, (chars, state) =>
+                return string.Create<object?>(size, null, (chars, state) =>
                 {
                     FastReadShorts(MemoryMarshal.Cast<char, short>(chars));
                 });

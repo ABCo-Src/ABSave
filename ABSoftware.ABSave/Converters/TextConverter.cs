@@ -40,10 +40,10 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public unsafe void SerializeCharArray(char[] obj, ref BitTarget header) =>
+        public static unsafe void SerializeCharArray(char[] obj, ref BitTarget header) =>
             header.Serializer.WriteText(obj.AsSpan(), ref header);
 
-        public void SerializeStringBuilder(StringBuilder obj, ref BitTarget header)
+        public static void SerializeStringBuilder(StringBuilder obj, ref BitTarget header)
         {
             // TODO: Use "GetChunks" with .NET 5!
             char[] tmp = obj.Length < ABSaveUtils.MAX_STACK_SIZE ? new char[obj.Length] : ArrayPool<char>.Shared.Rent(obj.Length);
@@ -70,7 +70,7 @@ namespace ABSoftware.ABSave.Converters
             };
         }
 
-        public unsafe char[] DeserializeCharArray(ref BitSource header)
+        public static unsafe char[] DeserializeCharArray(ref BitSource header)
         {
             if (header.Deserializer.Settings.UseUTF8)
                 return header.Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header);
@@ -85,12 +85,12 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public StringBuilder DeserializeStringBuilder(ref BitSource header) => new StringBuilder(header.Deserializer.ReadString(ref header));
+        public static StringBuilder DeserializeStringBuilder(ref BitSource header) => new StringBuilder(header.Deserializer.ReadString(ref header));
 
         #endregion
 
         #region Context
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(string))
             {

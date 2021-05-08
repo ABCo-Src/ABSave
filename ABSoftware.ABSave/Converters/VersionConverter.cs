@@ -8,7 +8,7 @@ namespace ABSoftware.ABSave.Converters
 {
     public class VersionConverter : Converter
     {
-        public static VersionConverter Instance = new VersionConverter();
+        public static VersionConverter Instance { get; } = new VersionConverter();
         private VersionConverter() { }
 
         public override bool ConvertsSubTypes => true;
@@ -18,7 +18,7 @@ namespace ABSoftware.ABSave.Converters
 
         public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
 
-        public void SerializeVersion(Version version, ref BitTarget header)
+        public static void SerializeVersion(Version version, ref BitTarget header)
         {
             var hasMajor = version.Major != 1; 
             var hasMinor = version.Minor > 0;
@@ -41,7 +41,7 @@ namespace ABSoftware.ABSave.Converters
 
         public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header) => DeserializeVersion(ref header);
 
-        public Version DeserializeVersion(ref BitSource header)
+        public static Version DeserializeVersion(ref BitSource header)
         {
             var hasMajor = header.ReadBit();
             var hasMinor = header.ReadBit();
@@ -56,7 +56,7 @@ namespace ABSoftware.ABSave.Converters
             return new Version(major, minor, build, revision);
         }
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Version)) gen.MarkCanConvert();
 

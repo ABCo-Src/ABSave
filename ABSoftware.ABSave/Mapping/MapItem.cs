@@ -45,17 +45,17 @@ namespace ABSoftware.ABSave.Mapping
 
     public enum MapItemType : byte
     {
-        Object,
         Converter,
+        Object,
         Runtime
     }
 
     internal struct ObjectMapItem
     {
-        public Dictionary<int, ObjectMemberInfo[]> Versions; 
+        public Dictionary<int, ObjectMemberInfo[]?> Versions; 
 
         // Null once all versions have been generated.
-        public IntermediateObjInfo IntermediateInfo;
+        public IntermediateObjInfo? IntermediateInfo;
     }
 
     internal struct ConverterMapItem

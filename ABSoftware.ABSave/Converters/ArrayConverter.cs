@@ -93,7 +93,7 @@ namespace ABSoftware.ABSave.Converters
         private void SerializeUnknown(Array arr, Type actualType, ref BitTarget typeHeader)
         {
             var context = new ArrayTypeInfo();
-            PopulateTypeInfo(ref context, typeHeader.Serializer.GetRuntimeMapItem(actualType.GetElementType()), typeHeader.Serializer.Map, actualType);
+            PopulateTypeInfo(ref context, typeHeader.Serializer.GetRuntimeMapItem(actualType.GetElementType()!), typeHeader.Serializer.Map, actualType);
 
             ABSaveSerializer.WriteClosedType(context.ElementType, ref typeHeader);
 
@@ -196,7 +196,7 @@ namespace ABSoftware.ABSave.Converters
             currentPos[dimension] = originalPos;
         }
 
-        MDSerializeArrayInfo GetMultiDimensionInfo(Array arr, ref ArrayTypeInfo context, ABSaveSerializer serializer, out int[] lowerBounds)
+        static MDSerializeArrayInfo GetMultiDimensionInfo(Array arr, ref ArrayTypeInfo context, ABSaveSerializer serializer, out int[] lowerBounds)
         {
             lowerBounds = new int[context.Rank];
 
@@ -366,11 +366,11 @@ namespace ABSoftware.ABSave.Converters
 
         #region Context Creation
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Array))
             {
-                if (!gen.Settings.BypassDangerousTypeChecking) throw new ABSaveDangerousTypeException("a general 'Array' type that could contain any type of element");
+                if (!gen.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'Array' type that could contain any type of element");
 
                 gen.MarkCanConvert();
                 return Context.Unknown;
@@ -382,11 +382,11 @@ namespace ABSoftware.ABSave.Converters
             var res = new Context();
 
             var elemType = gen.Type.GetElementType();
-            PopulateTypeInfo(ref res.Info, gen.GetMap(elemType), gen.Map, gen.Type);
+            PopulateTypeInfo(ref res.Info, gen.GetMap(elemType!), gen.Map, gen.Type);
             return res;
         }
 
-        void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, ABSaveMap map, Type type)
+        static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, ABSaveMap map, Type type)
         {
             var rank = type.GetArrayRank();
             info.ElementType = map.GetTypeOf(itemInfo);
@@ -410,7 +410,7 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        FastConversionType GetFastType(Type elementType) => Type.GetTypeCode(elementType) switch
+        static FastConversionType GetFastType(Type elementType) => Type.GetTypeCode(elementType) switch
         {
             TypeCode.Byte => FastConversionType.Byte,
             TypeCode.SByte => FastConversionType.SByte,
@@ -424,9 +424,11 @@ namespace ABSoftware.ABSave.Converters
 
         #region Primitive Optimization
 
-        unsafe void SerializeFast(Array arr, FastConversionType type, ref BitTarget header)
+        static unsafe void SerializeFast(Array arr, FastConversionType type, ref BitTarget header)
         {
-            if (type == FastConversionType.Char) TextConverter.Instance.SerializeCharArray((char[])arr, ref header);
+            // TODO: Remove tight coupling with TextConverter.
+            if (type == FastConversionType.Char) TextConverter.SerializeCharArray((char[])arr, ref header);
+
             header.Serializer.WriteCompressed((uint)arr.Length, ref header);
 
             switch (type)
@@ -451,9 +453,10 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        unsafe Array DeserializeFast(FastConversionType type, ref BitSource header)
+        unsafe static Array DeserializeFast(FastConversionType type, ref BitSource header)
         {
-            if (type == FastConversionType.Char) return TextConverter.Instance.DeserializeCharArray(ref header);
+            // TODO: Remove tight coupling with TextConverter.
+            if (type == FastConversionType.Char) return TextConverter.DeserializeCharArray(ref header);
 
             int length = (int)header.Deserializer.ReadCompressedInt(ref header);
             switch (type)

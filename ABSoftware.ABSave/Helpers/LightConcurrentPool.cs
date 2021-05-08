@@ -8,12 +8,12 @@ namespace ABSoftware.ABSave.Helpers
 {
     internal class LightConcurrentPool<T> where T : class
     {
-        int _itemCount;
+        int _itemCount = 0;
         readonly T[] _items;
 
         public LightConcurrentPool(int maxCapacity) => _items = new T[maxCapacity];
 
-        public T TryRent()
+        public T? TryRent()
         {
             lock (_items)
             {
@@ -26,8 +26,11 @@ namespace ABSoftware.ABSave.Helpers
         {
             lock (_items)
             {
-                if (_itemCount == _items.Length) return;
-                _items[_itemCount++] = item;
+                int newCount = _itemCount + 1;
+                if (newCount == _items.Length) return;
+
+                _items[_itemCount] = item;
+                _itemCount = newCount;
             }
         }
     }

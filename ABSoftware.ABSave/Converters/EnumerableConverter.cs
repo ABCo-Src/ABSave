@@ -33,11 +33,11 @@ namespace ABSoftware.ABSave.Converters
 
             if (actualContext.Info is CollectionInfo collectionInfo)
                 SerializeCollection(obj, collectionInfo, actualContext, ref header);
-            else if (actualContext.Info is ABSaveDictionaryInfo dictionaryInfo)
+            else if (actualContext.Info is DictionaryInfo dictionaryInfo)
                 SerializeDictionary(obj, dictionaryInfo, actualContext, ref header);
         }
 
-        void SerializeCollection(object obj, CollectionInfo info, Context context, ref BitTarget header)
+        static void SerializeCollection(object obj, CollectionInfo info, Context context, ref BitTarget header)
         {
             var size = info.GetCount(obj);
             header.Serializer.WriteCompressed((uint)size, ref header);
@@ -46,7 +46,7 @@ namespace ABSoftware.ABSave.Converters
             while (enumerator.MoveNext()) header.Serializer.SerializeItem(enumerator.Current, context.ElementOrKeyMap);
         }
 
-        void SerializeDictionary(object obj, ABSaveDictionaryInfo info, Context context, ref BitTarget header)
+        static void SerializeDictionary(object obj, DictionaryInfo info, Context context, ref BitTarget header)
         {
             var size = info.GetCount(obj);
             header.Serializer.WriteCompressed((uint)size, ref header);
@@ -69,12 +69,12 @@ namespace ABSoftware.ABSave.Converters
 
             if (actualContext.Info is CollectionInfo collectionInfo)
                 return DeserializeCollection(collectionInfo, actualType, actualContext, ref header);
-            else if (actualContext.Info is ABSaveDictionaryInfo dictionaryInfo)
+            else if (actualContext.Info is DictionaryInfo dictionaryInfo)
                 return DeserializeDictionary(dictionaryInfo, actualType, actualContext, ref header);
             else throw new Exception("Unrecognized enumerable info.");
         }
 
-        object DeserializeCollection(CollectionInfo info, Type type, Context context, ref BitSource header)
+        static object DeserializeCollection(CollectionInfo info, Type type, Context context, ref BitSource header)
         {
             int size = (int)header.Deserializer.ReadCompressedInt(ref header);
             var collection = info.CreateCollection(type, size);
@@ -85,7 +85,7 @@ namespace ABSoftware.ABSave.Converters
             return collection;
         }
 
-        object DeserializeDictionary(ABSaveDictionaryInfo info, Type type, Context context, ref BitSource header)
+        static object DeserializeDictionary(DictionaryInfo info, Type type, Context context, ref BitSource header)
         {
             int size = (int)header.Deserializer.ReadCompressedInt(ref header);
             var collection = info.CreateCollection(type, size);
@@ -93,8 +93,9 @@ namespace ABSoftware.ABSave.Converters
             for (int i = 0; i < size; i++)
             {
                 var key = header.Deserializer.DeserializeItem(context.ElementOrKeyMap);
-                var value = header.Deserializer.DeserializeItem(context.ValueMap);
+                if (key == null) throw new NullDictionaryKeyException();
 
+                var value = header.Deserializer.DeserializeItem(context.ValueMap);
                 info.AddItem(collection, key, value);
             }
 
@@ -105,7 +106,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Context
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             if (!typeof(IEnumerable).IsAssignableFrom(gen.Type)) return null;
             gen.MarkCanConvert();
@@ -141,34 +142,34 @@ namespace ABSoftware.ABSave.Converters
             }
 
             // Work out what category this type falls under.
-            CollectionCategory category = DetectCollectionType(gen.Type.GetInterfaces(), out Type elementOrKeyType, out Type valueType);
+            CollectionCategory category = DetectCollectionType(gen.Type.GetInterfaces(), out Type elementOrKeyType, out Type? valueType);
             return GetContextForCategory(category, elementOrKeyType, valueType, ref gen);
 
             // Get the correct info for the given type.
-            Context GetContextForCategory(CollectionCategory category, Type elementOrKeyType, Type valueType, ref ContextGen gen)
+            static Context GetContextForCategory(CollectionCategory category, Type elementOrKeyType, Type? valueType, ref ContextGen gen)
             {
                 return category switch
                 {
                     CollectionCategory.GenericICollection => new Context(CollectionInfo.GenericICollection, elementOrKeyType, gen.GetMap(elementOrKeyType), typeof(object), default),
                     CollectionCategory.NonGenericIList => new Context(CollectionInfo.NonGenericIList, elementOrKeyType, gen.GetMap(elementOrKeyType), typeof(object), default),
-                    CollectionCategory.GenericIDictionary => new Context(ABSaveDictionaryInfo.GenericIDictionary, elementOrKeyType, gen.GetMap(elementOrKeyType), valueType, gen.GetMap(valueType)),
-                    CollectionCategory.NonGenericIDictionary => new Context(ABSaveDictionaryInfo.NonGenericIDictionary, elementOrKeyType, gen.GetMap(elementOrKeyType), valueType, gen.GetMap(valueType)),
-                    _ => throw new ABSaveUnrecognizedCollectionException(),
+                    CollectionCategory.GenericIDictionary => new Context(DictionaryInfo.GenericIDictionary, elementOrKeyType, gen.GetMap(elementOrKeyType), valueType, gen.GetMap(valueType!)),
+                    CollectionCategory.NonGenericIDictionary => new Context(DictionaryInfo.NonGenericIDictionary, elementOrKeyType, gen.GetMap(elementOrKeyType), valueType, gen.GetMap(valueType!)),
+                    _ => throw new UnrecognizedCollectionException(),
                 };
             }
         }
 
-        static CollectionCategory DetectCollectionType(Type[] interfaces, out Type elementOrKeyType, out Type valueType)
+        static CollectionCategory DetectCollectionType(Type[] interfaces, out Type elementOrKeyType, out Type? valueType)
         {
             var category = CollectionCategory.None;
             bool needsToFindICollection = true;
-            Type genericICollectionType = null;
-            elementOrKeyType = null;
+            Type? genericICollectionType = null;
+            elementOrKeyType = null!;
             valueType = null;
 
             for (int i = 0; i < interfaces.Length; i++)
             {
-                Type gtd = null;
+                Type? gtd = null;
 
                 // If we haven't found the "ICollection<>" this collection has yet, try to get it. This will help us extract the type if there isn't anything more specific.
                 if (needsToFindICollection && interfaces[i].IsGenericType)
@@ -278,15 +279,17 @@ namespace ABSoftware.ABSave.Converters
         internal class Context : IConverterContext // Internal for testing
         {
             public IEnumerableInfo Info;
-            public Type ElementTypeOrKeyType;
+            public Type ElementOrKeyType;
             public MapItemInfo ElementOrKeyMap;
-            public Type ValueType;
+
+            // Optional:
+            public Type? ValueType;
             public MapItemInfo ValueMap;
 
-            public Context(IEnumerableInfo info, Type elementTypeOrKeyType, MapItemInfo elementOrKeyMap, Type valueType, MapItemInfo valueMap)
+            public Context(IEnumerableInfo info, Type elementOrKeyType, MapItemInfo elementOrKeyMap, Type? valueType, MapItemInfo valueMap)
             {
                 Info = info;
-                ElementTypeOrKeyType = elementTypeOrKeyType;
+                ElementOrKeyType = elementOrKeyType;
                 ElementOrKeyMap = elementOrKeyMap;
                 ValueType = valueType;
                 ValueMap = valueMap;

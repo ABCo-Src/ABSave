@@ -25,18 +25,26 @@ namespace ABSoftware.ABSave.Mapping.Generation
         internal static IntermediateObjInfo CreateInfo(Type type, MapGenerator gen)
         {
             var dest = Rent();
-            dest.ClassType = type;
+            try
+            {
+                dest.ClassType = type;
 
-            var ctx = new TranslationContext(dest);
+                var ctx = new TranslationContext(dest);
 
-            // Coming soon: Settings-based mapping
-            Reflection.FillInfo(ref ctx, gen);
+                // Coming soon: Settings-based mapping
+                Reflection.FillInfo(ref ctx, gen);
 
-            dest.RawMembers = ctx.CurrentMembers.ReleaseAndGetArray();
+                dest.RawMembers = ctx.CurrentMembers.ReleaseAndGetArray();
 
-            // Apply ordering on all the items, if necessary.
-            if (ctx.TranslationCurrentOrderInfo == -1)
-                OrderMembers(ref ctx);
+                // Apply ordering on all the items, if necessary.
+                if (ctx.TranslationCurrentOrderInfo == -1)
+                    OrderMembers(ref ctx);
+            }
+            catch
+            {
+                Release(dest);
+                throw;
+            }
 
             return dest;
         }
@@ -49,28 +57,32 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 var classType = ctx.Destination.ClassType;
                 var mode = GetClassMode(classType);
 
-                // Get the members
                 var hasFields = (mode & SaveMembersMode.Fields) > 0;
-                FieldInfo[] fields = hasFields ? classType.GetFields(bindingFlags) : null;
-
                 var hasProperties = (mode & SaveMembersMode.Properties) > 0;
-                PropertyInfo[] properties = hasProperties ? classType.GetProperties(bindingFlags) : null;
 
                 // Create our buffer
                 ctx.CurrentMembers.Initialize();
 
                 // Fields
                 if (hasFields)
+                {
+                    var fields = classType.GetFields(bindingFlags);
                     for (int i = 0; i < fields.Length; i++)
                         AddItem(ref ctx, gen, fields[i], fields[i].FieldType);
+                }
+                    
 
                 // Properties
                 if (hasProperties)
+                {
+                    var properties = classType.GetProperties(bindingFlags);
                     for (int i = 0; i < properties.Length; i++)
                     {
                         if (!properties[i].CanRead || !properties[i].CanWrite) continue;
                         AddItem(ref ctx, gen, properties[i], properties[i].PropertyType);
                     }
+                }
+                    
             }
 
             static void AddItem(ref TranslationContext ctx, MapGenerator gen, MemberInfo info, Type infoType)
@@ -93,7 +105,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 if (classType == typeof(object)) return SaveMembersMode.Fields;
 
                 var attribute = classType.GetCustomAttribute<SaveMembersAttribute>(false);
-                if (attribute == null) throw new ABSaveUnserializableType(classType);
+                if (attribute == null) throw new UnserializableType(classType);
 
                 return attribute.Mode;
             }
@@ -113,7 +125,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     }
                 }
 
-                if (!loadedSaveAttribute) throw new ABSaveIncompleteDetailsException(info);
+                if (!loadedSaveAttribute) throw new IncompleteDetailsException(info);
             }
         }
 
@@ -188,17 +200,14 @@ namespace ABSoftware.ABSave.Mapping.Generation
 
             pooled.UnmappedCount = 0;
             pooled.HighestVersion = 0;
-            pooled.ClassType = null;
-            pooled.RawMembers = null;
-            pooled.SortedMembers = null;
             return pooled;
         }
 
         public static void Release(IntermediateObjInfo dest)
         {
             // Null these out so they can be collected and aren't being held alive.
-            dest.ClassType = null;
-            dest.RawMembers = null;
+            dest.ClassType = null!;
+            dest.RawMembers = null!;
             dest.SortedMembers = null;
             InfoPool.Release(dest);
         }

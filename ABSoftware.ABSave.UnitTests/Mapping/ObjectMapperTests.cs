@@ -127,69 +127,69 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             VerifyRuns<ClassWithUnspportedForFastAccessorValueType, SimpleStruct>(accessor);
         }
 
-        [TestMethod]
-        public void MapObject_Empty()
-        {
-            Setup();
+        //[TestMethod]
+        //public void MapObject_Empty()
+        //{
+        //    Setup();
 
-            var properties = new IntermediateObjInfo()
-            {
-                UnmappedCount = 0,
-                ClassType = typeof(EmptyClass),
-                HighestVersion = 0,
-                SortedMembers = null,
-                RawMembers = Array.Empty<ObjectTranslatedItemInfo>()
-            };
+        //    var properties = new IntermediateObjInfo()
+        //    {
+        //        UnmappedCount = 0,
+        //        ClassType = typeof(EmptyClass),
+        //        HighestVersion = 0,
+        //        SortedMembers = null,
+        //        RawMembers = Array.Empty<ObjectTranslatedItemInfo>()
+        //    };
 
-            // Prepare the class for mapping.
-            var pos = Generator.CreateItem(typeof(EmptyClass), Map.GenInfo.AllTypes);
+        //    // Prepare the class for mapping.
+        //    var pos = Generator.CreateItem(typeof(EmptyClass), Map.GenInfo.AllTypes);
 
-            // Run the test
-            ObjectMapper.GenerateNewObject(properties, Generator, pos);
+        //    // Run the test
+        //    ObjectMapper.GenerateNewObject(properties, Generator, pos);
 
-            // Assert the results
-            ref MapItem item = ref Generator.Map.GetItemAt(pos);
-            ref ObjectMapItem objItem = ref item.Main.Object;
+        //    // Assert the results
+        //    ref MapItem item = ref Generator.Map.GetItemAt(pos);
+        //    ref ObjectMapItem objItem = ref item.Main.Object;
 
-            Assert.AreEqual(1, objItem.Versions.Count);
-            Assert.AreEqual(0, objItem.Versions[0].Length);
-        }
+        //    Assert.AreEqual(1, objItem.Versions.Count);
+        //    Assert.AreEqual(0, objItem.Versions[0].Length);
+        //}
 
-            [TestMethod]
-        public void MapObject_OneVersion()
-        {
-            Setup();
+        //[TestMethod]
+        //public void MapObject_OneVersion()
+        //{
+        //    Setup();
 
-            var properties = new IntermediateObjInfo()
-            {
-                UnmappedCount = 2,
-                ClassType = typeof(PropertyClass),
-                HighestVersion = 0,
-                SortedMembers = null,
-                RawMembers = new ObjectTranslatedItemInfo[]
-                {
-                    new ObjectTranslatedItemInfo() { Order = 0, MemberType = typeof(string), Info = typeof(PropertyClass).GetProperty(nameof(PropertyClass.A)) },
-                    new ObjectTranslatedItemInfo() { Order = 1, MemberType = typeof(bool), Info = typeof(PropertyClass).GetProperty(nameof(PropertyClass.B)) },
-                }
-            };
+        //    var properties = new IntermediateObjInfo()
+        //    {
+        //        UnmappedCount = 2,
+        //        ClassType = typeof(PropertyClass),
+        //        HighestVersion = 0,
+        //        SortedMembers = null,
+        //        RawMembers = new ObjectTranslatedItemInfo[]
+        //        {
+        //            new ObjectTranslatedItemInfo() { Order = 0, MemberType = typeof(string), Info = typeof(PropertyClass).GetProperty(nameof(PropertyClass.A)) },
+        //            new ObjectTranslatedItemInfo() { Order = 1, MemberType = typeof(bool), Info = typeof(PropertyClass).GetProperty(nameof(PropertyClass.B)) },
+        //        }
+        //    };
 
-            // Prepare the class for mapping.
-            var pos = Generator.CreateItem(typeof(PropertyClass), Map.GenInfo.AllTypes);
+        //    // Prepare the class for mapping.
+        //    var pos = Generator.CreateItem(typeof(PropertyClass), Map.GenInfo.AllTypes);
 
-            // Run the test
-            ObjectMapper.GenerateNewObject(properties, Generator, pos);
+        //    // Run the test
+        //    ObjectMapper.GenerateNewObject(properties, Generator, pos);
 
-            // Assert the results
-            ref MapItem item = ref Generator.Map.GetItemAt(pos);
-            ref ObjectMapItem objItem = ref item.Main.Object;
+        //    // Assert the results
+        //    ref MapItem item = ref Generator.Map.GetItemAt(pos);
+        //    ref ObjectMapItem objItem = ref item.Main.Object;
 
-            Assert.AreEqual(1, objItem.Versions.Count);
+        //    Assert.AreEqual(1, objItem.Versions.Count);
 
-            var thisVersion = objItem.Versions[0];
+        //    var thisVersion = objItem.Versions[0];
 
-            Assert.AreEqual(Generator.GetMap(typeof(string)), thisVersion[0].Map);
-            Assert.AreEqual(Generator.GetMap(typeof(bool)), thisVersion[1].Map);
-        }
+        //    Assert.AreEqual(Generator.GetMap(typeof(string)), thisVersion[0].Map);
+        //    Assert.AreEqual(Generator.GetMap(typeof(bool)), thisVersion[1].Map);
+        //}
 
         [TestMethod]
         public void GetVersion_NewAndExisting()

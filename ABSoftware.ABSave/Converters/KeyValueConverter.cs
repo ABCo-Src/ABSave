@@ -33,13 +33,13 @@ namespace ABSoftware.ABSave.Converters
                 SerializeNonGeneric((DictionaryEntry)obj, actualContext, header.Serializer);
         }
 
-        void SerializeGeneric(dynamic obj, Context context, ABSaveSerializer serializer)
+        static void SerializeGeneric(dynamic obj, Context context, ABSaveSerializer serializer)
         {
             serializer.SerializeItem(obj.Key, context.KeyMap);
             serializer.SerializeItem(obj.Value, context.ValueMap);
         }
 
-        void SerializeNonGeneric(DictionaryEntry obj, Context context, ABSaveSerializer serializer)
+        static void SerializeNonGeneric(DictionaryEntry obj, Context context, ABSaveSerializer serializer)
         {
             serializer.SerializeItem(obj.Key, context.KeyMap);
             serializer.SerializeItem(obj.Value, context.ValueMap);
@@ -55,23 +55,24 @@ namespace ABSoftware.ABSave.Converters
                 return DeserializeNonGeneric(header.Deserializer, actualContext);
         }
 
-        object DeserializeGeneric(Type actualType, Context context, ABSaveDeserializer deserializer)
+        static object DeserializeGeneric(Type actualType, Context context, ABSaveDeserializer deserializer)
         {
             var key = deserializer.DeserializeItem(context.KeyMap);
             var value = deserializer.DeserializeItem(context.ValueMap);
 
-            return Activator.CreateInstance(actualType, key, value);
+            return Activator.CreateInstance(actualType, key, value)!;
         }
 
-        DictionaryEntry DeserializeNonGeneric(ABSaveDeserializer deserializer, Context context)
+        static DictionaryEntry DeserializeNonGeneric(ABSaveDeserializer deserializer, Context context)
         {
             var key = deserializer.DeserializeItem(context.KeyMap);
             var value = deserializer.DeserializeItem(context.ValueMap);
 
+            if (key == null) throw new NullDictionaryKeyException();
             return new DictionaryEntry(key, value);
         }
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             var context = new Context();
 
@@ -89,7 +90,7 @@ namespace ABSoftware.ABSave.Converters
             {
                 gen.MarkCanConvert();
 
-                if (!gen.Settings.BypassDangerousTypeChecking) throw new ABSaveDangerousTypeException("a general 'DictionaryEntry' type that could contain any type of element.");
+                if (!gen.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'DictionaryEntry' type that could contain any type of element.");
                 context.IsGeneric = false;
                 context.KeyMap = context.ValueMap = gen.GetMap(typeof(object));
                 return context;

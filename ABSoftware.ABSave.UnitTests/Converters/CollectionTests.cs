@@ -44,7 +44,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
 
             Assert.IsInstanceOfType(ctx.Info, typeof(ListInfo));
-            Assert.AreEqual(typeof(string), ctx.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(string), ctx.ElementOrKeyType);
         }
 
         [TestMethod]
@@ -54,7 +54,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIListInfo));
-            Assert.AreEqual(typeof(string), ctx.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(string), ctx.ElementOrKeyType);
         }
 
         [TestMethod]
@@ -64,7 +64,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
 
             Assert.IsInstanceOfType(ctx.Info, typeof(GenericICollectionInfo));
-            Assert.AreEqual(typeof(int), ctx.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(int), ctx.ElementOrKeyType);
         }
 
         [TestMethod]
@@ -74,7 +74,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIListInfo));
-            Assert.AreEqual(typeof(object), ctx.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(object), ctx.ElementOrKeyType);
         }
 
         [TestMethod]
@@ -84,7 +84,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIDictionaryInfo));
-            Assert.AreEqual(typeof(int), ctx.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(int), ctx.ElementOrKeyType);
             Assert.AreEqual(typeof(bool), ctx.ValueType);
         }
 
@@ -95,7 +95,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
 
             Assert.IsInstanceOfType(ctx.Info, typeof(GenericIDictionaryInfo));
-            Assert.AreEqual(typeof(string), ctx.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(string), ctx.ElementOrKeyType);
             Assert.AreEqual(typeof(int), ctx.ValueType);
         }
 
@@ -106,7 +106,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIDictionaryInfo));
-            Assert.AreEqual(typeof(object), ctx.ElementTypeOrKeyType);
+            Assert.AreEqual(typeof(object), ctx.ElementOrKeyType);
             Assert.AreEqual(typeof(object), ctx.ValueType);
         }
 

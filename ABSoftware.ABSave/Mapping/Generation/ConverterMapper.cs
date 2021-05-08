@@ -19,17 +19,17 @@ namespace ABSoftware.ABSave.Mapping.Generation
             ref MapItem item = ref gen.FillItemWith(MapItemType.Converter, dest);
             ref ConverterMapItem convInfo = ref item.Main.Converter;
 
-            (convInfo.Converter, convInfo.Context) = (converter, context);
+            (convInfo.Converter, convInfo.Context) = (converter!, context!);
             item.IsGenerating = false;
             return true;
         }
 
-        static bool TryGetConverter(ref ContextGen gen, out Converter converter, out IConverterContext context)
+        static bool TryGetConverter(ref ContextGen gen, out Converter? converter, out IConverterContext? context)
         {
             var settings = gen.Settings;
 
             // Exact converter
-            if (settings.ExactConverters.TryGetValue(gen.Type, out converter))
+            if (settings.ExactConverters != null && settings.ExactConverters.TryGetValue(gen.Type, out converter))
             {
                 context = converter.TryGenerateContext(ref gen);
 
@@ -38,14 +38,17 @@ namespace ABSoftware.ABSave.Mapping.Generation
             }
 
             // Non-exact converter
-            for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
+            if (settings.NonExactConverters != null)
             {
-                context = settings.NonExactConverters[i].TryGenerateContext(ref gen);
-
-                if (gen._marked)
+                for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
                 {
-                    converter = settings.NonExactConverters[i];
-                    return true;
+                    context = settings.NonExactConverters[i].TryGenerateContext(ref gen);
+
+                    if (gen._marked)
+                    {
+                        converter = settings.NonExactConverters[i];
+                        return true;
+                    }
                 }
             }
 

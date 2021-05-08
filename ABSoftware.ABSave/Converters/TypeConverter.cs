@@ -11,7 +11,7 @@ namespace ABSoftware.ABSave.Converters
 {
     public class TypeConverter : Converter
     {
-        public static TypeConverter Instance = new TypeConverter();
+        public static TypeConverter Instance { get; } = new TypeConverter();
         private TypeConverter() { }
 
         public override bool ConvertsSubTypes => true;
@@ -26,7 +26,7 @@ namespace ABSoftware.ABSave.Converters
         public void SerializeType(Type type, ref BitTarget header) => SerializeType(type, ref header, SerializeGenerics);
         public void SerializeClosedType(Type type, ref BitTarget header) => SerializeType(type, ref header, SerializeClosedGenerics);
 
-        void SerializeType(Type type, ref BitTarget header, Action<Type, ABSaveSerializer> genericHandler)
+        static void SerializeType(Type type, ref BitTarget header, Action<Type, ABSaveSerializer> genericHandler)
         {
             // Try to use a pre-saved one
             if (HandleSerializeSaved(type, ref header)) return;
@@ -40,7 +40,7 @@ namespace ABSoftware.ABSave.Converters
             else SerializeTypeMainPart(type, ref header);
         }
 
-        void SerializeTypeMainPart(Type type, ref BitTarget header)
+        static void SerializeTypeMainPart(Type type, ref BitTarget header)
         {
             header.Serializer.SerializeExactNonNullItem(type.Assembly, header.Serializer.Map.AssemblyItem, ref header);
             header.Serializer.WriteString(type.FullName);
@@ -84,7 +84,7 @@ namespace ABSoftware.ABSave.Converters
         public Type DeserializeType(ref BitSource header) => DeserializeType(ref header, DeserializeOpenGenerics);
         public Type DeserializeClosedType(ref BitSource header) => DeserializeType(ref header, DeserializeClosedGenerics);
 
-        Type DeserializeType(ref BitSource header, Func<Type, ABSaveDeserializer, Type> genericAction)
+        static Type DeserializeType(ref BitSource header, Func<Type, ABSaveDeserializer, Type> genericAction)
         {
             // Try use a saved value.
             var cachedType = HandleDeserializeSaved(ref header);
@@ -99,12 +99,12 @@ namespace ABSoftware.ABSave.Converters
             return withGenerics;
         }
 
-        public Type DeserializeTypeMainPart(ref BitSource header)
+        public static Type DeserializeTypeMainPart(ref BitSource header)
         {
-            var assembly = (Assembly)header.Deserializer.DeserializeExactNonNullItem(header.Deserializer.Map.AssemblyItem, ref header);
+            var assembly = (Assembly)header.Deserializer.DeserializeExactNonNullItem(header.Deserializer.Map.AssemblyItem, ref header)!;
             var typeName = header.Deserializer.ReadString();
 
-            return assembly.GetType(typeName);
+            return assembly.GetType(typeName)!;
         }
 
         #endregion
@@ -163,7 +163,7 @@ namespace ABSoftware.ABSave.Converters
             return false;
         }
 
-        Type HandleDeserializeSaved(ref BitSource header)
+        static Type? HandleDeserializeSaved(ref BitSource header)
         {
             var isSaved = header.ReadBit();
 
@@ -176,7 +176,7 @@ namespace ABSoftware.ABSave.Converters
             return null;
         }
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Type) || gen.Type.IsSubclassOf(typeof(Type))) gen.MarkCanConvert();
             

@@ -98,7 +98,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            Assert.ThrowsException<ABSaveUnserializableType>(() => IntermediateObjInfoMapper.CreateInfo(typeof(UnserializableClass), Generator));
+            Assert.ThrowsException<UnserializableType>(() => IntermediateObjInfoMapper.CreateInfo(typeof(UnserializableClass), Generator));
         }
 
         [TestMethod]
@@ -140,7 +140,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             }
             while (iterator.MoveNext());
 
-            IntermediateObjInfoMapper.Release(info);
+            //IntermediateObjInfoMapper.Release(info);
         }
 
         [TestMethod]
@@ -152,33 +152,39 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             var info = IntermediateObjInfoMapper.CreateInfo(isValueTypeParent ? typeof(PropertyStruct) : typeof(PropertyClass), Generator);
 
-            Assert.AreEqual(2, info.UnmappedCount);
-            Assert.AreEqual(2, info.RawMembers.Length);
-
-            var iterator = new IntermediateObjInfo.MemberIterator(info);
-
-            int i = 0;
-            do
+            try
             {
-                ref ObjectTranslatedItemInfo item = ref iterator.GetCurrent();
+                Assert.AreEqual(2, info.UnmappedCount);
+                Assert.AreEqual(2, info.RawMembers.Length);
 
-                Assert.AreEqual(null, item.ExistingMap);
-                Assert.AreEqual(null, item.Accessor);
-                Assert.IsInstanceOfType(item.Info, typeof(PropertyInfo));
+                var iterator = new IntermediateObjInfo.MemberIterator(info);
 
-                Type expectedType = i switch
+                int i = 0;
+                do
                 {
-                    0 => typeof(string),
-                    1 => typeof(bool),
-                    _ => throw new Exception("Invalid key")
-                };
+                    ref ObjectTranslatedItemInfo item = ref iterator.GetCurrent();
 
-                Assert.AreEqual(expectedType, item.MemberType);
-                i++;
+                    Assert.AreEqual(null, item.ExistingMap);
+                    Assert.AreEqual(null, item.Accessor);
+                    Assert.IsInstanceOfType(item.Info, typeof(PropertyInfo));
+
+                    Type expectedType = i switch
+                    {
+                        0 => typeof(string),
+                        1 => typeof(bool),
+                        _ => throw new Exception("Invalid key")
+                    };
+
+                    Assert.AreEqual(expectedType, item.MemberType);
+                    i++;
+                }
+                while (iterator.MoveNext());
+
             }
-            while (iterator.MoveNext());
-
-            IntermediateObjInfoMapper.Release(info);
+            finally 
+            {
+                IntermediateObjInfoMapper.Release(info);
+            }
         }
         
         [TestMethod]
@@ -188,24 +194,31 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             var info = IntermediateObjInfoMapper.CreateInfo(typeof(UnorderedPropertyClass), Generator);
 
-            var iterator = new IntermediateObjInfo.MemberIterator(info);
-
-            int i = 0;
-            do
+            try
             {
-                ref ObjectTranslatedItemInfo item = ref iterator.GetCurrent();
+                var iterator = new IntermediateObjInfo.MemberIterator(info);
 
-                Type expectedType = i switch
+                int i = 0;
+                do
                 {
-                    0 => typeof(bool),
-                    1 => typeof(string),
-                    _ => throw new Exception("Invalid key")
-                };
+                    ref ObjectTranslatedItemInfo item = ref iterator.GetCurrent();
 
-                Assert.AreEqual(expectedType, item.MemberType);
-                i++;
+                    Type expectedType = i switch
+                    {
+                        0 => typeof(bool),
+                        1 => typeof(string),
+                        _ => throw new Exception("Invalid key")
+                    };
+
+                    Assert.AreEqual(expectedType, item.MemberType);
+                    i++;
+                }
+                while (iterator.MoveNext());
             }
-            while (iterator.MoveNext());
+            finally
+            {
+                IntermediateObjInfoMapper.Release(info);
+            }
         }
     }
 }

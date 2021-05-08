@@ -12,11 +12,11 @@ namespace ABSoftware.ABSave.Mapping.Generation
         public int UnmappedCount;
         public int HighestVersion;
 
-        public Type ClassType;
-        public ObjectTranslatedItemInfo[] RawMembers;
+        public Type ClassType = null!;
+        public ObjectTranslatedItemInfo[] RawMembers = null!;
 
         // Null if "RawMembers" is already sorted.
-        public ObjectTranslatedSortInfo[] SortedMembers;
+        public ObjectTranslatedSortInfo[]? SortedMembers;
 
         public void Initialize(Type classType)
             => ClassType = classType;

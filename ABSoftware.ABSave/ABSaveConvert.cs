@@ -16,17 +16,17 @@ namespace ABSoftware.ABSave
     {
         readonly static LightConcurrentPool<ABSaveSerializer> SerializerPool = new LightConcurrentPool<ABSaveSerializer>(2);
         readonly static LightConcurrentPool<ABSaveDeserializer> DeserializerPool = new LightConcurrentPool<ABSaveDeserializer>(2);
-        public static byte[] Serialize<T>(T obj, ABSaveMap map, Dictionary<Type, int> targetVersions = null) => SerializeNonGeneric(obj, map, targetVersions);
-        public static byte[] SerializeNonGeneric(object obj, ABSaveMap map, Dictionary<Type, int> targetVersions = null)
+        public static byte[] Serialize<T>(T obj, ABSaveMap map, Dictionary<Type, int>? targetVersions = null) => SerializeNonGeneric(obj, map, targetVersions);
+        public static byte[] SerializeNonGeneric(object? obj, ABSaveMap map, Dictionary<Type, int>? targetVersions = null)
         {
             var stream = new MemoryStream(); // Use pooling for "MemoryStream"s?
             SerializeNonGeneric(obj, map, stream, targetVersions);
             return stream.ToArray();
         }
 
-        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream, Dictionary<Type, int> targetVersions = null) => 
+        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream, Dictionary<Type, int>? targetVersions = null) => 
             SerializeNonGeneric(obj, map, stream, targetVersions);
-        public static void SerializeNonGeneric(object obj, ABSaveMap map, Stream stream, Dictionary<Type, int> targetVersions = null)
+        public static void SerializeNonGeneric(object? obj, ABSaveMap map, Stream stream, Dictionary<Type, int>? targetVersions = null)
         {
             var serializer = SerializerPool.TryRent() ?? new ABSaveSerializer();
             serializer.Initialize(stream, map, targetVersions);
@@ -34,15 +34,19 @@ namespace ABSoftware.ABSave
             SerializerPool.Release(serializer);
         }
 
-        public static T Deserialize<T>(byte[] arr, ABSaveMap map) => (T)DeserializeNonGeneric(arr, map);
-        public static object DeserializeNonGeneric(byte[] arr, ABSaveMap map)
+        public static T Deserialize<T>(byte[] arr, ABSaveMap map) => 
+            (T)DeserializeNonGeneric(arr, map)!;
+
+        public static object? DeserializeNonGeneric(byte[] arr, ABSaveMap map)
         {
             var stream = new MemoryStream(arr);
             return DeserializeNonGeneric(stream, map);
         }
 
-        public static T Deserialize<T>(Stream stream, ABSaveMap map) => (T)DeserializeNonGeneric(stream, map);
-        public static object DeserializeNonGeneric(Stream stream, ABSaveMap map)
+        public static T Deserialize<T>(Stream stream, ABSaveMap map) where T : class? => 
+            (T)DeserializeNonGeneric(stream, map)!;
+
+        public static object? DeserializeNonGeneric(Stream stream, ABSaveMap map)
         {
             var deserializer = DeserializerPool.TryRent() ?? new ABSaveDeserializer();
             deserializer.Initialize(stream, map);

@@ -158,7 +158,7 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             if (!gen.Type.IsPrimitive) return null;
 

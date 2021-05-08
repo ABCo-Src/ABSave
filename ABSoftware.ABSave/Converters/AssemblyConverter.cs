@@ -30,14 +30,14 @@ namespace ABSoftware.ABSave.Converters
 
             var assemblyName = assembly.GetName();
             var publicKeyToken = assemblyName.GetPublicKeyToken();
-            var cultureNeutral = assemblyName.CultureInfo.Equals(CultureInfo.InvariantCulture);
+            var cultureNeutral = assemblyName.CultureInfo!.Equals(CultureInfo.InvariantCulture);
             var hasPublicKeyToken = publicKeyToken != null;
 
             header.WriteBitWith(cultureNeutral);
             header.WriteBitWith(hasPublicKeyToken);
 
             // Version
-            header.Serializer.SerializeExactNonNullItem(assemblyName.Version, header.Serializer.Map.VersionItem, ref header);
+            header.Serializer.SerializeExactNonNullItem(assemblyName.Version!, header.Serializer.Map.VersionItem, ref header);
 
             // Name
             header.Serializer.WriteString(assemblyName.Name);
@@ -80,7 +80,7 @@ namespace ABSoftware.ABSave.Converters
             var hasPublicKeyToken = header.ReadBit();
 
             // Version
-            assemblyName.Version = (Version)header.Deserializer.DeserializeExactNonNullItem(header.Deserializer.Map.VersionItem, ref header);
+            assemblyName.Version = (Version)header.Deserializer.DeserializeExactNonNullItem(header.Deserializer.Map.VersionItem, ref header)!;
 
             // Name
             assemblyName.Name = header.Deserializer.ReadString();
@@ -101,7 +101,7 @@ namespace ABSoftware.ABSave.Converters
             return assembly;
         }
 
-        static Assembly TryDeserializeSaved(ref BitSource header)
+        static Assembly? TryDeserializeSaved(ref BitSource header)
         {
             var isSaved = header.ReadBit();
 
@@ -114,7 +114,7 @@ namespace ABSoftware.ABSave.Converters
             return null;
         }
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Assembly) || gen.Type.IsSubclassOf(typeof(Assembly))) gen.MarkCanConvert();
 

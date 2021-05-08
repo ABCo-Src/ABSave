@@ -9,7 +9,19 @@ namespace ABSoftware.ABSave.Serialization
 {
     public sealed partial class ABSaveSerializer
     {
-        public void WriteString(string str)
+        public void WriteString(string? str)
+        {
+            var header = new BitTarget(this);
+
+            if (str == null) header.WriteBitOff();
+            else
+            {
+                header.WriteBitOn();
+                WriteNonNullString(str!);
+            }
+        }
+
+        public void WriteNonNullString(string str)
         {
             var header = new BitTarget(this);
             WriteString(str, ref header);

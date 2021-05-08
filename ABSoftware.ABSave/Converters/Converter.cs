@@ -36,12 +36,12 @@ namespace ABSoftware.ABSave.Converters
         /// <summary>
         /// All the exact types of data this converter can convert.
         /// </summary>
-        public virtual Type[] ExactTypes { get; } = new Type[0];
+        public virtual Type[] ExactTypes { get; } = Array.Empty<Type>();
 
         /// <summary>
         /// Attempts to generate a context. If the converter has non-exact types, this should return null when this converter doesn't convert the given type.
         /// </summary>
-        public abstract IConverterContext TryGenerateContext(ref ContextGen gen);
+        public abstract IConverterContext? TryGenerateContext(ref ContextGen gen);
 
         public abstract void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header);
         public abstract object Deserialize(Type actualType, IConverterContext context, ref BitSource header);

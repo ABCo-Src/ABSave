@@ -31,7 +31,7 @@ namespace ABSoftware.ABSave.Converters
             return new Guid(data);
         }
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Guid)) gen.MarkCanConvert();
             return null;

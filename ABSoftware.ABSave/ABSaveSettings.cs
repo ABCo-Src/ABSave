@@ -29,8 +29,8 @@ namespace ABSoftware.ABSave
             var useLittleEndian = UseLittleEndian ?? template.UseLittleEndian;
             var bypassDangerousTypeChecking = BypassDangerousTypeChecking ?? template.BypassDangerousTypeChecking;
 
-            Dictionary<Type, Converter> exactConverters = null;
-            List<Converter> nonExactConverters = null;
+            Dictionary<Type, Converter>? exactConverters = null;
+            List<Converter>? nonExactConverters = null;
 
             // Set the custom converters correctly.
             if (CustomConverters != null)
@@ -83,13 +83,13 @@ namespace ABSoftware.ABSave
         public bool BypassDangerousTypeChecking { get; set; } = false;
         public bool UseLittleEndian { get; } = true;
 
-        public IReadOnlyDictionary<Type, Converter> ExactConverters { get; } = Converter.BuiltInExact;
-        public IReadOnlyList<Converter> NonExactConverters { get; } = Converter.BuiltInNonExact;
+        public IReadOnlyDictionary<Type, Converter>? ExactConverters { get; } = Converter.BuiltInExact;
+        public IReadOnlyList<Converter>? NonExactConverters { get; } = Converter.BuiltInNonExact;
 
         public ABSaveSettings() { }
 
         public ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian,
-            IReadOnlyDictionary<Type, Converter> exactConverters, IReadOnlyList<Converter> nonExactConverters)
+            IReadOnlyDictionary<Type, Converter>? exactConverters, IReadOnlyList<Converter>? nonExactConverters)
         =>
             (LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ExactConverters, NonExactConverters) = 
             (lazyBitHandling, useUTF8, useLittleEndian, bypassDangerousTypeChecking, exactConverters, nonExactConverters);

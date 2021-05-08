@@ -39,19 +39,22 @@ namespace ABSoftware.ABSave.Helpers
 
             var res = ABSaveUtils.CreateUninitializedArray<T>(totalLen);
 
-            // Go through every full block and copy the data out of them into our final array.
+            // Go through every block right up towards the last one and copy the data out of them into our final array.
             int currentPos = 0;
-            for (Block block = _startBlock; block != _currentBlock; block = block.Next)
+            Block block = _startBlock;
+
+            while (block != _currentBlock)
             {
                 Array.Copy(block.Data, 0, res, currentPos, block.Data.Length);
+                currentPos += BLOCK_SIZE;
 
                 // Release it
+                Block nextBlock = block.Next!;
                 Release(block);
-
-                currentPos += BLOCK_SIZE;
+                block = nextBlock;
             }
 
-            // Copy the data out of the latest block.
+            // Copy the data out of the very last block.
             Array.Copy(_currentBlock.Data, 0, res, currentPos, _currentBlockFilled);
 
             return res;
@@ -80,7 +83,7 @@ namespace ABSoftware.ABSave.Helpers
         class Block
         {
             public T[] Data = new T[BLOCK_SIZE];
-            public Block Next;
+            public Block? Next;
         }
     }
 }

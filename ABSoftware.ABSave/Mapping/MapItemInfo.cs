@@ -25,8 +25,11 @@ namespace ABSoftware.ABSave.Mapping
         }
 
         public override int GetHashCode() => Pos.GetHashCode();
-        public override bool Equals(object obj) => obj is MapItemInfo info && Equals(info);
+        public override bool Equals(object? obj) => obj is MapItemInfo info && Equals(info);
         public bool Equals(MapItemInfo other) => Pos.Equals(other.Pos);
+
+        public static bool operator ==(MapItemInfo left, MapItemInfo right) => left.Equals(right);
+        public static bool operator !=(MapItemInfo left, MapItemInfo right) => !left.Equals(right);
     }
 
     struct GenMapItemInfo
