@@ -21,7 +21,7 @@ namespace ABSoftware.ABSave.Converters
             typeof(TimeSpan)
         };
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
             var asContext = (Context)context;
 
@@ -38,7 +38,7 @@ namespace ABSoftware.ABSave.Converters
 
         public static void SerializeTicks(long ticks, ABSaveSerializer serializer) => serializer.WriteInt64(ticks);
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
             var asContext = (Context)context;
 
@@ -52,20 +52,12 @@ namespace ABSoftware.ABSave.Converters
 
         public static long DeserializeTicks(ABSaveDeserializer deserializer) => deserializer.ReadInt64();
 
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(DateTime))
-            {
-                gen.MarkCanConvert();
-                return Context.DateTime;
-            }
+                gen.AssignContext(Context.DateTime);
             else if (gen.Type == typeof(TimeSpan))
-            {
-                gen.MarkCanConvert();
-                return Context.TimeSpan;
-            }
-
-            else return null;
+                gen.AssignContext(Context.TimeSpan);
         }
 
         enum TicksType
@@ -74,7 +66,7 @@ namespace ABSoftware.ABSave.Converters
             TimeSpan
         }
 
-        class Context : IConverterContext
+        class Context : ConverterContext
         {
             public static Context DateTime = new Context() { Type = TicksType.DateTime };
             public static Context TimeSpan = new Context() { Type = TicksType.TimeSpan };

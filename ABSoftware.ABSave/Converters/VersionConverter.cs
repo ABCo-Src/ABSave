@@ -16,7 +16,7 @@ namespace ABSoftware.ABSave.Converters
         public override bool WritesToHeader => true;
         public override Type[] ExactTypes { get; } = new Type[] { typeof(Version) };
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
 
         public static void SerializeVersion(Version version, ref BitTarget header)
         {
@@ -39,7 +39,7 @@ namespace ABSoftware.ABSave.Converters
             if (header.FreeBits < 8) header.Apply();
         }
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header) => DeserializeVersion(ref header);
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header) => DeserializeVersion(ref header);
 
         public static Version DeserializeVersion(ref BitSource header)
         {
@@ -56,11 +56,10 @@ namespace ABSoftware.ABSave.Converters
             return new Version(major, minor, build, revision);
         }
 
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (gen.Type == typeof(Version)) gen.MarkCanConvert();
-
-            return null;
+            if (gen.Type == typeof(Version)) 
+                gen.AssignContext(null);
         }
     }
 }

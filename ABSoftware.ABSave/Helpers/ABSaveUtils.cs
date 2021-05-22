@@ -40,7 +40,7 @@ namespace ABSoftware.ABSave.Helpers
             return res;
         }
 
-        internal static void WaitUntilNotGenerating(ref MapItem item)
+        internal static void WaitUntilNotGenerating(MapItem item)
         {
             if (item.IsGenerating)
             {

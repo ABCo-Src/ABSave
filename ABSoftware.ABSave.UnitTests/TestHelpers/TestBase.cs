@@ -77,18 +77,14 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         {
             ResetState();
 
-            var pos = CurrentGenerator.CreateItem(type, CurrentMap.GenInfo.AllTypes);
-
-            ref MapItem item = ref CurrentGenerator.FillItemWith(MapItemType.Converter, pos);
-            ref ConverterMapItem convItm = ref item.Main.Converter;
-            convItm.Converter = converter;
+            CurrentGenerator.GetExistingOrAddNull(type);
 
             var genContext = new ContextGen(type, CurrentGenerator);
+            converter.TryGenerateContext(ref genContext);
 
-            item.IsGenerating = false;
-            convItm.Context = converter.TryGenerateContext(ref genContext);
-
-            CurrentMapItem = pos;
+            genContext.ContextInstance.Converter = converter;
+            genContext.ContextInstance.IsGenerating = false;
+            CurrentMapItem = new MapItemInfo(genContext.ContextInstance, false);
         }
 
         public void ResetStateWithMapFor(Type type)

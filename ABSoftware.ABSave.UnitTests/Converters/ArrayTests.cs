@@ -15,7 +15,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
     [TestClass]
     public class ArrayTests : ConverterTestBase
     {
-        static ABSaveSettings Settings;
+        static ABSaveSettings Settings = null!;
 
         [TestInitialize]
         public void SetupSettings()

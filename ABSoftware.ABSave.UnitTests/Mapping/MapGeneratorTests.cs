@@ -22,10 +22,8 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             // Generate it once.
             var pos = Generator.GetMap(typeof(SimpleClass));
 
-            ref MapItem item = ref Map.GetItemAt(pos);
-
             // See if it picks up on the existing item.
-            Assert.AreEqual(MapItemType.Object, item.MapType);
+            Assert.AreEqual(pos._innerItem, Generator.GetMap(typeof(SimpleClass))._innerItem);
         }
 
         [TestMethod]
@@ -41,88 +39,91 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         }
 
         [TestMethod]
-        public void GetOrStartGenerating_New()
+        public void GetOrAddNull_New()
         {
             Setup();
-            Assert.IsFalse(Generator.GetOrStartGenerating(typeof(SimpleClass), out _, Map.GenInfo.AllTypes));
+            Assert.IsNull(Generator.GetExistingOrAddNull(typeof(SimpleClass)));
+            Assert.IsNull(Map.AllTypes[typeof(SimpleClass)]);
         }
 
         [TestMethod]
-        public void GetOrStartGenerating_Existing()
+        public void GetOrAddNull_Existing()
         {
             Setup();
 
             var pos = Generator.GetMap(typeof(SimpleClass));
 
-            Assert.IsTrue(Generator.GetOrStartGenerating(typeof(SimpleClass), out MapItemInfo newPos, Map.GenInfo.AllTypes));
-            Assert.AreEqual(pos, newPos);
+            Assert.AreEqual(pos._innerItem, Generator.GetExistingOrAddNull(typeof(SimpleClass)));
         }
 
+        class EmptyMapItem : MapItem { }
+
         [TestMethod]
-        public async Task GetOrStartGenerating_WaitsOnAllocating()
+        public async Task GetOrAddNull_WaitsOnNull()
         {
             Setup();
 
             // This thread will make an "Allocating" item, the "waiter" should wait for that to change.
             var secondGenerator = Map.RentGenerator();
-            bool stopped = false;
+            MapItem retrieved = null;
 
             var waiter = new Task(() =>
             {
-                Generator.GetOrStartGenerating(typeof(int), out MapItemInfo pos, Map.GenInfo.AllTypes);
-                stopped = true;
+                retrieved = Generator.GetExistingOrAddNull(typeof(int));
             });
 
             // Make an "Allocating" item.
-            MapGenerator.TryGetItemFromDict(Map.GenInfo.AllTypes, typeof(int), MapItemState.Allocating, out MapItemInfo info);
-
+            Generator.GetExistingOrAddNull(typeof(int));
+            
             waiter.Start();
 
             // Wait a second - this should be more than enough time for the waiter to be stuck in the waiting cycle.
             await Task.Delay(1000);
 
-            Assert.IsFalse(stopped);
-
             // Now, we will finish the item, and see if the thread finishes accordingly.
-            Generator.CreateItem(typeof(int), Map.GenInfo.AllTypes);
+            var newMapItem = new EmptyMapItem();
+            Generator.ApplyItem(newMapItem, typeof(int));
 
             await Task.Delay(1000);
 
-            Assert.IsTrue(stopped);
+            Assert.AreEqual(newMapItem, retrieved);
         }
 
         [TestMethod]
-        public async Task GetOrStartGenerating_TwoThreads_SameType()
+        public void GetOrAddNull_TwoThreads_GenerateNew()
         {
             Setup();
 
             var secondGenerator = Map.RentGenerator();
+            
+            MapItem first = null;
+            MapItem second = null;
 
             // Trigger both threads at exactly the same time.
-            Task<bool> tsk = Task.Run(() => Generator.GetOrStartGenerating(typeof(int), out _, Map.GenInfo.AllTypes));
-            Task<bool> tsk2 = Task.Run(() => Generator.GetOrStartGenerating(typeof(int), out _, Map.GenInfo.AllTypes));
+            Thread tsk = new Thread(() =>
+            {
+                first = Generator.GetExistingOrAddNull(typeof(int));
+                if (first == null) Generator.ApplyItem(new EmptyMapItem(), typeof(int));
+            });
 
-            bool tskRes = await tsk;
-            bool tsk2Res = await tsk2;
+            Thread tsk2 = new Thread(() =>
+            {
+                second = Generator.GetExistingOrAddNull(typeof(int));
+                if (second == null) Generator.ApplyItem(new EmptyMapItem(), typeof(int));
+            });
+
+            tsk.Start();
+            tsk2.Start();
+
+            tsk.Join();
+            tsk2.Join();
 
             // Whichever raced to get the generation done doesn't matter, 
-            // if one is true, the other should be false.
-            if (tskRes)
-                Assert.IsFalse(tskRes ? tsk2Res : tskRes);
+            // if one is null, the other should be not be null.
+            Assert.IsNotNull(first ?? second);
 
             // Check that the item was created successfully.
-            Assert.AreEqual(MapItemState.Ready, Map.GenInfo.AllTypes[typeof(int)].State);
-        }
-
-        [TestMethod]
-        public void GetOrStartGenerating_Prepared()
-        {
-            Setup();
-
-            MapGenerator.TryGetItemFromDict(Map.GenInfo.AllTypes, typeof(int), MapItemState.Planned, out _);
-
-            // See if we take up the generation of this item:
-            Assert.IsFalse(Generator.GetOrStartGenerating(typeof(int), out _, Map.GenInfo.AllTypes));
+            Assert.IsInstanceOfType(Map.AllTypes[typeof(int)], typeof(EmptyMapItem));
         }
 
         [TestMethod]
@@ -132,37 +133,47 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             // Inner does not exist
             var pos = Generator.GetMap(typeof(SimpleStruct?));
-            Assert.IsTrue(pos.Pos.Flag);
+            Assert.IsTrue(pos.IsNullable);
 
             // Inner does exist
             var pos2 = Generator.GetMap(typeof(SimpleStruct?));
-            Assert.IsTrue(pos2.Pos.Flag);
+            Assert.IsTrue(pos2.IsNullable);
         }
 
         [TestMethod]
-        public void Generate_Runtime()
+        public void Generate_Runtime_NothingAlreadyExisting()
         {
             Setup();
 
-            // Nothing already exists
             var pos = Generator.GetRuntimeMap(typeof(SimpleClass));
-            ref var itm = ref Map.GetItemAt(pos);
+            Assert.IsFalse(pos.IsNullable);
 
-            Assert.AreEqual(MapItemType.Runtime, itm.MapType);
-            Assert.AreEqual(MapItemType.Object, Map.GetItemAt(itm.Extra.RuntimeInnerItem).MapType);
+            Assert.IsInstanceOfType(pos._innerItem, typeof(RuntimeMapItem));
+        }
 
-            // Runtime item already exists
-            var pos2 = Generator.GetRuntimeMap(typeof(SimpleClass));
+        [TestMethod]
+        public void Generate_Runtime_InnerAlreadyExists()
+        {
+            Setup();
 
-            Assert.AreEqual(pos, pos2);
-
-            // Inner already exists
             var pos3Expected = Generator.GetMap(typeof(SimpleStruct));
             var pos3Actual = Generator.GetRuntimeMap(typeof(SimpleStruct));
 
-            ref MapItem pos3Itm = ref Map.GetItemAt(pos3Actual);
+            Assert.AreEqual(pos3Expected._innerItem, ((RuntimeMapItem)pos3Actual._innerItem).InnerItem);
+        }
 
-            Assert.AreEqual(pos3Expected, pos3Itm.Extra.RuntimeInnerItem);
+        [TestMethod]
+        public void Generate_Runtime_RuntimeAlreadyExists()
+        {
+            Setup();
+
+            // Create an item
+            var existing = Generator.GetRuntimeMap(typeof(SimpleClass));
+
+            // Should detect the already existing one.
+            var pos2 = Generator.GetRuntimeMap(typeof(SimpleClass));
+
+            Assert.AreEqual(existing, pos2);
         }
 
         [TestMethod]

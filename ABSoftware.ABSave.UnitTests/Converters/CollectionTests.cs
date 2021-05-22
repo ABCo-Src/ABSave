@@ -9,16 +9,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABSoftware.ABSave.UnitTests.Converters
 {
     [TestClass]
     public class CollectionTests : ConverterTestBase
     {
-        static ABSaveSettings Settings;
+        static ABSaveSettings Settings = null!;
         ContextGen ContextGenInfo = new();
 
         [TestInitialize]
@@ -41,7 +38,9 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         public void Context_List()
         {
             ContextGenInfo.Type = typeof(List<string>);
-            var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+
+            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
 
             Assert.IsInstanceOfType(ctx.Info, typeof(ListInfo));
             Assert.AreEqual(typeof(string), ctx.ElementOrKeyType);
@@ -51,7 +50,9 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         public void Context_GenericICollection_NonGenericIList()
         {
             ContextGenInfo.Type = typeof(GenericAndNonGeneric);
-            var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+
+            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIListInfo));
             Assert.AreEqual(typeof(string), ctx.ElementOrKeyType);
@@ -61,7 +62,9 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         public void Context_GenericICollection()
         {
             ContextGenInfo.Type = typeof(GenericICollection);
-            var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+
+            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
 
             Assert.IsInstanceOfType(ctx.Info, typeof(GenericICollectionInfo));
             Assert.AreEqual(typeof(int), ctx.ElementOrKeyType);
@@ -71,7 +74,9 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         public void Context_NonGenericIList()
         {
             ContextGenInfo.Type = typeof(ArrayList);
-            var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+
+            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIListInfo));
             Assert.AreEqual(typeof(object), ctx.ElementOrKeyType);
@@ -81,7 +86,9 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         public void Context_GenericIDictionary_NonGenericIDictionary()
         {
             ContextGenInfo.Type = typeof(Dictionary<int, bool>);
-            var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+
+            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIDictionaryInfo));
             Assert.AreEqual(typeof(int), ctx.ElementOrKeyType);
@@ -92,7 +99,9 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         public void Context_GenericIDictionary()
         {
             ContextGenInfo.Type = typeof(GenericIDictionary);
-            var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+
+            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
 
             Assert.IsInstanceOfType(ctx.Info, typeof(GenericIDictionaryInfo));
             Assert.AreEqual(typeof(string), ctx.ElementOrKeyType);
@@ -103,7 +112,9 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         public void Context_NonGenericIDictionary()
         {
             ContextGenInfo.Type = typeof(Hashtable);
-            var ctx = (EnumerableConverter.Context)EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+
+            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
 
             Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIDictionaryInfo));
             Assert.AreEqual(typeof(object), ctx.ElementOrKeyType);

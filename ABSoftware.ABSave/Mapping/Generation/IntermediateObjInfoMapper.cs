@@ -17,36 +17,23 @@ namespace ABSoftware.ABSave.Mapping.Generation
     /// </summary>
     internal static class IntermediateObjInfoMapper
     {
-        static readonly LightConcurrentPool<IntermediateObjInfo> InfoPool = new LightConcurrentPool<IntermediateObjInfo>(4);
-
         /// <summary>
         /// Clears the list <see cref="MapGenerator.CurrentObjMembers"/> and inserts all of the members and information attached to them.
         /// </summary>
         internal static IntermediateObjInfo CreateInfo(Type type, MapGenerator gen)
         {
-            var dest = Rent();
-            try
-            {
-                dest.ClassType = type;
+            var ctx = new TranslationContext(type);
 
-                var ctx = new TranslationContext(dest);
+            // Coming soon: Settings-based mapping
+            Reflection.FillInfo(ref ctx, gen);
 
-                // Coming soon: Settings-based mapping
-                Reflection.FillInfo(ref ctx, gen);
+            var rawMembers = ctx.CurrentMembers.ToArray();
 
-                dest.RawMembers = ctx.CurrentMembers.ReleaseAndGetArray();
+            // Order all the items, if necessary.
+            if (ctx.TranslationCurrentOrderInfo == -1)
+                Array.Sort(rawMembers);
 
-                // Apply ordering on all the items, if necessary.
-                if (ctx.TranslationCurrentOrderInfo == -1)
-                    OrderMembers(ref ctx);
-            }
-            catch
-            {
-                Release(dest);
-                throw;
-            }
-
-            return dest;
+            return new IntermediateObjInfo(ctx.HighestVersion, rawMembers);
         }
 
         internal static class Reflection
@@ -54,49 +41,38 @@ namespace ABSoftware.ABSave.Mapping.Generation
             public static void FillInfo(ref TranslationContext ctx, MapGenerator gen)
             {
                 var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-                var classType = ctx.Destination.ClassType;
-                var mode = GetClassMode(classType);
-
-                var hasFields = (mode & SaveMembersMode.Fields) > 0;
-                var hasProperties = (mode & SaveMembersMode.Properties) > 0;
-
-                // Create our buffer
-                ctx.CurrentMembers.Initialize();
+                var mode = GetClassMode(ctx.ClassType);
 
                 // Fields
-                if (hasFields)
+                if ((mode & SaveMembersMode.Fields) > 0)
                 {
-                    var fields = classType.GetFields(bindingFlags);
+                    var fields = ctx.ClassType.GetFields(bindingFlags);
+
                     for (int i = 0; i < fields.Length; i++)
-                        AddItem(ref ctx, gen, fields[i], fields[i].FieldType);
+                        AddItem(ref ctx, gen, fields[i]);
                 }
                     
-
                 // Properties
-                if (hasProperties)
+                if ((mode & SaveMembersMode.Properties) > 0)
                 {
-                    var properties = classType.GetProperties(bindingFlags);
+                    var properties = ctx.ClassType.GetProperties(bindingFlags);
+
                     for (int i = 0; i < properties.Length; i++)
                     {
                         if (!properties[i].CanRead || !properties[i].CanWrite) continue;
-                        AddItem(ref ctx, gen, properties[i], properties[i].PropertyType);
+                        AddItem(ref ctx, gen, properties[i]);
                     }
                 }
-                    
             }
 
-            static void AddItem(ref TranslationContext ctx, MapGenerator gen, MemberInfo info, Type infoType)
+            static void AddItem(ref TranslationContext ctx, MapGenerator gen, MemberInfo info)
             {
-                var attributes = (MapAttr[])info.GetCustomAttributes(typeof(MapAttr), false);
-                if (attributes.Length == 0) return;
+                ObjectIntermediateItem dest = new ObjectIntermediateItem();
+                dest.Details.Unprocessed = info;
 
-                ref ObjectTranslatedItemInfo currentItem = ref ctx.CurrentMembers.CreateAndGet();
+                FillAttributeInfo(ref ctx, dest, info);
 
-                // Fill in the basic details
-                FillSharedItemInfo(ref ctx, ref currentItem, gen, info, infoType);
-
-                // Go through the attributes and fill that info in.
-                FillAttributeInfo(ref ctx, ref currentItem, attributes, info);
+                ctx.CurrentMembers.Add(dest);
             }
 
             static SaveMembersMode GetClassMode(Type classType)
@@ -110,8 +86,12 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 return attribute.Mode;
             }
 
-            static void FillAttributeInfo(ref TranslationContext ctx, ref ObjectTranslatedItemInfo currentItem, MapAttr[] attributes, MemberInfo info)
+            static void FillAttributeInfo(ref TranslationContext ctx, ObjectIntermediateItem dest, MemberInfo info)
             {
+                // Get the attributes.
+                var attributes = info.GetCustomAttributes(typeof(MapAttr), true);
+                if (attributes.Length == 0) return;
+
                 // Interpret the attributes.
                 bool loadedSaveAttribute = false;
                 for (int i = 0; i < attributes.Length; i++)
@@ -119,7 +99,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     switch (attributes[i])
                     {
                         case SaveAttribute save:
-                            FillMainInfo(ref ctx, ref currentItem, save.Order, save.FromVer, save.ToVer);
+                            FillMainInfo(ref ctx, dest, save.Order, save.FromVer, save.ToVer);
                             loadedSaveAttribute = true;
                             break;
                     }
@@ -129,9 +109,9 @@ namespace ABSoftware.ABSave.Mapping.Generation
             }
         }
 
-        internal static void FillMainInfo(ref TranslationContext ctx, ref ObjectTranslatedItemInfo currentItem, int order, int startVer, int endVer)
+        internal static void FillMainInfo(ref TranslationContext ctx, ObjectIntermediateItem newItem, int order, int startVer, int endVer)
         {
-            currentItem.Order = order;
+            newItem.Order = order;
 
             // Check ordering
             if (ctx.TranslationCurrentOrderInfo != -1)
@@ -142,87 +122,42 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     ctx.TranslationCurrentOrderInfo = -1;
             }
 
-            var dest = ctx.Destination;
-
             // If the version given is -1, that means it doesn't have a set end, so we'll just fill that in with "uint.MaxValue".
             // In this situation we'll only update the highest version based on what the minimum is.
             if (endVer == -1)
             {
-                (currentItem.StartVer, currentItem.EndVer) = (checked((uint)startVer), uint.MaxValue);
+                newItem.StartVer = checked((uint)startVer);
+                newItem.EndVer = uint.MaxValue;
 
-                if (startVer > dest.HighestVersion)
-                    dest.HighestVersion = startVer;
+                if (startVer > ctx.HighestVersion)
+                    ctx.HighestVersion = startVer;
             }
                 
 
             // If not, place it in as is, and track what the highest version is based on what their custom high is.
             else
             {
-                (currentItem.StartVer, currentItem.EndVer) = (checked((uint)startVer), checked((uint)endVer));
+                newItem.StartVer = checked((uint)startVer);
+                newItem.EndVer = checked((uint)endVer);
 
-                if (endVer > dest.HighestVersion)
-                    dest.HighestVersion = endVer;
+                if (endVer > ctx.HighestVersion)
+                    ctx.HighestVersion = endVer;
             }
-        }
-
-        static void FillSharedItemInfo(ref TranslationContext ctx, ref ObjectTranslatedItemInfo currentItem, MapGenerator gen, MemberInfo info, Type memberType)
-        {
-            currentItem.Info = info;
-            currentItem.MemberType = memberType;
-
-            // Handle mapping
-            if (MapGenerator.TryGetItemFromDict(gen.Map.GenInfo.AllTypes, memberType, MapItemState.Planned, out MapItemInfo val))
-                currentItem.ExistingMap = val;
-            else
-                ctx.Destination.UnmappedCount++;
-        }
-
-        internal static void OrderMembers(ref TranslationContext ctx)
-        {
-            var dest = ctx.Destination;
-
-            // Create information about what order all the members should be.
-            dest.SortedMembers = new ObjectTranslatedSortInfo[dest.RawMembers.Length];
-
-            for (int i = 0; i < dest.RawMembers.Length; i++)
-            {
-                dest.SortedMembers[i].Order = dest.RawMembers[i].Order;
-                dest.SortedMembers[i].Index = (short)i;
-            }
-
-            Array.Sort(dest.SortedMembers);
-        }
-
-        static IntermediateObjInfo Rent()
-        {
-            var pooled = InfoPool.TryRent();
-            if (pooled == null) return new IntermediateObjInfo();
-
-            pooled.UnmappedCount = 0;
-            pooled.HighestVersion = 0;
-            return pooled;
-        }
-
-        public static void Release(IntermediateObjInfo dest)
-        {
-            // Null these out so they can be collected and aren't being held alive.
-            dest.ClassType = null!;
-            dest.RawMembers = null!;
-            dest.SortedMembers = null;
-            InfoPool.Release(dest);
         }
 
         internal struct TranslationContext
         {
-            public LoadOnceList<ObjectTranslatedItemInfo> CurrentMembers;
-            public IntermediateObjInfo Destination;
+            public List<ObjectIntermediateItem> CurrentMembers;
+            public Type ClassType;
             public int TranslationCurrentOrderInfo;
+            public int HighestVersion;
 
-            public TranslationContext(IntermediateObjInfo dest)
+            public TranslationContext(Type classType)
             {
-                Destination = dest;
-                CurrentMembers = new LoadOnceList<ObjectTranslatedItemInfo>();
+                ClassType = classType;
+                CurrentMembers = new List<ObjectIntermediateItem>();
                 TranslationCurrentOrderInfo = 0;
+                HighestVersion = 0;
             }
         }
     }

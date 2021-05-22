@@ -1,4 +1,5 @@
-﻿using MessagePack;
+﻿using ABSoftware.ABSave.Mapping.Description.Attributes;
+using MessagePack;
 using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
     [MessagePackObject]
     [Serializable]
+    [SaveMembers]
     public sealed class JsonResponseModel : IEquatable<JsonResponseModel>
     {
         public JsonResponseModel() { }
@@ -18,31 +20,31 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             if (initialize) Initialize();
         }
         
-        [Key(0)]
+        [Save(0)]
         public string Id { get; set; }
 
-        [Key(1)]
+        [Save(1)]
         public string Type { get; set; }
 
-        [Key(2)]
+        [Save(2)]
         public int Count { get; set; }
 
-        [Key(3)]
+        [Save(3)]
         public DateTime CreationTime { get; set; }
 
-        [Key(4)]
+        [Save(4)]
         public DateTime UpdateTime { get; set; }
 
-        [Key(5)]
+        [Save(5)]
         public DateTime ExpirationTime { get; set; }
 
-        [Key(6)]
+        [Save(6)]
         public string PreviousPageId { get; set; }
 
-        [Key(7)]
+        [Save(7)]
         public string FollowingPageId { get; set; }
 
-        [Key(8)]
+        [Save(8)]
         public List<ApiModelContainer> ModelContainers { get; set; }
 
         /// <inheritdoc/>
@@ -93,15 +95,16 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
 
     [MessagePackObject]
     [Serializable]
+    [SaveMembers]
     public sealed class ApiModelContainer : IEquatable<ApiModelContainer>
     {
-        [Key(0)]
+        [Save(0)]
         public string Id { get; set; }
 
-        [Key(1)]
+        [Save(1)]
         public string Type { get; set; }
 
-        [Key(2)]
+        [Save(2)]
         public RestApiModel Model { get; set; }
 
         /// <inheritdoc/>
@@ -134,87 +137,88 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
 
     [MessagePackObject]
     [Serializable]
+    [SaveMembers]
     public sealed class RestApiModel : IEquatable<RestApiModel>
     {
-        [Key(0)]
+        [Save(0)]
         public string Id { get; set; }
 
-        [Key(1)]
+        [Save(1)]
         public string Type { get; set; }
         
-        [Key(2)]
+        [Save(2)]
         public string Parent { get; set; }
 
-        [Key(3)]
+        [Save(3)]
         public string Author { get; set; }
 
-        [Key(4)]
+        [Save(4)]
         public string Title { get; set; }
 
-        [Key(5)]
+        [Save(5)]
         public string Text { get; set; }
 
-        [Key(6)]
+        [Save(6)]
         public string Url { get; set; }
 
-        [Key(7)]
+        [Save(7)]
         public string HtmlContent { get; set; }
 
-        [Key(8)]
+        [Save(8)]
         public int Upvotes { get; set; }
 
-        [Key(9)]
+        [Save(9)]
         public int Downvotes { get; set; }
 
-        [Key(10)]
+        [Save(10)]
         public float VotesRatio { get; set; }
 
-        [Key(11)]
+        [Save(11)]
         public int Views { get; set; }
 
-        [Key(12)]
+        [Save(12)]
         public int Clicks { get; set; }
 
-        [Key(13)]
+        [Save(13)]
         public float ClicksRatio { get; set; }
 
-        [Key(14)]
+        [Save(14)]
         public int NumberOfComments { get; set; }
 
-        [Key(15)]
+        [Save(15)]
         public DateTime CreationTime { get; set; }
 
-        [Key(16)]
+        [Save(16)]
         public DateTime UpdateTime { get; set; }
 
-        [Key(17)]
+        [Save(17)]
         public DateTime ExpirationTime { get; set; }
 
-        [Key(18)]
+        [Save(18)]
         public bool Flag1 { get; set; }
 
-        [Key(19)]
+        [Save(19)]
         public bool Flag2 { get; set; }
 
-        [Key(20)]
+        [Save(20)]
         public bool Flag3 { get; set; }
 
-        [Key(21)]
+        [Save(21)]
         public bool Flag4 { get; set; }
 
-        [Key(22)]
+        [Save(22)]
         public bool Flag5 { get; set; }
 
-        [Key(23)]
+        [Save(23)]
         public string Optional1 { get; set; }
 
-        [Key(24)]
+        [Save(24)]
         public string Optional2 { get; set; }
 
-        [Key(25)]
+        [Save(25)]
         public string Optional3 { get; set; }
 
-        [Key(26)]
+        [Save(26)]
         public MediaInfoModel Info { get; set; }
 
         /// <inheritdoc/>
@@ -309,18 +313,19 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
 
     [MessagePackObject]
     [Serializable]
+    [SaveMembers]
     public sealed class MediaInfoModel : IEquatable<MediaInfoModel>
     {
-        [Key(0)]
+        [Save(0)]
         public string Id { get; set; }
 
-        [Key(1)]
+        [Save(1)]
         public string AlbumUrl { get; set; }
 
-        [Key(2)]
+        [Save(2)]
         public bool Property { get; set; }
 
-        [Key(3)]
+        [Save(3)]
         public List<ImageModel> Images { get; set; }
 
         /// <inheritdoc/>
@@ -362,18 +367,19 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
 
     [MessagePackObject]
     [Serializable]
+    [SaveMembers]
     public sealed class ImageModel : IEquatable<ImageModel>
     {
-        [Key(0)]
+        [Save(0)]
         public string Url { get; set; }
 
-        [Key(1)]
+        [Save(1)]
         public int Width { get; set; }
 
-        [Key(2)]
+        [Save(2)]
         public int Height { get; set; }
 
-        [Key(3)]
+        [Save(3)]
         public float AspectRatio { get; set; }
 
         /// <inheritdoc/>

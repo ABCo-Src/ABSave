@@ -15,30 +15,65 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
     [TestClass]
     public class IntermediateObjInfoMapperTests : MapTestBase
     {
+        public int A;
+        public int B;
+        public int C;
+
         [TestMethod]
-        public void FillMainInfo_CorrectContext_Ordered()
+        public void FillMainInfo_CorrectHighestVersion_NoCustomHighs()
+        {
+            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
+
+            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 3, 6, -1);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 8, -1);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 11, -1);
+
+            Assert.AreEqual(ctx.TranslationCurrentOrderInfo, 9);
+            Assert.AreEqual(ctx.HighestVersion, 11);
+        }
+
+        [TestMethod]
+        public void FillMainInfo_CorrectHighestVersion_CustomHighs()
+        {
+            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
+
+            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 3, 6, 7);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 8, 34);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 11, 59);
+
+            Assert.AreEqual(ctx.TranslationCurrentOrderInfo, 9);
+            Assert.AreEqual(ctx.HighestVersion, 59);
+        }
+
+        [TestMethod]
+        public void FillMainInfo_CorrectHighestVersion_Same()
+        {
+            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
+
+            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 3, 0, -1);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 0, -1);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 0, -1);
+
+            Assert.AreEqual(ctx.TranslationCurrentOrderInfo, 9);
+            Assert.AreEqual(ctx.HighestVersion, 0);
+        }
+
+        [TestMethod]
+        public void FillMainInfo_CorrectOrderInfo_Ordered()
         {
             Setup();
 
-            var dest = new IntermediateObjInfo();
+            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
 
-            var ctx = new IntermediateObjInfoMapper.TranslationContext(dest);
-            ctx.CurrentMembers.Initialize();
-
-            ref ObjectTranslatedItemInfo info = ref ctx.CurrentMembers.CreateAndGet();
-            info.MemberType = typeof(string);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, ref info, 3, 6, 7);
-
-            info = ref ctx.CurrentMembers.CreateAndGet();
-            info.MemberType = typeof(int);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, ref info, 5, 5, 34);
-
-            info = ref ctx.CurrentMembers.CreateAndGet();
-            info.MemberType = typeof(int);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, ref info, 9, 5, 59);
+            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 3, 0, -1);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 0, -1);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 0, -1);
 
             Assert.AreEqual(ctx.TranslationCurrentOrderInfo, 9);
-            Assert.AreEqual(dest.HighestVersion, 59);
         }
 
         [TestMethod]
@@ -46,52 +81,48 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var dest = new IntermediateObjInfo();
+            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
 
-            var ctx = new IntermediateObjInfoMapper.TranslationContext(dest);
-            ctx.CurrentMembers.Initialize();
-
-            ref ObjectTranslatedItemInfo info = ref ctx.CurrentMembers.CreateAndGet();
-            info.MemberType = typeof(string);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, ref info, 9, 6, 7);
-
-            info = ref ctx.CurrentMembers.CreateAndGet();
-            info.MemberType = typeof(int);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, ref info, 5, 5, 34);
-
-            info = ref ctx.CurrentMembers.CreateAndGet();
-            info.MemberType = typeof(int);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, ref info, 7, 5, 103);
+            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 0, -1);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 0, -1);
+            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 7, 0, -1);
 
             Assert.AreEqual(ctx.TranslationCurrentOrderInfo, -1);
-            Assert.AreEqual(dest.HighestVersion, 103);
         }
 
-        [TestMethod]
-        public void OrderMembers()
-        {
-            Setup();
+        //[TestMethod]
+        //public void OrderMembers()
+        //{
+        //    Setup();
 
-            var dest = new IntermediateObjInfo();
-            var ctx = new IntermediateObjInfoMapper.TranslationContext(dest);
+        //    var dest = new IntermediateObjInfo();
+        //    var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
 
-            ctx.CurrentMembers.Initialize();
-            ref ObjectTranslatedItemInfo item = ref ctx.CurrentMembers.CreateAndGet();
-            (item.Order, item.MemberType) = (3, typeof(string));
+        //    ObjectIntermediateItem item = new ObjectIntermediateItem()
+        //    {
+        //        Order = 3
+        //    };
+        //    ctx.CurrentMembers.Add(item);
 
-            item = ref ctx.CurrentMembers.CreateAndGet();
-            (item.Order, item.MemberType) = (15, typeof(string));
+        //    item = new ObjectIntermediateItem()
+        //    {
+        //        Order = 15
+        //    };
+        //    ctx.CurrentMembers.Add(item);
 
-            item = ref ctx.CurrentMembers.CreateAndGet();
-            (item.Order, item.MemberType) = (7, typeof(int));
+        //    item = new ObjectIntermediateItem()
+        //    {
+        //        Order = 7
+        //    };
+        //    ctx.CurrentMembers.Add(item);
 
-            dest.RawMembers = ctx.CurrentMembers.ReleaseAndGetArray();
-            IntermediateObjInfoMapper.OrderMembers(ref ctx);
+        //    IntermediateObjInfoMapper.(ref ctx);
 
-            Assert.AreEqual(0, dest.SortedMembers[0].Index);
-            Assert.AreEqual(2, dest.SortedMembers[1].Index);
-            Assert.AreEqual(1, dest.SortedMembers[2].Index);
-        }
+        //    Assert.AreEqual(0, dest.SortedMembers[0].Index);
+        //    Assert.AreEqual(2, dest.SortedMembers[1].Index);
+        //    Assert.AreEqual(1, dest.SortedMembers[2].Index);
+        //}
 
         [TestMethod]
         public void NoAttribute()
@@ -108,24 +139,16 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var strMap = Generator.GetMap(typeof(string));
             var info = IntermediateObjInfoMapper.CreateInfo(isValueTypeParent ? typeof(SimpleStruct) : typeof(SimpleClass), Generator);
 
-            Assert.AreEqual(2, info.UnmappedCount);
             Assert.AreEqual(3, info.RawMembers.Length);
-
-            var iterator = new IntermediateObjInfo.MemberIterator(info);
-
-            int i = 0;
-            do
+            
+            for (int i = 0; i < info.RawMembers.Length; i++)
             {
-                ref ObjectTranslatedItemInfo item = ref iterator.GetCurrent();
+                ObjectIntermediateItem item = new ObjectIntermediateItem();
 
-                bool isItm3 = item.Order == 2;
-
-                Assert.AreEqual(isItm3 ? strMap : null, item.ExistingMap);
-                Assert.AreEqual(null, item.Accessor);
-                Assert.IsInstanceOfType(item.Info, typeof(FieldInfo));
+                Assert.IsFalse(info.RawMembers[i].IsProcessed);
+                Assert.IsInstanceOfType(info.RawMembers[i].Details.Unprocessed, typeof(FieldInfo));
 
                 Type expectedType = i switch
                 {
@@ -135,10 +158,8 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
                     _ => throw new Exception("Incorrect key")
                 };
 
-                Assert.AreEqual(expectedType, item.MemberType);
-                i++;
+                Assert.AreEqual(expectedType, ((FieldInfo)info.RawMembers[i].Details.Unprocessed).FieldType);
             }
-            while (iterator.MoveNext());
 
             //IntermediateObjInfoMapper.Release(info);
         }
@@ -152,38 +173,22 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             var info = IntermediateObjInfoMapper.CreateInfo(isValueTypeParent ? typeof(PropertyStruct) : typeof(PropertyClass), Generator);
 
-            try
+            Assert.AreEqual(0, info.HighestVersion);
+            Assert.AreEqual(2, info.RawMembers.Length);
+
+            for (int i = 0; i < info.RawMembers.Length; i++)
             {
-                Assert.AreEqual(2, info.UnmappedCount);
-                Assert.AreEqual(2, info.RawMembers.Length);
+                Assert.IsFalse(info.RawMembers[i].IsProcessed);
+                Assert.IsInstanceOfType(info.RawMembers[i].Details.Unprocessed, typeof(PropertyInfo));
 
-                var iterator = new IntermediateObjInfo.MemberIterator(info);
-
-                int i = 0;
-                do
+                Type expectedType = i switch
                 {
-                    ref ObjectTranslatedItemInfo item = ref iterator.GetCurrent();
+                    0 => typeof(string),
+                    1 => typeof(bool),
+                    _ => throw new Exception("Invalid key")
+                };
 
-                    Assert.AreEqual(null, item.ExistingMap);
-                    Assert.AreEqual(null, item.Accessor);
-                    Assert.IsInstanceOfType(item.Info, typeof(PropertyInfo));
-
-                    Type expectedType = i switch
-                    {
-                        0 => typeof(string),
-                        1 => typeof(bool),
-                        _ => throw new Exception("Invalid key")
-                    };
-
-                    Assert.AreEqual(expectedType, item.MemberType);
-                    i++;
-                }
-                while (iterator.MoveNext());
-
-            }
-            finally 
-            {
-                IntermediateObjInfoMapper.Release(info);
+                Assert.AreEqual(expectedType, ((PropertyInfo)info.RawMembers[i].Details.Unprocessed)!.PropertyType);
             }
         }
         
@@ -194,30 +199,20 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             var info = IntermediateObjInfoMapper.CreateInfo(typeof(UnorderedPropertyClass), Generator);
 
-            try
+            for (int i = 0; i < info.RawMembers.Length; i++)
             {
-                var iterator = new IntermediateObjInfo.MemberIterator(info);
+                Assert.IsFalse(info.RawMembers[i].IsProcessed);
+                Assert.IsInstanceOfType(info.RawMembers[i].Details.Unprocessed, typeof(PropertyInfo));
 
-                int i = 0;
-                do
+                Type expectedType = i switch
                 {
-                    ref ObjectTranslatedItemInfo item = ref iterator.GetCurrent();
+                    0 => typeof(bool),
+                    1 => typeof(string),
+                    _ => throw new Exception("Invalid key")
+                };
 
-                    Type expectedType = i switch
-                    {
-                        0 => typeof(bool),
-                        1 => typeof(string),
-                        _ => throw new Exception("Invalid key")
-                    };
-
-                    Assert.AreEqual(expectedType, item.MemberType);
-                    i++;
-                }
-                while (iterator.MoveNext());
-            }
-            finally
-            {
-                IntermediateObjInfoMapper.Release(info);
+                Assert.AreEqual(expectedType, ((PropertyInfo)info.RawMembers[i].Details.Unprocessed).PropertyType);
+                i++;
             }
         }
     }

@@ -14,7 +14,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
 {
     public class ConverterTestBase : TestBase
     {
-        public Converter CurrentConverter;
+        public Converter CurrentConverter = null!;
 
         public void Setup<T>(ABSaveSettings settings, Converter converter)
         {

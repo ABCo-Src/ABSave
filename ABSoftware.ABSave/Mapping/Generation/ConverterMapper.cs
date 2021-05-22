@@ -8,33 +8,29 @@ namespace ABSoftware.ABSave.Mapping.Generation
 {
     internal static class ConverterMapper
     {
-        internal static bool TryGenerateConvert(Type type, MapGenerator gen, MapItemInfo dest)
+        internal static MapItem? TryGenerate(Type type, MapGenerator gen)
         {
             var genContext = new ContextGen(type, gen);
 
-            if (!TryGetConverter(ref genContext, out var converter, out var context))
-                return false;
+            if (!TryGetConverter(ref genContext))
+                return null;
 
-            // Place the converter and its context into the item. 
-            ref MapItem item = ref gen.FillItemWith(MapItemType.Converter, dest);
-            ref ConverterMapItem convInfo = ref item.Main.Converter;
-
-            (convInfo.Converter, convInfo.Context) = (converter!, context!);
-            item.IsGenerating = false;
-            return true;
+            return genContext.ContextInstance;
         }
 
-        static bool TryGetConverter(ref ContextGen gen, out Converter? converter, out IConverterContext? context)
+        static bool TryGetConverter(ref ContextGen gen)
         {
             var settings = gen.Settings;
 
             // Exact converter
-            if (settings.ExactConverters != null && settings.ExactConverters.TryGetValue(gen.Type, out converter))
+            if (settings.ExactConverters != null && settings.ExactConverters.TryGetValue(gen.Type, out var currentConverter))
             {
-                context = converter.TryGenerateContext(ref gen);
+                currentConverter.TryGenerateContext(ref gen);
 
-                if (!gen._marked) throw new Exception("Converter refused to convert one of its exact types when asked to generate a context.");
-                return true;
+                if (gen.ContextInstance == null)
+                    throw new Exception("Converter failed to provide a context for one of its exact (and by extension guaranteed) types.");
+
+                goto Found;
             }
 
             // Non-exact converter
@@ -42,38 +38,56 @@ namespace ABSoftware.ABSave.Mapping.Generation
             {
                 for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
                 {
-                    context = settings.NonExactConverters[i].TryGenerateContext(ref gen);
+                    currentConverter = settings.NonExactConverters[i];
 
-                    if (gen._marked)
-                    {
-                        converter = settings.NonExactConverters[i];
-                        return true;
-                    }
+                    currentConverter.TryGenerateContext(ref gen);
+
+                    if (gen.ContextInstance != null)
+                        goto Found;
                 }
             }
 
-            (converter, context) = (null, null);
             return false;
+
+        Found:
+            gen.ContextInstance.Converter = currentConverter;
+            return true;
         }
     }
 
     public struct ContextGen
     {
         public Type Type;
+        internal ConverterContext? ContextInstance; // Null if not assigned by the user
         readonly MapGenerator _gen;
-        internal bool _marked;
 
         public ABSaveMap Map => _gen.Map;
         public ABSaveSettings Settings => _gen.Map.Settings;
 
-        public void MarkCanConvert() => _marked = true;
+        /// <summary>
+        /// Once it has been decided the converter will convert the type, this MUST be used to provide what context will be used. 
+        /// The context may be left null in which case an instance will be filled in and provided at serialization-time with all the correct basic details.
+        /// </summary>
+        public void AssignContext(ConverterContext? contextInstance)
+        {
+            ContextInstance = contextInstance;
+            ContextInstance ??= new ConverterContext();
+            _gen.ApplyItem(ContextInstance, Type);
+        }
 
         /// <summary>
         /// Gets the map for the given type.
         /// </summary>
-        public MapItemInfo GetMap(Type type) => _gen.GetMap(type);
+        public MapItemInfo GetMap(Type type)
+        {
+            // Force converters to "AssignContext" first to get the map item out of the allocating state as quickly as possible.
+            if (ContextInstance == null)
+                throw new Exception("Converter must assign its context first before attempting to get other maps.");
+
+            return _gen.GetMap(type);
+        }
 
         internal ContextGen(Type type, MapGenerator gen) => 
-            (Type, _gen, _marked) = (type, gen, false);
+            (Type, _gen, ContextInstance) = (type, gen, null);
     }
 }

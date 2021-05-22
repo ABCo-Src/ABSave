@@ -33,19 +33,15 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
 
         public override bool AlsoConvertsNonExact => true;
         public override Type[] ExactTypes => new Type[] { typeof(Base), typeof(int) };
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (gen.Type.IsSubclassOf(typeof(Base)) || gen.Type == typeof(int))
-            {
-                return new Context();
-            }
-
-            return null;
+            if (gen.Type == typeof(Base) || gen.Type.IsSubclassOf(typeof(Base)) || gen.Type == typeof(int))
+                gen.AssignContext(new Context());
         }
 
-        class Context : IConverterContext { }
+        class Context : ConverterContext { }
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
             if (_writesToHeader)
             {
@@ -56,7 +52,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
             header.Serializer.WriteByte(OUTPUT_BYTE);
         }
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
             if (_writesToHeader && !header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
             if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");

@@ -18,9 +18,6 @@ using BenchmarkDotNet.Diagnostics.Windows.Configs;
 
 namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
-    [MemoryDiagnoser]
-    [InliningDiagnoser(true, true)]
-    [TailCallDiagnoser]
     public class TestBenchmark
     {
         public MemoryStream ABSaveResult;
@@ -55,11 +52,6 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt"));
         }
 
-        class Test
-        {
-            public int A { get; set; } = 35;
-        }
-
         //[Benchmark]
         //public object FastGen()
         //{
@@ -82,8 +74,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         [Benchmark]
         public void ABSave()
         {
-            ABSaveResult.Position = 0;
-            ABSaveConvert.Serialize(TestObj, Map, ABSaveResult);
+            ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
         }
 
         //[Benchmark]
@@ -177,9 +168,9 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         {
             //GenerateAndSaveNewModel();
             //TestOutputSize();
-
             BenchmarkRunner.Run<TestBenchmark>();
             Console.ReadLine();
+
 
             var benchmarks = new TestBenchmark();
             benchmarks.Setup();
@@ -191,7 +182,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
 
             Debugger.Break();
 
-            for (int i = 0; i < 37199; i++)
+            for (int i = 0; i < 47629; i++)
                 benchmarks.ABSave();
 
             Debugger.Break();

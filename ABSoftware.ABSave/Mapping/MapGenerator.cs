@@ -15,38 +15,63 @@ namespace ABSoftware.ABSave.Mapping
 
         public MapItemInfo GetMap(Type type)
         {
-            // Expand it if it's a nullable.
             bool isNullable = TryExpandNullable(ref type);
 
-            // Try to get it from the dictionary, and start generating if we can't.
-            bool alreadyGenerated = GetOrStartGenerating(type, out MapItemInfo pos, Map.GenInfo.AllTypes);
-            pos.IsNullable = isNullable;
-            if (alreadyGenerated) return pos;
+            MapItem? existingItem = GetExistingOrAddNull(type);
+            if (existingItem != null) return new MapItemInfo(existingItem, isNullable);
 
+            return GenerateMap(type, isNullable);
+        }
+
+        MapItemInfo GenerateMap(Type type, bool isNullable)
+        {
             EnsureTypeSafety(type);
 
-            // Try to use a converter, and fallback to manually mapping an object if we can't.
-            if (!ConverterMapper.TryGenerateConvert(type, this, pos))
-                GenerateObject(type, this, pos);
+            // Converter
+            MapItem? converterItem = ConverterMapper.TryGenerate(type, this);
+            if (converterItem != null) return FinishItem(converterItem);
 
-            return pos;
+            // Object
+            MapItem objItem = ObjectMapper.GenerateNewObject(type, this);
+            return FinishItem(objItem);
+
+            MapItemInfo FinishItem(MapItem item)
+            {
+                item.IsGenerating = false;
+                return new MapItemInfo(item, isNullable);
+            }
         }
 
         internal MapItemInfo GetRuntimeMap(Type type)
         {
-            if (GetOrStartGenerating(type, out MapItemInfo pos, Map.GenInfo.RuntimeMapItems)) return pos;
+            bool isNullable = TryExpandNullable(ref type);
 
-            ref MapItem item = ref FillItemWith(MapItemType.Runtime, pos);
-            item.Extra.RuntimeInnerItem = GetMap(type);
-            item.IsGenerating = false;
+            MapItem? existing = GetExistingOrAddNull(type);
+            if (existing is RuntimeMapItem) return new MapItemInfo(existing, isNullable);
 
-            pos.IsNullable = item.Extra.RuntimeInnerItem.IsNullable;
-            return pos;
+            MapItem newItem = existing ?? GenerateMap(type, isNullable)._innerItem;
+
+            // Now wrap it in a runtime item.
+            RuntimeMapItem newRuntime;
+            lock (Map.AllTypes)
+            {
+                // Check one more time to make sure the runtime item wasn't generated since we last looked at it.
+                if (Map.AllTypes[type] is RuntimeMapItem itm)
+                    return new MapItemInfo(itm, isNullable);
+
+                // Generate the new item!
+                newRuntime = new RuntimeMapItem(newItem);
+                ApplyItemProperties(newRuntime, type);
+                Map.AllTypes[type] = newRuntime;
+            }
+
+            newRuntime.IsGenerating = false;
+            return new MapItemInfo(newRuntime, isNullable);
         }
 
         // ABSave Concurrent Generation System:
         //
-        // The way this system works is when an item is currently being generated, or is already generated,
+        // The way this system works is when a map item is currently being generated, or is already generated,
         // it will get added to "AllTypes". When added to "AllTypes", it's given a state, these are all the
         // scearios and the states they get assigned.
         //
@@ -54,70 +79,40 @@ namespace ABSoftware.ABSave.Mapping
         // ------
         // The type has been fully generated.
         // 
-        // READY:
+        // READY (but currently generating):
         // ------
-        // If an object is currently in the middle of being generated, it will be put in "AllTypes" under
-        // a "Ready" state, because we are able to use items while they're being generated, provided they've
-        // been allocated a place already.
+        // If an object is currently in the middle of being generated, the final instance will be put in "AllTypes" with
+        // as "currently generating". In this situation we'll just take the map item as we are able to use items
+        // while they're being generated, provided they've been allocated a place already.
+        //
+        // This is represented by "IsGenerating" being set on the instance, which is checked at serialization-time.
         //
         // ALLOCATING:
         // -----------
-        // If an object is ABOUT to start generating, but just hasn't quite been allocated a place yet, we're
-        // going to wait (keep retrying again and again) until it's finally been allocated a place.
+        // If an object is ABOUT to start generating, but just hasn't quite been allocated a place yet (meaning it
+        // hasn't determined whether it's an object or converter yet, and as such doesn't know what to make an instance of),
+        // we're going to wait (keep retrying again and again) until it's finally been allocated a place.
         //
-        // PLANNED:
-        // -----------
-        // If a new type is found in the members of an object, a generator will mark the type and say:
-        // "I plan on generating this a little later, right now I just want to get through all the members". 
-        // If we encounter a "planned" type that's been marked like this, we can take up the generation ourselves.
-
-        // Try to get the item already generated, if we can't, make a new one with an "Allocating" state.
-        //
-        // We don't want to allocate inside the lock because that holds EVERYONE up waiting. 
-        // So that's why we mark it "Allocating" first, and then finish the
-        // allocation below (outside the lock) if needed.
-
-        /// <summary>
-        /// Attempts to get the already generated type from the dictionary. If it is currently being generated
-        /// on another thread, we will wait for that to complete. If it is not being generated or does not
-        /// exist in the dictionary at all, we will start generating it.
-        /// </summary>
-        /// <returns>Whether it was already generated or not</returns>
-        internal bool GetOrStartGenerating(Type type, out MapItemInfo pos, Dictionary<Type, GenMapItemInfo> collection)
+        // This is represented by the item being null.
+        internal MapItem? GetExistingOrAddNull(Type type)
         {
-            if (TryGetItemFromDict(collection, type, MapItemState.Allocating, out pos))
-                return true;
-
-            // Generate a new item, since we failed to get anything from the dict.
-            pos = CreateItem(type, collection);
-            return false;
-        }
-
-        internal static bool TryGetItemFromDict(Dictionary<Type, GenMapItemInfo> collection, Type type, MapItemState stateToAddIfNotIn, out MapItemInfo info)
-        {
-            info = default;
-
             while (true)
             {
                 // We must lock here to ensure two threads don't both try to generate the same thing twice.
-                lock (collection)
+                lock (Map.AllTypes)
                 {
-                    if (collection.TryGetValue(type, out GenMapItemInfo val))
+                    if (Map.AllTypes.TryGetValue(type, out MapItem? val))
                     {
-                        // Let "Planned" items fall through to generating for ourselves
-                        switch (val.State)
-                        {
-                            case MapItemState.Ready:
-                                info = val.Info;
-                                return true;
-                            case MapItemState.Allocating:
-                                goto Retry;
-                        }
+                        // Allocating, try again
+                        if (val == null)
+                            goto Retry;
+                        else
+                            return val;
                     }
 
                     // Start generating this item.
-                    collection[type] = new GenMapItemInfo(stateToAddIfNotIn);
-                    return false;
+                    Map.AllTypes[type] = null;
+                    return null;
                 }
 
             Retry:
@@ -125,26 +120,44 @@ namespace ABSoftware.ABSave.Mapping
             }
         }
 
-        internal MapItemInfo CreateItem(Type type, Dictionary<Type, GenMapItemInfo> collection)
+        internal MapItem? GetExistingRuntimeOrAddNull(Type type)
         {
-            ref MapItem item = ref Map.Items.CreateItemAndGet(out NonReallocatingListPos pos);
-            item.ItemType = type;
-            item.IsValueType = type.IsValueType;
-            item.IsGenerating = true;
+            while (true)
+            {
+                // We must lock here to ensure two threads don't both try to generate the same thing twice.
+                lock (Map.AllTypes)
+                {
+                    if (Map.AllTypes.TryGetValue(type, out MapItem? val))
+                    {
+                        // Allocating, try again
+                        if (val == null)
+                            goto Retry;
+                    }
 
-            var info = new MapItemInfo(pos);
+                    // Start generating this item.
+                    Map.AllTypes[type] = null;
+                    return null;
+                }
 
-            lock (collection)
-                collection[type] = new GenMapItemInfo(info);
-
-            return info;
+            Retry:
+                Thread.Yield(); // Wait a little bit before retrying.
+            }
         }
 
-        internal ref MapItem FillItemWith(MapItemType mapType, MapItemInfo info)
+        // Adds the current item to the dictionary and fills in its details.
+        internal void ApplyItem(MapItem item, Type type)
         {
-            ref MapItem item = ref Map.Items.GetItemRef(info.Pos);
-            item.MapType = mapType;
-            return ref item;
+            ApplyItemProperties(item, type);
+
+            lock (Map.AllTypes)
+                Map.AllTypes[type] = item;
+        }
+
+        internal void ApplyItemProperties(MapItem item, Type type)
+        {
+            item.ItemType = type;
+            item.IsValueItemType = type.IsValueType;
+            item.IsGenerating = true;
         }
 
         void EnsureTypeSafety(Type type)
@@ -165,12 +178,6 @@ namespace ABSoftware.ABSave.Mapping
             }
 
             return false;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void GenerateObject(Type type, MapGenerator gen, MapItemInfo dest)
-        {
-            ObjectMapper.GenerateNewObject(type, gen, dest);
         }
 
         internal void Initialize(ABSaveMap map) => Map = map;

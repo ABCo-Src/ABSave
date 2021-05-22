@@ -20,7 +20,7 @@ namespace ABSoftware.ABSave.Converters
 
         public override Type[] ExactTypes { get; } = new Type[] { typeof(Assembly) };
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header) =>
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header) =>
             SerializeAssembly((Assembly)obj, ref header);
 
         public static void SerializeAssembly(Assembly assembly, ref BitTarget header)
@@ -65,7 +65,7 @@ namespace ABSoftware.ABSave.Converters
             return false;
         }
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header) =>
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header) =>
             DeserializeAssembly(ref header);
 
         public static Assembly DeserializeAssembly(ref BitSource header)
@@ -114,11 +114,10 @@ namespace ABSoftware.ABSave.Converters
             return null;
         }
 
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (gen.Type == typeof(Assembly) || gen.Type.IsSubclassOf(typeof(Assembly))) gen.MarkCanConvert();
-
-            return null;
+            if (gen.Type == typeof(Assembly) || gen.Type.IsSubclassOf(typeof(Assembly)))
+                gen.AssignContext(null);
         }
     }
 }

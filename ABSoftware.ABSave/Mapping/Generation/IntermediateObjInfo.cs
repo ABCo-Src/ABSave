@@ -7,58 +7,39 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
-    internal class IntermediateObjInfo
+    struct IntermediateObjInfo
     {
-        public int UnmappedCount;
         public int HighestVersion;
+        public ObjectIntermediateItem[] RawMembers;
 
-        public Type ClassType = null!;
-        public ObjectTranslatedItemInfo[] RawMembers = null!;
-
-        // Null if "RawMembers" is already sorted.
-        public ObjectTranslatedSortInfo[]? SortedMembers;
-
-        public void Initialize(Type classType)
-            => ClassType = classType;
-
-        public ref struct MemberIterator
-        {
-            readonly IntermediateObjInfo _info;
-
-            public int Length => _info.RawMembers.Length;
-            public int Index;
-
-            public MemberIterator(IntermediateObjInfo info) : this()
-            {
-                Index = 0;
-                _info = info;
-            }
-
-            public bool MoveNext() => ++Index < Length;
-
-            public ref ObjectTranslatedItemInfo GetCurrent()
-            {
-                if (_info.SortedMembers == null)
-                    return ref _info.RawMembers[Index];
-                else
-                    return ref _info.RawMembers[_info.SortedMembers[Index].Index];
-            }
-        }
+        public IntermediateObjInfo(int highestVersion, ObjectIntermediateItem[] rawMembers) =>
+            (HighestVersion, RawMembers) = (highestVersion, rawMembers);
     }
 
-    [StructLayout(LayoutKind.Auto)]
-    internal struct ObjectTranslatedItemInfo
+    internal class ObjectIntermediateItem : IComparable<ObjectIntermediateItem>
     {
-        public Type MemberType;
         public int Order;
+
+        // Whether this item has been processed yet or not.
+        public bool IsProcessed;
 
         public uint StartVer;
         public uint EndVer;
 
-        public MapItemInfo? ExistingMap;
+        public Info Details;
 
-        public MemberInfo Info;
-        public MemberAccessor Accessor;
+        [StructLayout(LayoutKind.Explicit)]
+        public struct Info
+        {
+            [FieldOffset(0)]
+            public ObjectMemberSharedInfo Processed;
+
+            [FieldOffset(0)]
+            public MemberInfo Unprocessed;
+        }
+
+        // For sorting:
+        public int CompareTo(ObjectIntermediateItem? other) => Order.CompareTo(other!.Order);
     }
 
     internal struct ObjectTranslatedSortInfo : IComparable<ObjectTranslatedSortInfo>

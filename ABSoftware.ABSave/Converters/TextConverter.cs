@@ -22,7 +22,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
             var info = (Context)context;
 
@@ -35,12 +35,13 @@ namespace ABSoftware.ABSave.Converters
                     SerializeCharArray((char[])obj, ref header);
                     break;
                 case StringType.StringBuilder:
+                    
                     SerializeStringBuilder((StringBuilder)obj, ref header);
                     break;
             }
         }
 
-        public static unsafe void SerializeCharArray(char[] obj, ref BitTarget header) =>
+        public static void SerializeCharArray(char[] obj, ref BitTarget header) =>
             header.Serializer.WriteText(obj.AsSpan(), ref header);
 
         public static void SerializeStringBuilder(StringBuilder obj, ref BitTarget header)
@@ -57,7 +58,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
             var info = (Context)context;
 
@@ -70,7 +71,7 @@ namespace ABSoftware.ABSave.Converters
             };
         }
 
-        public static unsafe char[] DeserializeCharArray(ref BitSource header)
+        public static char[] DeserializeCharArray(ref BitSource header)
         {
             if (header.Deserializer.Settings.UseUTF8)
                 return header.Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header);
@@ -90,25 +91,14 @@ namespace ABSoftware.ABSave.Converters
         #endregion
 
         #region Context
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(string))
-            {
-                gen.MarkCanConvert();
-                return Context.String;
-            }
+                gen.AssignContext(Context.String);
             else if (gen.Type == typeof(StringBuilder))
-            {
-                gen.MarkCanConvert();
-                return Context.StringBuilder;
-            }
+                gen.AssignContext(Context.StringBuilder);
             else if (gen.Type == typeof(char[])) 
-            {
-                gen.MarkCanConvert();
-                return Context.CharArray;
-            }
-
-            else return null;
+                gen.AssignContext(Context.CharArray);
         }
 
         enum StringType
@@ -118,7 +108,7 @@ namespace ABSoftware.ABSave.Converters
             CharArray
         }
 
-        class Context : IConverterContext
+        class Context : ConverterContext
         {
             public static readonly Context String = new Context() { Type = StringType.String };
             public static readonly Context StringBuilder = new Context() { Type = StringType.StringBuilder };

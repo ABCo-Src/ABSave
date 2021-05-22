@@ -26,7 +26,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
             _withHeader = withHeader;
         }
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
             if (((Context)context).WritesToHeader)
             {
@@ -37,7 +37,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
             header.Serializer.WriteByte(110);
         }
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
             if (((Context)context).WritesToHeader)
             {
@@ -51,23 +51,15 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
             return new SubWithoutHeader();
         }
 
-        public override IConverterContext TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (gen.Type == typeof(SubWithHeader))
-            {
-                gen.MarkCanConvert();
-                return new Context() { WritesToHeader = true };
-            }
+            if (gen.Type == typeof(SubWithHeader))            
+                gen.AssignContext(new Context() { WritesToHeader = true });
             else if (gen.Type == typeof(SubWithoutHeader))
-            {
-                gen.MarkCanConvert();
-                return new Context() { WritesToHeader = false };
-            }
-            else
-                return null;
+                gen.AssignContext(new Context() { WritesToHeader = false });
         }
 
-        class Context : IConverterContext
+        class Context : ConverterContext
         {
             public bool WritesToHeader;
         }

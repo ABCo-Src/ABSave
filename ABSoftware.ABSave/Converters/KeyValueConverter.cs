@@ -22,7 +22,7 @@ namespace ABSoftware.ABSave.Converters
             typeof(DictionaryEntry)
         };
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
             var actualContext = (Context)context;
 
@@ -45,7 +45,7 @@ namespace ABSoftware.ABSave.Converters
             serializer.SerializeItem(obj.Value, context.ValueMap);
         }
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
             var actualContext = (Context)context;
 
@@ -72,33 +72,31 @@ namespace ABSoftware.ABSave.Converters
             return new DictionaryEntry(key, value);
         }
 
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
-            var context = new Context();
-
             if (gen.Type.IsGenericType && gen.Type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
             {
-                gen.MarkCanConvert();
+                var context = new Context();
+                gen.AssignContext(context);
+
                 var genericArgs = gen.Type.GetGenericArguments();
 
                 context.IsGeneric = true;
                 context.KeyMap = gen.GetMap(genericArgs[0]);
                 context.ValueMap = gen.GetMap(genericArgs[1]);
-                return context;
             }
             else if (gen.Type == typeof(DictionaryEntry))
             {
-                gen.MarkCanConvert();
+                var context = new Context();
+                gen.AssignContext(context);
 
                 if (!gen.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'DictionaryEntry' type that could contain any type of element.");
                 context.IsGeneric = false;
                 context.KeyMap = context.ValueMap = gen.GetMap(typeof(object));
-                return context;
             }
-            else return null;
         }
 
-        class Context : IConverterContext
+        class Context : ConverterContext
         {
             public bool IsGeneric;
             public MapItemInfo KeyMap;

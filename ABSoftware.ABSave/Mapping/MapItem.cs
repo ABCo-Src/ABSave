@@ -10,61 +10,78 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping
 {
-    [StructLayout(LayoutKind.Auto)]
-    internal struct MapItem
+    public struct MapItemInfo
     {
-        public Type ItemType;
-        public MapItemType MapType;
-        public bool IsValueType;
-        public volatile bool IsGenerating;
-        public ExtraData Extra;
-        public MainData Main;
+        public bool IsNullable { get; internal set; }
+        internal MapItem _innerItem;
 
-        // Extra data stored in the free 4 bytes.
-        [StructLayout(LayoutKind.Explicit)]
-        public struct ExtraData
+        /// <summary>
+        /// Gets the item type this info represents, including the nullability.
+        /// </summary>
+        public Type GetItemType() =>
+            IsNullable ? typeof(Nullable<>).MakeGenericType(_innerItem.ItemType) : _innerItem.ItemType;
+
+        public bool IsValueTypeItem =>
+            IsNullable ? true : _innerItem.IsValueItemType;
+
+        public override bool Equals(object? obj)
         {
-            [FieldOffset(0)]
-            public int ObjectHighestVersion;
+            if (obj is MapItemInfo info)
+            {
+                return IsNullable == info.IsNullable && _innerItem == info._innerItem;
+            }
 
-            [FieldOffset(0)]
-            public MapItemInfo RuntimeInnerItem;
+            return false;
         }
 
-        // Main data made up of 2 references.
+        public override int GetHashCode() => base.GetHashCode();        
+
+        internal MapItemInfo(MapItem item, bool isNullable) => (_innerItem, IsNullable) = (item, isNullable);
+    }
+
+    public abstract class MapItem
+    {
+        public Type ItemType = null!;
+        public bool IsValueItemType;
+
+        internal volatile bool IsGenerating;
+        internal bool ObjectHasOneVersion;
+        public int ObjectHighestVersion;
+    }
+
+    internal sealed class ObjectMapItem : MapItem
+    {
+        public ObjectMembers Members;
+        public ObjectIntermediateItem[]? RawMembers;
+
         [StructLayout(LayoutKind.Explicit)]
-        public struct MainData
+        public struct ObjectMembers
         {
             [FieldOffset(0)]
-            public ObjectMapItem Object;
-
+            public ObjectMemberSharedInfo[] OneVersion;
+             
             [FieldOffset(0)]
-            public ConverterMapItem Converter;
+            public Dictionary<int, ObjectMemberSharedInfo[]?> MultipleVersions;
         }
     }
 
-    public enum MapItemType : byte
+    /// <summary>
+    /// Represents a map item that was retrieved during serialization-time. It has extra code-gen information as map items
+    /// retrieved at serialization-time won't have been code-generated as a part of the main type.
+    /// </summary>
+    internal sealed class RuntimeMapItem : MapItem
     {
-        Converter,
-        Object,
-        Runtime
+        internal MapItem InnerItem;
+
+        public RuntimeMapItem(MapItem innerItem) => InnerItem = innerItem;
+
+        // TODO: Add code-gen details here.
     }
 
-    internal struct ObjectMapItem
-    {
-        public Dictionary<int, ObjectMemberInfo[]?> Versions; 
-
-        // Null once all versions have been generated.
-        public IntermediateObjInfo? IntermediateInfo;
-    }
-
-    internal struct ConverterMapItem
-    {
-        public Converter Converter;
-        public IConverterContext Context;
-    }
-
-    internal struct ObjectMemberInfo
+    /// <summary>
+    /// Info about a member that's shared across all versions it occurs.
+    /// </summary>
+    internal class ObjectMemberSharedInfo
     {
         public MapItemInfo Map;
         public MemberAccessor Accessor;

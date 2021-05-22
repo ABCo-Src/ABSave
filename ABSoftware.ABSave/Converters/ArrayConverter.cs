@@ -30,7 +30,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
             var arrContext = (Context)context;
             Serialize((Array)obj, actualType, ref arrContext.Info, ref header);
@@ -217,7 +217,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
             var arrContext = (Context)context;
             return Deserialize(ref arrContext.Info, ref header);
@@ -364,32 +364,30 @@ namespace ABSoftware.ABSave.Converters
 
         #endregion
 
-        #region Context Creation
-
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Array))
             {
                 if (!gen.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'Array' type that could contain any type of element");
 
-                gen.MarkCanConvert();
-                return Context.Unknown;
+                gen.AssignContext(Context.Unknown);
+                return;
             }
 
-            if (!gen.Type.IsArray) return null;
+            if (!gen.Type.IsArray) return;
 
-            gen.MarkCanConvert();
             var res = new Context();
 
             var elemType = gen.Type.GetElementType();
+
+            gen.AssignContext(res);
             PopulateTypeInfo(ref res.Info, gen.GetMap(elemType!), gen.Map, gen.Type);
-            return res;
         }
 
         static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, ABSaveMap map, Type type)
         {
             var rank = type.GetArrayRank();
-            info.ElementType = map.GetTypeOf(itemInfo);
+            info.ElementType = itemInfo.GetItemType();
             info.PerItem = itemInfo;
 
             if (type.IsSZArray)
@@ -419,8 +417,6 @@ namespace ABSoftware.ABSave.Converters
             TypeCode.Char => FastConversionType.Char,
             _ => FastConversionType.None
         };
-
-        #endregion
 
         #region Primitive Optimization
 
@@ -551,7 +547,7 @@ namespace ABSoftware.ABSave.Converters
             UShort
         }
 
-        class Context : IConverterContext
+        class Context : ConverterContext
         {
             public static Context Unknown = new Context { Info = new ArrayTypeInfo() { Type = ArrayType.Unknown } };
 

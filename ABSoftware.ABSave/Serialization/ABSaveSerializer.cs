@@ -22,7 +22,7 @@ namespace ABSoftware.ABSave.Serialization
     /// </summary>
     public sealed partial class ABSaveSerializer
     {
-        readonly Dictionary<MapItemInfo, ObjectMemberInfo[]> _typeVersions = new Dictionary<MapItemInfo, ObjectMemberInfo[]>();
+        readonly Dictionary<MapItem, ObjectMemberSharedInfo[]> _typeVersions = new Dictionary<MapItem, ObjectMemberSharedInfo[]>();
 
         internal Dictionary<Assembly, int> SavedAssemblies = new Dictionary<Assembly, int>();
         internal Dictionary<Type, int> SavedTypes = new Dictionary<Type, int>();
@@ -91,90 +91,108 @@ namespace ABSoftware.ABSave.Serialization
         public void SerializeExactNonNullItem(object obj, MapItemInfo item)
         {
             var currentHeader = new BitTarget(this);
-            SerializeItemNoSetup(obj, obj.GetType(), item, ref currentHeader, true);
+            SerializeItemNoSetup(obj, item, ref currentHeader, true);
         }
 
         public void SerializeExactNonNullItem(object obj, MapItemInfo item, ref BitTarget target) => 
-            SerializeItemNoSetup(obj, obj.GetType(), item, ref target, true);
+            SerializeItemNoSetup(obj, item, ref target, true);
 
         public void SerializePossibleNullableItem(object obj, MapItemInfo info, ref BitTarget target)
         {
             // Say it's "not null" if it is nullable.
             if (info.IsNullable) target.WriteBitOn();
-            SerializeItemNoSetup(obj, obj.GetType(), info, ref target, info.IsNullable);
+            SerializeItemNoSetup(obj, info, ref target, info.IsNullable);
         }
 
-        void SerializeItemNoSetup(object obj, Type actualType, MapItemInfo info, ref BitTarget target, bool skipHeader)
+        void SerializeItemNoSetup(object obj, MapItemInfo info, ref BitTarget target, bool skipHeader)
         {
-            ref MapItem item = ref Map.GetItemAt(info);
-            ABSaveUtils.WaitUntilNotGenerating(ref item);
+            MapItem item = info._innerItem;
+            ABSaveUtils.WaitUntilNotGenerating(item);
 
-            switch (item.MapType)
+            switch (item)
             {
-                case MapItemType.Converter:
-                    SerializeConverterItem(obj, actualType, ref item, ref target, skipHeader);
+                case ConverterContext ctx:
+                    SerializeConverterItem(obj, ctx, ref target, skipHeader);
                     break;
-                case MapItemType.Object:
-                    SerializeObjectItem(obj, actualType, info, ref item, ref target, skipHeader);
+                case ObjectMapItem objMap:
+                    SerializeObjectItem(obj, objMap, ref target, skipHeader);
                     break;
-                case MapItemType.Runtime:
-                    SerializeItemNoSetup(obj, actualType, item.Extra.RuntimeInnerItem, ref target, skipHeader);
+                case RuntimeMapItem runtime:
+                    SerializeItemNoSetup(obj, new MapItemInfo(runtime.InnerItem, info.IsNullable), ref target, skipHeader);
                     break;
                 default:
                     throw new Exception("ABSAVE: Unrecognized map item.");
             }
         }
 
-        void SerializeConverterItem(object obj, Type actualType, ref MapItem item, ref BitTarget target, bool skipHeader)
+        void SerializeConverterItem(object obj, ConverterContext ctx, ref BitTarget target, bool skipHeader)
         {
-            ref ConverterMapItem converter = ref item.Main.Converter;
+            var actualType = obj.GetType();
 
-            if (WriteHeader(converter.Converter.ConvertsSubTypes, converter.Converter.WritesToHeader, actualType, ref item, ref target, skipHeader))
+            if (!skipHeader)
             {
-                SerializeActualType(obj, actualType);
-                return;
+                bool convSubTypes = ctx.Converter.ConvertsSubTypes;
+                bool writesToHeader = ctx.Converter.WritesToHeader;
+
+                if (WriteHeader(convSubTypes, writesToHeader, actualType, ctx, ref target))
+                {
+                    SerializeActualType(obj, actualType);
+                    return;
+                }
             }
 
-            converter.Converter.Serialize(obj, actualType, converter.Context, ref target);
+            ctx.Converter.Serialize(obj, actualType, ctx, ref target);
         }
 
 
-        void SerializeObjectItem(object obj, Type actualType, MapItemInfo mapPos, ref MapItem item, ref BitTarget target, bool skipHeader)
+        void SerializeObjectItem(object obj, ObjectMapItem item, ref BitTarget target, bool skipHeader)
         {
-            if (WriteHeader(false, true, actualType, ref item, ref target, skipHeader))
+            var actualType = obj.GetType();
+
+            // Write the header
+            if (!skipHeader)
             {
-                SerializeActualType(obj, actualType);
-                return;
+                if (WriteHeader(false, true, actualType, item, ref target))
+                {
+                    SerializeActualType(obj, actualType);
+                    return;
+                }
             }
 
-            if (_typeVersions.TryGetValue(mapPos, out ObjectMemberInfo[]? val))
-                SerializeFromMembers(val);
+            // Write the members
+            if (_typeVersions.TryGetValue(item, out ObjectMemberSharedInfo[]? val))
+                SerializeFromMembers(obj, val);
             else
-            {
-                int targetVersion = 0;
+                SerializeObjectNewVersion(obj, item, ref target);
+        }
 
-                // Try to get the custom target version and if there is none use the latest.
-                if (TargetVersions?.TryGetValue(item.ItemType, out targetVersion) != true)
-                    targetVersion = item.Extra.ObjectHighestVersion;
+        private void SerializeObjectNewVersion(object obj, ObjectMapItem item, ref BitTarget target)
+        {
+            int targetVersion = 0;
 
-                WriteCompressed((uint)targetVersion, ref target);
+            // Try to get the custom target version and if there is none use the latest.
+            if (TargetVersions?.TryGetValue(item.ItemType, out targetVersion) != true)
+                targetVersion = item.ObjectHighestVersion;
 
-                ObjectMemberInfo[] info = Map.GetMembersForVersion(ref item, targetVersion);
-                SerializeFromMembers(info);
-                _typeVersions.Add(mapPos, info);
-            }
+            // Write the verion number.
+            WriteCompressed((uint)targetVersion, ref target);
 
-            void SerializeFromMembers(ObjectMemberInfo[] members)
-            {
-                for (int i = 0; i < members.Length; i++)
-                    SerializeItem(members[i].Accessor.Getter(obj), members[i].Map);
-            }
+            // Get and write the members.
+            ObjectMemberSharedInfo[] info = Map.GetMembersForVersion(item, targetVersion);
+            SerializeFromMembers(obj, info);
+            _typeVersions.Add(item, info);
+        }
+
+        void SerializeFromMembers(object obj, ObjectMemberSharedInfo[] members)
+        {
+            for (int i = 0; i < members.Length; i++)
+                SerializeItem(members[i].Accessor.Getter(obj), members[i].Map);
         }
 
         // Returns: True if the type differed, and needs to be serialized seperately, false if not.
-        static bool WriteHeader(bool mapConvSubTypes, bool mapHasHeader, Type actualType, ref MapItem item, ref BitTarget target, bool skipHeader)
+        static bool WriteHeader(bool mapConvSubTypes, bool mapHasHeader, Type actualType, MapItem item, ref BitTarget target)
         {
-            if (skipHeader || item.IsValueType) return false;
+            if (item.IsValueItemType) return false;
 
             // Null
             target.WriteBitOn();
@@ -204,7 +222,7 @@ namespace ABSoftware.ABSave.Serialization
             var info = GetRuntimeMapItem(type);
 
             var newTarget = new BitTarget(this);
-            SerializeItemNoSetup(obj, type, info, ref newTarget, true);
+            SerializeItemNoSetup(obj, info, ref newTarget, true);
         }
 
         // TODO: Use map guides to implement proper "Type" handling via map.

@@ -37,7 +37,7 @@ namespace ABSoftware.ABSave.Converters
             typeof(bool)
         };
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
             var serializer = header.Serializer;
 
@@ -130,7 +130,7 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
             var reader = header.Deserializer;
 
@@ -158,18 +158,17 @@ namespace ABSoftware.ABSave.Converters
             }
         }
 
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (!gen.Type.IsPrimitive) return null;
+            if (!gen.Type.IsPrimitive) return;
 
-            gen.MarkCanConvert();
             var typeCode = Type.GetTypeCode(gen.Type);
 
             // IntPtr
             if (typeCode == TypeCode.Object)
                 throw new Exception("Unsupported primitive provided. Please note that ABSave does not currently support .NET 5 and above types.");
 
-            return new Context((PrimitiveType)typeCode);
+            gen.AssignContext(new Context((PrimitiveType)typeCode));
         }
 
         enum PrimitiveType
@@ -191,7 +190,7 @@ namespace ABSoftware.ABSave.Converters
             Decimal = 15,
         }
 
-        class Context : IConverterContext
+        class Context : ConverterContext
         {
             public PrimitiveType Type;
 

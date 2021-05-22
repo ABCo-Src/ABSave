@@ -27,7 +27,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
             var actualContext = (Context)context;
 
@@ -63,7 +63,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
             var actualContext = (Context)context;
 
@@ -106,11 +106,20 @@ namespace ABSoftware.ABSave.Converters
 
         #region Context
 
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (!typeof(IEnumerable).IsAssignableFrom(gen.Type)) return null;
-            gen.MarkCanConvert();
+            if (!typeof(IEnumerable).IsAssignableFrom(gen.Type)) return;
 
+            var ctx = CreateContext(ref gen);
+            gen.AssignContext(ctx);
+
+            // Fill in the context's maps.
+            ctx.ElementOrKeyMap = gen.GetMap(ctx.ElementOrKeyType);
+            if (ctx.ValueType != null) ctx.ValueMap = gen.GetMap(ctx.ValueType);
+        }
+
+        Context CreateContext(ref ContextGen gen)
+        {
             // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
             {
                 if (gen.Type.IsGenericType)
@@ -121,7 +130,7 @@ namespace ABSoftware.ABSave.Converters
                     {
                         var argType = gen.Type.GetGenericArguments()[0];
 
-                        return new Context(CollectionInfo.List, argType, gen.GetMap(argType), null, default);
+                        return new Context(CollectionInfo.List, argType, null);
                     }
                     else if (gen.Type.IsInterface)
                     {
@@ -150,10 +159,10 @@ namespace ABSoftware.ABSave.Converters
             {
                 return category switch
                 {
-                    CollectionCategory.GenericICollection => new Context(CollectionInfo.GenericICollection, elementOrKeyType, gen.GetMap(elementOrKeyType), typeof(object), default),
-                    CollectionCategory.NonGenericIList => new Context(CollectionInfo.NonGenericIList, elementOrKeyType, gen.GetMap(elementOrKeyType), typeof(object), default),
-                    CollectionCategory.GenericIDictionary => new Context(DictionaryInfo.GenericIDictionary, elementOrKeyType, gen.GetMap(elementOrKeyType), valueType, gen.GetMap(valueType!)),
-                    CollectionCategory.NonGenericIDictionary => new Context(DictionaryInfo.NonGenericIDictionary, elementOrKeyType, gen.GetMap(elementOrKeyType), valueType, gen.GetMap(valueType!)),
+                    CollectionCategory.GenericICollection => new Context(CollectionInfo.GenericICollection, elementOrKeyType, null),
+                    CollectionCategory.NonGenericIList => new Context(CollectionInfo.NonGenericIList, elementOrKeyType, null),
+                    CollectionCategory.GenericIDictionary => new Context(DictionaryInfo.GenericIDictionary, elementOrKeyType, valueType),
+                    CollectionCategory.NonGenericIDictionary => new Context(DictionaryInfo.NonGenericIDictionary, elementOrKeyType, valueType),
                     _ => throw new UnrecognizedCollectionException(),
                 };
             }
@@ -276,7 +285,7 @@ namespace ABSoftware.ABSave.Converters
             None
         }
 
-        internal class Context : IConverterContext // Internal for testing
+        internal class Context : ConverterContext // Internal for testing
         {
             public IEnumerableInfo Info;
             public Type ElementOrKeyType;
@@ -286,13 +295,11 @@ namespace ABSoftware.ABSave.Converters
             public Type? ValueType;
             public MapItemInfo ValueMap;
 
-            public Context(IEnumerableInfo info, Type elementOrKeyType, MapItemInfo elementOrKeyMap, Type? valueType, MapItemInfo valueMap)
+            public Context(IEnumerableInfo info, Type elementOrKeyType, Type? valueType)
             {
                 Info = info;
                 ElementOrKeyType = elementOrKeyType;
-                ElementOrKeyMap = elementOrKeyMap;
                 ValueType = valueType;
-                ValueMap = valueMap;
             }
         }
 

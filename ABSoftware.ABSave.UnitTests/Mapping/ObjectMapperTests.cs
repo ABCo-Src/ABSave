@@ -16,7 +16,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
     [TestClass]
     public class ObjectMapperTests : MapTestBase
     {
-        static void VerifyRuns<TParent, TItem>(MemberAccessor accessor) where TParent : new()
+        static void VerifyRuns<TParent, TItem>(ref MemberAccessor accessor) where TParent : new()
         {
             object obj = new TParent();
             object expected = null;
@@ -34,98 +34,101 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Assert.AreEqual(expected, accessor.Getter(obj));
         }
 
-        MemberAccessor RunGenerateAccessor(Type type, Type parentType, MemberInfo info)
-        {
-            var item = Generator.GetMap(type);
-            var parent = Generator.GetMap(parentType);
-
-            return ObjectMapper.GenerateAccessor(ref Generator.Map.GetItemAt(item), ref Generator.Map.GetItemAt(parent), info);
-        }
-
         [TestMethod]
-        public void GetAccessor_Field()
+        public void GetFieldAccessor()
         {
             Setup();
 
             var memberInfo = typeof(SimpleClass).GetField(nameof(SimpleClass.Itm1), BindingFlags.NonPublic | BindingFlags.Instance);
-            var accessor = RunGenerateAccessor(typeof(bool), typeof(SimpleClass), memberInfo);
 
-            Assert.IsInstanceOfType(accessor.Object1, typeof(FieldInfo));
-            Assert.AreEqual(accessor.FieldGetter, accessor.Getter);
-            Assert.AreEqual(accessor.FieldSetter, accessor.Setter);
+            var item = new ObjectMemberSharedInfo();
+            ObjectMapper.GenerateFieldAccessor(ref item.Accessor, memberInfo);
 
-            VerifyRuns<SimpleClass, bool>(accessor);
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(FieldInfo));
+            Assert.AreEqual(MemberAccessorType.Field, item.Accessor.Type);
+
+            VerifyRuns<SimpleClass, bool>(ref item.Accessor);
+        }
+
+        void RunGenerateAccessor(ref MemberAccessor dest, Type type, Type parentType, PropertyInfo info)
+        {
+            var item = Generator.GetMap(type);
+            var parent = Generator.GetMap(parentType);
+
+            ObjectMapper.GeneratePropertyAccessor(ref dest, item._innerItem, parent._innerItem, info);
         }
 
         [TestMethod]
-        public void GetAccessor_ValueTypeParent()
+        public void GetPropertyAccessor_ValueTypeParent()
         {
             Setup();
 
             // Primitive
-            var memberInfo = typeof(PropertyStruct).GetProperty(nameof(PropertyStruct.A));
+            var memberInfo = typeof(PropertyStruct).GetProperty(nameof(PropertyStruct.A))!;
 
-            var accessor = RunGenerateAccessor(typeof(string), typeof(PropertyStruct), memberInfo);
+            var item = new ObjectMemberSharedInfo();
+            RunGenerateAccessor(ref item.Accessor, typeof(string), typeof(PropertyStruct), memberInfo);
 
-            Assert.IsInstanceOfType(accessor.Object1, typeof(PropertyInfo));
-            Assert.AreEqual(accessor.SlowGetter, accessor.Getter);
-            Assert.AreEqual(accessor.SlowSetter, accessor.Setter);
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(PropertyInfo));
+            Assert.AreEqual(MemberAccessorType.SlowProperty, item.Accessor.Type);
 
-            VerifyRuns<PropertyStruct, string>(accessor);
+            VerifyRuns<PropertyStruct, string>(ref item.Accessor);
         }
 
         [TestMethod]
-        public void GetAccessor_AllRefTypes()
+        public void GetPropertyAccessor_AllRefTypes()
         {
             Setup();
 
             // Primitive
-            var memberInfo = typeof(PropertyClass).GetProperty(nameof(PropertyClass.A));
+            var memberInfo = typeof(PropertyClass).GetProperty(nameof(PropertyClass.A))!;
 
-            var accessor = RunGenerateAccessor(typeof(string), typeof(PropertyClass), memberInfo);
+            var item = new ObjectMemberSharedInfo();
+            RunGenerateAccessor(ref item.Accessor, typeof(string), typeof(PropertyClass), memberInfo);
 
-            Assert.IsInstanceOfType(accessor.Object1, typeof(Func<PropertyClass, string>));
-            Assert.IsInstanceOfType(accessor.Object2, typeof(Action<PropertyClass, string>));
-            Assert.AreEqual(accessor.AllRefGetter, accessor.Getter);
-            Assert.AreEqual(accessor.AllRefSetter, accessor.Setter);
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(Func<PropertyClass, string>));
+            Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<PropertyClass, string>));
+            Assert.AreEqual(MemberAccessorType.AllRefProperty, item.Accessor.Type);
 
-            VerifyRuns<PropertyClass, string>(accessor);
+            VerifyRuns<PropertyClass, string>(ref item.Accessor);
         }
 
-        [TestMethod]
-        public void GetAccessor_ValueType_Supported()
-        {
-            Setup();
+        //[TestMethod]
+        //public void GetPropertyAccessor_ValueType_Supported()
+        //{
+        //    Setup();
 
-            // Primitive
-            var memberInfo = typeof(PropertyClass).GetProperty(nameof(PropertyClass.B));
+        //    // Primitive
+        //    var memberInfo = typeof(PropertyClass).GetProperty(nameof(PropertyClass.B))!;
 
-            var accessor = RunGenerateAccessor(typeof(bool), typeof(PropertyClass), memberInfo);
+        //    var item = new ObjectMemberSharedInfo();
+        //    RunGenerateAccessor(ref item.Accessor, typeof(bool), typeof(PropertyClass), memberInfo);
 
-            Assert.IsInstanceOfType(accessor.Object1, typeof(Func<PropertyClass, bool>));
-            Assert.IsInstanceOfType(accessor.Object2, typeof(Action<PropertyClass, bool>));
-            Assert.AreEqual(accessor.PrimitiveGetter<bool>, accessor.Getter);
-            Assert.AreEqual(accessor.PrimitiveSetter<bool>, accessor.Setter);
+        //    Assert.IsInstanceOfType(item.Accessor.Object1, typeof(Func<PropertyClass, bool>));
+        //    Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<PropertyClass, bool>));
+        //    Assert.AreEqual(item.Accessor.PrimitiveGetter<bool>, item.Accessor.Getter);
+        //    Assert.AreEqual(item.Accessor.PrimitiveSetter<bool>, item.Accessor.Setter);
 
-            VerifyRuns<PropertyClass, bool>(accessor);
-        }
+        //    VerifyRuns<PropertyClass, bool>(ref item.Accessor);
+        //}
 
-        [TestMethod]
-        public void GetAccessor_ValueType_Unsupported()
-        {
-            Setup();
+        //[TestMethod]
+        //public void GetPropertyAccessor_ValueType_Unsupported()
+        //{
+        //    Setup();
 
-            // Primitive
-            var memberInfo = typeof(ClassWithUnspportedForFastAccessorValueType).GetProperty(nameof(ClassWithUnspportedForFastAccessorValueType.S));
+        //    // Primitive
+        //    var memberInfo = typeof(ClassWithUnspportedForFastAccessorValueType).GetProperty(nameof(ClassWithUnspportedForFastAccessorValueType.S))!;
 
-            var accessor = RunGenerateAccessor(typeof(SimpleStruct), typeof(ClassWithUnspportedForFastAccessorValueType), memberInfo);
+        //    var item = new ObjectMemberSharedInfo();
+        //    RunGenerateAccessor(ref item.Accessor, typeof(SimpleStruct), typeof(ClassWithUnspportedForFastAccessorValueType), memberInfo);
 
-            Assert.IsInstanceOfType(accessor.Object1, typeof(PropertyInfo));
-            Assert.AreEqual(accessor.SlowGetter, accessor.Getter);
-            Assert.AreEqual(accessor.SlowSetter, accessor.Setter);
+        //    Assert.IsInstanceOfType(item.Accessor.Object1, typeof(PropertyInfo));
+        //    Assert.AreEqual(item.Accessor.SlowGetter, item.Accessor.Getter);
+        //    Assert.AreEqual(item.Accessor.SlowSetter, item.Accessor.Setter);
 
-            VerifyRuns<ClassWithUnspportedForFastAccessorValueType, SimpleStruct>(accessor);
-        }
+        //    VerifyRuns<ClassWithUnspportedForFastAccessorValueType, SimpleStruct>(ref item.Accessor);
+        //}
 
         //[TestMethod]
         //public void MapObject_Empty()
@@ -197,45 +200,43 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             // Prepare the class for mapping.
-            var pos = Generator.GetMap(typeof(VersionedPropertyClass));
-
-            ref MapItem item = ref Generator.Map.GetItemAt(pos);
+            var item = (ObjectMapItem)Generator.GetMap(typeof(VersionedPropertyClass))._innerItem;
 
             // Create a new version - version 1.
             {
-                var members = Map.GetMembersForVersion(ref item, 1);
+                var members = Map.GetMembersForVersion(item, 1);
 
                 Assert.AreEqual(3, members.Length);
                 Assert.AreEqual(Generator.GetMap(typeof(DateTime)), members[0].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(bool)), members[1].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(int)), members[2].Map);
 
-                var membersAgain = Map.GetMembersForVersion(ref item, 1);
+                var membersAgain = Map.GetMembersForVersion(item, 1);
 
                 Assert.AreEqual(members, membersAgain);
             }
 
             // Create a new version - version 0.
             {
-                var members = Map.GetMembersForVersion(ref item, 0);
+                var members = Map.GetMembersForVersion(item, 0);
 
                 Assert.AreEqual(1, members.Length);
                 Assert.AreEqual(Generator.GetMap(typeof(DateTime)), members[0].Map);
 
-                var membersAgain = Map.GetMembersForVersion(ref item, 0);
+                var membersAgain = Map.GetMembersForVersion(item, 0);
                 Assert.AreEqual(members, membersAgain);
             }
 
             // Create a new version - version 2.
             {
-                var members = Map.GetMembersForVersion(ref item, 2);
+                var members = Map.GetMembersForVersion(item, 2);
 
                 Assert.AreEqual(3, members.Length);
                 Assert.AreEqual(Generator.GetMap(typeof(DateTime)), members[0].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(int)), members[1].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(long)), members[2].Map);
 
-                var membersAgain = Map.GetMembersForVersion(ref item, 2);
+                var membersAgain = Map.GetMembersForVersion(item, 2);
                 Assert.AreEqual(members, membersAgain);
             }
         }
@@ -247,11 +248,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             var pos = Generator.GetMap(typeof(VersionedPropertyClass));
 
-            Assert.ThrowsException<UnsupportedVersionException>(() =>
-            {
-                ref MapItem item = ref Generator.Map.GetItemAt(pos);
-                Map.GetMembersForVersion(ref item, 3);
-            });
+            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetMembersForVersion((ObjectMapItem)pos._innerItem, 3));
         }
     }
 }

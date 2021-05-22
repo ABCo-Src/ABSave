@@ -13,7 +13,7 @@ namespace ABSoftware.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {
-        readonly Dictionary<MapItemInfo, ObjectMemberInfo[]> _typeVersions = new Dictionary<MapItemInfo, ObjectMemberInfo[]>();
+        readonly Dictionary<MapItem, ObjectMemberSharedInfo[]> _typeVersions = new Dictionary<MapItem, ObjectMemberSharedInfo[]>();
 
         internal List<Assembly> SavedAssemblies = new List<Assembly>();
         internal List<Type> SavedTypes = new List<Type>();
@@ -52,10 +52,8 @@ namespace ABSoftware.ABSave.Deserialization
 
         public object? DeserializeItem(MapItemInfo info)
         {
-            ref MapItem item = ref Map.GetItemAt(info);
-
             // Do null checks
-            if (item.IsValueType)
+            if (info.IsValueTypeItem)
             {
                 _currentHeader = new BitSource() { Deserializer = this };
                 _readHeader = false;
@@ -68,97 +66,105 @@ namespace ABSoftware.ABSave.Deserialization
                 _readHeader = true;
             }
             
-            return DeserializeNullableItem(info, ref Map.GetItemAt(info), info.Pos.Flag, false);
+            return DeserializeNullableItem(info, false);
         }
 
         public object DeserializeExactNonNullItem(MapItemInfo info)
         {
             _currentHeader = new BitSource() { Deserializer = this };
             _readHeader = false;
-            return DeserializeItemNoSetup(info, ref Map.GetItemAt(info), true);
+            return DeserializeItemNoSetup(info, true);
         }
 
         public object? DeserializeItem(MapItemInfo info, ref BitSource header)
         {
-            ref MapItem item = ref Map.GetItemAt(info);
+            MapItem item = info._innerItem;
 
             // Do null checks
-            if (!item.IsValueType && !header.ReadBit()) return null;
+            if (!info.IsValueTypeItem && !header.ReadBit()) return null;
             
             _currentHeader = header;
             _readHeader = true;
-            return DeserializeNullableItem(info, ref item, info.Pos.Flag, false);
+            return DeserializeNullableItem(info, false);
         }
 
         public object DeserializeExactNonNullItem(MapItemInfo info, ref BitSource header)
         {
             _currentHeader = header;
             _readHeader = true;
-            return DeserializeItemNoSetup(info, ref Map.GetItemAt(info), true);
+            return DeserializeItemNoSetup(info, true);
         }
 
-        object? DeserializeNullableItem(MapItemInfo itemPos, ref MapItem item, bool isNullable, bool skipHeaderHandling)
+        object? DeserializeNullableItem(MapItemInfo info, bool skipHeader)
         {
-            if (isNullable)
+            if (info.IsNullable)
             {
                 EnsureReadHeader();
                 if (!_currentHeader.ReadBit()) return null;
-                skipHeaderHandling = true;
+                skipHeader = true;
             }
 
-            return DeserializeItemNoSetup(itemPos, ref item, skipHeaderHandling);
+            return DeserializeItemNoSetup(info, skipHeader);
         }
 
-        object DeserializeItemNoSetup(MapItemInfo itemPos, ref MapItem item, bool skipHeaderHandling)
+        object DeserializeItemNoSetup(MapItemInfo info, bool skipHeader)
         {
-            ABSaveUtils.WaitUntilNotGenerating(ref item);
+            MapItem item = info._innerItem;
+            ABSaveUtils.WaitUntilNotGenerating(item);
 
-            return item.MapType switch
+            return item switch
             {
-                MapItemType.Converter => DeserializeConverterItem(ref item, skipHeaderHandling),
-                MapItemType.Object => DeserializeObjectItem(itemPos, ref item, skipHeaderHandling),
-                MapItemType.Runtime => DeserializeItemNoSetup(item.Extra.RuntimeInnerItem, ref Map.GetItemAt(item.Extra.RuntimeInnerItem), skipHeaderHandling),
+                ConverterContext converter => DeserializeConverterItem(converter, skipHeader),
+                ObjectMapItem objItem => DeserializeObjectItem(objItem, skipHeader),
+                RuntimeMapItem runtime => DeserializeItemNoSetup(new MapItemInfo(runtime.InnerItem, info.IsNullable), skipHeader),
                 _ => throw new Exception("Unrecognized map item"),
             };
         }
 
-        private object DeserializeConverterItem(ref MapItem item, bool skipHeaderHandling)
+        private object DeserializeConverterItem(ConverterContext context, bool skipHeader)
         {
-            ref ConverterMapItem converter = ref item.Main.Converter;
+            if (!skipHeader)
+            {
+                bool convertsSubTypes = context.Converter.ConvertsSubTypes;
+                bool writesToHeader = context.Converter.WritesToHeader;
 
-            Type? actualType = ReadHeader(converter.Converter.ConvertsSubTypes, converter.Converter.WritesToHeader, skipHeaderHandling, ref item);
-            if (actualType != null) return DeserializeActualType(actualType);
-
-            return converter.Converter.Deserialize(item.ItemType, converter.Context, ref _currentHeader);
+                Type? actualType = ReadHeader(convertsSubTypes, writesToHeader, context);
+                if (actualType != null) return DeserializeItemNoSetup(GetRuntimeMapItem(actualType), true);
+            }
+            
+            return context.Converter.Deserialize(context.ItemType, context, ref _currentHeader);
         }
 
-        private object DeserializeObjectItem(MapItemInfo itemPos, ref MapItem item, bool skipHeaderHandling)
+        private object DeserializeObjectItem(ObjectMapItem item, bool skipHeader)
         {
-            Type? actualType = ReadHeader(false, true, skipHeaderHandling, ref item);
-            if (actualType != null) return DeserializeActualType(actualType);
+            if (!skipHeader)
+            {
+                Type? actualType = ReadHeader(false, true, item);
+                if (actualType != null) return DeserializeItemNoSetup(GetRuntimeMapItem(actualType), true);
+            }
 
-            return DeserializeObjectMembers(item.ItemType, itemPos, ref item);
+            return DeserializeObjectMembers(item.ItemType, item);
         }
 
-        object DeserializeObjectMembers(Type type, MapItemInfo itemPos, ref MapItem item)
+        object DeserializeObjectMembers(Type type, ObjectMapItem item)
         {
             var res = Activator.CreateInstance(type);
-
-            if (_typeVersions.TryGetValue(itemPos, out ObjectMemberInfo[]? val))
+            
+            if (_typeVersions.TryGetValue(item, out ObjectMemberSharedInfo[]? val))
                 DeserializeFromMembers(val!);
             else
             {
                 // Deserialize the version in the file.
                 int version = (int)ReadCompressedInt(ref _currentHeader);
 
-                ObjectMemberInfo[] info = Map.GetMembersForVersion(ref item, version);
-                _typeVersions.Add(itemPos, info);
+                ObjectMemberSharedInfo[] info = Map.GetMembersForVersion(item, version);
+                _typeVersions.Add(item, info);
                 DeserializeFromMembers(info);
             }
 
             return res!;
 
-            void DeserializeFromMembers(ObjectMemberInfo[] members)
+            void DeserializeFromMembers(ObjectMemberSharedInfo[] members)
             {
                 for (int i = 0; i < members.Length; i++)
                     members[i].Accessor.Setter(res!, DeserializeItem(members[i].Map));
@@ -166,9 +172,9 @@ namespace ABSoftware.ABSave.Deserialization
         }
 
         // Returns: The actual type, null if it's the same as the specified type.
-        Type? ReadHeader(bool mapSupportsSub, bool mapUsesHeader, bool skipHeaderHandling, ref MapItem item)
+        Type? ReadHeader(bool mapSupportsSub, bool mapUsesHeader, MapItem item)
         {
-            if (skipHeaderHandling || item.IsValueType)
+            if (item.IsValueItemType)
             {
                 if (mapUsesHeader) EnsureReadHeader();
                 return null;
@@ -190,12 +196,6 @@ namespace ABSoftware.ABSave.Deserialization
             }
 
             return null;
-        }
-
-        object DeserializeActualType(Type type)
-        {
-            var info = GetRuntimeMapItem(type);
-            return DeserializeItemNoSetup(info, ref Map.GetItemAt(info), true);
         }
 
         void EnsureReadHeader()

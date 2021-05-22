@@ -15,7 +15,7 @@ namespace ABSoftware.ABSave.Converters
         public override bool AlsoConvertsNonExact => false;
         public override Type[] ExactTypes { get; } = new Type[] { typeof(Guid) };
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
             var guid = (Guid)obj;
             Span<byte> bytes = stackalloc byte[16];
@@ -24,17 +24,17 @@ namespace ABSoftware.ABSave.Converters
             header.Serializer.WriteBytes(bytes);
         }
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
             Span<byte> data = stackalloc byte[16];
             header.Deserializer.ReadBytes(data);
             return new Guid(data);
         }
 
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (gen.Type == typeof(Guid)) gen.MarkCanConvert();
-            return null;
+            if (gen.Type == typeof(Guid)) 
+                gen.AssignContext(null);
         }
     }
 }

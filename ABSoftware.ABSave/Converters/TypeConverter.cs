@@ -21,7 +21,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Serialize
 
-        public override void Serialize(object obj, Type actualType, IConverterContext context, ref BitTarget header) => SerializeType((Type)obj, ref header);
+        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header) => SerializeType((Type)obj, ref header);
 
         public void SerializeType(Type type, ref BitTarget header) => SerializeType(type, ref header, SerializeGenerics);
         public void SerializeClosedType(Type type, ref BitTarget header) => SerializeType(type, ref header, SerializeClosedGenerics);
@@ -79,7 +79,7 @@ namespace ABSoftware.ABSave.Converters
 
         #region Deserialize
 
-        public override object Deserialize(Type actualType, IConverterContext context, ref BitSource header) => DeserializeType(ref header);
+        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header) => DeserializeType(ref header);
 
         public Type DeserializeType(ref BitSource header) => DeserializeType(ref header, DeserializeOpenGenerics);
         public Type DeserializeClosedType(ref BitSource header) => DeserializeType(ref header, DeserializeClosedGenerics);
@@ -176,11 +176,10 @@ namespace ABSoftware.ABSave.Converters
             return null;
         }
 
-        public override IConverterContext? TryGenerateContext(ref ContextGen gen)
+        public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (gen.Type == typeof(Type) || gen.Type.IsSubclassOf(typeof(Type))) gen.MarkCanConvert();
-            
-            return null;
+            if (gen.Type == typeof(Type) || gen.Type.IsSubclassOf(typeof(Type))) 
+                gen.AssignContext(null);
         }
     }
 }

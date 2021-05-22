@@ -20,8 +20,8 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            MapItemInfo info = Generator.CreateItem(typeof(SimpleClass), Map.GenInfo.AllTypes);
-            Assert.IsFalse(ConverterMapper.TryGenerateConvert(typeof(SimpleClass), Generator, info));
+            Generator.GetExistingOrAddNull(typeof(SimpleClass));
+            Assert.IsNull(ConverterMapper.TryGenerate(typeof(SimpleClass), Generator));
         }
 
         [TestMethod]
@@ -29,14 +29,11 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            MapItemInfo info = Generator.CreateItem(typeof(string), Map.GenInfo.AllTypes);
-            Assert.IsTrue(ConverterMapper.TryGenerateConvert(typeof(string), Generator, info));
+            Generator.GetExistingOrAddNull(typeof(string));
+            var res = ConverterMapper.TryGenerate(typeof(string), Generator);
 
-            ref MapItem item = ref Map.GetItemAt(info);
-            ref ConverterMapItem converterItem = ref item.Main.Converter;
-
-            Assert.AreEqual(TextConverter.Instance, converterItem.Converter);
-            Assert.IsNotNull(converterItem.Context);
+            Assert.IsNotNull(res);
+            Assert.AreEqual(TextConverter.Instance, ((ConverterContext)res).Converter);
         }
 
         [TestMethod]
@@ -44,14 +41,11 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            MapItemInfo info = Generator.CreateItem(typeof(KeyValuePair<int, int>), Map.GenInfo.AllTypes);
-            Assert.IsTrue(ConverterMapper.TryGenerateConvert(typeof(KeyValuePair<int, int>), Generator, info));
-
-            ref MapItem item = ref Map.GetItemAt(info);
-            ref ConverterMapItem converterItem = ref item.Main.Converter;
-
-            Assert.AreEqual(KeyValueConverter.Instance, converterItem.Converter);
-            Assert.IsNotNull(converterItem.Context);
+            Generator.GetExistingOrAddNull(typeof(KeyValuePair<int, int>));
+            var res = ConverterMapper.TryGenerate(typeof(KeyValuePair<int, int>), Generator);
+ 
+            Assert.IsNotNull(res);
+            Assert.AreEqual(KeyValueConverter.Instance, ((ConverterContext)res).Converter);
         }
     }
 }
