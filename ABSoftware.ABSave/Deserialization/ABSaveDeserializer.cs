@@ -78,8 +78,6 @@ namespace ABSoftware.ABSave.Deserialization
 
         public object? DeserializeItem(MapItemInfo info, ref BitSource header)
         {
-            MapItem item = info._innerItem;
-
             // Do null checks
             if (!info.IsValueTypeItem && !header.ReadBit()) return null;
             

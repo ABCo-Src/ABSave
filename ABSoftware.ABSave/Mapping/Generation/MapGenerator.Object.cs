@@ -1,27 +1,22 @@
 ﻿using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
-    /// <summary>
-    /// Creates a final map of an object using intermediate information from <see cref="GenObjectTranslator"/>
-    /// </summary>
-    internal static class ObjectMapper
+    // Creates a final map of an object using intermediate information from the "IntermediateObject" part.
+    public partial class MapGenerator
     {
         struct Context
         {
             public int TargetVersion;
-            public MapGenerator Gen;
             public ObjectMapItem Dest;
 
-            public Context(int targetVersion, MapGenerator gen, ObjectMapItem dest)
-                => (TargetVersion, Gen, Dest) = (targetVersion, gen, dest);
+            public Context(int targetVersion, ObjectMapItem dest)
+                => (TargetVersion, Dest) = (targetVersion, dest);
         }
 
         internal static ObjectMemberSharedInfo[]? GetVersionOrAddNull(int version, ObjectMapItem parentObj)
@@ -51,16 +46,16 @@ namespace ABSoftware.ABSave.Mapping.Generation
             }
         }
 
-        internal static ObjectMemberSharedInfo[] GenerateVersion(MapGenerator gen, int version, ObjectMapItem parentObj)
+        internal ObjectMemberSharedInfo[] GenerateVersion(int version, ObjectMapItem parentObj)
         {
             int latestVer = parentObj.ObjectHighestVersion;
 
             if (parentObj.ObjectHasOneVersion || version > latestVer)
                 throw new UnsupportedVersionException(parentObj.ItemType, version);
 
-            var ctx = new Context(version, gen, parentObj);
+            var ctx = new Context(version, parentObj);
             var newVer = GenerateNewVersion(ref ctx, parentObj);
-           
+
             lock (parentObj.Members.MultipleVersions)
             {
                 parentObj.Members.MultipleVersions[version] = newVer;
@@ -70,17 +65,17 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     parentObj.RawMembers = null;
                 }
             }
-                
+
             return newVer;
         }
 
-        internal static MapItem GenerateNewObject(Type type, MapGenerator gen)
-            => GenerateNewObject(type, IntermediateObjInfoMapper.CreateInfo(type, gen), gen);
+        internal MapItem GenerateNewObject(Type type)
+            => GenerateNewObject(type, CreateIntermediateObjectInfo(type));
 
-        internal static MapItem GenerateNewObject(Type type, IntermediateObjInfo info, MapGenerator gen)
+        internal MapItem GenerateNewObject(Type type, IntermediateObjInfo info)
         {
             var res = new ObjectMapItem();
-            gen.ApplyItem(res, type);
+            ApplyItem(res, type);
 
             // If there's literally zero members, just do nothing.
             if (info.RawMembers.Length == 0)
@@ -92,7 +87,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             // Handle objects with only one version quickly without any extra work.
             if (info.HighestVersion == 0)
             {
-                var ctx = new Context(0, gen, res);
+                var ctx = new Context(0, res);
                 GenerateForOneVersion(ref ctx, res);
 
                 // There are no more versions here, release the intermediate.
@@ -120,7 +115,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             return res;
         }
 
-        static ObjectMemberSharedInfo[] GenerateNewVersion(ref Context ctx, ObjectMapItem parent)
+        ObjectMemberSharedInfo[] GenerateNewVersion(ref Context ctx, ObjectMapItem parent)
         {
             var lst = new List<ObjectMemberSharedInfo>();
             int version = ctx.TargetVersion;
@@ -130,25 +125,25 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 var intermediateItm = ctx.Dest.RawMembers[i];
 
                 if (version >= intermediateItm.StartVer && version <= intermediateItm.EndVer)
-                    lst.Add(GetOrCreateItemFrom(intermediateItm, ctx.Gen, parent));
+                    lst.Add(GetOrCreateItemFrom(intermediateItm, parent));
             }
 
             return lst.ToArray();
         }
 
-        private static ObjectMemberSharedInfo[] GenerateForOneVersion(ref Context ctx, ObjectMapItem dest)
+        ObjectMemberSharedInfo[] GenerateForOneVersion(ref Context ctx, ObjectMapItem dest)
         {
             // No need to do any checks at all - just copy the items right across!
             ObjectMemberSharedInfo[] outputArr = new ObjectMemberSharedInfo[dest.RawMembers!.Length];
 
             for (int i = 0; i < outputArr.Length; i++)
-                outputArr[i] = CreateItem(ctx.Gen, dest, ctx.Dest.RawMembers![i]);
+                outputArr[i] = CreateItem(dest, ctx.Dest.RawMembers![i]);
 
             dest.ObjectHasOneVersion = true;
             return dest.Members.OneVersion = outputArr;
         }
 
-        static ObjectMemberSharedInfo GetOrCreateItemFrom(ObjectIntermediateItem intermediate, MapGenerator gen, ObjectMapItem parent)
+        ObjectMemberSharedInfo GetOrCreateItemFrom(ObjectIntermediateItem intermediate, ObjectMapItem parent)
         {
             if (!intermediate.IsProcessed)
             {
@@ -158,7 +153,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     // So check one more time to ensure that isn't the case.
                     if (!intermediate.IsProcessed)
                     {
-                        intermediate.Details.Processed = CreateItem(gen, parent, intermediate);
+                        intermediate.Details.Processed = CreateItem(parent, intermediate);
                         intermediate.IsProcessed = true;
                     }
                 }
@@ -167,24 +162,23 @@ namespace ABSoftware.ABSave.Mapping.Generation
             return intermediate.Details.Processed;
         }
 
-        static ObjectMemberSharedInfo CreateItem(MapGenerator gen, ObjectMapItem parent, ObjectIntermediateItem intermediate)
+        ObjectMemberSharedInfo CreateItem(ObjectMapItem parent, ObjectIntermediateItem intermediate)
         {
             var dest = new ObjectMemberSharedInfo();
             var memberInfo = intermediate.Details.Unprocessed;
-
 
             Type itemType;
 
             if (memberInfo is FieldInfo field)
             {
                 itemType = field.FieldType;
-                dest.Map = gen.GetMap(itemType);
+                dest.Map = GetMap(itemType);
                 GenerateFieldAccessor(ref dest.Accessor, memberInfo);
             }
             else if (memberInfo is PropertyInfo property)
             {
                 itemType = property.PropertyType;
-                dest.Map = gen.GetMap(itemType);
+                dest.Map = GetMap(itemType);
                 GeneratePropertyAccessor(ref dest.Accessor, dest.Map._innerItem, parent, property);
             }
             else throw new Exception("Unrecognized member info in shared info");
@@ -193,11 +187,9 @@ namespace ABSoftware.ABSave.Mapping.Generation
         }
 
         // Internal for testing:
-        internal static void GenerateFieldAccessor(ref MemberAccessor dest, MemberInfo memberInfo)
-        {
-            dest.Initialize(MemberAccessorType.Field, memberInfo, null);
-        }
-        
+        internal static void GenerateFieldAccessor(ref MemberAccessor dest, MemberInfo memberInfo) =>
+            dest.Initialize(MemberAccessorType.Field, memberInfo, null);        
+
         /// <summary>
         /// Generate the fastest possible accessor for the given property. See more details on <see cref="MemberAccessor"/>
         /// </summary>
@@ -226,10 +218,10 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     CreateAllRefTypeAccessor(ref accessor, parentItem.ItemType, item, property);
                     return;
                 }
-                    
+
             }
 
-            // Unoptimized
+        // Unoptimized
         Unoptimized:
             accessor.Initialize(MemberAccessorType.SlowProperty, property, null);
         }

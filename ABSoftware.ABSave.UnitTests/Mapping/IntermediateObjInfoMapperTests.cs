@@ -22,12 +22,12 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void FillMainInfo_CorrectHighestVersion_NoCustomHighs()
         {
-            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
+            var ctx = new MapGenerator.TranslationContext(typeof(IntermediateObjInfoMapperTests));
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 3, 6, -1);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 8, -1);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 11, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 3, 6, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 5, 8, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 9, 11, -1);
 
             Assert.AreEqual(ctx.TranslationCurrentOrderInfo, 9);
             Assert.AreEqual(ctx.HighestVersion, 11);
@@ -36,12 +36,12 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void FillMainInfo_CorrectHighestVersion_CustomHighs()
         {
-            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
+            var ctx = new MapGenerator.TranslationContext(typeof(IntermediateObjInfoMapperTests));
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 3, 6, 7);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 8, 34);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 11, 59);
+            MapGenerator.FillMainInfo(ref ctx, info, 3, 6, 7);
+            MapGenerator.FillMainInfo(ref ctx, info, 5, 8, 34);
+            MapGenerator.FillMainInfo(ref ctx, info, 9, 11, 59);
 
             Assert.AreEqual(ctx.TranslationCurrentOrderInfo, 9);
             Assert.AreEqual(ctx.HighestVersion, 59);
@@ -50,12 +50,14 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         public void FillMainInfo_CorrectHighestVersion_Same()
         {
-            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
+            Setup();
+
+            var ctx = new MapGenerator.TranslationContext(typeof(IntermediateObjInfoMapperTests));
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 3, 0, -1);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 0, -1);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 0, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 3, 0, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 5, 0, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 9, 0, -1);
 
             Assert.AreEqual(ctx.TranslationCurrentOrderInfo, 9);
             Assert.AreEqual(ctx.HighestVersion, 0);
@@ -66,12 +68,12 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
+            var ctx = new MapGenerator.TranslationContext(typeof(IntermediateObjInfoMapperTests));
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 3, 0, -1);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 0, -1);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 0, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 3, 0, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 5, 0, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 9, 0, -1);
 
             Assert.AreEqual(ctx.TranslationCurrentOrderInfo, 9);
         }
@@ -81,12 +83,12 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var ctx = new IntermediateObjInfoMapper.TranslationContext(typeof(IntermediateObjInfoMapperTests));
+            var ctx = new MapGenerator.TranslationContext(typeof(IntermediateObjInfoMapperTests));
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 9, 0, -1);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 5, 0, -1);
-            IntermediateObjInfoMapper.FillMainInfo(ref ctx, info, 7, 0, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 9, 0, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 5, 0, -1);
+            MapGenerator.FillMainInfo(ref ctx, info, 7, 0, -1);
 
             Assert.AreEqual(ctx.TranslationCurrentOrderInfo, -1);
         }
@@ -129,7 +131,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            Assert.ThrowsException<UnserializableType>(() => IntermediateObjInfoMapper.CreateInfo(typeof(UnserializableClass), Generator));
+            Assert.ThrowsException<UnserializableType>(() => Generator.CreateIntermediateObjectInfo(typeof(UnserializableClass)));
         }
 
         [TestMethod]
@@ -139,14 +141,12 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var info = IntermediateObjInfoMapper.CreateInfo(isValueTypeParent ? typeof(SimpleStruct) : typeof(SimpleClass), Generator);
+            var info = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(SimpleStruct) : typeof(SimpleClass));
 
             Assert.AreEqual(3, info.RawMembers.Length);
             
             for (int i = 0; i < info.RawMembers.Length; i++)
             {
-                ObjectIntermediateItem item = new ObjectIntermediateItem();
-
                 Assert.IsFalse(info.RawMembers[i].IsProcessed);
                 Assert.IsInstanceOfType(info.RawMembers[i].Details.Unprocessed, typeof(FieldInfo));
 
@@ -171,7 +171,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var info = IntermediateObjInfoMapper.CreateInfo(isValueTypeParent ? typeof(PropertyStruct) : typeof(PropertyClass), Generator);
+            var info = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(PropertyStruct) : typeof(PropertyClass));
 
             Assert.AreEqual(0, info.HighestVersion);
             Assert.AreEqual(2, info.RawMembers.Length);
@@ -197,7 +197,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var info = IntermediateObjInfoMapper.CreateInfo(typeof(UnorderedPropertyClass), Generator);
+            var info = Generator.CreateIntermediateObjectInfo(typeof(UnorderedPropertyClass));
 
             for (int i = 0; i < info.RawMembers.Length; i++)
             {

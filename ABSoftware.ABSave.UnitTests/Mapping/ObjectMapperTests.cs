@@ -42,7 +42,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             var memberInfo = typeof(SimpleClass).GetField(nameof(SimpleClass.Itm1), BindingFlags.NonPublic | BindingFlags.Instance);
 
             var item = new ObjectMemberSharedInfo();
-            ObjectMapper.GenerateFieldAccessor(ref item.Accessor, memberInfo);
+            MapGenerator.GenerateFieldAccessor(ref item.Accessor, memberInfo);
 
             Assert.IsInstanceOfType(item.Accessor.Object1, typeof(FieldInfo));
             Assert.AreEqual(MemberAccessorType.Field, item.Accessor.Type);
@@ -55,7 +55,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             var item = Generator.GetMap(type);
             var parent = Generator.GetMap(parentType);
 
-            ObjectMapper.GeneratePropertyAccessor(ref dest, item._innerItem, parent._innerItem, info);
+            MapGenerator.GeneratePropertyAccessor(ref dest, item._innerItem, parent._innerItem, info);
         }
 
         [TestMethod]

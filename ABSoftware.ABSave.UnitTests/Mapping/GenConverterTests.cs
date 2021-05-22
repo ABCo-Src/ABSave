@@ -21,7 +21,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             Generator.GetExistingOrAddNull(typeof(SimpleClass));
-            Assert.IsNull(ConverterMapper.TryGenerate(typeof(SimpleClass), Generator));
+            Assert.IsNull(Generator.TryGenerateConverter(typeof(SimpleClass)));
         }
 
         [TestMethod]
@@ -30,7 +30,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             Generator.GetExistingOrAddNull(typeof(string));
-            var res = ConverterMapper.TryGenerate(typeof(string), Generator);
+            var res = Generator.TryGenerateConverter(typeof(string));
 
             Assert.IsNotNull(res);
             Assert.AreEqual(TextConverter.Instance, ((ConverterContext)res).Converter);
@@ -42,7 +42,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             Generator.GetExistingOrAddNull(typeof(KeyValuePair<int, int>));
-            var res = ConverterMapper.TryGenerate(typeof(KeyValuePair<int, int>), Generator);
+            var res = Generator.TryGenerateConverter(typeof(KeyValuePair<int, int>));
  
             Assert.IsNotNull(res);
             Assert.AreEqual(KeyValueConverter.Instance, ((ConverterContext)res).Converter);

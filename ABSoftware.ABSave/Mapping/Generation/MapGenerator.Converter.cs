@@ -1,16 +1,15 @@
 ﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
-    internal static class ConverterMapper
+    public partial class MapGenerator
     {
-        internal static MapItem? TryGenerate(Type type, MapGenerator gen)
+        internal MapItem? TryGenerateConverter(Type type)
         {
-            var genContext = new ContextGen(type, gen);
+            var genContext = new ContextGen(type, this);
 
             if (!TryGetConverter(ref genContext))
                 return null;
@@ -87,7 +86,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             return _gen.GetMap(type);
         }
 
-        internal ContextGen(Type type, MapGenerator gen) => 
+        internal ContextGen(Type type, MapGenerator gen) =>
             (Type, _gen, ContextInstance) = (type, gen, null);
     }
 }

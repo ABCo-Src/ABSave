@@ -21,20 +21,16 @@ namespace ABSoftware.ABSave.Mapping
         public Type GetItemType() =>
             IsNullable ? typeof(Nullable<>).MakeGenericType(_innerItem.ItemType) : _innerItem.ItemType;
 
-        public bool IsValueTypeItem =>
-            IsNullable ? true : _innerItem.IsValueItemType;
+        public bool IsValueTypeItem => IsNullable || _innerItem.IsValueItemType;
 
-        public override bool Equals(object? obj)
-        {
-            if (obj is MapItemInfo info)
-            {
-                return IsNullable == info.IsNullable && _innerItem == info._innerItem;
-            }
+        public override bool Equals(object? obj) => obj is MapItemInfo info && this == info;
+        public static bool operator ==(MapItemInfo left, MapItemInfo right) =>
+            left.IsNullable == right.IsNullable && left._innerItem == right._innerItem;
 
-            return false;
-        }
+        public static bool operator !=(MapItemInfo left, MapItemInfo right) =>
+           left.IsNullable != right.IsNullable || left._innerItem != right._innerItem;
 
-        public override int GetHashCode() => base.GetHashCode();        
+        public override int GetHashCode() => base.GetHashCode();
 
         internal MapItemInfo(MapItem item, bool isNullable) => (_innerItem, IsNullable) = (item, isNullable);
     }

@@ -6,9 +6,9 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace ABSoftware.ABSave.Mapping
+namespace ABSoftware.ABSave.Mapping.Generation
 {
-    public unsafe class MapGenerator
+    public partial class MapGenerator
     {
         internal ABSaveMap Map = null!;
         internal MapItemInfo CurrentItem;
@@ -28,11 +28,11 @@ namespace ABSoftware.ABSave.Mapping
             EnsureTypeSafety(type);
 
             // Converter
-            MapItem? converterItem = ConverterMapper.TryGenerate(type, this);
+            MapItem? converterItem = TryGenerateConverter(type);
             if (converterItem != null) return FinishItem(converterItem);
 
             // Object
-            MapItem objItem = ObjectMapper.GenerateNewObject(type, this);
+            MapItem objItem = GenerateNewObject(type);
             return FinishItem(objItem);
 
             MapItemInfo FinishItem(MapItem item)
@@ -153,7 +153,7 @@ namespace ABSoftware.ABSave.Mapping
                 Map.AllTypes[type] = item;
         }
 
-        internal void ApplyItemProperties(MapItem item, Type type)
+        internal static void ApplyItemProperties(MapItem item, Type type)
         {
             item.ItemType = type;
             item.IsValueItemType = type.IsValueType;

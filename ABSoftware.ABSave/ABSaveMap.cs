@@ -65,13 +65,13 @@ namespace ABSoftware.ABSave.Mapping
         internal ObjectMemberSharedInfo[] GetMembersForVersion(ObjectMapItem item, int version)
         {
             // Try to get the version if it already exists.
-            var existing = ObjectMapper.GetVersionOrAddNull(version, item);
+            var existing = MapGenerator.GetVersionOrAddNull(version, item);
             if (existing != null) return existing;
 
             // If it doesn't, generate it.
             {
                 var gen = RentGenerator();
-                var res = ObjectMapper.GenerateVersion(gen, version, item);
+                var res = gen.GenerateVersion(version, item);
                 ReleaseGenerator(gen);
 
                 return res;

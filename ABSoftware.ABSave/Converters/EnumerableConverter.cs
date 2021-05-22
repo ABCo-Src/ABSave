@@ -7,8 +7,6 @@ using ABSoftware.ABSave.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO.Pipes;
 
 namespace ABSoftware.ABSave.Converters
 {
@@ -118,7 +116,7 @@ namespace ABSoftware.ABSave.Converters
             if (ctx.ValueType != null) ctx.ValueMap = gen.GetMap(ctx.ValueType);
         }
 
-        Context CreateContext(ref ContextGen gen)
+        static Context CreateContext(ref ContextGen gen)
         {
             // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
             {
@@ -135,27 +133,27 @@ namespace ABSoftware.ABSave.Converters
                     else if (gen.Type.IsInterface)
                     {
                         if (gtd == typeof(ICollection<>))
-                            return GetContextForCategory(CollectionCategory.GenericICollection, gen.Type.GetGenericArguments()[0], null, ref gen);
+                            return GetContextForCategory(CollectionCategory.GenericICollection, gen.Type.GetGenericArguments()[0], null);
                         else if (gtd == typeof(IDictionary<,>))
-                            return GetContextForCategory(CollectionCategory.GenericIDictionary, gen.Type.GetGenericArguments()[0], gen.Type.GetGenericArguments()[1], ref gen);
+                            return GetContextForCategory(CollectionCategory.GenericIDictionary, gen.Type.GetGenericArguments()[0], gen.Type.GetGenericArguments()[1]);
                     }
                 }
 
                 if (gen.Type.IsInterface)
                 {
                     if (gen.Type == typeof(IList))
-                        return GetContextForCategory(CollectionCategory.NonGenericIList, typeof(object), null, ref gen);
+                        return GetContextForCategory(CollectionCategory.NonGenericIList, typeof(object), null);
                     else if (gen.Type == typeof(IDictionary))
-                        return GetContextForCategory(CollectionCategory.NonGenericIDictionary, typeof(object), null, ref gen);
+                        return GetContextForCategory(CollectionCategory.NonGenericIDictionary, typeof(object), null);
                 }
             }
 
             // Work out what category this type falls under.
             CollectionCategory category = DetectCollectionType(gen.Type.GetInterfaces(), out Type elementOrKeyType, out Type? valueType);
-            return GetContextForCategory(category, elementOrKeyType, valueType, ref gen);
+            return GetContextForCategory(category, elementOrKeyType, valueType);
 
             // Get the correct info for the given type.
-            static Context GetContextForCategory(CollectionCategory category, Type elementOrKeyType, Type? valueType, ref ContextGen gen)
+            static Context GetContextForCategory(CollectionCategory category, Type elementOrKeyType, Type? valueType)
             {
                 return category switch
                 {

@@ -1,31 +1,27 @@
 ﻿using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping.Description;
 using ABSoftware.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
-    /// <summary>
-    /// This is executed before the <see cref="ObjectMapper"/> to gather the raw data from either the attributes
-    /// or externally defined maps, and then translate it all, alongside a lot of analysis data, into an
-    /// intermediary form, that can then used to make the final maps for all the different version numbers.
-    /// </summary>
-    internal static class IntermediateObjInfoMapper
+    // This is executed before the "Object" section to gather the raw data from either the attributes
+    // or externally defined maps, and then translate it all, alongside a lot of analysis data, into an
+    // intermediary form, that can then used to make the final maps for all the different version numbers.    
+    public partial class MapGenerator
     {
         /// <summary>
         /// Clears the list <see cref="MapGenerator.CurrentObjMembers"/> and inserts all of the members and information attached to them.
         /// </summary>
-        internal static IntermediateObjInfo CreateInfo(Type type, MapGenerator gen)
+        internal IntermediateObjInfo CreateIntermediateObjectInfo(Type type)
         {
             var ctx = new TranslationContext(type);
 
             // Coming soon: Settings-based mapping
-            Reflection.FillInfo(ref ctx, gen);
+            Reflection.FillInfo(ref ctx, this);
 
             var rawMembers = ctx.CurrentMembers.ToArray();
 
@@ -36,7 +32,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             return new IntermediateObjInfo(ctx.HighestVersion, rawMembers);
         }
 
-        internal static class Reflection
+        internal class Reflection
         {
             public static void FillInfo(ref TranslationContext ctx, MapGenerator gen)
             {
@@ -49,9 +45,9 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     var fields = ctx.ClassType.GetFields(bindingFlags);
 
                     for (int i = 0; i < fields.Length; i++)
-                        AddItem(ref ctx, gen, fields[i]);
+                        AddItem(ref ctx, fields[i]);
                 }
-                    
+
                 // Properties
                 if ((mode & SaveMembersMode.Properties) > 0)
                 {
@@ -60,12 +56,12 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     for (int i = 0; i < properties.Length; i++)
                     {
                         if (!properties[i].CanRead || !properties[i].CanWrite) continue;
-                        AddItem(ref ctx, gen, properties[i]);
+                        AddItem(ref ctx, properties[i]);
                     }
                 }
             }
 
-            static void AddItem(ref TranslationContext ctx, MapGenerator gen, MemberInfo info)
+            static void AddItem(ref TranslationContext ctx, MemberInfo info)
             {
                 ObjectIntermediateItem dest = new ObjectIntermediateItem();
                 dest.Details.Unprocessed = info;
@@ -132,7 +128,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 if (startVer > ctx.HighestVersion)
                     ctx.HighestVersion = startVer;
             }
-                
+
 
             // If not, place it in as is, and track what the highest version is based on what their custom high is.
             else

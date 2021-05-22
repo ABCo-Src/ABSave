@@ -93,7 +93,7 @@ namespace ABSoftware.ABSave.Converters
         private void SerializeUnknown(Array arr, Type actualType, ref BitTarget typeHeader)
         {
             var context = new ArrayTypeInfo();
-            PopulateTypeInfo(ref context, typeHeader.Serializer.GetRuntimeMapItem(actualType.GetElementType()!), typeHeader.Serializer.Map, actualType);
+            PopulateTypeInfo(ref context, typeHeader.Serializer.GetRuntimeMapItem(actualType.GetElementType()!), actualType);
 
             ABSaveSerializer.WriteClosedType(context.ElementType, ref typeHeader);
 
@@ -381,10 +381,10 @@ namespace ABSoftware.ABSave.Converters
             var elemType = gen.Type.GetElementType();
 
             gen.AssignContext(res);
-            PopulateTypeInfo(ref res.Info, gen.GetMap(elemType!), gen.Map, gen.Type);
+            PopulateTypeInfo(ref res.Info, gen.GetMap(elemType!), gen.Type);
         }
 
-        static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, ABSaveMap map, Type type)
+        static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, Type type)
         {
             var rank = type.GetArrayRank();
             info.ElementType = itemInfo.GetItemType();
