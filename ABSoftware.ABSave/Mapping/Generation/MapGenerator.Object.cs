@@ -12,14 +12,14 @@ namespace ABSoftware.ABSave.Mapping.Generation
     {
         struct Context
         {
-            public int TargetVersion;
+            public uint TargetVersion;
             public ObjectMapItem Dest;
 
-            public Context(int targetVersion, ObjectMapItem dest)
+            public Context(uint targetVersion, ObjectMapItem dest)
                 => (TargetVersion, Dest) = (targetVersion, dest);
         }
 
-        internal static ObjectMemberSharedInfo[]? GetVersionOrAddNull(int version, ObjectMapItem parentObj)
+        internal static ObjectMemberSharedInfo[]? GetVersionOrAddNull(uint version, ObjectMapItem parentObj)
         {
             if (parentObj.ObjectHasOneVersion)
                 return version > 0 ? null : parentObj.Members.OneVersion;
@@ -46,9 +46,9 @@ namespace ABSoftware.ABSave.Mapping.Generation
             }
         }
 
-        internal ObjectMemberSharedInfo[] GenerateVersion(int version, ObjectMapItem parentObj)
+        internal ObjectMemberSharedInfo[] GenerateVersion(uint version, ObjectMapItem parentObj)
         {
-            int latestVer = parentObj.ObjectHighestVersion;
+            uint latestVer = parentObj.ObjectHighestVersion;
 
             if (parentObj.ObjectHasOneVersion || version > latestVer)
                 throw new UnsupportedVersionException(parentObj.ItemType, version);
@@ -60,10 +60,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             {
                 parentObj.Members.MultipleVersions[version] = newVer;
                 if (parentObj.Members.MultipleVersions.Count > parentObj.ObjectHighestVersion)
-                {
-                    //IntermediateObjInfoMapper.Release(parentObj.IntermediateInfo!);
                     parentObj.RawMembers = null;
-                }
             }
 
             return newVer;
@@ -90,15 +87,14 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 var ctx = new Context(0, res);
                 GenerateForOneVersion(ref ctx, res);
 
-                // There are no more versions here, release the intermediate.
+                // There are no more versions here, drop the raw members.
                 res.RawMembers = null;
-                //IntermediateObjInfoMapper.Release(info);
             }
             else
             {
                 res.ObjectHasOneVersion = false;
                 res.RawMembers = info.RawMembers;
-                res.Members.MultipleVersions = new Dictionary<int, ObjectMemberSharedInfo[]?>();
+                res.Members.MultipleVersions = new Dictionary<uint, ObjectMemberSharedInfo[]?>();
             }
 
             return res;
@@ -118,7 +114,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
         ObjectMemberSharedInfo[] GenerateNewVersion(ref Context ctx, ObjectMapItem parent)
         {
             var lst = new List<ObjectMemberSharedInfo>();
-            int version = ctx.TargetVersion;
+            uint version = ctx.TargetVersion;
 
             for (int i = 0; i < ctx.Dest.RawMembers!.Length; i++)
             {

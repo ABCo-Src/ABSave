@@ -26,8 +26,8 @@ namespace ABSoftware.ABSave.Mapping
         {
             return Type switch
             {
-                MemberAccessorType.Field => ABSaveUtils.UnsafeFastCast<FieldInfo>(Object1).GetValue(parent),
-                MemberAccessorType.SlowProperty => ABSaveUtils.UnsafeFastCast<PropertyInfo>(Object1).GetValue(parent),
+                MemberAccessorType.Field => ((FieldInfo)Object1).GetValue(parent),
+                MemberAccessorType.SlowProperty => ((PropertyInfo)Object1).GetValue(parent),
                 MemberAccessorType.AllRefProperty => Unsafe.As<Func<object, object?>>(Object1)(parent),
                 // MemberAccessorType.PrimitiveProperty => Unsafe.As<Func<object, T>>(Object1)(parent);
                 _ => throw new Exception("Unrecognized member accessor type"),
@@ -39,10 +39,10 @@ namespace ABSoftware.ABSave.Mapping
             switch (Type)
             {
                 case MemberAccessorType.Field:
-                    ABSaveUtils.UnsafeFastCast<FieldInfo>(Object1).SetValue(parent, value);
+                    ((FieldInfo)Object1).SetValue(parent, value);
                     break;
                 case MemberAccessorType.SlowProperty:
-                    ABSaveUtils.UnsafeFastCast<PropertyInfo>(Object1).SetValue(parent, value);
+                    ((PropertyInfo)Object1).SetValue(parent, value);
                     break;
                 case MemberAccessorType.AllRefProperty:
                     Unsafe.As<Action<object, object?>>(Object2)!(parent, value);

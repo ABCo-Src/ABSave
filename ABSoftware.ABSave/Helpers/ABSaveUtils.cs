@@ -32,14 +32,6 @@ namespace ABSoftware.ABSave.Helpers
 
         internal static bool ContainsZeroByte(uint l) => ((l - 0x01010101L) & ~l & 0x80808080L) > 0;
 
-        internal static MapItemInfo GetRuntimeMapItem(Type type, ABSaveMap parent)
-        {
-            var generator = parent.RentGenerator();
-            var res = generator.GetRuntimeMap(type);
-            parent.ReleaseGenerator(generator);
-            return res;
-        }
-
         internal static void WaitUntilNotGenerating(MapItem item)
         {
             if (item.IsGenerating)
@@ -56,19 +48,10 @@ namespace ABSoftware.ABSave.Helpers
         internal static T[] CreateUninitializedArray<T>(int length)
         {
             // TODO: Add .NET 5 GC.GetUnintiailizedArray support
-#if NET5_0
+#if NET5_0_OR_GREATER
             return GC.AllocateUninitializedArray<T>(length);
 #else
             return new T[length];
-#endif
-        }
-
-        internal static T UnsafeFastCast<T>(object obj) where T : class
-        {
-#if DEBUG
-            return (T)obj;
-#else
-            return Unsafe.As<T>(obj);
 #endif
         }
     }

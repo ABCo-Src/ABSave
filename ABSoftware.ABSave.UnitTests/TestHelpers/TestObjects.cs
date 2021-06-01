@@ -200,6 +200,19 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
     }
 
     [SaveMembers]
+    public class ClassWithSkippableItem
+    {
+        [Save(0)]
+        public string A { get; set; }
+
+        // No attribute
+        public bool Skippable { get; set; }
+
+        [Save(2)]
+        public int C { get; set; }
+    }
+
+    [SaveMembers]
     public class VersionedPropertyClass
     {
         // Version 0: A

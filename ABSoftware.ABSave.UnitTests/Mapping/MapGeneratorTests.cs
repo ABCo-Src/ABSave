@@ -64,7 +64,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             // This thread will make an "Allocating" item, the "waiter" should wait for that to change.
-            var secondGenerator = Map.RentGenerator();
+            var secondGenerator = Map.GetGenerator();
             MapItem retrieved = null;
 
             var waiter = new Task(() =>
@@ -94,7 +94,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var secondGenerator = Map.RentGenerator();
+            var secondGenerator = Map.GetGenerator();
             
             MapItem first = null;
             MapItem second = null;

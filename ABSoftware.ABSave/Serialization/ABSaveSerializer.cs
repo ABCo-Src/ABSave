@@ -27,7 +27,7 @@ namespace ABSoftware.ABSave.Serialization
         internal Dictionary<Assembly, int> SavedAssemblies = new Dictionary<Assembly, int>();
         internal Dictionary<Type, int> SavedTypes = new Dictionary<Type, int>();
 
-        public Dictionary<Type, int>? TargetVersions { get; private set; }
+        public Dictionary<Type, uint>? TargetVersions { get; private set; }
         public ABSaveMap Map { get; private set; } = null!;
         public ABSaveSettings Settings { get; private set; } = null!;
         public Stream Output { get; private set; } = null!;
@@ -35,7 +35,7 @@ namespace ABSoftware.ABSave.Serialization
 
         byte[]? _stringBuffer;
 
-        public void Initialize(Stream output, ABSaveMap map, Dictionary<Type, int>? targetVersions)
+        public void Initialize(Stream output, ABSaveMap map, Dictionary<Type, uint>? targetVersions)
         {
             if (!output.CanWrite)
                 throw new Exception("Cannot use unwriteable stream.");
@@ -58,7 +58,7 @@ namespace ABSoftware.ABSave.Serialization
             _typeVersions.Clear();
         }
 
-        public MapItemInfo GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
+        public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
 
         public void SerializeRoot(object? obj)
         {
@@ -168,7 +168,7 @@ namespace ABSoftware.ABSave.Serialization
 
         private void SerializeObjectNewVersion(object obj, ObjectMapItem item, ref BitTarget target)
         {
-            int targetVersion = 0;
+            uint targetVersion = 0;
 
             // Try to get the custom target version and if there is none use the latest.
             if (TargetVersions?.TryGetValue(item.ItemType, out targetVersion) != true)

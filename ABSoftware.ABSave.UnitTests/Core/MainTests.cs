@@ -180,7 +180,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
         [TestMethod]
         public void Object_CustomVersion()
         {
-            Initialize(ABSaveSettings.ForSpeed, new Dictionary<Type, int>() { { typeof(VersionedPropertyClass), 1 } });
+            Initialize(ABSaveSettings.ForSpeed, new Dictionary<Type, uint>() { { typeof(VersionedPropertyClass), 1 } });
             ResetStateWithMapFor(typeof(VersionedPropertyClass));
             {
                 var targetObj = new VersionedPropertyClass();

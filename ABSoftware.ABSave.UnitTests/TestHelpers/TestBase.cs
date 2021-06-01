@@ -25,7 +25,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public ABSaveDeserializer Deserializer;
 
         public void Initialize() => Initialize(ABSaveSettings.ForSpeed);
-        public void Initialize(ABSaveSettings template, Dictionary<Type, int> targetVersions = null)
+        public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null)
         {
             var settingsBuilder = new ABSaveSettingsBuilder
             {

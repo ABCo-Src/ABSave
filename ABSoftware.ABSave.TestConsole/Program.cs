@@ -168,9 +168,10 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         {
             //GenerateAndSaveNewModel();
             //TestOutputSize();
+            //Console.ReadLine();
+
             BenchmarkRunner.Run<TestBenchmark>();
             Console.ReadLine();
-
 
             var benchmarks = new TestBenchmark();
             benchmarks.Setup();
@@ -182,7 +183,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
 
             Debugger.Break();
 
-            for (int i = 0; i < 47629; i++)
+            for (int i = 0; i < 100000; i++)
                 benchmarks.ABSave();
 
             Debugger.Break();

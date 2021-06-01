@@ -42,7 +42,7 @@ namespace ABSoftware.ABSave.Mapping
 
         internal volatile bool IsGenerating;
         internal bool ObjectHasOneVersion;
-        public int ObjectHighestVersion;
+        public uint ObjectHighestVersion;
     }
 
     internal sealed class ObjectMapItem : MapItem
@@ -57,7 +57,7 @@ namespace ABSoftware.ABSave.Mapping
             public ObjectMemberSharedInfo[] OneVersion;
              
             [FieldOffset(0)]
-            public Dictionary<int, ObjectMemberSharedInfo[]?> MultipleVersions;
+            public Dictionary<uint, ObjectMemberSharedInfo[]?> MultipleVersions;
         }
     }
 

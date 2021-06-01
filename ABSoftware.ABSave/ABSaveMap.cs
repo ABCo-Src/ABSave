@@ -12,7 +12,7 @@ namespace ABSoftware.ABSave.Mapping
 {
     public class ABSaveMap
     {
-        internal LightConcurrentPool<MapGenerator> GeneratorPool = new LightConcurrentPool<MapGenerator>(4);
+        internal static ThreadLocal<MapGenerator> GeneratorPool = new ThreadLocal<MapGenerator>(() => new MapGenerator());
         internal MapItemInfo RootItem;
         internal MapItemInfo AssemblyItem;
         internal MapItemInfo VersionItem;
@@ -40,43 +40,32 @@ namespace ABSoftware.ABSave.Mapping
         public static ABSaveMap GetNonGeneric(Type type, ABSaveSettings settings)
         {
             var map = new ABSaveMap(settings);
-            var generator = map.RentGenerator();
+            var generator = map.GetGenerator();
 
             map.RootItem = generator.GetMap(type);
             map.AssemblyItem = generator.GetMap(typeof(Assembly));
             map.VersionItem = generator.GetMap(typeof(Version));
-
-            map.ReleaseGenerator(generator);
             return map;
         }
 
-        internal MapGenerator RentGenerator()
+        internal MapGenerator GetGenerator()
         {
-            var res = GeneratorPool.TryRent() ?? new MapGenerator();
+            MapGenerator res = GeneratorPool.Value!;
             res.Initialize(this);
             return res;
         }
 
-        internal void ReleaseGenerator(MapGenerator gen)
-        {
-            GeneratorPool.Release(gen);
-        }
-
-        internal ObjectMemberSharedInfo[] GetMembersForVersion(ObjectMapItem item, int version)
+        internal ObjectMemberSharedInfo[] GetMembersForVersion(ObjectMapItem item, uint version)
         {
             // Try to get the version if it already exists.
             var existing = MapGenerator.GetVersionOrAddNull(version, item);
             if (existing != null) return existing;
 
             // If it doesn't, generate it.
-            {
-                var gen = RentGenerator();
-                var res = gen.GenerateVersion(version, item);
-                ReleaseGenerator(gen);
-
-                return res;
-            }
+            return GetGenerator().GenerateVersion(version, item);
         }
+
+        internal MapItemInfo GetRuntimeMapItem(Type type) => GetGenerator().GetRuntimeMap(type);
     }
 
     internal struct MapGenerationInfo

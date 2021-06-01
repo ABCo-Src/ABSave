@@ -43,7 +43,7 @@ namespace ABSoftware.ABSave.Deserialization
         BitSource _currentHeader;
         bool _readHeader;
     
-        public MapItemInfo GetRuntimeMapItem(Type type) => ABSaveUtils.GetRuntimeMapItem(type, Map);
+        public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
 
         public object? DeserializeRoot()
         {
@@ -153,7 +153,7 @@ namespace ABSoftware.ABSave.Deserialization
             else
             {
                 // Deserialize the version in the file.
-                int version = (int)ReadCompressedInt(ref _currentHeader);
+                uint version = ReadCompressedInt(ref _currentHeader);
 
                 ObjectMemberSharedInfo[] info = Map.GetMembersForVersion(item, version);
                 _typeVersions.Add(item, info);
