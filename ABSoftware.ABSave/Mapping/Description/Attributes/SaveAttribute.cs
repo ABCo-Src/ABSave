@@ -6,7 +6,7 @@ using System.Text;
 namespace ABSoftware.ABSave.Mapping.Description.Attributes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public class SaveAttribute : MapAttr
+    public sealed class SaveAttribute : MapAttr
     {
         public int Order;
 

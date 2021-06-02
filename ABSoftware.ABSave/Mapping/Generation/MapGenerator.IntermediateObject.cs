@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
@@ -16,21 +17,9 @@ namespace ABSoftware.ABSave.Mapping.Generation
     // intermediary form, that can then used to make the final maps for all the different version numbers.    
     public partial class MapGenerator
     {
-        // Constant values used in the buffer below
-        internal static readonly ObjectIntermediateItem _skipMapItem = new ObjectIntermediateItem();
-        internal static readonly ObjectIntermediateItem _invalidMapItem = new ObjectIntermediateItem();
+        public static bool IsParallel = false;
 
-        // A buffer of the current members as we add them in the intermediate items.
-        // This will contain "null"s at first but those will be turned into
-        // the correct thing as they get processed on the thread pool.
-        //
-        // If an item becomes "_skipMapItem", that means that particular item should be ignored
-        // as it did not have the "Save" attributes.
-        //
-        // If there was a problem with the attributes on the item (i.e. contained some but not required)
-        // "_invalidMapItem" will be set and once seen this will call the system to throw
-        internal ObjectIntermediateItem?[] _intermediateCurrentBuffer = Array.Empty<ObjectIntermediateItem?>();
-        internal int _intermediateCurrentBufferLength;
+        internal ReflectionMapper CurrentReflectionMapper;
 
         // Context used while creating intermediate info.
         internal TranslationContext _intermediateContext = new TranslationContext();
@@ -43,7 +32,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             _intermediateContext = new TranslationContext(type);
 
             // Coming soon: Settings-based mapping
-            var members = Reflection.FillInfo(this);
+            var members = CurrentReflectionMapper.FillInfo();
 
             if (_intermediateContext.TranslationCurrentOrderInfo == -1)
                 Array.Sort(members);
@@ -51,110 +40,162 @@ namespace ABSoftware.ABSave.Mapping.Generation
             return new IntermediateObjInfo(_intermediateContext.HighestVersion, members);
         }
 
-        internal class Reflection
+        internal class ReflectionMapper
         {
-            public static ObjectIntermediateItem[] FillInfo(MapGenerator gen)
+            internal MapGenerator Gen;
+            internal ReflectionMapper(MapGenerator gen)
+            { 
+                Gen = gen;
+                _threadPoolAddItem = ProcessAttributesOnThreadPool;
+            }
+
+            // Constant values used in the buffer below
+            internal static readonly ObjectIntermediateItem _skipMapItem = new ObjectIntermediateItem();
+            internal static readonly ObjectIntermediateItem _invalidMapItem = new ObjectIntermediateItem();
+
+            // A buffer used as we're processing the attributes of each member in parallel, each item goes to 
+            // one member. Any null items are members that did not have the "Save" attribute and should be ignored.
+            internal ObjectIntermediateItem?[] _intermediateCurrentBuffer = Array.Empty<ObjectIntermediateItem?>();
+            internal int _intermediateCurrentBufferLength;
+
+            internal MemberInfo[] _currentFields = Array.Empty<FieldInfo>();
+            internal MemberInfo[] _currentProperties = Array.Empty<PropertyInfo>();
+
+            public ObjectIntermediateItem[] FillInfo()
             {
                 var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-                var classType = gen._intermediateContext.ClassType;
+                var classType = Gen._intermediateContext.ClassType;
                 var mode = GetClassMode(classType);
 
                 // Get the members
-                FieldInfo[] fields = GetFields(bindingFlags, classType, mode);
-                PropertyInfo[] properties = GetProperties(bindingFlags, classType, mode);
+                _currentFields = GetFields(bindingFlags, classType, mode);
+                _currentProperties = GetProperties(bindingFlags, classType, mode);
 
-                PrepareBuffer(fields.Length + properties.Length, gen);
+                PrepareBuffer(_currentFields.Length + _currentProperties.Length);
 
                 // Process the members
-                if (fields.Length > 0)
-                    ProcessMembers(gen, fields, 0, fields.Length);
-                if (properties.Length > 0)
-                    ProcessMembers(gen, properties, fields.Length, properties.Length);
-
-                // Put it all together to make the final member array.
-                return CreateFinalArrayFromBuffer(gen);
+                return ProcessMembers();
             }
 
-            static void ProcessMembers(MapGenerator gen, MemberInfo[] items, int offset, int length)
+            // Info used by the threads while interpreting the attributes on members.
+            static readonly ParallelOptions Options = new ParallelOptions() { MaxDegreeOfParallelism = 2 };
+
+            ObjectIntermediateItem[] ProcessMembers()
             {
-                // First, we'll go through every member, and start examining all their attributes 
-                // on the thread pool in the background.
-                //
-                // And then we'll go through again and process all the ones that have been examined.
-                if (offset == 0)
+                // First, we'll go through every member, and start examining all their attributes in parallel.
+                // As we do this, we'll also count how many members do have the "SaveAttribute".
+                int count = ParallelProcessMembers();
+
+                // And then we'll go through what's now in the buffer, make the final members array, move it
+                // into that new array and update the context based on what we see as we do it.
+                return ProcessBufferContents(count);
+            }
+
+            volatile ManualResetEventSlim _finishedThreadPoolWork = new ManualResetEventSlim();
+            int _threadPoolCount;
+
+            int ParallelProcessMembers()
+            {
+                _threadPoolCount = 0;
+                _finishedThreadPoolWork.Reset();
+
+                // Unfortunately the overhead of anything such as "Parallel" completely negates the benefit,
+                // as do any fancy queues of what's left to process. We need to keep the parallelism extremely simple.
+                // So literally all we'll do is do one half on the thread pool, and the other half here.
+                ThreadPoolQueue();
+
+                int localCount = 0;
+                ProcessMembers(0, ref localCount);
+
+                _finishedThreadPoolWork.Wait();
+                return localCount + _threadPoolCount;
+            }
+
+            void ThreadPoolQueue()
+            {
+#if NET5_0_OR_GREATER
+                ThreadPool.UnsafeQueueUserWorkItem(_threadPoolAddItem, null, true);
+#else
+                ThreadPool.UnsafeQueueUserWorkItem(_threadPoolAddItem, null);
+#endif
+            }
+
+            ObjectIntermediateItem[] ProcessBufferContents(int totalCount)
+            {
+                int resPos = 0;
+                var res = new ObjectIntermediateItem[totalCount];
+
+                for (int i = 0; i < _intermediateCurrentBufferLength; i++)
                 {
-                    for (int i = 0; i < length; i++)
-                        StartAddItem(gen, items[i], i);
-                    for (int i = 0; i < length; i++)
-                        FinishAddItem(gen, items[i], i);
+                    ObjectIntermediateItem? item = _intermediateCurrentBuffer[i];
+                    if (item == null) continue;
+
+                    Gen.UpdateContextFromItem(item);
+                    res[resPos++] = item;
                 }
+
+                return res;
+            }
+
+
+            readonly
+#if NET5_0_OR_GREATER
+                Action<object?>
+#else
+                WaitCallback
+#endif
+                _threadPoolAddItem;
+
+            private void ProcessAttributesOnThreadPool(object? state)
+            {
+                ProcessMembers(1, ref _threadPoolCount);
+                _finishedThreadPoolWork.Set();
+            }
+
+            void ProcessMembers(int offset, ref int count)
+            {
+                for (int i = offset; i < _currentFields.Length; i += 2)
+                    ProcessMemberAttributes(_currentFields[i], ref _intermediateCurrentBuffer[i], ref count);
+
+                int currentBufferOffset = _currentFields.Length;
+
+                if (currentBufferOffset == 0)
+                    for (int i = offset; i < _currentProperties.Length; i += 2)
+                        ProcessMemberAttributes(_currentProperties[i], ref _intermediateCurrentBuffer[i], ref count);
                 else
-                {
-                    for (int i = 0; i < length; i++)
-                        StartAddItem(gen, items[i], offset + i);
-                    for (int i = 0; i < length; i++)
-                        FinishAddItem(gen, items[i], offset + i);
-                }
+                    for (int i = offset; i < _currentProperties.Length; i += 2)
+                    {
+                        ProcessMemberAttributes(_currentProperties[i], ref _intermediateCurrentBuffer[i], ref count);
+                        currentBufferOffset += 2;
+                    }
             }
 
-            static void StartAddItem(MapGenerator gen, MemberInfo info, int idx)
+            internal static void ProcessMemberAttributes(MemberInfo info, ref ObjectIntermediateItem? dest, ref int count)
             {
-                // Queue up getting the attributes to the thread pool.
-                ThreadPool.QueueUserWorkItem(ProcessItemAttributes, new ThreadItemInfo(info, gen, idx), false);
+                // Get the attributes - skip this item if there are none
+                var attributes = info.GetCustomAttributes(typeof(MapAttr), true);
+                if (attributes.Length == 0) return;
+
+                // Create the item.
+                bool successful = CreateItemFromAttributes(out ObjectIntermediateItem newItem, info, attributes);
+                if (!successful) throw new IncompleteDetailsException(info);
+
+                dest = newItem;
+                count++;
             }
 
-            static void FinishAddItem(MapGenerator gen, MemberInfo info, int idx)
+            private static bool CreateItemFromAttributes(out ObjectIntermediateItem newItem, MemberInfo info, object[] attributes)
             {
-                ref ObjectIntermediateItem? item = ref gen._intermediateCurrentBuffer[idx];
+                newItem = new ObjectIntermediateItem();
+                newItem.Details.Unprocessed = info;
 
-                // TODO: Look into perhaps a built in way to poll this?
-                while (Volatile.Read(ref item) == null)
-                    Thread.Yield();
-
-                if (item == _skipMapItem)
-                {
-                    item = null;
-                    return;
-                }
-                else if (item == _invalidMapItem)
-                {
-                    // Before we throw we need to wait for all the tasks to finish - else we'll risk
-                    // using the MapGenerator again for something else while thread pool
-                    // is still using the buffer!
-                    WaitForFullCompletion(gen, idx);
-                    throw new IncompleteDetailsException(info);
-                }
-                else
-                {
-                    gen.UpdateContextFromItem(item!);
-                    gen._intermediateContext.UnskippedMemberCount++;
-                }
-            }
-
-            internal static void ProcessItemAttributes(ThreadItemInfo info)
-            {
-                ref ObjectIntermediateItem? dest = ref info.Gen._intermediateCurrentBuffer[info.Idx];
-
-                var attributes = info.Info.GetCustomAttributes(typeof(MapAttr), true);
-                if (attributes.Length == 0)
-                    Volatile.Write(ref dest, _skipMapItem); // Mark it to be skipped.
-
-                var newItem = new ObjectIntermediateItem();
-                newItem.Details.Unprocessed = info.Info;
-
-                bool successful = InterpretAttributes(newItem, attributes);
-                Volatile.Write(ref dest, successful ? newItem : _skipMapItem);
-            }
-
-            private static bool InterpretAttributes(ObjectIntermediateItem dest, object[] attributes)
-            {
                 bool loadedSaveAttribute = false;
                 for (int i = 0; i < attributes.Length; i++)
                 {
                     switch (attributes[i])
                     {
                         case SaveAttribute save:
-                            FillMainInfo(dest, save.Order, save.FromVer, save.ToVer);
+                            FillMainInfo(newItem, save.Order, save.FromVer, save.ToVer);
                             loadedSaveAttribute = true;
                             break;
                     }
@@ -194,43 +235,35 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 return properties;
             }
 
-            static void PrepareBuffer(int size, MapGenerator gen)
+            void PrepareBuffer(int size)
             {
-                if (gen.PrepareBufferForSize(size))
-                    gen.ClearBuffer();
+                if (PrepareBufferForSize(size))
+                    ClearBuffer();
             }
 
-            private static void WaitForFullCompletion(MapGenerator gen, int idx)
+            // Returns: Needs clearing before use
+            internal bool PrepareBufferForSize(int requiredSize)
             {
-                for (int i = idx + 1; i < gen._intermediateCurrentBuffer.Length; i++)
+                _intermediateCurrentBufferLength = requiredSize;
+                if (_intermediateCurrentBuffer.Length < requiredSize)
                 {
-                    ref ObjectIntermediateItem? eachItem = ref gen._intermediateCurrentBuffer[idx];
-                    while (Volatile.Read(ref eachItem) == null);
+                    _intermediateCurrentBuffer = new ObjectIntermediateItem[requiredSize];
+                    return false;
                 }
+
+                return true;
             }
 
-            static ObjectIntermediateItem[] CreateFinalArrayFromBuffer(MapGenerator gen)
+            internal void ClearBuffer() => 
+                Array.Clear(_intermediateCurrentBuffer, 0, _intermediateCurrentBuffer.Length);
+
+            // Local info handed over to the threads.
+            internal struct ThreadLocalInfo
             {
-                int arrPos = 0;
-                var arr = new ObjectIntermediateItem[gen._intermediateContext.UnskippedMemberCount];
-                var buffer = gen._intermediateCurrentBuffer;
-                int len = gen._intermediateCurrentBufferLength;
-
-                for (int i = 0; i < len; i++)
-                    if (buffer[i] != null)
-                        arr[arrPos++] = buffer[i]!;
-
-                return arr;
-            }
-
-            // Info handed over to each thread pool operation.
-            internal struct ThreadItemInfo
-            {
-                public MemberInfo Info;
                 public MapGenerator Gen;
-                public int Idx;
+                public int Offset;
 
-                public ThreadItemInfo(MemberInfo info, MapGenerator gen, int idx) => (Info, Gen, Idx) = (info, gen, idx);
+                public ThreadLocalInfo(MapGenerator gen, int idxOffset) => (Gen, Offset) = (gen, idxOffset);
             }
         }
 
@@ -267,24 +300,6 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 if (newItem.EndVer > _intermediateContext.HighestVersion)
                     _intermediateContext.HighestVersion = newItem.EndVer;
             }
-        }
-
-        // Returns: Needs clearing before use
-        internal bool PrepareBufferForSize(int requiredSize)
-        {
-            _intermediateCurrentBufferLength = requiredSize;
-            if (_intermediateCurrentBuffer.Length < requiredSize)
-            {
-                _intermediateCurrentBuffer = new ObjectIntermediateItem[requiredSize];
-                return false;
-            }
-
-            return true;
-        }
-
-        internal void ClearBuffer()
-        {
-            Array.Clear(_intermediateCurrentBuffer, 0, _intermediateCurrentBuffer.Length);
         }
 
         internal struct TranslationContext

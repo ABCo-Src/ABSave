@@ -87,6 +87,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             await Task.Delay(1000);
 
             Assert.AreEqual(newMapItem, retrieved);
+            Map.ReleaseGenerator(secondGenerator);
         }
 
         [TestMethod]
@@ -124,6 +125,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             // Check that the item was created successfully.
             Assert.IsInstanceOfType(Map.AllTypes[typeof(int)], typeof(EmptyMapItem));
+            Map.ReleaseGenerator(secondGenerator);
         }
 
         [TestMethod]

@@ -175,7 +175,7 @@ namespace ABSoftware.ABSave.Serialization
                 targetVersion = item.ObjectHighestVersion;
 
             // Write the verion number.
-            WriteCompressed((uint)targetVersion, ref target);
+            WriteCompressed(targetVersion, ref target);
 
             // Get and write the members.
             ObjectMemberSharedInfo[] info = Map.GetMembersForVersion(item, targetVersion);

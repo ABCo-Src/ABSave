@@ -16,12 +16,11 @@ namespace ABSoftware.ABSave.Mapping
         internal MapItemInfo RootItem;
         internal MapItemInfo AssemblyItem;
         internal MapItemInfo VersionItem;
-        internal MapGenerationInfo GenInfo;
 
         /// <summary>
         /// All the types present throughout the map, and their respective map item.
         /// </summary>
-        public Dictionary<Type, MapItem?> AllTypes;
+        internal Dictionary<Type, MapItem?> AllTypes;
 
         /// <summary>
         /// The configuration this map uses.
@@ -45,6 +44,29 @@ namespace ABSoftware.ABSave.Mapping
             map.RootItem = generator.GetMap(type);
             map.AssemblyItem = generator.GetMap(typeof(Assembly));
             map.VersionItem = generator.GetMap(typeof(Version));
+
+            map.ReleaseGenerator(generator);
+            return map;
+        }
+
+        internal ObjectMemberSharedInfo[] GetMembersForVersion(ObjectMapItem item, uint version)
+        {
+            // Try to get the version if it already exists.
+            var existing = MapGenerator.GetVersionOrAddNull(version, item);
+            if (existing != null) return existing;
+
+            // If it doesn't, generate it.
+            var gen = GetGenerator();
+            var res = gen.GenerateVersion(version, item);
+            ReleaseGenerator(gen);
+            return res;
+        }
+
+        internal MapItemInfo GetRuntimeMapItem(Type type)
+        {
+            var gen = GetGenerator();
+            var map = gen.GetRuntimeMap(type);
+            ReleaseGenerator(gen);
             return map;
         }
 
@@ -55,20 +77,11 @@ namespace ABSoftware.ABSave.Mapping
             return res;
         }
 
-        internal ObjectMemberSharedInfo[] GetMembersForVersion(ObjectMapItem item, uint version)
+        // NOTE: It's generally not a good idea to call this from a "finally" just in case it pools
+        // a generator that's been left in an invalid state.
+        internal void ReleaseGenerator(MapGenerator gen)
         {
-            // Try to get the version if it already exists.
-            var existing = MapGenerator.GetVersionOrAddNull(version, item);
-            if (existing != null) return existing;
-
-            // If it doesn't, generate it.
-            return GetGenerator().GenerateVersion(version, item);
+            gen.FinishGeneration();
         }
-
-        internal MapItemInfo GetRuntimeMapItem(Type type) => GetGenerator().GetRuntimeMap(type);
-    }
-
-    internal struct MapGenerationInfo
-    {
     }
 }

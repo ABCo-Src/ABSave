@@ -16,6 +16,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
     public class CollectionTests : ConverterTestBase
     {
         static ABSaveSettings Settings = null!;
+        public MapGenerator CurrentGenerator;
         ContextGen ContextGenInfo = new();
 
         [TestInitialize]
@@ -32,6 +33,12 @@ namespace ABSoftware.ABSave.UnitTests.Converters
             CurrentGenerator.Initialize(CurrentMap);
 
             ContextGenInfo = new ContextGen(typeof(object), CurrentGenerator);
+        }
+
+        [TestCleanup]
+        public void Cleanup()
+        {
+            CurrentMap.ReleaseGenerator(CurrentGenerator);
         }
 
         [TestMethod]

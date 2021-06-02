@@ -8,12 +8,12 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
-    struct IntermediateObjInfo
+    public struct IntermediateObjInfo
     {
         public uint HighestVersion;
-        public ObjectIntermediateItem[] RawMembers;
+        internal ObjectIntermediateItem[] RawMembers;
 
-        public IntermediateObjInfo(uint highestVersion, ObjectIntermediateItem[] rawMembers) =>
+        internal IntermediateObjInfo(uint highestVersion, ObjectIntermediateItem[] rawMembers) =>
             (HighestVersion, RawMembers) = (highestVersion, rawMembers);
     }
 

@@ -136,13 +136,16 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var ctx = new MapGenerator();
+            var ctx = Generator.CurrentReflectionMapper;
             var member = typeof(ClassWithSkippableItem).GetProperty(nameof(ClassWithSkippableItem.Skippable));
             ctx.PrepareBufferForSize(3);
 
-            MapGenerator.Reflection.ProcessItemAttributes(new MapGenerator.Reflection.ThreadItemInfo(member, ctx, 1));
+            ObjectIntermediateItem item = null;
+            int count = 0;
 
-            Assert.AreEqual(ctx._intermediateCurrentBuffer[1], MapGenerator._skipMapItem);
+            MapGenerator.ReflectionMapper.ProcessMemberAttributes(member, ref item, ref count);
+            Assert.AreEqual(0, count);
+            Assert.IsNull(item);
         }
 
         [TestMethod]
@@ -150,13 +153,15 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var ctx = new MapGenerator();
+            var ctx = Generator.CurrentReflectionMapper;
             var member = typeof(VersionedPropertyClass).GetProperty(nameof(VersionedPropertyClass.B));
             ctx.PrepareBufferForSize(3);
 
-            MapGenerator.Reflection.ProcessItemAttributes(new MapGenerator.Reflection.ThreadItemInfo(member, ctx, 1));
+            ObjectIntermediateItem item = null;
+            int count = 0;
 
-            ObjectIntermediateItem item = ctx._intermediateCurrentBuffer[1];
+            MapGenerator.ReflectionMapper.ProcessMemberAttributes(member, ref item, ref count);
+            Assert.AreEqual(1, count);
             Assert.AreEqual(1, item.Order);
             Assert.AreEqual(1u, item.StartVer);
             Assert.AreEqual(1u, item.EndVer);
@@ -272,7 +277,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public void FieldsAndProperties_SmallToLarge_SharedBuffer(bool isValueTypeParent)
+        public void FieldsAndProperties_SmallToLarge_SharedGenerator(bool isValueTypeParent)
         {
             // If we re-use the same map generator and the same buffer within it but for different
             // numbers of members see if it still works.
@@ -285,7 +290,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
-        public void FieldsAndProperties_LargeToSmall_SharedBuffer(bool isValueTypeParent)
+        public void FieldsAndProperties_LargeToSmall_SharedGenerator(bool isValueTypeParent)
         {
             // If we re-use the same map generator and the same buffer within it but for different
             // numbers of members see if it still works.

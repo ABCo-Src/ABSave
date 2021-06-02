@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
@@ -168,17 +169,16 @@ namespace ABSoftware.ABSave.Mapping.Generation
             if (memberInfo is FieldInfo field)
             {
                 itemType = field.FieldType;
-                dest.Map = GetMap(itemType);
                 GenerateFieldAccessor(ref dest.Accessor, memberInfo);
             }
             else if (memberInfo is PropertyInfo property)
             {
                 itemType = property.PropertyType;
-                dest.Map = GetMap(itemType);
-                GeneratePropertyAccessor(ref dest.Accessor, dest.Map._innerItem, parent, property);
+                _propertyAccessorsToProcess.Add(new PropertyAccessorsToProcess(dest, parent, property));
             }
             else throw new Exception("Unrecognized member info in shared info");
 
+            dest.Map = GetMap(itemType);
             return dest;
         }
 
@@ -265,6 +265,30 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 GenericPropertySetterDelegate.MakeGenericType(parent, item.ItemType));
 
             accessor.Initialize(MemberAccessorType.AllRefProperty, propGetter, propSetter);
+        }
+
+        struct PropertyAccessorsToProcess
+        {
+            public ObjectMemberSharedInfo Info;
+            public PropertyInfo Property;
+            public MapItem Parent;
+
+            public PropertyAccessorsToProcess(ObjectMemberSharedInfo info, MapItem parent, PropertyInfo property) =>
+                (Info, Parent, Property) = (info, parent, property);
+        }
+
+        // A list of all the property members to still have their accessor processed. These get
+        // parallel processed at the very end of the generation process.
+        List<PropertyAccessorsToProcess> _propertyAccessorsToProcess = new List<PropertyAccessorsToProcess>();
+
+        private void ProcessAllQueuedAccessors()
+        {
+            Parallel.ForEach(_propertyAccessorsToProcess, s =>
+            {
+                GeneratePropertyAccessor(ref s.Info.Accessor, s.Info.Map._innerItem, s.Parent, s.Property);
+            });
+
+            _propertyAccessorsToProcess.Clear();
         }
     }
 }

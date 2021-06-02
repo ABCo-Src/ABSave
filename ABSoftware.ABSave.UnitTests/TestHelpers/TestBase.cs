@@ -17,7 +17,6 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
     public abstract class TestBase
     {
         public ABSaveMap CurrentMap;
-        public MapGenerator CurrentGenerator;
         public MapItemInfo CurrentMapItem;
 
         public MemoryStream Stream;
@@ -39,9 +38,6 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
             };
 
             CurrentMap = ABSaveMap.Get<EmptyClass>(settingsBuilder.CreateSettings(template));
-
-            CurrentGenerator = new MapGenerator();
-            CurrentGenerator.Initialize(CurrentMap);
 
             Stream = new MemoryStream();
             Serializer = new ABSaveSerializer();
@@ -77,20 +73,28 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         {
             ResetState();
 
-            CurrentGenerator.GetExistingOrAddNull(type);
+            var gen = CurrentMap.GetGenerator();
+            {
+                gen.GetExistingOrAddNull(type);
 
-            var genContext = new ContextGen(type, CurrentGenerator);
-            converter.TryGenerateContext(ref genContext);
+                var genContext = new ContextGen(type, gen);
+                converter.TryGenerateContext(ref genContext);
 
-            genContext.ContextInstance.Converter = converter;
-            genContext.ContextInstance.IsGenerating = false;
-            CurrentMapItem = new MapItemInfo(genContext.ContextInstance, false);
+                genContext.ContextInstance.Converter = converter;
+                genContext.ContextInstance.IsGenerating = false;
+                CurrentMapItem = new MapItemInfo(genContext.ContextInstance, false);
+            }
+
+            CurrentMap.ReleaseGenerator(gen);
         }
 
         public void ResetStateWithMapFor(Type type)
         {
             ResetState();
-            CurrentMapItem = CurrentGenerator.GetMap(type);
+
+            var gen = CurrentMap.GetGenerator();
+            CurrentMapItem = gen.GetMap(type);
+            CurrentMap.ReleaseGenerator(gen);
         }
 
         public void ResetState()

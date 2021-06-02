@@ -180,6 +180,9 @@ namespace ABSoftware.ABSave.Mapping.Generation
             return false;
         }
 
+        internal MapGenerator() => CurrentReflectionMapper = new ReflectionMapper(this);
+
         internal void Initialize(ABSaveMap map) => Map = map;
+        internal void FinishGeneration() => ProcessAllQueuedAccessors();
     }
 }

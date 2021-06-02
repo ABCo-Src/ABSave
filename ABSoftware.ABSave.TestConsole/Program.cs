@@ -15,9 +15,12 @@ using System.Xml.Serialization;
 using ABSoftware.ABSave.Serialization;
 using System.Reflection;
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
+using ABSoftware.ABSave.Mapping.Description.Attributes;
+using ABSoftware.ABSave.Mapping.Generation;
 
 namespace ABSoftware.ABSave.Testing.ConsoleApp
 {
+
     public class TestBenchmark
     {
         public MemoryStream ABSaveResult;
@@ -49,8 +52,9 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             BinaryPackResult = new MemoryStream();
 
             Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
-            TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt"));
+            //TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt"));
         }
+
 
         //[Benchmark]
         //public object FastGen()
@@ -74,7 +78,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
         [Benchmark]
         public void ABSave()
         {
-            ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
         }
 
         //[Benchmark]
@@ -170,6 +174,7 @@ namespace ABSoftware.ABSave.Testing.ConsoleApp
             //TestOutputSize();
             //Console.ReadLine();
 
+            //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(null, new DebugInProcessConfig());
             BenchmarkRunner.Run<TestBenchmark>();
             Console.ReadLine();
 
