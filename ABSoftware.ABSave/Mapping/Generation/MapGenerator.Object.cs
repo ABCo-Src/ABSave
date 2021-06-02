@@ -131,7 +131,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
         ObjectMemberSharedInfo[] GenerateForOneVersion(ref Context ctx, ObjectMapItem dest)
         {
             // No need to do any checks at all - just copy the items right across!
-            ObjectMemberSharedInfo[] outputArr = new ObjectMemberSharedInfo[dest.RawMembers!.Length];
+            var outputArr = new ObjectMemberSharedInfo[dest.RawMembers!.Length];
 
             for (int i = 0; i < outputArr.Length; i++)
                 outputArr[i] = CreateItem(dest, ctx.Dest.RawMembers![i]);
@@ -189,80 +189,64 @@ namespace ABSoftware.ABSave.Mapping.Generation
         /// <summary>
         /// Generate the fastest possible accessor for the given property. See more details on <see cref="MemberAccessor"/>
         /// </summary>
-        internal static void GeneratePropertyAccessor(ref MemberAccessor accessor, MapItem item, MapItem parentItem, PropertyInfo property)
+        internal static void GeneratePropertyAccessor(ref MemberAccessor accessor, MapItemInfo item, MapItem parentItem, PropertyInfo property)
         {
             // All property optimizations rely on the parent being a reference-type.
             if (!parentItem.IsValueItemType)
             {
                 // Value type property - Just support some basic primitives.
-                if (item.IsValueItemType)
+                if (item.IsValueTypeItem)
                 {
-                    // TODO: Investigate adding primitive support.
-                    goto Unoptimized; // Temporary goto
-                    //// Rationale: Generating an accessor for value types is very difficult, as JIT gen
-                    //// for value types varies wildly and is too implementation-specific. Since this 
-                    //// is only designed to be a quick and dirty fast accessor anyway, it's easiest if
-                    //// we only support the very basic primitives (which are very common anyway)
-                    //// and nothing more. "MakeGenericMethod" is too expensive.
-                    //var successful = TryGenerateAccessorPrimitive(accessor, parentItem.ItemType, item.ItemType, property);
-                    //if (successful) return;
+                    // Rationale: Generating an accessor for value types is very difficult, as JIT gen
+                    // for value types varies wildly and is too implementation-specific. Since this 
+                    // is only designed to be a quick and dirty fast accessor anyway, it's easiest if
+                    // we only support the very basic primitives (which are very common anyway)
+                    // and nothing more. "MakeGenericMethod" is too expensive.
+                    var successful = TryGenerateAccessorPrimitive(ref accessor, parentItem.ItemType, item.GetItemType(), property);
+                    if (successful) return;
                 }
 
                 // Reference type property - Simply force cast to "object".
                 else
                 {
-                    CreateAllRefTypeAccessor(ref accessor, parentItem.ItemType, item, property);
+                    CreateAllRefTypeAccessor(ref accessor, parentItem.ItemType, item.GetItemType(), property);
                     return;
                 }
 
             }
 
-        // Unoptimized
-        Unoptimized:
+            // Unoptimized
             accessor.Initialize(MemberAccessorType.SlowProperty, property, null);
         }
 
-        static readonly Type GenericPropertyGetterDelegate = typeof(Func<,>);
-        static readonly Type GenericPropertySetterDelegate = typeof(Action<,>);
+        internal delegate object ReferenceGetterDelegate<T>(T val);
+        static readonly Type GenericRefPropertyGetter = typeof(ReferenceGetterDelegate<>);
+        static readonly Type GenericPrimitivePropertyGetter = typeof(Func<,>);
+        static readonly Type GenericPropertySetter = typeof(Action<,>);
 
         // Try to generate an accessor for a built-in primitive type.
-        //static bool TryGenerateAccessorPrimitive(MemberAccessor accessor, Type parentType, Type type, PropertyInfo property)
-        //{
-        //    return Type.GetTypeCode(type) switch
-        //    {
-        //        TypeCode.Boolean => ApplyPrimitiveAccessorFor<bool>(),
-        //        TypeCode.Byte => ApplyPrimitiveAccessorFor<byte>(),
-        //        TypeCode.SByte => ApplyPrimitiveAccessorFor<sbyte>(),
-        //        TypeCode.UInt16 => ApplyPrimitiveAccessorFor<ushort>(),
-        //        TypeCode.Int16 => ApplyPrimitiveAccessorFor<short>(),
-        //        TypeCode.Int32 => ApplyPrimitiveAccessorFor<int>(),
-        //        TypeCode.UInt32 => ApplyPrimitiveAccessorFor<uint>(),
-        //        TypeCode.Int64 => ApplyPrimitiveAccessorFor<long>(),
-        //        TypeCode.UInt64 => ApplyPrimitiveAccessorFor<ulong>(),
-        //        TypeCode.Single => ApplyPrimitiveAccessorFor<float>(),
-        //        TypeCode.Double => ApplyPrimitiveAccessorFor<double>(),
-        //        TypeCode.Decimal => ApplyPrimitiveAccessorFor<decimal>(),
-        //        TypeCode.DateTime => ApplyPrimitiveAccessorFor<DateTime>(),
-        //        _ => false
-        //    };
+        static bool TryGenerateAccessorPrimitive(ref MemberAccessor accessor, Type parentType, Type type, PropertyInfo property)
+        {
+            TypeCode typeCode = Type.GetTypeCode(type);
 
-        //    bool ApplyPrimitiveAccessorFor<T>() where T : struct
-        //    {
-        //        var getter = property.GetGetMethod()!.CreateDelegate(GenericPropertyGetterDelegate.MakeGenericType(parentType, type));
-        //        var setter = property.GetSetMethod()!.CreateDelegate(GenericPropertySetterDelegate.MakeGenericType(parentType, type));
+            // If it's not in the range of supported types (bool, DateTime, primitives) don't do the primitive accessor.
+            if (typeCode < TypeCode.Boolean || typeCode > TypeCode.DateTime) return false;
 
-        //        accessor.Initialize(getter, setter, accessor.PrimitiveGetter<T>, accessor.PrimitiveSetter<T>);
-        //        return true;
-        //    }
-        //}
+            var getter = property.GetGetMethod()!.CreateDelegate(GenericPrimitivePropertyGetter.MakeGenericType(parentType, type));
+            var setter = property.GetSetMethod()!.CreateDelegate(GenericPropertySetter.MakeGenericType(parentType, type));
 
-        private static void CreateAllRefTypeAccessor(ref MemberAccessor accessor, Type parent, MapItem item, PropertyInfo property)
+            accessor.Initialize(MemberAccessorType.PrimitiveProperty, getter, setter);
+            accessor.PrimitiveTypeCode = typeCode;
+            return true;
+        }
+
+        private static void CreateAllRefTypeAccessor(ref MemberAccessor accessor, Type parent, Type itemType, PropertyInfo property)
         {
             var propGetter = property.GetGetMethod()!.CreateDelegate(
-                GenericPropertyGetterDelegate.MakeGenericType(parent, item.ItemType));
-
+                GenericRefPropertyGetter.MakeGenericType(parent));
+            
             var propSetter = property.GetSetMethod()!.CreateDelegate(
-                GenericPropertySetterDelegate.MakeGenericType(parent, item.ItemType));
+                GenericPropertySetter.MakeGenericType(parent, itemType));
 
             accessor.Initialize(MemberAccessorType.AllRefProperty, propGetter, propSetter);
         }
@@ -285,7 +269,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
         {
             Parallel.ForEach(_propertyAccessorsToProcess, s =>
             {
-                GeneratePropertyAccessor(ref s.Info.Accessor, s.Info.Map._innerItem, s.Parent, s.Property);
+                GeneratePropertyAccessor(ref s.Info.Accessor, s.Info.Map, s.Parent, s.Property);
             });
 
             _propertyAccessorsToProcess.Clear();

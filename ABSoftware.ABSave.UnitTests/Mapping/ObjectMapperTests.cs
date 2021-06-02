@@ -55,7 +55,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             var item = Generator.GetMap(type);
             var parent = Generator.GetMap(parentType);
 
-            MapGenerator.GeneratePropertyAccessor(ref dest, item._innerItem, parent._innerItem, info);
+            MapGenerator.GeneratePropertyAccessor(ref dest, item, parent._innerItem, info);
         }
 
         [TestMethod]
@@ -86,49 +86,48 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             var item = new ObjectMemberSharedInfo();
             RunGenerateAccessor(ref item.Accessor, typeof(string), typeof(PropertyClass), memberInfo);
 
-            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(Func<PropertyClass, string>));
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(MapGenerator.ReferenceGetterDelegate<PropertyClass>));
             Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<PropertyClass, string>));
             Assert.AreEqual(MemberAccessorType.AllRefProperty, item.Accessor.Type);
 
             VerifyRuns<PropertyClass, string>(ref item.Accessor);
         }
 
-        //[TestMethod]
-        //public void GetPropertyAccessor_ValueType_Supported()
-        //{
-        //    Setup();
+        [TestMethod]
+        public void GetPropertyAccessor_ValueType_Supported()
+        {
+            Setup();
 
-        //    // Primitive
-        //    var memberInfo = typeof(PropertyClass).GetProperty(nameof(PropertyClass.B))!;
+            // Primitive
+            var memberInfo = typeof(PropertyClass).GetProperty(nameof(PropertyClass.B))!;
 
-        //    var item = new ObjectMemberSharedInfo();
-        //    RunGenerateAccessor(ref item.Accessor, typeof(bool), typeof(PropertyClass), memberInfo);
+            var item = new ObjectMemberSharedInfo();
+            RunGenerateAccessor(ref item.Accessor, typeof(bool), typeof(PropertyClass), memberInfo);
 
-        //    Assert.IsInstanceOfType(item.Accessor.Object1, typeof(Func<PropertyClass, bool>));
-        //    Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<PropertyClass, bool>));
-        //    Assert.AreEqual(item.Accessor.PrimitiveGetter<bool>, item.Accessor.Getter);
-        //    Assert.AreEqual(item.Accessor.PrimitiveSetter<bool>, item.Accessor.Setter);
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(Func<PropertyClass, bool>));
+            Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<PropertyClass, bool>));
+            Assert.AreEqual(MemberAccessorType.PrimitiveProperty, item.Accessor.Type);
+            Assert.AreEqual(TypeCode.Boolean, item.Accessor.PrimitiveTypeCode);
 
-        //    VerifyRuns<PropertyClass, bool>(ref item.Accessor);
-        //}
+            VerifyRuns<PropertyClass, bool>(ref item.Accessor);
+        }
 
-        //[TestMethod]
-        //public void GetPropertyAccessor_ValueType_Unsupported()
-        //{
-        //    Setup();
+        [TestMethod]
+        public void GetPropertyAccessor_ValueType_Unsupported()
+        {
+            Setup();
 
-        //    // Primitive
-        //    var memberInfo = typeof(ClassWithUnspportedForFastAccessorValueType).GetProperty(nameof(ClassWithUnspportedForFastAccessorValueType.S))!;
+            // Primitive
+            var memberInfo = typeof(ClassWithUnspportedForFastAccessorValueType).GetProperty(nameof(ClassWithUnspportedForFastAccessorValueType.S))!;
 
-        //    var item = new ObjectMemberSharedInfo();
-        //    RunGenerateAccessor(ref item.Accessor, typeof(SimpleStruct), typeof(ClassWithUnspportedForFastAccessorValueType), memberInfo);
+            var item = new ObjectMemberSharedInfo();
+            RunGenerateAccessor(ref item.Accessor, typeof(SimpleStruct), typeof(ClassWithUnspportedForFastAccessorValueType), memberInfo);
 
-        //    Assert.IsInstanceOfType(item.Accessor.Object1, typeof(PropertyInfo));
-        //    Assert.AreEqual(item.Accessor.SlowGetter, item.Accessor.Getter);
-        //    Assert.AreEqual(item.Accessor.SlowSetter, item.Accessor.Setter);
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(PropertyInfo));
+            Assert.AreEqual(MemberAccessorType.SlowProperty, item.Accessor.Type);
 
-        //    VerifyRuns<ClassWithUnspportedForFastAccessorValueType, SimpleStruct>(ref item.Accessor);
-        //}
+            VerifyRuns<ClassWithUnspportedForFastAccessorValueType, SimpleStruct>(ref item.Accessor);
+        }
 
         //[TestMethod]
         //public void MapObject_Empty()
