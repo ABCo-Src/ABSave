@@ -50,7 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ABSoftware.ABSave\ABSoftware.ABSave.csproj" />
+    <ProjectReference Include="..\..\ABSoftware.ABSave\ABSoftware.ABSave.csproj" />
   </ItemGroup>
 
 </Project>

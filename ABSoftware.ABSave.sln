@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.30128.74
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ABSoftware.ABSave", "ABSoftware.ABSave\ABSoftware.ABSave.csproj", "{40D404AE-28E3-400E-B12A-FF636067A7EB}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ABSoftware.ABSave.TestConsole", "ABSoftware.ABSave.TestConsole\ABSoftware.ABSave.TestConsole.csproj", "{2E621347-F176-47C5-A640-ACB63995C6BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ABSoftware.ABSave.TestConsole", "tests\ABSoftware.ABSave.TestConsole\ABSoftware.ABSave.TestConsole.csproj", "{2E621347-F176-47C5-A640-ACB63995C6BD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ABSoftware.ABSave.UnitTests", "ABSoftware.ABSave.UnitTests\ABSoftware.ABSave.UnitTests.csproj", "{1C56F345-BCE7-464B-A214-B1FE772F0175}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ABSoftware.ABSave.UnitTests", "tests\ABSoftware.ABSave.UnitTests\ABSoftware.ABSave.UnitTests.csproj", "{1C56F345-BCE7-464B-A214-B1FE772F0175}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
