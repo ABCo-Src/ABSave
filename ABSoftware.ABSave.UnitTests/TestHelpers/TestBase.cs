@@ -61,8 +61,8 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
             Serializer.SavedTypes.Add(typeof(SubNoConverter), 2);
             Deserializer.SavedTypes.Add(typeof(SubNoConverter));
 
-            Serializer.SavedTypes.Add(typeof(GeneralClass), 3);
-            Deserializer.SavedTypes.Add(typeof(GeneralClass));
+            Serializer.SavedTypes.Add(typeof(NestedClass), 3);
+            Deserializer.SavedTypes.Add(typeof(NestedClass));
         }
 
         public void GoToStart() => Stream.Position = 0;

@@ -154,7 +154,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             var ctx = Generator.CurrentReflectionMapper;
-            var member = typeof(VersionedPropertyClass).GetProperty(nameof(VersionedPropertyClass.B));
+            var member = typeof(VersionedClass).GetProperty(nameof(VersionedClass.B));
             ctx.PrepareBufferForSize(3);
 
             ObjectIntermediateItem item = null;
@@ -226,10 +226,10 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         void TestFields(bool isValueTypeParent)
         {
             var info = new ObjectIntermediateInfo();
-            uint version = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(SimpleStruct) : typeof(SimpleClass), ref info);
+            uint version = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(FieldStruct) : typeof(FieldClass), ref info);
 
             Assert.AreEqual(0u, version);
-            Assert.AreEqual(3, info.RawMembers.Length);
+            Assert.AreEqual(2, info.RawMembers.Length);
 
             for (int i = 0; i < info.RawMembers.Length; i++)
             {
@@ -238,9 +238,8 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
                 Type expectedType = i switch
                 {
-                    0 => typeof(bool),
-                    1 => typeof(int),
-                    2 => typeof(string),
+                    0 => typeof(string),
+                    1 => typeof(bool),
                     _ => throw new Exception("Incorrect key")
                 };
 
@@ -260,7 +259,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         void TestProperties(bool isValueTypeParent)
         {
             var info = new ObjectIntermediateInfo();
-            uint version = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(PropertyStruct) : typeof(PropertyClass), ref info);
+            uint version = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(AllPrimitiveStruct) : typeof(AllPrimitiveClass), ref info);
 
             Assert.AreEqual(0u, version);
             Assert.AreEqual(2, info.RawMembers.Length);
@@ -272,8 +271,9 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
                 Type expectedType = i switch
                 {
-                    0 => typeof(string),
-                    1 => typeof(bool),
+                    0 => typeof(bool),
+                    1 => typeof(int),
+                    2 => typeof(string),
                     _ => throw new Exception("Invalid key")
                 };
 
@@ -313,7 +313,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             var info = new ObjectIntermediateInfo();
-            uint version = Generator.CreateIntermediateObjectInfo(typeof(UnorderedPropertyClass), ref info);
+            uint version = Generator.CreateIntermediateObjectInfo(typeof(UnorderedClass), ref info);
 
             Assert.AreEqual(0u, version);
 

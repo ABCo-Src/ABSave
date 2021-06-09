@@ -30,10 +30,10 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         }
 
         public override bool AlsoConvertsNonExact => true;
-        public override Type[] ExactTypes => new Type[] { typeof(Base), typeof(int) };
+        public override Type[] ExactTypes => new Type[] { typeof(BaseIndex), typeof(int) };
         public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (gen.Type == typeof(Base) || gen.Type.IsSubclassOf(typeof(Base)) || gen.Type == typeof(int))
+            if (gen.Type == typeof(BaseIndex) || gen.Type.IsSubclassOf(typeof(BaseIndex)) || gen.Type == typeof(int))
                 gen.AssignContext(new Context(), 0);
         }
 

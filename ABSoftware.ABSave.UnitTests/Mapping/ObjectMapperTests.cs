@@ -28,8 +28,8 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
                 expected = true;
             else if (typeof(TItem) == typeof(string))
                 expected = "ABC";
-            else if (typeof(TItem) == typeof(SimpleStruct))
-                expected = new SimpleStruct(true, 172, "d");
+            else if (typeof(TItem) == typeof(AllPrimitiveStruct))
+                expected = new AllPrimitiveStruct(true, 172, "d");
 
             accessor.Setter(obj, expected);
 
@@ -41,7 +41,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var memberInfo = typeof(SimpleClass).GetField(nameof(SimpleClass.Itm1), BindingFlags.NonPublic | BindingFlags.Instance);
+            var memberInfo = typeof(FieldClass).GetField(nameof(FieldClass.A), BindingFlags.NonPublic | BindingFlags.Instance);
 
             var item = new ObjectMemberSharedInfo();
             MapGenerator.GenerateFieldAccessor(ref item.Accessor, memberInfo);
@@ -49,7 +49,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Assert.IsInstanceOfType(item.Accessor.Object1, typeof(FieldInfo));
             Assert.AreEqual(MemberAccessorType.Field, item.Accessor.Type);
 
-            VerifyRuns<SimpleClass, bool>(ref item.Accessor);
+            VerifyRuns<FieldClass, string>(ref item.Accessor);
         }
 
         void RunGenerateAccessor(ref MemberAccessor dest, Type type, Type parentType, PropertyInfo info)
@@ -66,15 +66,15 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             // Primitive
-            var memberInfo = typeof(PropertyStruct).GetProperty(nameof(PropertyStruct.A))!;
+            var memberInfo = typeof(AllPrimitiveStruct).GetProperty(nameof(AllPrimitiveStruct.C))!;
 
             var item = new ObjectMemberSharedInfo();
-            RunGenerateAccessor(ref item.Accessor, typeof(string), typeof(PropertyStruct), memberInfo);
+            RunGenerateAccessor(ref item.Accessor, typeof(string), typeof(AllPrimitiveStruct), memberInfo);
 
             Assert.IsInstanceOfType(item.Accessor.Object1, typeof(PropertyInfo));
             Assert.AreEqual(MemberAccessorType.SlowProperty, item.Accessor.Type);
 
-            VerifyRuns<PropertyStruct, string>(ref item.Accessor);
+            VerifyRuns<AllPrimitiveStruct, string>(ref item.Accessor);
         }
 
         [TestMethod]
@@ -83,16 +83,16 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             // Primitive
-            var memberInfo = typeof(PropertyClass).GetProperty(nameof(PropertyClass.A))!;
+            var memberInfo = typeof(NestedClass).GetProperty(nameof(NestedClass.B))!;
 
             var item = new ObjectMemberSharedInfo();
-            RunGenerateAccessor(ref item.Accessor, typeof(string), typeof(PropertyClass), memberInfo);
+            RunGenerateAccessor(ref item.Accessor, typeof(SubWithHeader), typeof(NestedClass), memberInfo);
 
-            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(MapGenerator.ReferenceGetterDelegate<PropertyClass>));
-            Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<PropertyClass, string>));
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(MapGenerator.ReferenceGetterDelegate<NestedClass>));
+            Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<NestedClass, SubWithHeader>));
             Assert.AreEqual(MemberAccessorType.AllRefProperty, item.Accessor.Type);
 
-            VerifyRuns<PropertyClass, string>(ref item.Accessor);
+            VerifyRuns<NestedClass, SubWithHeader>(ref item.Accessor);
         }
 
         [TestMethod]
@@ -101,17 +101,17 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             // Primitive
-            var memberInfo = typeof(PropertyClass).GetProperty(nameof(PropertyClass.B))!;
+            var memberInfo = typeof(NestedClass).GetProperty(nameof(NestedClass.A))!;
 
             var item = new ObjectMemberSharedInfo();
-            RunGenerateAccessor(ref item.Accessor, typeof(bool), typeof(PropertyClass), memberInfo);
+            RunGenerateAccessor(ref item.Accessor, typeof(byte), typeof(NestedClass), memberInfo);
 
-            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(Func<PropertyClass, bool>));
-            Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<PropertyClass, bool>));
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(Func<NestedClass, byte>));
+            Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<NestedClass, byte>));
             Assert.AreEqual(MemberAccessorType.PrimitiveProperty, item.Accessor.Type);
             Assert.AreEqual(TypeCode.Boolean, item.Accessor.PrimitiveTypeCode);
 
-            VerifyRuns<PropertyClass, bool>(ref item.Accessor);
+            VerifyRuns<NestedClass, byte>(ref item.Accessor);
         }
 
         [TestMethod]
@@ -123,12 +123,12 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             var memberInfo = typeof(ClassWithUnspportedForFastAccessorValueType).GetProperty(nameof(ClassWithUnspportedForFastAccessorValueType.S))!;
 
             var item = new ObjectMemberSharedInfo();
-            RunGenerateAccessor(ref item.Accessor, typeof(SimpleStruct), typeof(ClassWithUnspportedForFastAccessorValueType), memberInfo);
+            RunGenerateAccessor(ref item.Accessor, typeof(AllPrimitiveStruct), typeof(ClassWithUnspportedForFastAccessorValueType), memberInfo);
 
             Assert.IsInstanceOfType(item.Accessor.Object1, typeof(PropertyInfo));
             Assert.AreEqual(MemberAccessorType.SlowProperty, item.Accessor.Type);
 
-            VerifyRuns<ClassWithUnspportedForFastAccessorValueType, SimpleStruct>(ref item.Accessor);
+            VerifyRuns<ClassWithUnspportedForFastAccessorValueType, AllPrimitiveStruct>(ref item.Accessor);
         }
 
         //[TestMethod]
@@ -201,7 +201,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             // Prepare the class for mapping.
-            var item = (ObjectMapItem)Generator.GetMap(typeof(VersionedPropertyClass))._innerItem;
+            var item = (ObjectMapItem)Generator.GetMap(typeof(VersionedClass))._innerItem;
 
             // Create a new version - version 1.
             {
@@ -266,7 +266,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var pos = Generator.GetMap(typeof(VersionedPropertyClass));
+            var pos = Generator.GetMap(typeof(VersionedClass));
 
             Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetMembersForVersion((ObjectMapItem)pos._innerItem, 4));
         }

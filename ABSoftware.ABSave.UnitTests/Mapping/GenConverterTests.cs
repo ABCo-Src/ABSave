@@ -20,8 +20,8 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            Generator.GetExistingOrAddNull(typeof(SimpleClass));
-            Assert.IsNull(Generator.TryGenerateConverter(typeof(SimpleClass)));
+            Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass));
+            Assert.IsNull(Generator.TryGenerateConverter(typeof(AllPrimitiveClass)));
         }
 
         [TestMethod]

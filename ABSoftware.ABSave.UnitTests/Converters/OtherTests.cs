@@ -137,10 +137,10 @@ namespace ABSoftware.ABSave.UnitTests.Converters
                 Action<ABSaveSerializer> convAsm = s =>
                 {
                     var header = new BitTarget(s, 7);
-                    AssemblyConverter.SerializeAssembly(typeof(Base).Assembly, ref header);
+                    AssemblyConverter.SerializeAssembly(typeof(BaseIndex).Assembly, ref header);
                 };
 
-                TestType(typeof(Base), GetByteArr(new object[] { convAsm, typeof(Base).FullName }, (short)GenType.Action, 44, (short)GenType.String));
+                TestType(typeof(BaseIndex), GetByteArr(new object[] { convAsm, typeof(BaseIndex).FullName }, (short)GenType.Action, 44, (short)GenType.String));
             }
 
             // Generic
@@ -163,7 +163,7 @@ namespace ABSoftware.ABSave.UnitTests.Converters
 
             // Non-generic
             {
-                var type = typeof(Base);
+                var type = typeof(BaseIndex);
                 TestType(type, GetByteArr(new object[] { type.FullName }, 64, 44, (short)GenType.String));
             }
 
@@ -196,8 +196,8 @@ namespace ABSoftware.ABSave.UnitTests.Converters
         void SaveCurrentAssembly()
         {
             // Save the current assembly so we don't have to test for it.
-            Serializer.SavedAssemblies.Add(typeof(Base).Assembly, Serializer.SavedAssemblies.Count);
-            Deserializer.SavedAssemblies.Add(typeof(Base).Assembly);
+            Serializer.SavedAssemblies.Add(typeof(BaseIndex).Assembly, Serializer.SavedAssemblies.Count);
+            Deserializer.SavedAssemblies.Add(typeof(BaseIndex).Assembly);
         }
 
         //[TestMethod]

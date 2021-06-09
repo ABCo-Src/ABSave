@@ -20,10 +20,10 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             // Generate it once.
-            var pos = Generator.GetMap(typeof(SimpleClass));
+            var pos = Generator.GetMap(typeof(AllPrimitiveClass));
 
             // See if it picks up on the existing item.
-            Assert.AreEqual(pos._innerItem, Generator.GetMap(typeof(SimpleClass))._innerItem);
+            Assert.AreEqual(pos._innerItem, Generator.GetMap(typeof(AllPrimitiveClass))._innerItem);
         }
 
         [TestMethod]
@@ -32,18 +32,18 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             // Generate it once.
-            var pos = Generator.GetMap(typeof(SimpleClass));
+            var pos = Generator.GetMap(typeof(AllPrimitiveClass));
 
             // See if it picks up on the existing item.
-            Assert.AreEqual(pos, Generator.GetMap(typeof(SimpleClass)));
+            Assert.AreEqual(pos, Generator.GetMap(typeof(AllPrimitiveClass)));
         }
 
         [TestMethod]
         public void GetOrAddNull_New()
         {
             Setup();
-            Assert.IsNull(Generator.GetExistingOrAddNull(typeof(SimpleClass)));
-            Assert.IsNull(Map.AllTypes[typeof(SimpleClass)]);
+            Assert.IsNull(Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass)));
+            Assert.IsNull(Map.AllTypes[typeof(AllPrimitiveClass)]);
         }
 
         [TestMethod]
@@ -51,9 +51,9 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var pos = Generator.GetMap(typeof(SimpleClass));
+            var pos = Generator.GetMap(typeof(AllPrimitiveClass));
 
-            Assert.AreEqual(pos._innerItem, Generator.GetExistingOrAddNull(typeof(SimpleClass)));
+            Assert.AreEqual(pos._innerItem, Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass)));
         }
 
         class EmptyMapItem : MapItem { }
@@ -134,11 +134,11 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup(); 
 
             // Inner does not exist
-            var pos = Generator.GetMap(typeof(SimpleStruct?));
+            var pos = Generator.GetMap(typeof(AllPrimitiveStruct?));
             Assert.IsTrue(pos.IsNullable);
 
             // Inner does exist
-            var pos2 = Generator.GetMap(typeof(SimpleStruct?));
+            var pos2 = Generator.GetMap(typeof(AllPrimitiveStruct?));
             Assert.IsTrue(pos2.IsNullable);
         }
 
@@ -147,7 +147,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var pos = Generator.GetRuntimeMap(typeof(SimpleClass));
+            var pos = Generator.GetRuntimeMap(typeof(AllPrimitiveClass));
             Assert.IsFalse(pos.IsNullable);
 
             Assert.IsInstanceOfType(pos._innerItem, typeof(RuntimeMapItem));
@@ -158,8 +158,8 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var pos3Expected = Generator.GetMap(typeof(SimpleStruct));
-            var pos3Actual = Generator.GetRuntimeMap(typeof(SimpleStruct));
+            var pos3Expected = Generator.GetMap(typeof(AllPrimitiveStruct));
+            var pos3Actual = Generator.GetRuntimeMap(typeof(AllPrimitiveStruct));
 
             Assert.AreEqual(pos3Expected._innerItem, ((RuntimeMapItem)pos3Actual._innerItem).InnerItem);
         }
@@ -170,10 +170,10 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Setup();
 
             // Create an item
-            var existing = Generator.GetRuntimeMap(typeof(SimpleClass));
+            var existing = Generator.GetRuntimeMap(typeof(AllPrimitiveClass));
 
             // Should detect the already existing one.
-            var pos2 = Generator.GetRuntimeMap(typeof(SimpleClass));
+            var pos2 = Generator.GetRuntimeMap(typeof(AllPrimitiveClass));
 
             Assert.AreEqual(existing, pos2);
         }

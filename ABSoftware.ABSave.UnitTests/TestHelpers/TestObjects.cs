@@ -12,13 +12,19 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
     class EmptyClass { }
 
     [SaveMembers]
-    class GenericType<TA, TB, TC> : Base { }
+    class GenericType<TA, TB, TC> : BaseIndex { }
+
+    #region Index Inheritance
 
     [SaveMembers]
-    class Base { }
+    [SaveInheritance(SaveInheritanceMode.Index, typeof(SubToDo), typeof(SubNoConverter), typeof(SubWithHeader), typeof(SubWithoutHeader))]
+    class BaseIndex { }
 
     [SaveMembers]
-    class SubNoConverter : Base 
+    class SubToDo : BaseIndex { }
+
+    [SaveMembers]
+    class SubNoConverter : BaseIndex 
     {
         [Save(0)]
         public byte A { get; set; }
@@ -40,7 +46,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
     }
 
     [SaveMembers]
-    class SubWithHeader : Base
+    class SubWithHeader : BaseIndex
     {
         public override bool Equals(object obj) => obj is SubWithHeader;
 
@@ -48,15 +54,95 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
     }
 
     [SaveMembers]
-    class SubWithoutHeader : Base
+    class SubWithoutHeader : BaseIndex
     {
         public override bool Equals(object obj) => obj is SubWithoutHeader;
 
         public override int GetHashCode() => base.GetHashCode();
     }
 
+    #endregion
+
+    #region General
+
     [SaveMembers]
-    struct MyStruct
+    class NestedClass : BaseIndex
+    {
+        [Save(0)]
+        public byte A { get; set; }
+
+        [Save(1)]
+        public SubWithHeader B { get; set; }
+
+        [Save(2)]
+        public SubWithoutHeader C { get; set; }
+
+        [Save(3)]
+        public VerySimpleStruct D { get; set; }
+
+        public NestedClass() { }
+        public NestedClass(byte a)
+        {
+            A = a;
+            B = new SubWithHeader();
+            C = new SubWithoutHeader();
+            D = new VerySimpleStruct(a, 9);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is NestedClass right)
+            {
+                return A == right.A && B.Equals(right.B) && C.Equals(right.C) && D.Equals(right.D);
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode() => base.GetHashCode();
+    }
+
+    [SaveMembers(SaveMembersMode.Fields)]
+    public class AllPrimitiveClass
+    {
+        [Save(0)]
+        internal bool Itm1 { get; set; }
+
+        [Save(1)]
+        public int Itm2 { get; set; }
+
+        [Save(2)]
+        public string Itm3 { get; set; }
+
+        public AllPrimitiveClass() { }
+        public AllPrimitiveClass(bool itm1, int itm2, string itm3)
+        {
+            Itm1 = itm1;
+            Itm2 = itm2;
+            Itm3 = itm3;
+        }
+
+        public bool IsEquivalentTo(AllPrimitiveClass other) => Itm1 == other.Itm1 && Itm2 == other.Itm2 && Itm3 == other.Itm3;
+    }
+
+    [SaveMembers(SaveMembersMode.Fields)]
+    public struct AllPrimitiveStruct
+    {
+        [Save(0)]
+        public bool A { get; set; }
+
+        [Save(1)]
+        public int B { get; set; }
+
+        [Save(2)]
+        public string C { get; set; }
+
+        public AllPrimitiveStruct(bool itm1, int itm2, string itm3) =>
+            (A, B, C) = (itm1, itm2, itm3);
+    }
+
+    [SaveMembers]
+    struct VerySimpleStruct
     {
         [Save(0)]
         public byte A { get; set; }
@@ -64,7 +150,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         [Save(1)]
         public byte B { get; set; }
 
-        public MyStruct(byte a, byte b)
+        public VerySimpleStruct(byte a, byte b)
         {
             A = a;
             B = b;
@@ -72,7 +158,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
 
         public override bool Equals(object obj)
         {
-            if (obj is MyStruct right)
+            if (obj is VerySimpleStruct right)
             {
                 return A == right.A && B == right.B;
             }
@@ -85,104 +171,32 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
-    [SaveMembers]
-    class GeneralClass : Base
+    #endregion
+
+    #region Mapping Classes
+
+    [SaveMembers(SaveMembersMode.Fields)]
+    public class FieldClass
     {
         [Save(0)]
-        public byte A { get; set; }
+        public string A;
 
         [Save(1)]
-        public SubWithHeader B { get; set; }
-
-        [Save(2)]
-        public SubWithoutHeader C { get; set; }
-
-        [Save(3)]
-        public MyStruct D { get; set; }
-
-        public GeneralClass() { }
-        public GeneralClass(byte a)
-        {
-            A = a;
-            B = new SubWithHeader();
-            C = new SubWithoutHeader();
-            D = new MyStruct(a, 9);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is GeneralClass right)
-            {
-                return A == right.A && B.Equals(right.B) && C.Equals(right.C) && D.Equals(right.D);
-            }
-
-            return false;
-        }
-
-        public override int GetHashCode() => base.GetHashCode();
+        public bool B;
     }
 
     [SaveMembers(SaveMembersMode.Fields)]
-    public class SimpleClass
+    public struct FieldStruct
     {
         [Save(0)]
-        internal bool Itm1;
+        public string A;
 
         [Save(1)]
-        public int Itm2;
-
-        [Save(2)]
-        public string Itm3;
-
-        public SimpleClass() { }
-        public SimpleClass(bool itm1, int itm2, string itm3)
-        {
-            Itm1 = itm1;
-            Itm2 = itm2;
-            Itm3 = itm3;
-        }
-
-        public bool IsEquivalentTo(SimpleClass other) => Itm1 == other.Itm1 && Itm2 == other.Itm2 && Itm3 == other.Itm3;
-    }
-
-    [SaveMembers(SaveMembersMode.Fields)]
-    public struct SimpleStruct
-    {
-        [Save(0)]
-        public bool Itm1;
-
-        [Save(1)]
-        public int Itm2;
-
-        [Save(2)]
-        public string Itm3;
-
-        public SimpleStruct(bool itm1, int itm2, string itm3) =>
-            (Itm1, Itm2, Itm3) = (itm1, itm2, itm3);
+        public bool B;
     }
 
     [SaveMembers]
-    public class PropertyClass
-    {
-        [Save(0)]
-        public string A { get; set; }
-
-        [Save(1)]
-        public bool B { get; set; }
-    }
-
-    [SaveMembers]
-    public struct PropertyStruct
-    {
-        [Save(0)]
-        public string A { get; set; }
-
-        [Save(1)]
-        public bool B { get; set; }
-    }
-
-    [SaveMembers]
-    public class UnorderedPropertyClass
+    public class UnorderedClass
     {
         [Save(1)]
         public string A { get; set; }
@@ -205,9 +219,16 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
     }
 
     [SaveMembers]
+    public class ClassWithUnspportedForFastAccessorValueType
+    {
+        [Save(0)]
+        public AllPrimitiveStruct S { get; set; }
+    }
+
+    [SaveMembers]
     [SaveInheritance(SaveInheritanceMode.Key, FromVer = 0, ToVer = 1)]
     [SaveInheritance(SaveInheritanceMode.IndexOrKey, FromVer = 3)]
-    public class VersionedPropertyClass
+    public class VersionedClass
     {
         // Version 0: A
         // Version 1: A, B, C
@@ -226,7 +247,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
 
         public override bool Equals(object obj)
         {
-            if (obj is VersionedPropertyClass cl)
+            if (obj is VersionedClass cl)
             {
                 return A == cl.A && B == cl.B && C == cl.C && D == cl.D;
             }
@@ -237,12 +258,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
-    [SaveMembers]
-    public class ClassWithUnspportedForFastAccessorValueType
-    {
-        [Save(0)]
-        public SimpleStruct S { get; set; }
-    }
+    #endregion
 
     public class UnserializableClass { }
 }
