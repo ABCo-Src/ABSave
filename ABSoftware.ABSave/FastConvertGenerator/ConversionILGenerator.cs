@@ -5,7 +5,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 
-namespace ABSoftware.ABSave.FastConvertGenerator
+namespace ABCo.ABSave.FastConvertGenerator
 {
     /// <summary>
     /// Generates a dynamic method for serializing and deserializing an object, and all of its sub-types.

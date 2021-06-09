@@ -1,9 +1,9 @@
-﻿using ABSoftware.ABSave.Converters;
+﻿using ABCo.ABSave.Converters;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABSoftware.ABSave.Mapping.Generation
+namespace ABCo.ABSave.Mapping.Generation
 {
     public partial class MapGenerator
     {

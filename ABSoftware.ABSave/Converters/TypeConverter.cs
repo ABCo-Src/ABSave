@@ -1,13 +1,13 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Generation;
-using ABSoftware.ABSave.Serialization;
+﻿using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Serialization;
 using System;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
-namespace ABSoftware.ABSave.Converters
+namespace ABCo.ABSave.Converters
 {
     public class TypeConverter : Converter
     {

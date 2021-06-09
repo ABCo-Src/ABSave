@@ -1,4 +1,4 @@
-﻿using ABSoftware.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Mapping.Description.Attributes;
 using MessagePack;
 using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 using System;
@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ABSoftware.ABSave.Testing.ConsoleApp
+namespace ABCo.ABSave.Testing.ConsoleApp
 {
     [MessagePackObject]
     [Serializable]

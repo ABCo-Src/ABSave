@@ -1,12 +1,12 @@
-﻿using ABSoftware.ABSave.Mapping.Description;
-using ABSoftware.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Mapping.Description;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.UnitTests.TestHelpers
+namespace ABCo.ABSave.UnitTests.TestHelpers
 {
     [SaveMembers]
     class EmptyClass { }

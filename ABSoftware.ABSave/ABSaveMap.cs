@@ -1,14 +1,14 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping.Generation;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 
-namespace ABSoftware.ABSave.Mapping
+namespace ABCo.ABSave.Mapping
 {
     public class ABSaveMap
     {

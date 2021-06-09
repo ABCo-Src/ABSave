@@ -1,10 +1,10 @@
-﻿using ABSoftware.ABSave.Mapping;
+﻿using ABCo.ABSave.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Helpers
+namespace ABCo.ABSave.Helpers
 {
     [StructLayout(LayoutKind.Explicit)]
     internal struct AlreadySavedVersionInfo

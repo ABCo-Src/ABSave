@@ -1,11 +1,11 @@
-﻿using ABSoftware.ABSave.Helpers;
+﻿using ABCo.ABSave.Helpers;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Deserialization
+namespace ABCo.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {

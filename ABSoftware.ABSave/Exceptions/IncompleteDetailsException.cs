@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace ABSoftware.ABSave.Exceptions
+namespace ABCo.ABSave.Exceptions
 {
     public class IncompleteDetailsException
         : ABSaveException

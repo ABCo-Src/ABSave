@@ -1,6 +1,6 @@
-﻿using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.UnitTests.Mapping;
-using ABSoftware.ABSave.UnitTests.TestHelpers;
+﻿using ABCo.ABSave.Mapping;
+using ABCo.ABSave.UnitTests.Mapping;
+using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.UnitTests
+namespace ABCo.ABSave.UnitTests
 {
     [TestClass]
     public class ABSaveTests : TestBase

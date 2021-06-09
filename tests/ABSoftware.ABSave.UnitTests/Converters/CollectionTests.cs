@@ -1,16 +1,16 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Generation;
-using ABSoftware.ABSave.Serialization;
-using ABSoftware.ABSave.UnitTests.TestHelpers;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Serialization;
+using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
-namespace ABSoftware.ABSave.UnitTests.Converters
+namespace ABCo.ABSave.UnitTests.Converters
 {
     [TestClass]
     public class CollectionTests : ConverterTestBase

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading;
 
-namespace ABSoftware.ABSave.Helpers
+namespace ABCo.ABSave.Helpers
 {
     internal class LightConcurrentPool<T> where T : class
     {

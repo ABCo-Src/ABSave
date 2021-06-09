@@ -1,11 +1,11 @@
-﻿using ABSoftware.ABSave.Helpers;
+﻿using ABCo.ABSave.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Mapping
+namespace ABCo.ABSave.Mapping
 {
     /// <summary>
     /// Represents the best getter and setter for a member. 

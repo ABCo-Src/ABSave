@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Serialization
+namespace ABCo.ABSave.Serialization
 {
     [StructLayout(LayoutKind.Auto)]
     // NOTE: This would benefit HUGELY with IL generation

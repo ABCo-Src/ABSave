@@ -1,12 +1,12 @@
-﻿using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Serialization;
+﻿using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Deserialization
+namespace ABCo.ABSave.Deserialization
 {
     /// <summary>
     /// Represents data coming in bit-by-bit from a given source. This does not read anything until a bit is read.

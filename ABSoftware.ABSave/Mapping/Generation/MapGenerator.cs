@@ -1,12 +1,12 @@
-﻿using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping.Generation;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 
-namespace ABSoftware.ABSave.Mapping.Generation
+namespace ABCo.ABSave.Mapping.Generation
 {
     public partial class MapGenerator
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Mapping.Description.Attributes
+namespace ABCo.ABSave.Mapping.Description.Attributes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
     public sealed class SaveAttribute : MapAttr

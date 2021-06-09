@@ -1,17 +1,17 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Description;
-using ABSoftware.ABSave.Mapping.Description.Attributes;
-using ABSoftware.ABSave.Mapping.Generation;
-using ABSoftware.ABSave.Serialization;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description;
+using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
 
-namespace ABSoftware.ABSave.Converters
+namespace ABCo.ABSave.Converters
 {
     /// <summary>
     /// Represents the information gathered about a type that's necessary for conversion.

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Serialization
+namespace ABCo.ABSave.Serialization
 {
     public sealed partial class ABSaveSerializer
     {

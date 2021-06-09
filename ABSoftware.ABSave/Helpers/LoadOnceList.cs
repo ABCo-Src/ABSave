@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Helpers
+namespace ABCo.ABSave.Helpers
 {
     /// <summary>
     /// A list that's designed to be loaded with items sequentially once and then have an array pulled out.

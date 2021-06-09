@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABSoftware.ABSave.Mapping.Description
+namespace ABCo.ABSave.Mapping.Description
 {
     public enum SaveMembersMode : byte
     {

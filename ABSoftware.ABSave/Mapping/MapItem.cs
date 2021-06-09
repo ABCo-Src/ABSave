@@ -1,16 +1,16 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping.Description;
-using ABSoftware.ABSave.Mapping.Description.Attributes;
-using ABSoftware.ABSave.Mapping.Generation;
-using ABSoftware.ABSave.Serialization;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping.Description;
+using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Mapping
+namespace ABCo.ABSave.Mapping
 {
     public struct MapItemInfo
     {

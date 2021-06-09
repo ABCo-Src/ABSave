@@ -1,12 +1,12 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Helpers;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text;
 
-namespace ABSoftware.ABSave
+namespace ABCo.ABSave
 {
     public enum SettingsPreset
     {

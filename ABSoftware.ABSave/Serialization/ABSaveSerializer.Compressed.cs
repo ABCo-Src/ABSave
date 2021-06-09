@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABSoftware.ABSave.Serialization
+namespace ABCo.ABSave.Serialization
 {
     // ===============================================
     // NOTE: Full details about the "compressed numerical" structure can be seen in the TXT file: CompressedPlan.txt in the project root

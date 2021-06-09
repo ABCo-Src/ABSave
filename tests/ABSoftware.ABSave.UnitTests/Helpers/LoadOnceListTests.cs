@@ -1,4 +1,4 @@
-﻿using ABSoftware.ABSave.Helpers;
+﻿using ABCo.ABSave.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.UnitTests.Helpers
+namespace ABCo.ABSave.UnitTests.Helpers
 {
     [TestClass]
     public class LoadOnceListTests

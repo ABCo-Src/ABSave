@@ -1,10 +1,10 @@
-﻿using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Description;
-using ABSoftware.ABSave.Mapping.Description.Attributes;
-using ABSoftware.ABSave.Mapping.Generation;
-using ABSoftware.ABSave.UnitTests.TestHelpers;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description;
+using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -13,7 +13,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.UnitTests.Mapping
+namespace ABCo.ABSave.UnitTests.Mapping
 {
     [TestClass]
     public class ObjectMapperTests : MapTestBase

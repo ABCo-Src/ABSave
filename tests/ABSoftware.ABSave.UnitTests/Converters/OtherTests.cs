@@ -1,6 +1,6 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Serialization;
-using ABSoftware.ABSave.UnitTests.TestHelpers;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Serialization;
+using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections;
@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.UnitTests.Converters
+namespace ABCo.ABSave.UnitTests.Converters
 {
     [TestClass]
     public class OtherTests : ConverterTestBase

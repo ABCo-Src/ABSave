@@ -1,13 +1,13 @@
-﻿using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping.Description;
-using ABSoftware.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping.Description;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Mapping.Generation
+namespace ABCo.ABSave.Mapping.Generation
 {
     internal struct ObjectIntermediateInfo
     {

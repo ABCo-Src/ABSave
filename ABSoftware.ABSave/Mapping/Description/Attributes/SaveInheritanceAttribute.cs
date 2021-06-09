@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABSoftware.ABSave.Mapping.Description.Attributes
+namespace ABCo.ABSave.Mapping.Description.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
     public class SaveInheritanceAttribute : Attribute

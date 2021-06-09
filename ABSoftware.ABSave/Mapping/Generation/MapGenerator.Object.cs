@@ -1,6 +1,6 @@
-﻿using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Mapping.Description;
-using ABSoftware.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Description;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.Mapping.Generation
+namespace ABCo.ABSave.Mapping.Generation
 {
     // Creates a final map of an object using intermediate information from the "IntermediateObject" part.
     public partial class MapGenerator

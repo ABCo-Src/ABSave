@@ -1,7 +1,7 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Serialization;
-using ABSoftware.ABSave.UnitTests.TestHelpers;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Serialization;
+using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.UnitTests.Converters
+namespace ABCo.ABSave.UnitTests.Converters
 {
     public class ConverterTestBase : TestBase
     {

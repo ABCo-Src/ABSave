@@ -1,5 +1,5 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Mapping;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
-namespace ABSoftware.ABSave.Helpers
+namespace ABCo.ABSave.Helpers
 {
     internal static class ABSaveUtils
     {

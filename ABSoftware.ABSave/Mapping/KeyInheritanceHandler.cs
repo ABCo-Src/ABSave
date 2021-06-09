@@ -1,6 +1,6 @@
-﻿using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Mapping.Description;
-using ABSoftware.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Description;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.Mapping
+namespace ABCo.ABSave.Mapping
 {
     public static class KeyInheritanceHandler
     {

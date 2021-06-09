@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABSoftware.ABSave.Exceptions
+namespace ABCo.ABSave.Exceptions
 {
     class InvalidSubTypeInfoException : Exception
     {

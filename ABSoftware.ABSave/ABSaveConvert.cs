@@ -1,13 +1,13 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Serialization;
+﻿using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace ABSoftware.ABSave
+namespace ABCo.ABSave
 {
     /// <summary>
     /// Converts to and from ABSave.

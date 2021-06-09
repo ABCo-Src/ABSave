@@ -1,12 +1,12 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Generation;
-using ABSoftware.ABSave.Serialization;
+﻿using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABSoftware.ABSave.Converters
+namespace ABCo.ABSave.Converters
 {
     // TODO: Add .NET 5 support for "nint"s
     public class PrimitiveConverter : Converter

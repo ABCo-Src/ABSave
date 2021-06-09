@@ -1,12 +1,12 @@
-﻿using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Mapping;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text;
 
-namespace ABSoftware.ABSave.Helpers
+namespace ABCo.ABSave.Helpers
 {
     public interface IEnumerableInfo { }
 

@@ -1,5 +1,5 @@
-﻿using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.UnitTests.TestHelpers;
+﻿using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.UnitTests.Core
+namespace ABCo.ABSave.UnitTests.Core
 {
     [TestClass]
     public class BitSourceTests : TestBase

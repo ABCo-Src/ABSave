@@ -1,10 +1,10 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Description;
-using ABSoftware.ABSave.Mapping.Description.Attributes;
-using ABSoftware.ABSave.Mapping.Generation;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description;
+using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -13,7 +13,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABSoftware.ABSave.Deserialization
+namespace ABCo.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {

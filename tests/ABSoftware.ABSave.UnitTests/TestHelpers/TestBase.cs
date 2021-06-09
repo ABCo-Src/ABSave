@@ -1,9 +1,9 @@
-﻿using ABSoftware.ABSave.Converters;
-using ABSoftware.ABSave.Deserialization;
-using ABSoftware.ABSave.Helpers;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.Mapping.Generation;
-using ABSoftware.ABSave.Serialization;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -12,7 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.UnitTests.TestHelpers
+namespace ABCo.ABSave.UnitTests.TestHelpers
 {
     public abstract class TestBase
     {

@@ -1,6 +1,6 @@
-﻿using ABSoftware.ABSave.Exceptions;
-using ABSoftware.ABSave.Mapping;
-using ABSoftware.ABSave.UnitTests.TestHelpers;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace ABSoftware.ABSave.UnitTests.Mapping
+namespace ABCo.ABSave.UnitTests.Mapping
 {
     [TestClass]
     public class MapGeneratorTests : MapTestBase
