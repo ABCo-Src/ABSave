@@ -15,9 +15,8 @@ namespace ABSoftware.ABSave.Converters
         public static TextConverter Instance { get; } = new TextConverter();
         private TextConverter() { }
 
-        public override bool AlsoConvertsNonExact => false;
-        public override bool WritesToHeader => true;
-        public override bool ConvertsSubTypes => false;
+        public override bool AlsoConvertsNonExact => false;        
+        public override bool UsesHeaderForVersion(uint version) => true;
         public override Type[] ExactTypes { get; } = new Type[] { typeof(string), typeof(StringBuilder), typeof(char[]) };
 
         #region Serialization
@@ -94,11 +93,11 @@ namespace ABSoftware.ABSave.Converters
         public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(string))
-                gen.AssignContext(Context.String);
+                gen.AssignContext(Context.String, 0);
             else if (gen.Type == typeof(StringBuilder))
-                gen.AssignContext(Context.StringBuilder);
+                gen.AssignContext(Context.StringBuilder, 0);
             else if (gen.Type == typeof(char[])) 
-                gen.AssignContext(Context.CharArray);
+                gen.AssignContext(Context.CharArray, 0);
         }
 
         enum StringType

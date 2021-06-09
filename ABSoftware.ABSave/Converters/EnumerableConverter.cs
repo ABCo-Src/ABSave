@@ -15,9 +15,8 @@ namespace ABSoftware.ABSave.Converters
         public static EnumerableConverter Instance { get; } = new EnumerableConverter();
         private EnumerableConverter() { }
 
-        public override bool ConvertsSubTypes => false;
         public override bool AlsoConvertsNonExact => true;
-        public override bool WritesToHeader => true;
+        public override bool UsesHeaderForVersion(uint version) => true;
         public override Type[] ExactTypes { get; } = new Type[]
         {
             typeof(IEnumerable)
@@ -109,7 +108,7 @@ namespace ABSoftware.ABSave.Converters
             if (!typeof(IEnumerable).IsAssignableFrom(gen.Type)) return;
 
             var ctx = CreateContext(ref gen);
-            gen.AssignContext(ctx);
+            gen.AssignContext(ctx, 0);
 
             // Fill in the context's maps.
             ctx.ElementOrKeyMap = gen.GetMap(ctx.ElementOrKeyType);

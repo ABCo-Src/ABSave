@@ -49,7 +49,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             return false;
 
         Found:
-            gen.ContextInstance.Converter = currentConverter;
+            gen.ContextInstance._converter = currentConverter;
             return true;
         }
     }
@@ -67,11 +67,12 @@ namespace ABSoftware.ABSave.Mapping.Generation
         /// Once it has been decided the converter will convert the type, this MUST be used to provide what context will be used. 
         /// The context may be left null in which case an instance will be filled in and provided at serialization-time with all the correct basic details.
         /// </summary>
-        public void AssignContext(ConverterContext? contextInstance)
+        public void AssignContext(ConverterContext? contextInstance, uint maximumVersion)
         {
             ContextInstance = contextInstance;
             ContextInstance ??= new ConverterContext();
             _gen.ApplyItem(ContextInstance, Type);
+            ContextInstance.HighestVersion = maximumVersion;
         }
 
         /// <summary>

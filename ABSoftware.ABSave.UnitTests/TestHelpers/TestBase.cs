@@ -80,7 +80,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
                 var genContext = new ContextGen(type, gen);
                 converter.TryGenerateContext(ref genContext);
 
-                genContext.ContextInstance.Converter = converter;
+                genContext.ContextInstance._converter = converter;
                 genContext.ContextInstance.IsGenerating = false;
                 CurrentMapItem = new MapItemInfo(genContext.ContextInstance, false);
             }

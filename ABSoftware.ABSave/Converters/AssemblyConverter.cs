@@ -15,8 +15,7 @@ namespace ABSoftware.ABSave.Converters
         private AssemblyConverter() { }
 
         public override bool AlsoConvertsNonExact => true;
-        public override bool WritesToHeader => true;
-        public override bool ConvertsSubTypes => true;
+        public override bool UsesHeaderForVersion(uint version) => true;
 
         public override Type[] ExactTypes { get; } = new Type[] { typeof(Assembly) };
 
@@ -117,7 +116,7 @@ namespace ABSoftware.ABSave.Converters
         public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Assembly) || gen.Type.IsSubclassOf(typeof(Assembly)))
-                gen.AssignContext(null);
+                gen.AssignContext(null, 0);
         }
     }
 }

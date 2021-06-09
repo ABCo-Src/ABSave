@@ -11,7 +11,6 @@ namespace ABSoftware.ABSave.Converters
         public static GuidConverter Instance { get; } = new GuidConverter();
         private GuidConverter() { }
 
-        public override bool ConvertsSubTypes => true;
         public override bool AlsoConvertsNonExact => false;
         public override Type[] ExactTypes { get; } = new Type[] { typeof(Guid) };
 
@@ -34,7 +33,7 @@ namespace ABSoftware.ABSave.Converters
         public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Guid)) 
-                gen.AssignContext(null);
+                gen.AssignContext(null, 0);
         }
     }
 }

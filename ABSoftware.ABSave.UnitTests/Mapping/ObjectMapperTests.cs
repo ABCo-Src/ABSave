@@ -1,6 +1,8 @@
 ﻿using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Description;
+using ABSoftware.ABSave.Mapping.Description.Attributes;
 using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -203,40 +205,59 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             // Create a new version - version 1.
             {
-                var members = Map.GetMembersForVersion(item, 1);
+                var info = Map.GetMembersForVersion(item, 1);
 
-                Assert.AreEqual(3, members.Length);
-                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), members[0].Map);
-                Assert.AreEqual(Generator.GetMap(typeof(bool)), members[1].Map);
-                Assert.AreEqual(Generator.GetMap(typeof(int)), members[2].Map);
+                Assert.AreEqual(3, info.Members.Length);
+                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(bool)), info.Members[1].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[2].Map);
+                Assert.AreEqual(SaveInheritanceMode.Key, info.InheritanceInfo!.Mode);
 
-                var membersAgain = Map.GetMembersForVersion(item, 1);
-
-                Assert.AreEqual(members, membersAgain);
+                var infoAgain = Map.GetMembersForVersion(item, 1);
+                Assert.AreEqual(info, infoAgain);
             }
 
             // Create a new version - version 0.
             {
-                var members = Map.GetMembersForVersion(item, 0);
+                var info = Map.GetMembersForVersion(item, 0);
 
-                Assert.AreEqual(1, members.Length);
-                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), members[0].Map);
+                Assert.AreEqual(1, info.Members.Length);
+                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
+                Assert.AreEqual(SaveInheritanceMode.Key, info.InheritanceInfo!.Mode);
 
-                var membersAgain = Map.GetMembersForVersion(item, 0);
-                Assert.AreEqual(members, membersAgain);
+                var infoAgain = Map.GetMembersForVersion(item, 0);
+                Assert.AreEqual(info, infoAgain);
             }
 
             // Create a new version - version 2.
             {
-                var members = Map.GetMembersForVersion(item, 2);
+                var info = Map.GetMembersForVersion(item, 2);
 
-                Assert.AreEqual(3, members.Length);
-                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), members[0].Map);
-                Assert.AreEqual(Generator.GetMap(typeof(int)), members[1].Map);
-                Assert.AreEqual(Generator.GetMap(typeof(long)), members[2].Map);
+                Assert.AreEqual(3, info.Members.Length);
+                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[1].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[2].Map);
+                Assert.IsNull(info.InheritanceInfo);
 
-                var membersAgain = Map.GetMembersForVersion(item, 2);
-                Assert.AreEqual(members, membersAgain);
+                var infoAgain = Map.GetMembersForVersion(item, 2);
+                Assert.AreEqual(info, infoAgain);
+            }
+
+            // Create a new version - version 3.
+            {
+                var info = Map.GetMembersForVersion(item, 3);
+
+                // The same members as version 2
+                Assert.AreEqual(3, info.Members.Length);
+                Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[1].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[2].Map);
+
+                // No inheritance
+                Assert.AreEqual(SaveInheritanceMode.IndexOrKey, info.InheritanceInfo!.Mode);
+
+                var infoAgain = Map.GetMembersForVersion(item, 3);
+                Assert.AreEqual(info, infoAgain);
             }
         }
 
@@ -247,7 +268,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
             var pos = Generator.GetMap(typeof(VersionedPropertyClass));
 
-            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetMembersForVersion((ObjectMapItem)pos._innerItem, 3));
+            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetMembersForVersion((ObjectMapItem)pos._innerItem, 4));
         }
     }
 }

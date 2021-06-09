@@ -14,9 +14,8 @@ namespace ABSoftware.ABSave.Converters
         public static TypeConverter Instance { get; } = new TypeConverter();
         private TypeConverter() { }
 
-        public override bool ConvertsSubTypes => true;
-        public override bool AlsoConvertsNonExact => true;
-        public override bool WritesToHeader => true;
+        public override bool AlsoConvertsNonExact => true;        
+        public override bool UsesHeaderForVersion(uint version) => true;
         public override Type[] ExactTypes { get; } = new Type[] { typeof(Type) };
 
         #region Serialize
@@ -179,7 +178,7 @@ namespace ABSoftware.ABSave.Converters
         public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Type) || gen.Type.IsSubclassOf(typeof(Type))) 
-                gen.AssignContext(null);
+                gen.AssignContext(null, 0);
         }
     }
 }

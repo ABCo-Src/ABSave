@@ -14,8 +14,7 @@ namespace ABSoftware.ABSave.Converters
         public static PrimitiveConverter Instance { get; } = new PrimitiveConverter();
         private PrimitiveConverter() { }
 
-        public override bool WritesToHeader => false;
-        public override bool ConvertsSubTypes => false;
+        public override bool UsesHeaderForVersion(uint version) => false;        
         public override bool AlsoConvertsNonExact => true;
 
         public override Type[] ExactTypes { get; } = new Type[]
@@ -168,7 +167,7 @@ namespace ABSoftware.ABSave.Converters
             if (typeCode == TypeCode.Object)
                 throw new Exception("Unsupported primitive provided. Please note that ABSave does not currently support .NET 5 and above types.");
 
-            gen.AssignContext(new Context((PrimitiveType)typeCode));
+            gen.AssignContext(new Context((PrimitiveType)typeCode), 0);
         }
 
         enum PrimitiveType

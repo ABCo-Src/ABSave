@@ -16,9 +16,8 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         private bool _withHeader = false;
 
         public const int OUTPUT_BYTE = 110;
-        public override bool ConvertsSubTypes => false;
         public override bool AlsoConvertsNonExact => false;
-        public override bool WritesToHeader => _withHeader;
+        public override bool UsesHeaderForVersion(uint version) => true;
         public override Type[] ExactTypes => _withHeader ? new Type[] { typeof(SubWithHeader) } : new Type[] { typeof(SubWithoutHeader) };
 
         public SubTypeConverter(bool withHeader)
@@ -54,9 +53,9 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(SubWithHeader))            
-                gen.AssignContext(new Context() { WritesToHeader = true });
+                gen.AssignContext(new Context() { WritesToHeader = true }, 0);
             else if (gen.Type == typeof(SubWithoutHeader))
-                gen.AssignContext(new Context() { WritesToHeader = false });
+                gen.AssignContext(new Context() { WritesToHeader = false }, 0);
         }
 
         class Context : ConverterContext

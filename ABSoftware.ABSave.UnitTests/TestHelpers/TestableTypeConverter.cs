@@ -17,12 +17,10 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public const int OUTPUT_BYTE = 55;
 
         private bool _writesToHeader;
-        private bool _convertsSubTypes;
+        
+        public override bool UsesHeaderForVersion(uint version) => _writesToHeader;        
 
-        public override bool WritesToHeader => _writesToHeader;
-        public override bool ConvertsSubTypes => _convertsSubTypes;
-
-        public TestableTypeConverter(bool writesToHeader, bool convertsSubTypes) => (_writesToHeader, _convertsSubTypes) = (writesToHeader, convertsSubTypes);
+        public TestableTypeConverter(bool writesToHeader) => _writesToHeader = writesToHeader;
 
         public MapItem GetMap<T>() => GetMap(typeof(T));
         public MapItem GetMap(Type itemType)
@@ -36,7 +34,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Base) || gen.Type.IsSubclassOf(typeof(Base)) || gen.Type == typeof(int))
-                gen.AssignContext(new Context());
+                gen.AssignContext(new Context(), 0);
         }
 
         class Context : ConverterContext { }

@@ -1,4 +1,5 @@
 ﻿using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Mapping.Description;
 using ABSoftware.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
@@ -8,13 +9,21 @@ using System.Text;
 
 namespace ABSoftware.ABSave.Mapping.Generation
 {
-    public struct IntermediateObjInfo
+    internal struct ObjectIntermediateInfo
     {
-        public uint HighestVersion;
         internal ObjectIntermediateItem[] RawMembers;
+        internal SaveInheritanceAttribute[]? AllInheritanceAttributes;
 
-        internal IntermediateObjInfo(uint highestVersion, ObjectIntermediateItem[] rawMembers) =>
-            (HighestVersion, RawMembers) = (highestVersion, rawMembers);
+        internal ObjectIntermediateInfo(ObjectIntermediateItem[] rawMembers, SaveInheritanceAttribute[]? allInheritanceAttributes) =>
+            (RawMembers, AllInheritanceAttributes) = (rawMembers, allInheritanceAttributes);
+
+        public void Release()
+        {
+            // No one should be looking at this once it's been released, and as such them being null
+            // even when they're not nullable is fine, as no one should ever see that.
+            RawMembers = null!;
+            AllInheritanceAttributes = null;
+        }
     }
 
     internal sealed class ObjectIntermediateItem : IComparable<ObjectIntermediateItem>

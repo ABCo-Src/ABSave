@@ -15,7 +15,6 @@ namespace ABSoftware.ABSave.Converters
         public static KeyValueConverter Instance { get; } = new KeyValueConverter();
         private KeyValueConverter() { }
 
-        public override bool ConvertsSubTypes => true;
         public override bool AlsoConvertsNonExact => true;
         public override Type[] ExactTypes { get; } = new Type[]
         {
@@ -77,7 +76,7 @@ namespace ABSoftware.ABSave.Converters
             if (gen.Type.IsGenericType && gen.Type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>))
             {
                 var context = new Context();
-                gen.AssignContext(context);
+                gen.AssignContext(context, 0);
 
                 var genericArgs = gen.Type.GetGenericArguments();
 
@@ -88,7 +87,7 @@ namespace ABSoftware.ABSave.Converters
             else if (gen.Type == typeof(DictionaryEntry))
             {
                 var context = new Context();
-                gen.AssignContext(context);
+                gen.AssignContext(context, 0);
 
                 if (!gen.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'DictionaryEntry' type that could contain any type of element.");
                 context.IsGeneric = false;

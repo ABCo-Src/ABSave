@@ -1,4 +1,5 @@
-﻿using ABSoftware.ABSave.Mapping.Description.Attributes;
+﻿using ABSoftware.ABSave.Mapping.Description;
+using ABSoftware.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -121,16 +122,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
-    [SaveMembers]
-    public struct ValueTypeObj { }
-
-    [SaveMembers]
-    public class ReferenceTypeSub : ReferenceTypeBase { }
-
-    [SaveMembers]
-    public class ReferenceTypeBase { }
-
-    [SaveMembers(ABSave.Mapping.Description.SaveMembersMode.Fields)]
+    [SaveMembers(SaveMembersMode.Fields)]
     public class SimpleClass
     {
         [Save(0)]
@@ -153,7 +145,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public bool IsEquivalentTo(SimpleClass other) => Itm1 == other.Itm1 && Itm2 == other.Itm2 && Itm3 == other.Itm3;
     }
 
-    [SaveMembers(ABSave.Mapping.Description.SaveMembersMode.Fields)]
+    [SaveMembers(SaveMembersMode.Fields)]
     public struct SimpleStruct
     {
         [Save(0)]
@@ -213,6 +205,8 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
     }
 
     [SaveMembers]
+    [SaveInheritance(SaveInheritanceMode.Key, FromVer = 0, ToVer = 1)]
+    [SaveInheritance(SaveInheritanceMode.IndexOrKey, FromVer = 3)]
     public class VersionedPropertyClass
     {
         // Version 0: A

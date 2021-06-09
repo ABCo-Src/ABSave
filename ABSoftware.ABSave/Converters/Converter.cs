@@ -1,6 +1,8 @@
 ﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Deserialization;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Description;
+using ABSoftware.ABSave.Mapping.Description.Attributes;
 using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
@@ -16,21 +18,12 @@ namespace ABSoftware.ABSave.Converters
     /// </summary>
     public class ConverterContext : MapItem
     {
-        internal Converter Converter = null!;
+        internal Converter _converter = null!;
+        internal Dictionary<uint, SaveInheritanceAttribute?>? _inheritanceValues = null;
     }
 
     public abstract class Converter
     {
-        /// <summary>
-        /// Whether this converter can be used for sub-classes of the class it was originally selected for.
-        /// </summary>
-        public abstract bool ConvertsSubTypes { get; }
-
-        /// <summary>
-        /// Whether the converter wants to store data in the extra 6 or 7-bits of header data ABSave has available on the item.
-        /// </summary>
-        public virtual bool WritesToHeader => false;
-
         /// <summary>
         /// Whether this type converter can also convert things other than exact types. If this is enabled, ABSave will also call <see cref="TryGenerateContext(ABSaveSettings, Type)"/>, and if it generates a context this converter will be used.
         /// </summary>
@@ -46,6 +39,7 @@ namespace ABSoftware.ABSave.Converters
         /// </summary>
         public abstract void TryGenerateContext(ref ContextGen gen);
 
+        public virtual bool UsesHeaderForVersion(uint version) => false;
         public abstract void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header);
         public abstract object Deserialize(Type actualType, ConverterContext context, ref BitSource header);
 

@@ -2,8 +2,12 @@
 using ABSoftware.ABSave.Exceptions;
 using ABSoftware.ABSave.Helpers;
 using ABSoftware.ABSave.Mapping;
+using ABSoftware.ABSave.Mapping.Description;
+using ABSoftware.ABSave.Mapping.Description.Attributes;
+using ABSoftware.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -13,7 +17,8 @@ namespace ABSoftware.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {
-        readonly Dictionary<MapItem, ObjectMemberSharedInfo[]> _typeVersions = new Dictionary<MapItem, ObjectMemberSharedInfo[]>();
+        readonly Dictionary<MapItem, ConverterVersionInfo> _converterVersions = new Dictionary<MapItem, ConverterVersionInfo>();
+        readonly Dictionary<MapItem, ObjectVersionInfo> _objectVersions = new Dictionary<MapItem, ObjectVersionInfo>();
 
         internal List<Assembly> SavedAssemblies = new List<Assembly>();
         internal List<Type> SavedTypes = new List<Type>();
@@ -37,7 +42,7 @@ namespace ABSoftware.ABSave.Deserialization
         {
             SavedAssemblies.Clear();
             SavedTypes.Clear();
-            _typeVersions.Clear();
+            _objectVersions.Clear();
         }
 
         BitSource _currentHeader;
@@ -121,80 +126,106 @@ namespace ABSoftware.ABSave.Deserialization
 
         private object DeserializeConverterItem(ConverterContext context, bool skipHeader)
         {
+            // Handle the inheritance bit.
+            bool sameType = true;
             if (!skipHeader)
-            {
-                bool convertsSubTypes = context.Converter.ConvertsSubTypes;
-                bool writesToHeader = context.Converter.WritesToHeader;
+                sameType = ReadHeader(context);
 
-                Type? actualType = ReadHeader(convertsSubTypes, writesToHeader, context);
-                if (actualType != null) return DeserializeItemNoSetup(GetRuntimeMapItem(actualType), true);
+            // Read or create the version info if needed
+            if (_converterVersions.TryGetValue(context, out ConverterVersionInfo info))
+            {
+                uint version = ReadNewVersionInfo();
+                info = ConverterVersionInfo.CreateFromContext(version, context);
+                _converterVersions.Add(context, info);
             }
             
-            return context.Converter.Deserialize(context.ItemType, context, ref _currentHeader);
+            // Handle inheritance.
+            if (info.InheritanceInfo != null && !sameType)            
+                return DeserializeActualType(info.InheritanceInfo, context.ItemType);            
+            
+            return context._converter.Deserialize(context.ItemType, context, ref _currentHeader);
         }
 
         private object DeserializeObjectItem(ObjectMapItem item, bool skipHeader)
         {
+            // Handle the inheritance bit.
+            bool sameType = true;
             if (!skipHeader)
+                sameType = ReadHeader(item);
+
+            // Read or create the version info if needed
+            if (_objectVersions.TryGetValue(item, out ObjectVersionInfo info))
             {
-                Type? actualType = ReadHeader(false, true, item);
-                if (actualType != null) return DeserializeItemNoSetup(GetRuntimeMapItem(actualType), true);
+                uint version = ReadNewVersionInfo();
+                info = MapGenerator.GetVersionOrAddNull(version, item);
+                _objectVersions.Add(item, info);
             }
 
-            return DeserializeObjectMembers(item.ItemType, item);
+            // Handle inheritance.
+            if (info.InheritanceInfo != null && !sameType)
+                return DeserializeActualType(info.InheritanceInfo, item.ItemType);
+
+            return DeserializeObjectMembers(item.ItemType, info.Members!);
         }
 
-        object DeserializeObjectMembers(Type type, ObjectMapItem item)
+        object DeserializeObjectMembers(Type type, ObjectMemberSharedInfo[] members)
         {
             var res = Activator.CreateInstance(type);
-            
-            if (_typeVersions.TryGetValue(item, out ObjectMemberSharedInfo[]? val))
-                DeserializeFromMembers(val!);
-            else
-            {
-                // Deserialize the version in the file.
-                uint version = ReadCompressedInt(ref _currentHeader);
 
-                ObjectMemberSharedInfo[] info = Map.GetMembersForVersion(item, version);
-                _typeVersions.Add(item, info);
-                DeserializeFromMembers(info);
-            }
+            for (int i = 0; i < members.Length; i++)
+                members[i].Accessor.Setter(res!, DeserializeItem(members[i].Map));
 
             return res!;
-
-            void DeserializeFromMembers(ObjectMemberSharedInfo[] members)
-            {
-                for (int i = 0; i < members.Length; i++)
-                    members[i].Accessor.Setter(res!, DeserializeItem(members[i].Map));
-            }
         }
 
-        // Returns: The actual type, null if it's the same as the specified type.
-        Type? ReadHeader(bool mapSupportsSub, bool mapUsesHeader, MapItem item)
+        // Returns: Whether the type has changed
+        bool ReadHeader(MapItem item)
         {
-            if (item.IsValueItemType)
-            {
-                if (mapUsesHeader) EnsureReadHeader();
-                return null;
-            }
+            if (item.IsValueItemType) return false;
 
-            // Type checks
-            if (!mapSupportsSub)
-            {
-                EnsureReadHeader();
+            EnsureReadHeader();
 
-                // Matching type
-                if (_currentHeader.ReadBit()) return null;
-
-                var actualType = ReadClosedType(item.ItemType, ref _currentHeader);
-
-                // The header was used by the type
-                _readHeader = false;
-                return actualType;
-            }
-
-            return null;
+            // Type
+            return _currentHeader.ReadBit();
         }
+
+        uint ReadNewVersionInfo() => ReadCompressedInt(ref _currentHeader);
+
+        // Returns: Whether the sub-type was converted in here and we should return now.
+        object DeserializeActualType(SaveInheritanceAttribute info, Type baseType)
+        {
+            Type? actualType = info.Mode switch
+            {
+                SaveInheritanceMode.Index => TryReadListInheritance(info, baseType),
+                SaveInheritanceMode.Key => TryReadKeyInheritance(info, baseType),
+                SaveInheritanceMode.IndexOrKey => _currentHeader.ReadBit() ? TryReadListInheritance(info, baseType) : TryReadKeyInheritance(info, baseType),
+                _ => throw new Exception("Invalid save inheritance mode")
+            };
+
+            if (actualType == null) throw new InvalidSubTypeInfoException(baseType);
+
+            // Deserialize the actual type.
+            return DeserializeItemNoSetup(GetRuntimeMapItem(actualType), true);
+        }
+
+        Type? TryReadListInheritance(SaveInheritanceAttribute info, Type baseType)
+        {
+            uint key = ReadCompressedInt(ref _currentHeader);
+            return info.IndexDeserializeCache.GetValueOrDefault(key);
+        }
+
+        Type? TryReadKeyInheritance(SaveInheritanceAttribute info, Type baseType)
+        {
+            // Make sure the info is initialized for deserialization.
+            KeyInheritanceHandler.EnsureCreatedDeserializeCacheOnInfo(baseType, info);
+
+            // Read in the key from the file.
+            string key = ReadString(ref _currentHeader);
+
+            // See if there's an item with that key.
+            return info.KeyDeserializeCache!.GetValueOrDefault(key);
+        }
+
 
         void EnsureReadHeader()
         {
@@ -217,7 +248,7 @@ namespace ABSoftware.ABSave.Deserialization
             var res = TypeConverter.Instance.DeserializeType(ref header);
 
             // Safety check.
-            if (!res.IsSubclassOf(requiredBaseType)) throw new UnexpectedTypeException(requiredBaseType, res);
+            if (!res.IsSubclassOf(requiredBaseType)) throw new UnsupportedSubTypeException(requiredBaseType, res);
 
             return res;
         }
@@ -233,7 +264,7 @@ namespace ABSoftware.ABSave.Deserialization
             var res = TypeConverter.Instance.DeserializeClosedType(ref header);
 
             // Safety check.
-            if (!res.IsSubclassOf(requiredBaseType)) throw new UnexpectedTypeException(requiredBaseType, res);
+            if (!res.IsSubclassOf(requiredBaseType)) throw new UnsupportedSubTypeException(requiredBaseType, res);
 
             return res;
         }

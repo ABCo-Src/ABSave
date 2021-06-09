@@ -205,7 +205,11 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            Assert.ThrowsException<UnserializableType>(() => Generator.CreateIntermediateObjectInfo(typeof(UnserializableClass)));
+            Assert.ThrowsException<UnserializableType>(() =>
+            {
+                var info = new ObjectIntermediateInfo();
+                Generator.CreateIntermediateObjectInfo(typeof(UnserializableClass), ref info);
+            });
         }
 
         [TestMethod]
@@ -221,8 +225,10 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
         void TestFields(bool isValueTypeParent)
         {
-            var info = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(SimpleStruct) : typeof(SimpleClass));
+            var info = new ObjectIntermediateInfo();
+            uint version = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(SimpleStruct) : typeof(SimpleClass), ref info);
 
+            Assert.AreEqual(0u, version);
             Assert.AreEqual(3, info.RawMembers.Length);
 
             for (int i = 0; i < info.RawMembers.Length; i++)
@@ -253,9 +259,10 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
 
         void TestProperties(bool isValueTypeParent)
         {
-            var info = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(PropertyStruct) : typeof(PropertyClass));
+            var info = new ObjectIntermediateInfo();
+            uint version = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(PropertyStruct) : typeof(PropertyClass), ref info);
 
-            Assert.AreEqual(0u, info.HighestVersion);
+            Assert.AreEqual(0u, version);
             Assert.AreEqual(2, info.RawMembers.Length);
 
             for (int i = 0; i < info.RawMembers.Length; i++)
@@ -305,7 +312,10 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var info = Generator.CreateIntermediateObjectInfo(typeof(UnorderedPropertyClass));
+            var info = new ObjectIntermediateInfo();
+            uint version = Generator.CreateIntermediateObjectInfo(typeof(UnorderedPropertyClass), ref info);
+
+            Assert.AreEqual(0u, version);
 
             for (int i = 0; i < info.RawMembers.Length; i++)
             {

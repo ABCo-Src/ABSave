@@ -25,7 +25,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
         [TestMethod]
         public void Converter_ValueType_WithoutHeader()
         {
-            ResetStateWithConverter<int>(new TestableTypeConverter(false, false));
+            ResetStateWithConverter<int>(new TestableTypeConverter(false));
             {
                 Serializer.SerializeItem(1, CurrentMapItem);
                 AssertAndGoToStart(TestableTypeConverter.OUTPUT_BYTE);
@@ -37,7 +37,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
         [TestMethod]
         public void Converter_ValueType_WithHeader()
         {
-            ResetStateWithConverter<int>(new TestableTypeConverter(true, false));
+            ResetStateWithConverter<int>(new TestableTypeConverter(true));
             {
                 Serializer.SerializeItem(1, CurrentMapItem);
                 AssertAndGoToStart(128, TestableTypeConverter.OUTPUT_BYTE);
@@ -49,7 +49,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
         [TestMethod]
         public void Converter_MatchingRef_WithoutHeader()
         {
-            ResetStateWithConverter<Base>(new TestableTypeConverter(false, false));
+            ResetStateWithConverter<Base>(new TestableTypeConverter(false));
             {
                 Serializer.SerializeItem(new Base(), CurrentMapItem);
                 AssertAndGoToStart((byte)192, TestableTypeConverter.OUTPUT_BYTE);
@@ -61,7 +61,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
         [TestMethod]
         public void Converter_MatchingRef_WithHeader()
         {
-            ResetStateWithConverter<Base>(new TestableTypeConverter(true, false));
+            ResetStateWithConverter<Base>(new TestableTypeConverter(true));
             {
                 Serializer.SerializeItem(new Base(), CurrentMapItem);
                 AssertAndGoToStart((byte)224, TestableTypeConverter.OUTPUT_BYTE);
@@ -73,7 +73,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
         [TestMethod]
         public void Converter_MatchingRef_Null()
         {
-            ResetStateWithConverter<Base>(new TestableTypeConverter(true, false));
+            ResetStateWithConverter<Base>(new TestableTypeConverter(true));
             {
                 Serializer.SerializeItem(null, CurrentMapItem);
                 AssertAndGoToStart(0);
@@ -91,7 +91,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
             // With header
             if (isInheritanceEnabled)
             {
-                ResetStateWithConverter<Base>(new TestableTypeConverter(false, false));
+                ResetStateWithConverter<Base>(new TestableTypeConverter(false));
                 {
                     Serializer.SerializeItem(new SubWithHeader(), CurrentMapItem);
                     AssertAndGoToStart(160, 128, SubTypeConverter.OUTPUT_BYTE);
@@ -100,7 +100,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
                 }
 
                 // Without header
-                ResetStateWithConverter<Base>(new TestableTypeConverter(false, false));
+                ResetStateWithConverter<Base>(new TestableTypeConverter(false));
                 {
                     Serializer.SerializeItem(new SubWithoutHeader(), CurrentMapItem);
                     AssertAndGoToStart(161, SubTypeConverter.OUTPUT_BYTE);
@@ -111,7 +111,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
 
             // SAME CONVERTER:
             // With header
-            ResetStateWithConverter<Base>(new TestableTypeConverter(true, true));
+            ResetStateWithConverter<Base>(new TestableTypeConverter(true));
             {
                 Serializer.SerializeItem(new SubWithHeader(), CurrentMapItem);
                 AssertAndGoToStart(192, TestableTypeConverter.OUTPUT_BYTE);
@@ -120,7 +120,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
             }
 
             // Without header
-            ResetStateWithConverter<Base>(new TestableTypeConverter(false, true));
+            ResetStateWithConverter<Base>(new TestableTypeConverter(false));
             {
                 Serializer.SerializeItem(new SubWithoutHeader(), CurrentMapItem);
                 AssertAndGoToStart(128, TestableTypeConverter.OUTPUT_BYTE);
@@ -195,7 +195,7 @@ namespace ABSoftware.ABSave.UnitTests.Core
         [TestMethod]
         public void CrossType_ConvToObj()
         {
-            ResetStateWithConverter<Base>(new TestableTypeConverter(false, false));
+            ResetStateWithConverter<Base>(new TestableTypeConverter(false));
             {
                 Serializer.SerializeItem(new SubNoConverter(150), CurrentMapItem);
                 AssertAndGoToStart(162, 0, 150);

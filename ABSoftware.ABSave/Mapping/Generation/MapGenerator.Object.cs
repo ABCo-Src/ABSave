@@ -1,4 +1,6 @@
 ﻿using ABSoftware.ABSave.Exceptions;
+using ABSoftware.ABSave.Mapping.Description;
+using ABSoftware.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -20,10 +22,10 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 => (TargetVersion, Dest) = (targetVersion, dest);
         }
 
-        internal static ObjectMemberSharedInfo[]? GetVersionOrAddNull(uint version, ObjectMapItem parentObj)
+        internal static ObjectVersionInfo GetVersionOrAddNull(uint version, ObjectMapItem parentObj)
         {
-            if (parentObj.ObjectHasOneVersion)
-                return version > 0 ? null : parentObj.Members.OneVersion;
+            if (parentObj.HasOneVersion)
+                return version > 0 ? ObjectVersionInfo.None : parentObj.Members.OneVersion;
 
             while (true)
             {
@@ -32,14 +34,14 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     // Does not exist - Has not and is not generating.
                     // Exists but is null - Is currently generating.
                     // Exists and is not null - Is ready to use.
-                    if (parentObj.Members.MultipleVersions.TryGetValue(version, out ObjectMemberSharedInfo[]? info))
+                    if (parentObj.Members.MultipleVersions.TryGetValue(version, out ObjectVersionInfo info))
                     {
-                        if (info != null) return info;
+                        if (info.Members != null) return info;
                     }
                     else
                     {
-                        parentObj.Members.MultipleVersions.Add(version, null);
-                        return null;
+                        parentObj.Members.MultipleVersions.Add(version, ObjectVersionInfo.None);
+                        return ObjectVersionInfo.None;
                     }
                 }
 
@@ -47,97 +49,108 @@ namespace ABSoftware.ABSave.Mapping.Generation
             }
         }
 
-        internal ObjectMemberSharedInfo[] GenerateVersion(uint version, ObjectMapItem parentObj)
+        internal ObjectVersionInfo AddNewVersion(uint version, ObjectMapItem parentObj)
         {
-            uint latestVer = parentObj.ObjectHighestVersion;
-
-            if (parentObj.ObjectHasOneVersion || version > latestVer)
+            if (parentObj.HasOneVersion || version > parentObj.HighestVersion)
                 throw new UnsupportedVersionException(parentObj.ItemType, version);
 
-            var ctx = new Context(version, parentObj);
-            var newVer = GenerateNewVersion(ref ctx, parentObj);
+            var newVer = GenerateNewVersion(version, parentObj);
 
             lock (parentObj.Members.MultipleVersions)
             {
                 parentObj.Members.MultipleVersions[version] = newVer;
-                if (parentObj.Members.MultipleVersions.Count > parentObj.ObjectHighestVersion)
-                    parentObj.RawMembers = null;
+                if (parentObj.Members.MultipleVersions.Count > parentObj.HighestVersion)
+                    parentObj.Intermediate.RawMembers = null!;
             }
 
             return newVer;
         }
 
-        internal MapItem GenerateNewObject(Type type)
-            => GenerateNewObject(type, CreateIntermediateObjectInfo(type));
+        void FillDestWithNoMembers(ObjectMapItem dest)
+        {
+            dest.Intermediate.Release();
 
-        internal MapItem GenerateNewObject(Type type, IntermediateObjInfo info)
+            dest.HasOneVersion = true;
+            dest.HighestVersion = 0;
+            dest.Members.OneVersion = new ObjectVersionInfo(Array.Empty<ObjectMemberSharedInfo>(), null);
+        }
+
+        void FillDestWithOneVersion(ObjectMapItem dest)
+        {
+            dest.HasOneVersion = true;
+            dest.Members.OneVersion = GenerateForOneVersion(dest.HighestVersion, dest);
+
+            // There are no more versions here, drop the raw members.
+            dest.Intermediate.Release();
+        }
+
+        void FillDestWithMultipleVersions(ObjectMapItem dest)
+        {
+            dest.HasOneVersion = false;
+            dest.Members.MultipleVersions = new Dictionary<uint, ObjectVersionInfo>();
+        }
+
+        internal MapItem GenerateNewObject(Type type)
         {
             var res = new ObjectMapItem();
             ApplyItem(res, type);
 
-            // If there's literally zero members, just do nothing.
-            if (info.RawMembers.Length == 0)
-                return GenerateNoMembers(res);
+            res.HighestVersion = CreateIntermediateObjectInfo(type, ref res.Intermediate);
 
-            res.RawMembers = info.RawMembers;
-            res.ObjectHighestVersion = info.HighestVersion;
-
-            // Handle objects with only one version quickly without any extra work.
-            if (info.HighestVersion == 0)
-            {
-                var ctx = new Context(0, res);
-                GenerateForOneVersion(ref ctx, res);
-
-                // There are no more versions here, drop the raw members.
-                res.RawMembers = null;
-            }
+            if (res.Intermediate.RawMembers!.Length == 0)
+                FillDestWithNoMembers(res);
+            else if (res.HighestVersion == 0)
+                FillDestWithOneVersion(res);
             else
-            {
-                res.ObjectHasOneVersion = false;
-                res.RawMembers = info.RawMembers;
-                res.Members.MultipleVersions = new Dictionary<uint, ObjectMemberSharedInfo[]?>();
-            }
+                FillDestWithMultipleVersions(res);
 
             return res;
         }
 
-        static MapItem GenerateNoMembers(ObjectMapItem res)
+        ObjectVersionInfo GenerateNewVersion(uint targetVersion, ObjectMapItem parent)
         {
-            res.RawMembers = null;
-            //IntermediateObjInfoMapper.Release(info);
-
-            res.ObjectHasOneVersion = true;
-            res.ObjectHighestVersion = 0;
-            res.Members.OneVersion = Array.Empty<ObjectMemberSharedInfo>();
-            return res;
-        }
-
-        ObjectMemberSharedInfo[] GenerateNewVersion(ref Context ctx, ObjectMapItem parent)
-        {
+            var intermediate = parent.Intermediate;
             var lst = new List<ObjectMemberSharedInfo>();
-            uint version = ctx.TargetVersion;
 
-            for (int i = 0; i < ctx.Dest.RawMembers!.Length; i++)
+            // Get the members
+            for (int i = 0; i < intermediate.RawMembers.Length; i++)
             {
-                var intermediateItm = ctx.Dest.RawMembers[i];
+                var intermediateItm = intermediate.RawMembers[i];
 
-                if (version >= intermediateItm.StartVer && version <= intermediateItm.EndVer)
+                if (targetVersion >= intermediateItm.StartVer && targetVersion <= intermediateItm.EndVer)
                     lst.Add(GetOrCreateItemFrom(intermediateItm, parent));
             }
 
-            return lst.ToArray();
+            var inheritanceInfo = FindInheritanceAttributeForVersion(intermediate.AllInheritanceAttributes, targetVersion);
+            return new ObjectVersionInfo(lst.ToArray(), inheritanceInfo);
         }
 
-        ObjectMemberSharedInfo[] GenerateForOneVersion(ref Context ctx, ObjectMapItem dest)
+        ObjectVersionInfo GenerateForOneVersion(uint version, ObjectMapItem parent)
         {
+            var intermediate = parent.Intermediate;
+
             // No need to do any checks at all - just copy the items right across!
-            var outputArr = new ObjectMemberSharedInfo[dest.RawMembers!.Length];
+            var outputArr = new ObjectMemberSharedInfo[intermediate.RawMembers.Length];
 
             for (int i = 0; i < outputArr.Length; i++)
-                outputArr[i] = CreateItem(dest, ctx.Dest.RawMembers![i]);
+                outputArr[i] = CreateItem(parent, intermediate.RawMembers[i]);
 
-            dest.ObjectHasOneVersion = true;
-            return dest.Members.OneVersion = outputArr;
+            SaveInheritanceAttribute? inheritanceInfo = FindInheritanceAttributeForVersion(intermediate.AllInheritanceAttributes, version);
+            return new ObjectVersionInfo(outputArr, inheritanceInfo);
+        }
+
+        private static SaveInheritanceAttribute? FindInheritanceAttributeForVersion(SaveInheritanceAttribute[]? attributes, uint version)
+        {
+            if (attributes == null) return null;
+
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                var currentAttribute = attributes[i];
+                if (currentAttribute.FromVer <= version && currentAttribute.ToVer >= version)
+                    return currentAttribute;
+            }
+
+            return null;
         }
 
         ObjectMemberSharedInfo GetOrCreateItemFrom(ObjectIntermediateItem intermediate, ObjectMapItem parent)

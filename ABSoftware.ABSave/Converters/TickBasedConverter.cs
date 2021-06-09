@@ -13,7 +13,6 @@ namespace ABSoftware.ABSave.Converters
         public static TickBasedConverter Instance { get; } = new TickBasedConverter();
         private TickBasedConverter() { }
 
-        public override bool ConvertsSubTypes => true;
         public override bool AlsoConvertsNonExact => false;
         public override Type[] ExactTypes { get; } = new Type[]
         {
@@ -55,9 +54,9 @@ namespace ABSoftware.ABSave.Converters
         public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(DateTime))
-                gen.AssignContext(Context.DateTime);
+                gen.AssignContext(Context.DateTime, 0);
             else if (gen.Type == typeof(TimeSpan))
-                gen.AssignContext(Context.TimeSpan);
+                gen.AssignContext(Context.TimeSpan, 0);
         }
 
         enum TicksType

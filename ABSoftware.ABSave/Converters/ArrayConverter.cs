@@ -16,8 +16,8 @@ namespace ABSoftware.ABSave.Converters
         private ArrayConverter() { }
 
         public override bool AlsoConvertsNonExact => true;
-        public override bool WritesToHeader => true;
-        public override bool ConvertsSubTypes => false;
+
+        public override bool UsesHeaderForVersion(uint version) => true;
 
         // Remember to update in "ABSaveTypeConverter".
         public override Type[] ExactTypes { get; } = new Type[]
@@ -370,7 +370,7 @@ namespace ABSoftware.ABSave.Converters
             {
                 if (!gen.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'Array' type that could contain any type of element");
 
-                gen.AssignContext(Context.Unknown);
+                gen.AssignContext(Context.Unknown, 0);
                 return;
             }
 
@@ -380,7 +380,7 @@ namespace ABSoftware.ABSave.Converters
 
             var elemType = gen.Type.GetElementType();
 
-            gen.AssignContext(res);
+            gen.AssignContext(res, 0);
             PopulateTypeInfo(ref res.Info, gen.GetMap(elemType!), gen.Type);
         }
 

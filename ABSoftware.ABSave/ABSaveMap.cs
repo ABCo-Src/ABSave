@@ -49,15 +49,15 @@ namespace ABSoftware.ABSave.Mapping
             return map;
         }
 
-        internal ObjectMemberSharedInfo[] GetMembersForVersion(ObjectMapItem item, uint version)
+        internal ObjectVersionInfo GetMembersForVersion(ObjectMapItem item, uint version)
         {
             // Try to get the version if it already exists.
             var existing = MapGenerator.GetVersionOrAddNull(version, item);
-            if (existing != null) return existing;
+            if (existing.Members != null) return existing;
 
             // If it doesn't, generate it.
             var gen = GetGenerator();
-            var res = gen.GenerateVersion(version, item);
+            var res = gen.AddNewVersion(version, item);
             ReleaseGenerator(gen);
             return res;
         }

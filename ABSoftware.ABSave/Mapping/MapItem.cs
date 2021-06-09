@@ -1,5 +1,7 @@
 ﻿using ABSoftware.ABSave.Converters;
 using ABSoftware.ABSave.Helpers;
+using ABSoftware.ABSave.Mapping.Description;
+using ABSoftware.ABSave.Mapping.Description.Attributes;
 using ABSoftware.ABSave.Mapping.Generation;
 using ABSoftware.ABSave.Serialization;
 using System;
@@ -41,24 +43,56 @@ namespace ABSoftware.ABSave.Mapping
         public bool IsValueItemType;
 
         internal volatile bool IsGenerating;
-        internal bool ObjectHasOneVersion;
-        public uint ObjectHighestVersion;
+        internal bool HasOneVersion;
+        public uint HighestVersion;
+
+        // All the base types have been checked already and are definitely supported.
+        public List<Type>? DefiniteSupportedBaseTypes;
     }
 
     internal sealed class ObjectMapItem : MapItem
     {
         public ObjectMembers Members;
-        public ObjectIntermediateItem[]? RawMembers;
+        public ObjectIntermediateInfo Intermediate;
 
         [StructLayout(LayoutKind.Explicit)]
         public struct ObjectMembers
         {
             [FieldOffset(0)]
-            public ObjectMemberSharedInfo[] OneVersion;
+            public ObjectVersionInfo OneVersion;
              
             [FieldOffset(0)]
-            public Dictionary<uint, ObjectMemberSharedInfo[]?> MultipleVersions;
+            public Dictionary<uint, ObjectVersionInfo> MultipleVersions;
         }
+    }
+
+    internal struct ObjectVersionInfo
+    {
+        public static ObjectVersionInfo None => new ObjectVersionInfo(null, null);
+
+        public ObjectMemberSharedInfo[]? Members;
+        public SaveInheritanceAttribute? InheritanceInfo;
+
+        public ObjectVersionInfo(ObjectMemberSharedInfo[]? members, SaveInheritanceAttribute? inheritanceInfo) =>
+            (Members, InheritanceInfo) = (members, inheritanceInfo);
+    }
+
+    internal struct ConverterVersionInfo
+    {
+        public uint VersionNumber;
+        public bool UsesHeader;
+        public SaveInheritanceAttribute? InheritanceInfo;
+
+        public static ConverterVersionInfo CreateFromContext(uint version, ConverterContext context)
+        {
+            return new ConverterVersionInfo(
+                    version,
+                    context._converter.UsesHeaderForVersion(version),
+                    context._inheritanceValues?.GetValueOrDefault(version));
+        }
+
+        public ConverterVersionInfo(uint versionInfo, bool usesHeader, SaveInheritanceAttribute? inheritanceInfo) =>
+            (VersionNumber, UsesHeader, InheritanceInfo) = (versionInfo, usesHeader, inheritanceInfo);
     }
 
     /// <summary>

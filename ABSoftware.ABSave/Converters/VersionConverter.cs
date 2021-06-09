@@ -11,9 +11,8 @@ namespace ABSoftware.ABSave.Converters
         public static VersionConverter Instance { get; } = new VersionConverter();
         private VersionConverter() { }
 
-        public override bool ConvertsSubTypes => true;
         public override bool AlsoConvertsNonExact => false;
-        public override bool WritesToHeader => true;
+        public override bool UsesHeaderForVersion(uint version) => true;
         public override Type[] ExactTypes { get; } = new Type[] { typeof(Version) };
 
         public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
@@ -59,7 +58,7 @@ namespace ABSoftware.ABSave.Converters
         public override void TryGenerateContext(ref ContextGen gen)
         {
             if (gen.Type == typeof(Version)) 
-                gen.AssignContext(null);
+                gen.AssignContext(null, 0);
         }
     }
 }

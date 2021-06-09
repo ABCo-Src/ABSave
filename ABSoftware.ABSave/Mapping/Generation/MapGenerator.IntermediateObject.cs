@@ -17,8 +17,6 @@ namespace ABSoftware.ABSave.Mapping.Generation
     // intermediary form, that can then used to make the final maps for all the different version numbers.    
     public partial class MapGenerator
     {
-        public static bool IsParallel = false;
-
         internal ReflectionMapper CurrentReflectionMapper;
 
         // Context used while creating intermediate info.
@@ -27,17 +25,18 @@ namespace ABSoftware.ABSave.Mapping.Generation
         /// <summary>
         /// Clears the list <see cref="MapGenerator.CurrentObjMembers"/> and inserts all of the members and information attached to them.
         /// </summary>
-        internal IntermediateObjInfo CreateIntermediateObjectInfo(Type type)
+        internal uint CreateIntermediateObjectInfo(Type type, ref ObjectIntermediateInfo info)
         {
             _intermediateContext = new TranslationContext(type);
 
             // Coming soon: Settings-based mapping
-            var members = CurrentReflectionMapper.FillInfo();
+            var members = CurrentReflectionMapper.FillInfo(out SaveInheritanceAttribute[]? attr);
 
             if (_intermediateContext.TranslationCurrentOrderInfo == -1)
                 Array.Sort(members);
 
-            return new IntermediateObjInfo(_intermediateContext.HighestVersion, members);
+            info = new ObjectIntermediateInfo(members, attr);
+            return _intermediateContext.HighestVersion;
         }
 
         internal class ReflectionMapper
@@ -49,10 +48,6 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 _threadPoolAddItem = ProcessAttributesOnThreadPool;
             }
 
-            // Constant values used in the buffer below
-            internal static readonly ObjectIntermediateItem _skipMapItem = new ObjectIntermediateItem();
-            internal static readonly ObjectIntermediateItem _invalidMapItem = new ObjectIntermediateItem();
-
             // A buffer used as we're processing the attributes of each member in parallel, each item goes to 
             // one member. Any null items are members that did not have the "Save" attribute and should be ignored.
             internal ObjectIntermediateItem?[] _intermediateCurrentBuffer = Array.Empty<ObjectIntermediateItem?>();
@@ -61,11 +56,11 @@ namespace ABSoftware.ABSave.Mapping.Generation
             internal MemberInfo[] _currentFields = Array.Empty<FieldInfo>();
             internal MemberInfo[] _currentProperties = Array.Empty<PropertyInfo>();
 
-            public ObjectIntermediateItem[] FillInfo()
+            public ObjectIntermediateItem[] FillInfo(out SaveInheritanceAttribute[]? inheritanceInfo)
             {
                 var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
                 var classType = Gen._intermediateContext.ClassType;
-                var mode = GetClassMode(classType);
+                var mode = GetClassInfo(classType, out inheritanceInfo);
 
                 // Get the members
                 _currentFields = GetFields(bindingFlags, classType, mode);
@@ -173,7 +168,7 @@ namespace ABSoftware.ABSave.Mapping.Generation
             internal static void ProcessMemberAttributes(MemberInfo info, ref ObjectIntermediateItem? dest, ref int count)
             {
                 // Get the attributes - skip this item if there are none
-                var attributes = info.GetCustomAttributes(typeof(MapAttr), true);
+                var attributes = info.GetCustomAttributes(typeof(MapAttr), false);
                 if (attributes.Length == 0) return;
 
                 // Create the item.
@@ -204,9 +199,29 @@ namespace ABSoftware.ABSave.Mapping.Generation
                 return loadedSaveAttribute;
             }
 
-            static SaveMembersMode GetClassMode(Type classType)
+            SaveMembersMode GetClassInfo(Type classType, out SaveInheritanceAttribute[]? inheritanceInfo)
             {
                 // TODO: This is just to temporarily support "object" until proper settings mapping comes in.
+                SaveMembersMode res = GetClassMode(classType);
+
+                inheritanceInfo = (SaveInheritanceAttribute[])classType.GetCustomAttributes<SaveInheritanceAttribute>(false);
+
+                if (inheritanceInfo.Length == 0) 
+                    inheritanceInfo = null;
+                else
+                {
+                    for (int i = 0; i < inheritanceInfo.Length; i++)
+                    {
+                        var info = (SaveInheritanceAttribute)inheritanceInfo[i];
+                        Gen.UpdateVersionInfo(info.FromVer, info.ToVer);
+                    }
+                }
+
+                return res;
+            }
+
+            private static SaveMembersMode GetClassMode(Type classType)
+            {
                 if (classType == typeof(object)) return SaveMembersMode.Fields;
 
                 var attribute = classType.GetCustomAttribute<SaveMembersAttribute>(false);
@@ -287,18 +302,23 @@ namespace ABSoftware.ABSave.Mapping.Generation
                     _intermediateContext.TranslationCurrentOrderInfo = -1;
             }
 
+            UpdateVersionInfo(newItem.StartVer, newItem.EndVer);
+        }
+
+        void UpdateVersionInfo(uint startVer, uint endVer)
+        {
             // If there is no upper we'll only update the highest version based on what the minimum is.
-            if (newItem.EndVer == uint.MaxValue)
+            if (endVer == uint.MaxValue)
             {
-                if (newItem.StartVer > _intermediateContext.HighestVersion)
-                    _intermediateContext.HighestVersion = newItem.StartVer;
+                if (startVer > _intermediateContext.HighestVersion)
+                    _intermediateContext.HighestVersion = startVer;
             }
 
             // If not update based on what their custom high is.
             else
             {
-                if (newItem.EndVer > _intermediateContext.HighestVersion)
-                    _intermediateContext.HighestVersion = newItem.EndVer;
+                if (endVer > _intermediateContext.HighestVersion)
+                    _intermediateContext.HighestVersion = endVer;
             }
         }
 
