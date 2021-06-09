@@ -102,7 +102,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
-    [SaveMembers(SaveMembersMode.Fields)]
+    [SaveMembers]
     public class AllPrimitiveClass
     {
         [Save(0)]
@@ -125,7 +125,7 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public bool IsEquivalentTo(AllPrimitiveClass other) => Itm1 == other.Itm1 && Itm2 == other.Itm2 && Itm3 == other.Itm3;
     }
 
-    [SaveMembers(SaveMembersMode.Fields)]
+    [SaveMembers]
     public struct AllPrimitiveStruct
     {
         [Save(0)]
@@ -258,7 +258,35 @@ namespace ABSoftware.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
+    public class UnserializableClass { }
+
     #endregion
 
-    public class UnserializableClass { }
+    #region Key Inheritance Modes
+
+    [SaveMembers]
+    [SaveInheritance(SaveInheritanceMode.Key)]
+    public class KeyBase { }
+
+    [SaveMembers]
+    [SaveInheritanceKey("First")]
+    public class KeySubFirst : KeyBase { }
+
+    [SaveMembers]
+    [SaveInheritanceKey("Second")]
+    public class KeySubSecond : KeyBase { }
+
+    [SaveMembers]
+    [SaveInheritance(SaveInheritanceMode.IndexOrKey, typeof(IndexKeySubIndex))]
+    public class IndexKeyBase { }
+
+    [SaveMembers]
+    public class IndexKeySubIndex : IndexKeyBase { }
+
+    [SaveMembers]
+    [SaveInheritanceKey("Key")]
+    public class IndexKeySubKey : IndexKeyBase { }
+
+    #endregion
+
 }

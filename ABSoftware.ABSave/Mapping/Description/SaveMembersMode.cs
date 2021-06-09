@@ -13,7 +13,7 @@ namespace ABSoftware.ABSave.Mapping.Description
     public enum SaveInheritanceMode
     {
         /// <summary>
-        /// Tells ABSave to use the index the type appears in the list provided to store what type is present.
+        /// Tells ABSave to use the index the type appears in the list provided to store what sub-type is present.
         /// </summary>
         Index,
 

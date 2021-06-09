@@ -262,7 +262,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             uint version = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(AllPrimitiveStruct) : typeof(AllPrimitiveClass), ref info);
 
             Assert.AreEqual(0u, version);
-            Assert.AreEqual(2, info.RawMembers.Length);
+            Assert.AreEqual(3, info.RawMembers.Length);
 
             for (int i = 0; i < info.RawMembers.Length; i++)
             {

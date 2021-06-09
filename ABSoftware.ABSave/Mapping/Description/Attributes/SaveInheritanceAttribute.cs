@@ -8,17 +8,18 @@ namespace ABSoftware.ABSave.Mapping.Description.Attributes
     public class SaveInheritanceAttribute : Attribute
     {
         public SaveInheritanceMode Mode;
+        internal bool HasGeneratedFullKeyCache;
 
         ///// <summary>
         ///// Whether to ignore any types that aren't in the list or don't have a key and simply serialize their base members.
         ///// </summary>
         //public bool IgnoreUnmarkedTypes = false;
 
-        public Dictionary<Type, uint> IndexSerializeCache;
-        public Dictionary<uint, Type> IndexDeserializeCache;
+        internal Dictionary<Type, uint> IndexSerializeCache;
+        internal Dictionary<uint, Type> IndexDeserializeCache;
 
-        public Dictionary<Type, string>? KeySerializeCache;
-        public Dictionary<string, Type>? KeyDeserializeCache;
+        internal Dictionary<Type, string>? KeySerializeCache;
+        internal Dictionary<string, Type>? KeyDeserializeCache;
 
         public uint FromVer;
         public uint ToVer = uint.MaxValue;

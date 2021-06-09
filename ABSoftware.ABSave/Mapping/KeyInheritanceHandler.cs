@@ -3,6 +3,7 @@ using ABSoftware.ABSave.Mapping.Description;
 using ABSoftware.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -19,6 +20,8 @@ namespace ABSoftware.ABSave.Mapping
                 // Try to get it from the cache.
                 if (info.KeySerializeCache != null && info.KeySerializeCache.TryGetValue(type, out string? val))
                     return val;
+
+                Debug.Assert(!info.HasGeneratedFullKeyCache);
 
                 // If it's not in the cache, get and add it now.
                 var attribute = type.GetCustomAttribute<SaveInheritanceKeyAttribute>(false);
@@ -39,7 +42,7 @@ namespace ABSoftware.ABSave.Mapping
             lock (info)
             {
                 // Just use one of them to see if the cache is valid or not.
-                if (info.KeyDeserializeCache != null) return;
+                if (info.HasGeneratedFullKeyCache) return;
 
                 var keyedInfo = GetKeyedSubTypesFor(type);
 
@@ -54,6 +57,8 @@ namespace ABSoftware.ABSave.Mapping
                     info.KeySerializeCache.Add(currentInfo.Type, currentInfo.Key);
                     info.KeyDeserializeCache.Add(currentInfo.Key, currentInfo.Type);
                 }
+
+                info.HasGeneratedFullKeyCache = true;
             }
         }
 
@@ -76,7 +81,7 @@ namespace ABSoftware.ABSave.Mapping
             for (int i = 0; i < currentAssemblies.Length; i++)
             {
                 var referenced = currentAssemblies[i].GetReferencedAssemblies();
-                if (referenced.Contains(typeAssemblyName))
+                if (currentAssemblies[i] == type.Assembly || referenced.Contains(typeAssemblyName))
                 {
                     var subTypes = currentAssemblies[i].GetTypes();
 

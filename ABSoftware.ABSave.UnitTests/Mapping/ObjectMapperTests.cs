@@ -24,6 +24,8 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             object expected = null;
             if (typeof(TItem) == typeof(int))
                 expected = 123;
+            if (typeof(TItem) == typeof(byte))
+                expected = (byte)123;
             else if (typeof(TItem) == typeof(bool))
                 expected = true;
             else if (typeof(TItem) == typeof(string))
@@ -41,7 +43,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var memberInfo = typeof(FieldClass).GetField(nameof(FieldClass.A), BindingFlags.NonPublic | BindingFlags.Instance);
+            var memberInfo = typeof(FieldClass).GetField(nameof(FieldClass.A));
 
             var item = new ObjectMemberSharedInfo();
             MapGenerator.GenerateFieldAccessor(ref item.Accessor, memberInfo);
@@ -109,7 +111,7 @@ namespace ABSoftware.ABSave.UnitTests.Mapping
             Assert.IsInstanceOfType(item.Accessor.Object1, typeof(Func<NestedClass, byte>));
             Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<NestedClass, byte>));
             Assert.AreEqual(MemberAccessorType.PrimitiveProperty, item.Accessor.Type);
-            Assert.AreEqual(TypeCode.Boolean, item.Accessor.PrimitiveTypeCode);
+            Assert.AreEqual(TypeCode.Byte, item.Accessor.PrimitiveTypeCode);
 
             VerifyRuns<NestedClass, byte>(ref item.Accessor);
         }
