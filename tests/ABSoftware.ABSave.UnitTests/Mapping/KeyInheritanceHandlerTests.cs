@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.TestOtherAssembly;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -53,11 +54,11 @@ namespace ABCo.ABSave.UnitTests.Mapping
         }
 
         [TestMethod]
-        public void EnsureCreatedDeserializeCacheOnInfo_New()
+        public void EnsureHasAllTypeCache_New_SameAssembly()
         {
             SaveInheritanceAttribute attribute = typeof(KeyBase).GetCustomAttribute<SaveInheritanceAttribute>();
 
-            KeyInheritanceHandler.EnsureCreatedDeserializeCacheOnInfo(typeof(KeyBase), attribute);
+            KeyInheritanceHandler.EnsureHasAllTypeCache(typeof(KeyBase), attribute);
 
             Assert.AreEqual(2, attribute.KeySerializeCache.Count);
             Assert.AreEqual(2, attribute.KeyDeserializeCache.Count);
@@ -72,14 +73,33 @@ namespace ABCo.ABSave.UnitTests.Mapping
         }
 
         [TestMethod]
-        public void EnsureCreatedDeserializeCacheOnInfo_Existing()
+        public void EnsureHasAllTypeCache_New_CrossAssembly()
+        {
+            SaveInheritanceAttribute attribute = typeof(KeyBase).GetCustomAttribute<SaveInheritanceAttribute>();
+
+            KeyInheritanceHandler.EnsureHasAllTypeCache(typeof(OtherAssemblyBase), attribute);
+
+            Assert.AreEqual(2, attribute.KeySerializeCache.Count);
+            Assert.AreEqual(2, attribute.KeyDeserializeCache.Count);
+
+            Assert.AreEqual("First", attribute.KeySerializeCache[typeof(OtherAssemblySub)]);
+            Assert.AreEqual(typeof(OtherAssemblySub), attribute.KeyDeserializeCache["First"]);
+
+            Assert.AreEqual("Second", attribute.KeySerializeCache[typeof(CrossAssemblySub)]);
+            Assert.AreEqual(typeof(CrossAssemblySub), attribute.KeyDeserializeCache["Second"]);
+
+            Assert.IsTrue(attribute.HasGeneratedFullKeyCache);
+        }
+
+        [TestMethod]
+        public void EnsureHasAllTypeCache_Existing()
         {
             SaveInheritanceAttribute attribute = typeof(KeyBase).GetCustomAttribute<SaveInheritanceAttribute>();
 
             // Simulate it having already been done.
             attribute.HasGeneratedFullKeyCache = true;
 
-            KeyInheritanceHandler.EnsureCreatedDeserializeCacheOnInfo(typeof(KeyBase), attribute);
+            KeyInheritanceHandler.EnsureHasAllTypeCache(typeof(KeyBase), attribute);
 
             // Since nothing has actually been done these will just be null.
             Assert.IsNull(attribute.KeySerializeCache);

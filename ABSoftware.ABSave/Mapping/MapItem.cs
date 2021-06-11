@@ -88,7 +88,7 @@ namespace ABCo.ABSave.Mapping
             return new ConverterVersionInfo(
                     version,
                     context._converter.UsesHeaderForVersion(version),
-                    context._inheritanceValues?.GetValueOrDefault(version));
+                    MapGenerator.GetConverterInheritanceInfoForVersion(version, context));
         }
 
         public ConverterVersionInfo(uint versionInfo, bool usesHeader, SaveInheritanceAttribute? inheritanceInfo) =>

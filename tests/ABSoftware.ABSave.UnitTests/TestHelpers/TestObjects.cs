@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.TestOtherAssembly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 {
     [SaveMembers]
     class EmptyClass { }
+
+    public struct ConverterValueType { }
 
     [SaveMembers]
     class GenericType<TA, TB, TC> : BaseIndex { }
@@ -45,7 +48,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
-    [SaveMembers]
     class SubWithHeader : BaseIndex
     {
         public override bool Equals(object obj) => obj is SubWithHeader;
@@ -53,7 +55,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
-    [SaveMembers]
     class SubWithoutHeader : BaseIndex
     {
         public override bool Equals(object obj) => obj is SubWithoutHeader;
@@ -286,6 +287,12 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     [SaveMembers]
     [SaveInheritanceKey("Key")]
     public class IndexKeySubKey : IndexKeyBase { }
+
+    // OtherAssemblyBase is in the "OtherAssembly".
+
+    [SaveMembers]
+    [SaveInheritanceKey("Second")]
+    public class CrossAssemblySub : OtherAssemblyBase { }
 
     #endregion
 

@@ -16,10 +16,10 @@ namespace ABCo.ABSave.UnitTests.Converters
     {
         public Converter CurrentConverter = null!;
 
-        public void Setup<T>(ABSaveSettings settings, Converter converter)
+        public void Setup<T>(ABSaveSettings settings)
         {
             Initialize(settings);
-            ResetStateWithConverter<T>(converter);
+            ResetStateWithMapFor<T>();
         }
 
         public void DoSerialize(object obj)

@@ -135,15 +135,22 @@ namespace ABCo.ABSave.Serialization
         {
             var actualType = obj.GetType();
 
+            bool appliedHeader = true;
+
             // Write the null and inheritance bits.
             bool sameType = true;
-            if (!skipHeader)
+            if (!ctx.IsValueItemType && !skipHeader)
+            {
                 sameType = WriteHeaderNullAndInheritance(actualType, ctx, ref header);
+                appliedHeader = false;
+            }
 
             // Write and get the info for a version, if necessary
-            if (_converterVersions.TryGetValue(ctx, out ConverterVersionInfo info))
+            if (!_converterVersions.TryGetValue(ctx, out ConverterVersionInfo info))
             {
                 uint version = WriteNewVersionInfo(ctx, ref header);
+                appliedHeader = true;
+
                 info = ConverterVersionInfo.CreateFromContext(version, ctx);
                 _converterVersions.Add(ctx, info);
             }
@@ -155,8 +162,8 @@ namespace ABCo.ABSave.Serialization
                 return;
             }
 
-            // Apply the header if it's not being used.
-            if (!info.UsesHeader)
+            // Apply the header if it's not being used and hasn't already been applied.
+            if (!info.UsesHeader && !appliedHeader)
                 header.Apply();
 
             ctx._converter.Serialize(obj, actualType, ctx, ref header);
@@ -168,11 +175,11 @@ namespace ABCo.ABSave.Serialization
 
             // Write the null and inheritance bits.
             bool sameType = true;
-            if (!skipHeader) 
+            if (!item.IsValueItemType && !skipHeader) 
                 sameType = WriteHeaderNullAndInheritance(actualType, item, ref header);
 
             // Write and get the info for a version, if necessary
-            if (_objectVersions.TryGetValue(item, out ObjectVersionInfo info))
+            if (!_objectVersions.TryGetValue(item, out ObjectVersionInfo info))
             {
                 uint version = WriteNewVersionInfo(item, ref header);
                 info = MapGenerator.GetVersionOrAddNull(version, item);
@@ -198,8 +205,6 @@ namespace ABCo.ABSave.Serialization
         // Returns: Whether the type has changed.
         bool WriteHeaderNullAndInheritance(Type actualType, MapItem item, ref BitTarget target)
         {
-            if (item.IsValueItemType) return true;
-
             target.WriteBitOn(); // Null
 
             bool sameType = item.ItemType == actualType;

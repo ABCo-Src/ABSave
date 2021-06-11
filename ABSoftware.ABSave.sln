@@ -9,6 +9,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ABCo.ABSave.TestConsole", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ABCo.ABSave.UnitTests", "tests\ABSoftware.ABSave.UnitTests\ABCo.ABSave.UnitTests.csproj", "{1C56F345-BCE7-464B-A214-B1FE772F0175}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ABCo.ABSave.TestOtherAssembly", "tests\ABCo.ABSave.TestOtherAssembly\ABCo.ABSave.TestOtherAssembly.csproj", "{7ACAB98A-9D35-4035-B537-943129C46BC9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{1C56F345-BCE7-464B-A214-B1FE772F0175}.Release|x64.Build.0 = Release|x64
 		{1C56F345-BCE7-464B-A214-B1FE772F0175}.Release|x86.ActiveCfg = Release|x86
 		{1C56F345-BCE7-464B-A214-B1FE772F0175}.Release|x86.Build.0 = Release|x86
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Debug|x64.Build.0 = Debug|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Debug|x86.Build.0 = Debug|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Release|x64.ActiveCfg = Release|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Release|x64.Build.0 = Release|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Release|x86.ActiveCfg = Release|Any CPU
+		{7ACAB98A-9D35-4035-B537-943129C46BC9}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

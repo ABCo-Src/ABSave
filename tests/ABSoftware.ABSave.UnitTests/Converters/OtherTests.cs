@@ -22,7 +22,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Guid()
         {
-            Setup<Guid>(ABSaveSettings.ForSpeed, GuidConverter.Instance);
+            Setup<Guid>(ABSaveSettings.ForSpeed);
             var guid = new Guid("01234567-89ab-0123-4567-89abcdef0123");
 
             DoSerialize(guid);
@@ -34,7 +34,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void DateTime()
         {
-            Setup<DateTime>(ABSaveSettings.ForSpeed, TickBasedConverter.Instance);
+            Setup<DateTime>(ABSaveSettings.ForSpeed);
             var dateTime = new DateTime(1989, 6, 3, 7, 3, 8);
 
             DoSerialize(dateTime);
@@ -46,7 +46,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void TimeSpan()
         {
-            Setup<TimeSpan>(ABSaveSettings.ForSpeed, TickBasedConverter.Instance);
+            Setup<TimeSpan>(ABSaveSettings.ForSpeed);
             var timeSpan = new TimeSpan(19, 7, 3, 8);
 
             DoSerialize(timeSpan);
@@ -58,7 +58,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void KeyValue()
         {
-            Setup<KeyValuePair<byte, bool>>(ABSaveSettings.ForSpeed, KeyValueConverter.Instance);
+            Setup<KeyValuePair<byte, bool>>(ABSaveSettings.ForSpeed);
             var obj = new KeyValuePair<byte, bool>(234, true);
 
             DoSerialize(obj);
@@ -70,7 +70,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void DictionaryEntry()
         {
-            Setup<DictionaryEntry>(ABSaveSettings.ForSpeed, KeyValueConverter.Instance);
+            Setup<DictionaryEntry>(ABSaveSettings.ForSpeed);
             var obj = new DictionaryEntry(new SubNoConverter(5), new SubWithoutHeader());
 
             DoSerialize(obj);
@@ -82,7 +82,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Version()
         {
-            Setup<Version>(ABSaveSettings.ForSpeed, VersionConverter.Instance);
+            Setup<Version>(ABSaveSettings.ForSpeed);
 
             Version[] versions = new Version[]
             {
@@ -105,7 +105,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Assembly_NoCulture_PublicKeyToken()
         {
-            Setup<Assembly>(ABSaveSettings.ForSpeed, AssemblyConverter.Instance);
+            Setup<Assembly>(ABSaveSettings.ForSpeed);
             var assembly = typeof(OtherTests).Assembly;
 
             // Non-saved
@@ -127,7 +127,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Type()
         {
-            Setup<Type>(ABSaveSettings.ForSpeed, TypeConverter.Instance);
+            Setup<Type>(ABSaveSettings.ForSpeed);
 
             _typeSerialize = t => DoSerialize(t);
             _typeDeserialize = () => DoDeserialize<Type>();
@@ -155,7 +155,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public unsafe void Type_Closed()
         {
-            Setup<Type>(ABSaveSettings.ForSpeed, TypeConverter.Instance);
+            Setup<Type>(ABSaveSettings.ForSpeed);
             SaveCurrentAssembly();
 
             _typeSerialize = t => Serializer.WriteClosedType(t);

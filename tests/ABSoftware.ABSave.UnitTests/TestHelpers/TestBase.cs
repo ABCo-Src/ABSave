@@ -31,8 +31,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                 // Add "SubTypeConverter" as a converter.
                 CustomConverters = new List<Converter>()
                 {
-                    new SubTypeConverter(false),
-                    new SubTypeConverter(true)
+                    new BaseTypeConverter(),
+                    new SubTypeConverter()
                 },
                 BypassDangerousTypeChecking = true
             };
@@ -67,26 +67,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public void GoToStart() => Stream.Position = 0;
 
-        public void ResetStateWithConverter<T>(Converter converter) => ResetStateWithConverter(typeof(T), converter);
-
-        public void ResetStateWithConverter(Type type, Converter converter)
-        {
-            ResetState();
-
-            var gen = CurrentMap.GetGenerator();
-            {
-                gen.GetExistingOrAddNull(type);
-
-                var genContext = new ContextGen(type, gen);
-                converter.TryGenerateContext(ref genContext);
-
-                genContext.ContextInstance._converter = converter;
-                genContext.ContextInstance.IsGenerating = false;
-                CurrentMapItem = new MapItemInfo(genContext.ContextInstance, false);
-            }
-
-            CurrentMap.ReleaseGenerator(gen);
-        }
+        public void ResetStateWithMapFor<T>() => ResetStateWithMapFor(typeof(T));
 
         public void ResetStateWithMapFor(Type type)
         {

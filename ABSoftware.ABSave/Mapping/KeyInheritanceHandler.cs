@@ -37,7 +37,7 @@ namespace ABCo.ABSave.Mapping
             }
         }
 
-        public static void EnsureCreatedDeserializeCacheOnInfo(Type type, SaveInheritanceAttribute info)
+        public static void EnsureHasAllTypeCache(Type type, SaveInheritanceAttribute info)
         {
             lock (info)
             {
@@ -81,7 +81,17 @@ namespace ABCo.ABSave.Mapping
             for (int i = 0; i < currentAssemblies.Length; i++)
             {
                 var referenced = currentAssemblies[i].GetReferencedAssemblies();
-                if (currentAssemblies[i] == type.Assembly || referenced.Contains(typeAssemblyName))
+
+                if (currentAssemblies[i] == type.Assembly)
+                    goto Accept;
+
+                for (int j = 0; j < referenced.Length; j++)
+                    if (referenced[j].Name == typeAssemblyName.Name)
+                        goto Accept;
+
+                continue;
+
+            Accept:
                 {
                     var subTypes = currentAssemblies[i].GetTypes();
 

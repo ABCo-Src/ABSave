@@ -132,7 +132,7 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(context);
 
             // Read or create the version info if needed
-            if (_converterVersions.TryGetValue(context, out ConverterVersionInfo info))
+            if (!_converterVersions.TryGetValue(context, out ConverterVersionInfo info))
             {
                 uint version = ReadNewVersionInfo();
                 info = ConverterVersionInfo.CreateFromContext(version, context);
@@ -217,7 +217,7 @@ namespace ABCo.ABSave.Deserialization
         Type? TryReadKeyInheritance(SaveInheritanceAttribute info, Type baseType)
         {
             // Make sure the info is initialized for deserialization.
-            KeyInheritanceHandler.EnsureCreatedDeserializeCacheOnInfo(baseType, info);
+            KeyInheritanceHandler.EnsureHasAllTypeCache(baseType, info);
 
             // Read in the key from the file.
             string key = ReadString(ref _currentHeader);

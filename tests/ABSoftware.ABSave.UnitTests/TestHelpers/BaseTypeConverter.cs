@@ -12,28 +12,19 @@ using System.Threading.Tasks;
 namespace ABCo.ABSave.UnitTests.TestHelpers
 {
     // A type converter with customizable properties for easy testing.
-    class  TestableTypeConverter : Converter
+    class BaseTypeConverter : Converter
     {
         public const int OUTPUT_BYTE = 55;
 
-        private bool _writesToHeader;
+        public static bool WritesToHeader;
         
-        public override bool UsesHeaderForVersion(uint version) => _writesToHeader;        
-
-        public TestableTypeConverter(bool writesToHeader) => _writesToHeader = writesToHeader;
-
-        public MapItem GetMap<T>() => GetMap(typeof(T));
-        public MapItem GetMap(Type itemType)
-        {
-            throw new Exception("TODO");
-            //return new Mapping.Items.ConverterMapItem(new MapGenerator().GetMap(itemType), this, new Context());
-        }
+        public override bool UsesHeaderForVersion(uint version) => WritesToHeader;
 
         public override bool AlsoConvertsNonExact => true;
-        public override Type[] ExactTypes => new Type[] { typeof(BaseIndex), typeof(int) };
+        public override Type[] ExactTypes => new Type[] { typeof(BaseIndex), typeof(ConverterValueType) };
         public override void TryGenerateContext(ref ContextGen gen)
         {
-            if (gen.Type == typeof(BaseIndex) || gen.Type.IsSubclassOf(typeof(BaseIndex)) || gen.Type == typeof(int))
+            if (gen.Type == typeof(BaseIndex) || gen.Type.IsSubclassOf(typeof(BaseIndex)) || gen.Type == typeof(ConverterValueType))
                 gen.AssignContext(new Context(), 0);
         }
 
@@ -41,7 +32,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
         {
-            if (_writesToHeader)
+            if (WritesToHeader)
             {
                 header.WriteBitOn();
                 header.Apply();
@@ -52,7 +43,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
         {
-            if (_writesToHeader && !header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
+            if (WritesToHeader && !header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
             if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
 
             return OUTPUT_BYTE;

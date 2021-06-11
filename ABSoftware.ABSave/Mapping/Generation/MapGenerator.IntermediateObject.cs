@@ -86,7 +86,7 @@ namespace ABCo.ABSave.Mapping.Generation
                 return ProcessBufferContents(count);
             }
 
-            volatile ManualResetEventSlim _finishedThreadPoolWork = new ManualResetEventSlim();
+            readonly ManualResetEventSlim _finishedThreadPoolWork = new ManualResetEventSlim();
             int _threadPoolCount;
 
             int ParallelProcessMembers()
@@ -212,7 +212,7 @@ namespace ABCo.ABSave.Mapping.Generation
                 {
                     for (int i = 0; i < inheritanceInfo.Length; i++)
                     {
-                        var info = (SaveInheritanceAttribute)inheritanceInfo[i];
+                        var info = inheritanceInfo[i];
                         Gen.UpdateVersionInfo(info.FromVer, info.ToVer);
                     }
                 }

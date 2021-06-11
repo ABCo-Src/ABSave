@@ -1,4 +1,5 @@
 ﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -17,7 +18,7 @@ namespace ABCo.ABSave.Mapping.Generation
             return genContext.ContextInstance;
         }
 
-        static bool TryGetConverter(ref ContextGen gen)
+        bool TryGetConverter(ref ContextGen gen)
         {
             var settings = gen.Settings;
 
@@ -50,7 +51,24 @@ namespace ABCo.ABSave.Mapping.Generation
 
         Found:
             gen.ContextInstance._converter = currentConverter;
+            gen.ContextInstance._allInheritanceAttributes = GetInheritanceAttributes(gen.Type);
             return true;
+        }
+
+        // Temporary helper until object conversion gets moved into its own converter
+        internal static SaveInheritanceAttribute? GetConverterInheritanceInfoForVersion(uint version, ConverterContext context)
+        {
+            // Try to get it from the dictionary.
+            if (context._inheritanceValues != null && context._inheritanceValues.TryGetValue(version, out SaveInheritanceAttribute? val))
+                return val;
+
+            // If it's not in there, find it in the attribute array.
+            if (context._allInheritanceAttributes == null) return null;
+            SaveInheritanceAttribute? attribute = FindInheritanceAttributeForVersion(context._allInheritanceAttributes, version);
+
+            context._inheritanceValues ??= new Dictionary<uint, SaveInheritanceAttribute?>();
+            context._inheritanceValues.Add(version, attribute);
+            return attribute;
         }
     }
 

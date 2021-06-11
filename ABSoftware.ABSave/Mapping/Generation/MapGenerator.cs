@@ -1,10 +1,12 @@
 ﻿using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Reflection;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -179,6 +181,22 @@ namespace ABCo.ABSave.Mapping.Generation
 
             return false;
         }
+
+        private static SaveInheritanceAttribute? FindInheritanceAttributeForVersion(SaveInheritanceAttribute[]? attributes, uint version)
+        {
+            if (attributes == null) return null;
+
+            for (int i = 0; i < attributes.Length; i++)
+            {
+                var currentAttribute = attributes[i];
+                if (currentAttribute.FromVer <= version && currentAttribute.ToVer >= version)
+                    return currentAttribute;
+            }
+
+            return null;
+        }
+
+        SaveInheritanceAttribute[] GetInheritanceAttributes(Type classType) => (SaveInheritanceAttribute[])classType.GetCustomAttributes<SaveInheritanceAttribute>(false);
 
         internal MapGenerator() => CurrentReflectionMapper = new ReflectionMapper(this);
 

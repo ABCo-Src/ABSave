@@ -19,6 +19,7 @@ namespace ABCo.ABSave.Converters
     public class ConverterContext : MapItem
     {
         internal Converter _converter = null!;
+        internal SaveInheritanceAttribute[]? _allInheritanceAttributes = null;
         internal Dictionary<uint, SaveInheritanceAttribute?>? _inheritanceValues = null;
     }
 

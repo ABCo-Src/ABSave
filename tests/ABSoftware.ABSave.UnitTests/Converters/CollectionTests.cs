@@ -131,7 +131,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Convert_List()
         {
-            Setup<List<byte>>(Settings, EnumerableConverter.Instance);
+            Setup<List<byte>>(Settings);
 
             var obj = new List<byte> { 1, 2, 3, 4 };
 
@@ -143,7 +143,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Convert_IDictionary_Generic()
         {
-            Setup<Dictionary<byte, byte>>(Settings, EnumerableConverter.Instance);
+            Setup<Dictionary<byte, byte>>(Settings);
 
             var obj = new Dictionary<byte, byte> { { 1, 2 }, { 3, 4 } };
 
@@ -155,7 +155,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Convert_IList_NonGeneric()
         {
-            Setup<ArrayList>(Settings, EnumerableConverter.Instance);
+            Setup<ArrayList>(Settings);
 
             var obj = new ArrayList() { (byte)7 };
 

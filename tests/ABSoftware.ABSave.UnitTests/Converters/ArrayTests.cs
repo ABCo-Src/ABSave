@@ -36,7 +36,7 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(Settings, ArrayConverter.Instance);
+                Setup<Array>(Settings);
                 DoSerialize(arr);
 
                 Action<ABSaveSerializer> getElemType = s => s.WriteClosedType(typeof(string));
@@ -46,7 +46,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             }
             else
             {
-                Setup<string[]>(Settings, ArrayConverter.Instance);
+                Setup<string[]>(Settings);
 
                 DoSerialize(arr);
                 AssertAndGoToStart(5, 193, 65, 193, 66, 193, 67, 193, 68, 193, 69);
@@ -63,7 +63,7 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(Settings, ArrayConverter.Instance);
+                Setup<Array>(Settings);
                 DoSerialize(arr);
 
                 Action<ABSaveSerializer> getElemType = s => s.WriteClosedType(typeof(byte));
@@ -73,7 +73,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             }
             else
             {
-                Setup<byte[]>(Settings, ArrayConverter.Instance);
+                Setup<byte[]>(Settings);
 
                 DoSerialize(arr);
                 AssertAndGoToStart(5, 2, 7, 167, 43, 32);
@@ -95,7 +95,7 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(Settings, ArrayConverter.Instance);
+                Setup<Array>(Settings);
 
                 DoSerialize(arr);
 
@@ -138,7 +138,7 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(Settings, ArrayConverter.Instance);
+                Setup<Array>(Settings);
 
                 DoSerialize(arr);
 
@@ -149,7 +149,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             }
             else
             {
-                Setup<byte[,,]>(Settings, ArrayConverter.Instance);
+                Setup<byte[,,]>(Settings);
 
                 DoSerialize(arr);
                 AssertAndGoToStart(2, 3, 2, 2, 7, 167, 43, 32, 54, 67, 68, 69, 70, 71, 72);
@@ -170,7 +170,7 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(Settings, ArrayConverter.Instance);
+                Setup<Array>(Settings);
 
                 DoSerialize(arr);
 
@@ -181,7 +181,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             }
             else
             {
-                Setup<byte[,]>(Settings, ArrayConverter.Instance);
+                Setup<byte[,]>(Settings);
 
                 DoSerialize(arr);
                 AssertAndGoToStart(130, 2, 9, 6, 2, 7, 167, 43);
