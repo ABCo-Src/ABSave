@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Helpers;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.UnitTests.TestHelpers;
@@ -18,7 +19,9 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
         public void Setup()
         {
-            var settings = ABSaveSettings.ForSize;
+            var builder = new ABSaveSettingsBuilder();
+            builder.CustomConverters = new List<Converter>() { new SubTypeConverter() };
+            var settings = builder.CreateSettings(ABSaveSettings.ForSpeed);
 
             Map = new ABSaveMap(settings);
             Generator = new MapGenerator();

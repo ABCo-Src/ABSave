@@ -20,11 +20,11 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     #region Index Inheritance
 
     [SaveMembers]
-    [SaveInheritance(SaveInheritanceMode.Index, typeof(SubToDo), typeof(SubNoConverter), typeof(SubWithHeader), typeof(SubWithoutHeader))]
+    [SaveInheritance(SaveInheritanceMode.Index, typeof(SubEmpty), typeof(SubNoConverter), typeof(SubWithHeader), typeof(SubWithoutHeader))]
     class BaseIndex { }
 
     [SaveMembers]
-    class SubToDo : BaseIndex { }
+    class SubEmpty : BaseIndex { }
 
     [SaveMembers]
     class SubNoConverter : BaseIndex 
