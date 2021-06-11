@@ -42,12 +42,13 @@ namespace ABCo.ABSave.Converters
 
             switch (context.Type)
             {
-                case ArrayType.SZArrayFast:
-                    {
-                        SerializeFast(arr, context.FastConversion, ref header);
+                // TODO: This doesn't work with element type versions so temporarily disabled!
+                //case ArrayType.SZArrayFast:
+                //    {
+                //        SerializeFast(arr, context.FastConversion, ref header);
 
-                        break;
-                    }
+                //        break;
+                //    }
                 case ArrayType.SZArrayManual:
                     {
                         header.Serializer.WriteCompressed((uint)len, ref header);
@@ -102,13 +103,14 @@ namespace ABCo.ABSave.Converters
             // Write the unknown information.
             switch (context.Type)
             {
-                case ArrayType.SZArrayFast:
+                // TODO: This doesn't work with element type versions so temporarily disabled!
+                //case ArrayType.SZArrayFast:
 
-                    header.WriteBitOff();
-                    header.WriteBitOff();
-                    SerializeFast(arr, context.FastConversion, ref header);
+                //    header.WriteBitOff();
+                //    header.WriteBitOff();
+                //    SerializeFast(arr, context.FastConversion, ref header);
 
-                    break;
+                //    break;
                 case ArrayType.SZArrayManual:
 
                     header.WriteBitOff();
@@ -227,8 +229,9 @@ namespace ABCo.ABSave.Converters
         {
             switch (context.Type)
             {
-                case ArrayType.SZArrayFast:
-                    return DeserializeFast(context.FastConversion, ref header);
+                // TODO: This doesn't work with element type versions so temporarily disabled!
+                //case ArrayType.SZArrayFast:
+                //    return DeserializeFast(context.FastConversion, ref header);
                 case ArrayType.SZArrayManual:
                     {
                         int arrSize = (int)header.Deserializer.ReadCompressedInt(ref header);
@@ -303,8 +306,9 @@ namespace ABCo.ABSave.Converters
                 else
                 {
                     // Try to fast convert
-                    var fastType = GetFastType(elementType);
-                    if (fastType != FastConversionType.None) return DeserializeFast(fastType, ref header);
+                    // TODO: This doesn't work with element type versions so temporarily disabled!
+                    //var fastType = GetFastType(elementType);
+                    //if (fastType != FastConversionType.None) return DeserializeFast(fastType, ref header);
 
                     int size = (int)header.Deserializer.ReadCompressedInt(ref header);
                     var arr = Array.CreateInstance(elementType, size);

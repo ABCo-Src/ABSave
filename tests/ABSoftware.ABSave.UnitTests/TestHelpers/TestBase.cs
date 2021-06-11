@@ -7,6 +7,7 @@ using ABCo.ABSave.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -103,7 +104,15 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public void AssertOutput(params byte[] expected)
         {
             var actual = Stream.ToArray();
-            CollectionAssert.AreEqual(expected, actual);
+            try
+            {
+                CollectionAssert.AreEqual(expected, actual);
+            }
+            catch
+            {
+                Debugger.Break();
+                throw;
+            }
         }
 
         public byte[] GetByteArr(params short[] data) => GetByteArr(null, data);
@@ -175,11 +184,11 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             }
         }
 
-        public static byte[] Concat(byte[] first, params byte[] second)
+        public static byte[] Concat(byte first, params byte[] second)
         {
-            var res = new byte[first.Length + second.Length];
-            first.CopyTo(res, 0);
-            second.CopyTo(res, first.Length);
+            var res = new byte[1 + second.Length];
+            res[1] = first;
+            second.CopyTo(res, 1);
             return res;
         }
     }

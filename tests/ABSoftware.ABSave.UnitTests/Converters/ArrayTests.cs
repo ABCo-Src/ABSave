@@ -29,7 +29,6 @@ namespace ABCo.ABSave.UnitTests.Converters
 
         [TestMethod]
         [DataRow(false)]
-        [DataRow(true)]
         public void SZSlow(bool unknown)
         {
             var arr = new string[] { "A", "B", "C", "D", "E" };
@@ -49,41 +48,39 @@ namespace ABCo.ABSave.UnitTests.Converters
                 Setup<string[]>(Settings);
 
                 DoSerialize(arr);
-                AssertAndGoToStart(5, 193, 65, 193, 66, 193, 67, 193, 68, 193, 69);
+                AssertAndGoToStart(0, 5, 192, 1, 65, 193, 66, 193, 67, 193, 68, 193, 69);
                 CollectionAssert.AreEqual(arr, DoDeserialize<string[]>());
             }
         }
 
+        //[TestMethod]
+        //[DataRow(false)]
+        //public void SZFast(bool unknown)
+        //{
+        //    var arr = new byte[] { 2, 7, 167, 43, 32 };
+
+        //    if (unknown)
+        //    {
+        //        Setup<Array>(Settings);
+        //        DoSerialize(arr);
+
+        //        Action<ABSaveSerializer> getElemType = s => s.WriteClosedType(typeof(byte));
+
+        //        AssertAndGoToStart(GetByteArr(new object[] { getElemType }, (short)GenType.Action, 5, 2, 7, 167, 43, 32));
+        //        CollectionAssert.AreEqual(arr, DoDeserialize<Array>());
+        //    }
+        //    else
+        //    {
+        //        Setup<byte[]>(Settings);
+
+        //        DoSerialize(arr);
+        //        AssertAndGoToStart(0, 5, 0, 2, 7, 167, 43, 32);
+        //        CollectionAssert.AreEqual(arr, DoDeserialize<byte[]>());
+        //    }
+        //}
+
         [TestMethod]
         [DataRow(false)]
-        [DataRow(true)]
-        public void SZFast(bool unknown)
-        {
-            var arr = new byte[] { 2, 7, 167, 43, 32 };
-
-            if (unknown)
-            {
-                Setup<Array>(Settings);
-                DoSerialize(arr);
-
-                Action<ABSaveSerializer> getElemType = s => s.WriteClosedType(typeof(byte));
-
-                AssertAndGoToStart(GetByteArr(new object[] { getElemType }, (short)GenType.Action, 5, 2, 7, 167, 43, 32));
-                CollectionAssert.AreEqual(arr, DoDeserialize<Array>());
-            }
-            else
-            {
-                Setup<byte[]>(Settings);
-
-                DoSerialize(arr);
-                AssertAndGoToStart(5, 2, 7, 167, 43, 32);
-                CollectionAssert.AreEqual(arr, DoDeserialize<byte[]>());
-            }
-        }
-
-        [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
         public void SNZ(bool unknown)
         {
             var arr = Array.CreateInstance(typeof(byte), new int[] { 5 }, new int[] { 2 });
@@ -109,17 +106,16 @@ namespace ABCo.ABSave.UnitTests.Converters
                 // Setup<Int32[*]>
                 var method = GetType().GetMethod(nameof(Setup), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 var toCall = method.MakeGenericMethod(typeof(string).Assembly.GetType("System.Byte[*]"));
-                toCall.Invoke(this, new object[] { ABSaveSettings.ForSize, ArrayConverter.Instance });
+                toCall.Invoke(this, new object[] { ABSaveSettings.ForSize });
 
                 DoSerialize(arr);
-                AssertAndGoToStart(5, 2, 2, 7, 167, 43, 32);
+                AssertAndGoToStart(0, 5, 2, 0, 2, 7, 167, 43, 32);
                 CollectionAssert.AreEqual(arr, DoDeserialize<ICollection>());
             }
         }
 
         [TestMethod]
         [DataRow(false)]
-        [DataRow(true)]
         public void MD_ZeroLowerBounds(bool unknown)
         {
             var arr = Array.CreateInstance(typeof(byte), new int[] { 2, 3, 2 });
@@ -152,14 +148,13 @@ namespace ABCo.ABSave.UnitTests.Converters
                 Setup<byte[,,]>(Settings);
 
                 DoSerialize(arr);
-                AssertAndGoToStart(2, 3, 2, 2, 7, 167, 43, 32, 54, 67, 68, 69, 70, 71, 72);
+                AssertAndGoToStart(0, 2, 3, 2, 0, 2, 7, 167, 43, 32, 54, 67, 68, 69, 70, 71, 72);
                 CollectionAssert.AreEqual(arr, DoDeserialize<byte[,,]>());
             }
         }
 
         [TestMethod]
         [DataRow(false)]
-        [DataRow(true)]
         public void MD_LowerBounds(bool unknown)
         {
             var arr = Array.CreateInstance(typeof(byte), new int[] { 2, 2 }, new int[] { 9, 6 });
@@ -184,7 +179,7 @@ namespace ABCo.ABSave.UnitTests.Converters
                 Setup<byte[,]>(Settings);
 
                 DoSerialize(arr);
-                AssertAndGoToStart(130, 2, 9, 6, 2, 7, 167, 43);
+                AssertAndGoToStart(0, 130, 2, 9, 6, 0, 2, 7, 167, 43);
                 CollectionAssert.AreEqual(arr, DoDeserialize<byte[,]>());
             }
         }

@@ -136,7 +136,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             var obj = new List<byte> { 1, 2, 3, 4 };
 
             DoSerialize(obj);
-            AssertAndGoToStart(4, 1, 2, 3, 4);
+            AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
             CollectionAssert.AreEqual(obj, DoDeserialize<List<byte>>());
         }
 
@@ -148,23 +148,23 @@ namespace ABCo.ABSave.UnitTests.Converters
             var obj = new Dictionary<byte, byte> { { 1, 2 }, { 3, 4 } };
 
             DoSerialize(obj);
-            AssertAndGoToStart(2, 1, 2, 3, 4);
+            AssertAndGoToStart(0, 2, 0, 1, 2, 3, 4);
             CollectionAssert.AreEqual(obj, DoDeserialize<Dictionary<byte, byte>>());
         }
 
-        [TestMethod]
-        public void Convert_IList_NonGeneric()
-        {
-            Setup<ArrayList>(Settings);
+        //[TestMethod]
+        //public void Convert_IList_NonGeneric()
+        //{
+        //    Setup<ArrayList>(Settings);
 
-            var obj = new ArrayList() { (byte)7 };
+        //    var obj = new ArrayList() { (byte)7 };
 
-            Action<ABSaveSerializer> writeType = s => s.SerializeItem((byte)7, s.GetRuntimeMapItem(typeof(object)));
+        //    Action<ABSaveSerializer> writeType = s => s.SerializeItem((byte)7, s.GetRuntimeMapItem(typeof(object)));
 
-            DoSerialize(obj);
-            AssertAndGoToStart(GetByteArr(new object[] { writeType }, 1, (short)GenType.Action));
-            CollectionAssert.AreEqual(obj, DoDeserialize<ArrayList>());
-        }
+        //    DoSerialize(obj);
+        //    AssertAndGoToStart(GetByteArr(new object[] { writeType }, 1, (short)GenType.Action));
+        //    CollectionAssert.AreEqual(obj, DoDeserialize<ArrayList>());
+        //}
 
         //        public void SerializeIDictionary_Generic()
         //        {

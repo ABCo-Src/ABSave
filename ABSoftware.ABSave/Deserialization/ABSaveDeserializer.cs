@@ -43,6 +43,7 @@ namespace ABCo.ABSave.Deserialization
             SavedAssemblies.Clear();
             SavedTypes.Clear();
             _objectVersions.Clear();
+            _converterVersions.Clear();
         }
 
         BitSource _currentHeader;

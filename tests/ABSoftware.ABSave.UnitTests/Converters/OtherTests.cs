@@ -26,7 +26,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             var guid = new Guid("01234567-89ab-0123-4567-89abcdef0123");
 
             DoSerialize(guid);
-            AssertAndGoToStart(guid.ToByteArray());
+            AssertAndGoToStart(Concat(0, guid.ToByteArray()));
 
             Assert.AreEqual(guid, DoDeserialize<Guid>());
         }
@@ -38,7 +38,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             var dateTime = new DateTime(1989, 6, 3, 7, 3, 8);
 
             DoSerialize(dateTime);
-            AssertAndGoToStart(BitConverter.GetBytes(dateTime.Ticks));
+            AssertAndGoToStart(Concat(0, BitConverter.GetBytes(dateTime.Ticks)));
 
             Assert.AreEqual(dateTime, DoDeserialize<DateTime>());
         }
@@ -50,7 +50,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             var timeSpan = new TimeSpan(19, 7, 3, 8);
 
             DoSerialize(timeSpan);
-            AssertAndGoToStart(BitConverter.GetBytes(timeSpan.Ticks));
+            AssertAndGoToStart(Concat(0, BitConverter.GetBytes(timeSpan.Ticks)));
 
             Assert.AreEqual(timeSpan, DoDeserialize<TimeSpan>());
         }
@@ -62,22 +62,22 @@ namespace ABCo.ABSave.UnitTests.Converters
             var obj = new KeyValuePair<byte, bool>(234, true);
 
             DoSerialize(obj);
-            AssertAndGoToStart(234, 1);
+            AssertAndGoToStart(0, 0, 234, 0, 1);
 
             Assert.AreEqual(obj, DoDeserialize<KeyValuePair<byte, bool>>());
         }
 
-        [TestMethod]
-        public void DictionaryEntry()
-        {
-            Setup<DictionaryEntry>(ABSaveSettings.ForSpeed);
-            var obj = new DictionaryEntry(new SubNoConverter(5), new SubWithoutHeader());
+        //[TestMethod]
+        //public void DictionaryEntry()
+        //{
+        //    Setup<DictionaryEntry>(ABSaveSettings.ForSpeed);
+        //    var obj = new DictionaryEntry(new SubNoConverter(5), new SubWithoutHeader());
 
-            DoSerialize(obj);
-            AssertAndGoToStart(162, 0, 5, 161, SubTypeConverter.OUTPUT_BYTE);
+        //    DoSerialize(obj);
+        //    AssertAndGoToStart(0, 162, 0, 5, 161, SubTypeConverter.OUTPUT_BYTE);
 
-            Assert.AreEqual(obj, DoDeserialize<DictionaryEntry>());
-        }
+        //    Assert.AreEqual(obj, DoDeserialize<DictionaryEntry>());
+        //}
 
         [TestMethod]
         public void Version()
@@ -111,7 +111,9 @@ namespace ABCo.ABSave.UnitTests.Converters
             // Non-saved
             {
                 DoSerialize(assembly);
-                AssertAndGoToStart(GetByteArr(new object[] { typeof(OtherTests).Assembly.GetName().Name, typeof(OtherTests).Assembly.GetName().GetPublicKeyToken() }, 96, 27, (short)GenType.String, (short)GenType.ByteArr));
+                AssertAndGoToStart(GetByteArr(
+                    new object[] { typeof(OtherTests).Assembly.GetName().Name, typeof(OtherTests).Assembly.GetName().GetPublicKeyToken() }, 
+                    0, 96, 0, 21, (short)GenType.String, (short)GenType.ByteArr));
                 Assert.AreEqual(assembly, DoDeserialize<Assembly>());
             }
 
@@ -132,23 +134,28 @@ namespace ABCo.ABSave.UnitTests.Converters
             _typeSerialize = t => DoSerialize(t);
             _typeDeserialize = () => DoDeserialize<Type>();
 
-            // Non-generic (Include assembly here)
+            Action<ABSaveSerializer> convAsm = s =>
             {
-                Action<ABSaveSerializer> convAsm = s =>
-                {
-                    var header = new BitTarget(s, 7);
-                    AssemblyConverter.SerializeAssembly(typeof(BaseIndex).Assembly, ref header);
-                };
+                var header = new BitTarget(s, 8);
+                AssemblyConverter.SerializeAssembly(typeof(BaseIndex).Assembly, ref header);
+            };
 
-                TestType(typeof(BaseIndex), GetByteArr(new object[] { convAsm, typeof(BaseIndex).FullName }, (short)GenType.Action, 44, (short)GenType.String));
+            // Non-generic
+            {
+                TestType(typeof(BaseIndex), GetByteArr(
+                    new object[] { convAsm, typeof(BaseIndex).FullName },
+                    0, 0, (short)GenType.Action, 43, (short)GenType.String));
             }
 
             // Generic
+            ResetState();
             {
                 var genericType = typeof(GenericType<,,>);
                 var filledType = typeof(GenericType<,,>).MakeGenericType(typeof(SubWithHeader), genericType.GetGenericArguments()[1], typeof(SubWithoutHeader));
 
-                TestType(filledType, GetByteArr(new object[] { genericType.FullName }, 64, 53, (short)GenType.String, 192, 97));
+                TestType(filledType, GetByteArr(
+                    new object[] { convAsm, typeof(GenericType<,,>).FullName },
+                    0, 0, (short)GenType.Action, 47, (short)GenType.String, 192, 97));
             }
         }
 
@@ -164,13 +171,19 @@ namespace ABCo.ABSave.UnitTests.Converters
             // Non-generic
             {
                 var type = typeof(BaseIndex);
-                TestType(type, GetByteArr(new object[] { type.FullName }, 64, 44, (short)GenType.String));
+                TestType(type, GetByteArr(
+                    new object[] { type.FullName }, 
+                    0, 128, 43, (short)GenType.String));
             }
 
             // Generic
+            ResetState();
+            SaveCurrentAssembly();
             {
                 var type = typeof(GenericType<SubWithHeader, SubWithoutHeader, SubNoConverter>);
-                TestType(type, GetByteArr(new object[] { typeof(GenericType<,,>).FullName }, 64, 53, (short)GenType.String, 128, 129, 130));
+                TestType(type, GetByteArr(
+                    new object[] { typeof(GenericType<,,>).FullName }, 
+                    0, 128, 47, (short)GenType.String, 128, 129, 130));
             }
         }
 
