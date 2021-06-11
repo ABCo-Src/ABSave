@@ -20,7 +20,7 @@ jobs:
         run: dotnet restore
 
       - name: Build ABSave
-        run: dotnet build --no-restore --confgiuration Release
+        run: dotnet build --no-restore --configuration Release
 
       - name: Run Tests
         run: dotnet test --no-build --configuration  Release
