@@ -32,4 +32,4 @@ jobs:
         run: dotnet build --no-restore --configuration Release
         
       - name: Run Tests .NET Standard 2.1
-        run: dotnet test --no-build --confgiuration Release
+        run: dotnet test --no-build --configuration Release
