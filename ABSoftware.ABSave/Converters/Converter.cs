@@ -13,18 +13,11 @@ using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
-    /// <summary>
-    /// Represents the information gathered about a type that's necessary for conversion.
-    /// </summary>
-    public class ConverterContext : MapItem
+    public abstract class Converter : MapItem
     {
-        internal Converter _converter = null!;
         internal SaveInheritanceAttribute[]? _allInheritanceAttributes = null;
         internal Dictionary<uint, SaveInheritanceAttribute?>? _inheritanceValues = null;
-    }
 
-    public abstract class Converter
-    {
         /// <summary>
         /// Whether this type converter can also convert things other than exact types. If this is enabled, ABSave will also call <see cref="TryGenerateContext(ABSaveSettings, Type)"/>, and if it generates a context this converter will be used.
         /// </summary>
@@ -41,8 +34,8 @@ namespace ABCo.ABSave.Converters
         public abstract void TryGenerateContext(ref ContextGen gen);
 
         public virtual bool UsesHeaderForVersion(uint version) => false;
-        public abstract void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header);
-        public abstract object Deserialize(Type actualType, ConverterContext context, ref BitSource header);
+        public abstract void Serialize(object obj, Type actualType, ref BitTarget header);
+        public abstract object Deserialize(Type actualType, ref BitSource header);
 
         internal static readonly IReadOnlyDictionary<Type, Converter> BuiltInExact = new Dictionary<Type, Converter>()
         {
