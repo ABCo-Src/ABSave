@@ -12,35 +12,67 @@ namespace ABCo.ABSave.Converters
 {
     public class ArrayConverter : Converter
     {
-        public static ArrayConverter Instance { get; } = new ArrayConverter();
-        private ArrayConverter() { }
+        ArrayTypeInfo _info;
 
-        public override bool AlsoConvertsNonExact => true;
-
-        public override bool UsesHeaderForVersion(uint version) => true;
-
-        // Remember to update in "ABSaveTypeConverter".
-        public override Type[] ExactTypes { get; } = new Type[]
+        public override bool CheckType(CheckTypeInfo info)
         {
-            typeof(Array),
-            typeof(byte[]),
-            typeof(string[]),
-            typeof(int[]),
-        };
+            if (info.Type.IsArray) return true;
+
+            if (info.Type == typeof(Array))
+            {
+                if (!info.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'Array' type that could contain any type of element");
+
+                _info.Type = ArrayType.Unknown;
+                return true;
+            }
+
+            return false;
+        }
+
+        public override void Initialize(InitializeInfo info)
+        {
+            if (_info.Type != ArrayType.Unknown) return;
+
+            var elemType = info.Type.GetElementType();
+            PopulateTypeInfo(ref _info, info.GetMap(elemType!), elemType);
+        }
+
+        static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, Type type)
+        {
+            var rank = type.GetArrayRank();
+            info.ElementType = itemInfo.GetItemType();
+            info.PerItem = itemInfo;
+
+            if (type.IsSZArray)
+            {
+                info.FastConversion = GetFastType(info.ElementType);
+                info.Type = info.FastConversion == FastConversionType.None ? ArrayType.SZArrayManual : ArrayType.SZArrayFast;
+            }
+            else if (rank == 1)
+            {
+                info.Rank = 1;
+                info.Type = ArrayType.SNZArray;
+            }
+            else
+            {
+                if (rank == 32) throw new Exception("ABSave does not support arrays with exactly 32 dimensions, only below.");
+                info.Rank = (byte)rank;
+                info.Type = ArrayType.MultiDimensional;
+            }
+        }
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
-        {
-            var arrContext = (Context)context;
-            Serialize((Array)obj, actualType, ref arrContext.Info, ref header);
+        public override void Serialize(object obj, Type actualType, ref BitTarget header)
+        {            
+            Serialize((Array)obj, actualType, ref header);
         }
 
-        void Serialize(Array arr, Type actualType, ref ArrayTypeInfo context, ref BitTarget header)
+        void Serialize(Array arr, Type actualType, ref BitTarget header)
         {
             var len = arr.Length;
 
-            switch (context.Type)
+            switch (_info.Type)
             {
                 // TODO: This doesn't work with element type versions so temporarily disabled!
                 //case ArrayType.SZArrayFast:
@@ -52,7 +84,7 @@ namespace ABCo.ABSave.Converters
                 case ArrayType.SZArrayManual:
                     {
                         header.Serializer.WriteCompressed((uint)len, ref header);
-                        for (int i = 0; i < len; i++) header.Serializer.SerializeItem(arr.GetValue(i), context.PerItem);
+                        for (int i = 0; i < len; i++) header.Serializer.SerializeItem(arr.GetValue(i), _info.PerItem);
 
                         break;
                     }
@@ -66,20 +98,20 @@ namespace ABCo.ABSave.Converters
                         header.Serializer.WriteCompressed((uint)i);
 
                         int end = i + len;
-                        for (; i < end; i++) header.Serializer.SerializeItem(arr.GetValue(i), context.PerItem);
+                        for (; i < end; i++) header.Serializer.SerializeItem(arr.GetValue(i), _info.PerItem);
 
                         break;
                     }
                 case ArrayType.MultiDimensional:
                     {
                         // Get information about the array.
-                        var mdContext = GetMultiDimensionInfo(arr, ref context, header.Serializer, out int[] lowerBounds);
+                        var mdContext = GetMultiDimensionInfo(arr, ref _info, header.Serializer, out int[] lowerBounds);
                         int firstLength = arr.GetLength(0);
 
                         header.WriteBitWith(mdContext.CustomLowerBounds);
                         header.Serializer.WriteCompressed((uint)firstLength, ref header);
 
-                        SerializeMultiDimensionalArrayData(arr, ref context, ref mdContext, firstLength, lowerBounds, header.Serializer);
+                        SerializeMultiDimensionalArrayData(arr, ref _info, ref mdContext, firstLength, lowerBounds, header.Serializer);
 
                         break;
                     }
@@ -219,15 +251,14 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ref BitSource header)
         {
-            var arrContext = (Context)context;
-            return Deserialize(ref arrContext.Info, ref header);
+            return Deserialize(ref header);
         }
 
-        object Deserialize(ref ArrayTypeInfo context, ref BitSource header)
+        object Deserialize(ref BitSource header)
         {
-            switch (context.Type)
+            switch (_info.Type)
             {
                 // TODO: This doesn't work with element type versions so temporarily disabled!
                 //case ArrayType.SZArrayFast:
@@ -235,9 +266,9 @@ namespace ABCo.ABSave.Converters
                 case ArrayType.SZArrayManual:
                     {
                         int arrSize = (int)header.Deserializer.ReadCompressedInt(ref header);
-                        Array arr = Array.CreateInstance(context.ElementType, arrSize);
+                        Array arr = Array.CreateInstance(_info.ElementType, arrSize);
 
-                        for (int i = 0; i < arrSize; i++) arr.SetValue(header.Deserializer.DeserializeItem(context.PerItem), i);
+                        for (int i = 0; i < arrSize; i++) arr.SetValue(header.Deserializer.DeserializeItem(_info.PerItem), i);
                         return arr;
                     }
                 case ArrayType.SNZArray:
@@ -245,10 +276,10 @@ namespace ABCo.ABSave.Converters
                         int arrSize = (int)header.Deserializer.ReadCompressedInt(ref header);
                         int i = (int)header.Deserializer.ReadCompressedInt(ref header);
 
-                        var arr = Array.CreateInstance(context.ElementType, new int[] { arrSize }, new int[] { i });
+                        var arr = Array.CreateInstance(_info.ElementType, new int[] { arrSize }, new int[] { i });
 
                         int end = i + arrSize;
-                        for (; i < end; i++) arr.SetValue(header.Deserializer.DeserializeItem(context.PerItem), i);
+                        for (; i < end; i++) arr.SetValue(header.Deserializer.DeserializeItem(_info.PerItem), i);
                         return arr;
                     }
                 case ArrayType.MultiDimensional:
@@ -256,7 +287,7 @@ namespace ABCo.ABSave.Converters
                         bool hasCustomLowerBounds = header.ReadBit();
                         int arrSize = (int)header.Deserializer.ReadCompressedInt(ref header);
 
-                        return DeserializeMultiDimensionalArray(in context, hasCustomLowerBounds, arrSize, header.Deserializer);
+                        return DeserializeMultiDimensionalArray(in _info, hasCustomLowerBounds, arrSize, header.Deserializer);
                     }
 
                 // Unknown
@@ -368,50 +399,6 @@ namespace ABCo.ABSave.Converters
 
         #endregion
 
-        public override void TryGenerateContext(ref ContextGen gen)
-        {
-            if (gen.Type == typeof(Array))
-            {
-                if (!gen.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'Array' type that could contain any type of element");
-
-                gen.AssignContext(Context.Unknown, 0);
-                return;
-            }
-
-            if (!gen.Type.IsArray) return;
-
-            var res = new Context();
-
-            var elemType = gen.Type.GetElementType();
-
-            gen.AssignContext(res, 0);
-            PopulateTypeInfo(ref res.Info, gen.GetMap(elemType!), gen.Type);
-        }
-
-        static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, Type type)
-        {
-            var rank = type.GetArrayRank();
-            info.ElementType = itemInfo.GetItemType();
-            info.PerItem = itemInfo;
-
-            if (type.IsSZArray)
-            {
-                info.FastConversion = GetFastType(info.ElementType);
-                info.Type = info.FastConversion == FastConversionType.None ? ArrayType.SZArrayManual : ArrayType.SZArrayFast;
-            }
-            else if (rank == 1)
-            {
-                info.Rank = 1;
-                info.Type = ArrayType.SNZArray;
-            }
-            else
-            {
-                if (rank == 32) throw new Exception("ABSave does not support arrays with exactly 32 dimensions, only below.");
-                info.Rank = (byte)rank;
-                info.Type = ArrayType.MultiDimensional;
-            }
-        }
-
         static FastConversionType GetFastType(Type elementType) => Type.GetTypeCode(elementType) switch
         {
             TypeCode.Byte => FastConversionType.Byte,
@@ -424,75 +411,75 @@ namespace ABCo.ABSave.Converters
 
         #region Primitive Optimization
 
-        static unsafe void SerializeFast(Array arr, FastConversionType type, ref BitTarget header)
-        {
-            // TODO: Remove tight coupling with TextConverter.
-            if (type == FastConversionType.Char) TextConverter.SerializeCharArray((char[])arr, ref header);
+        //static unsafe void SerializeFast(Array arr, FastConversionType type, ref BitTarget header)
+        //{
+        //    // TODO: Remove tight coupling with TextConverter.
+        //    if (type == FastConversionType.Char) TextConverter.SerializeCharArray((char[])arr, ref header);
 
-            header.Serializer.WriteCompressed((uint)arr.Length, ref header);
+        //    header.Serializer.WriteCompressed((uint)arr.Length, ref header);
 
-            switch (type)
-            {
-                case FastConversionType.Byte:
-                    header.Serializer.WriteByteArray((byte[])arr);
-                    break;
-                case FastConversionType.SByte:
-                    var data = ((sbyte[])arr).AsSpan();
-                    header.Serializer.WriteBytes(MemoryMarshal.Cast<sbyte, byte>(data));
+        //    switch (type)
+        //    {
+        //        case FastConversionType.Byte:
+        //            header.Serializer.WriteByteArray((byte[])arr);
+        //            break;
+        //        case FastConversionType.SByte:
+        //            var data = ((sbyte[])arr).AsSpan();
+        //            header.Serializer.WriteBytes(MemoryMarshal.Cast<sbyte, byte>(data));
 
-                    break;
-                case FastConversionType.Short:
-                    header.Serializer.FastWriteShorts(((short[])arr).AsSpan());
-                    break;
-                case FastConversionType.UShort:
-                    var shortData = ((ushort[])arr).AsSpan();
-                    header.Serializer.FastWriteShorts(MemoryMarshal.Cast<ushort, short>(shortData));
-                    break;
-                default:
-                    throw new Exception("ABSAVE: The context given was invalid.");
-            }
-        }
+        //            break;
+        //        case FastConversionType.Short:
+        //            header.Serializer.FastWriteShorts(((short[])arr).AsSpan());
+        //            break;
+        //        case FastConversionType.UShort:
+        //            var shortData = ((ushort[])arr).AsSpan();
+        //            header.Serializer.FastWriteShorts(MemoryMarshal.Cast<ushort, short>(shortData));
+        //            break;
+        //        default:
+        //            throw new Exception("ABSAVE: The context given was invalid.");
+        //    }
+        //}
 
-        unsafe static Array DeserializeFast(FastConversionType type, ref BitSource header)
-        {
-            // TODO: Remove tight coupling with TextConverter.
-            if (type == FastConversionType.Char) return TextConverter.DeserializeCharArray(ref header);
+        //unsafe static Array DeserializeFast(FastConversionType type, ref BitSource header)
+        //{
+        //    // TODO: Remove tight coupling with TextConverter.
+        //    if (type == FastConversionType.Char) return TextConverter.DeserializeCharArray(ref header);
 
-            int length = (int)header.Deserializer.ReadCompressedInt(ref header);
-            switch (type)
-            {
-                case FastConversionType.Byte:
-                    {  
-                        var arr = new byte[length];
-                        header.Deserializer.ReadBytes(arr);
-                        return arr;
-                    }
-                case FastConversionType.SByte:
-                    {
-                        var arr = new sbyte[length];
-                        fixed (sbyte* arrData = arr)
-                            header.Deserializer.ReadBytes(new Span<byte>(arrData, length));
+        //    int length = (int)header.Deserializer.ReadCompressedInt(ref header);
+        //    switch (type)
+        //    {
+        //        case FastConversionType.Byte:
+        //            {  
+        //                var arr = new byte[length];
+        //                header.Deserializer.ReadBytes(arr);
+        //                return arr;
+        //            }
+        //        case FastConversionType.SByte:
+        //            {
+        //                var arr = new sbyte[length];
+        //                fixed (sbyte* arrData = arr)
+        //                    header.Deserializer.ReadBytes(new Span<byte>(arrData, length));
 
-                        return arr;
-                    }
-                case FastConversionType.Short:
-                    {
-                        var arr = new short[length];
-                        header.Deserializer.FastReadShorts(arr.AsSpan());
+        //                return arr;
+        //            }
+        //        case FastConversionType.Short:
+        //            {
+        //                var arr = new short[length];
+        //                header.Deserializer.FastReadShorts(arr.AsSpan());
 
-                        return arr;
-                    }
-                case FastConversionType.UShort:
-                    {
-                        var arr = new ushort[length];
-                        header.Deserializer.FastReadShorts(MemoryMarshal.Cast<ushort, short>(arr.AsSpan()));
+        //                return arr;
+        //            }
+        //        case FastConversionType.UShort:
+        //            {
+        //                var arr = new ushort[length];
+        //                header.Deserializer.FastReadShorts(MemoryMarshal.Cast<ushort, short>(arr.AsSpan()));
 
-                        return arr;
-                    }
-                default:
-                    throw new Exception("ABSAVE: The context given was invalid.");
-            }
-        }
+        //                return arr;
+        //            }
+        //        default:
+        //            throw new Exception("ABSAVE: The context given was invalid.");
+        //    }
+        //}
 
         #endregion
 
@@ -551,13 +538,6 @@ namespace ABCo.ABSave.Converters
             UShort
         }
 
-        class Context : ConverterContext
-        {
-            public static Context Unknown = new Context { Info = new ArrayTypeInfo() { Type = ArrayType.Unknown } };
-
-            public ArrayTypeInfo Info = new ArrayTypeInfo();
-        }
-
         [StructLayout(LayoutKind.Auto)]
         struct ArrayTypeInfo
         {
@@ -578,5 +558,16 @@ namespace ABCo.ABSave.Converters
                 PerItem = perItem;
             }
         }
+
+        public override bool AlsoConvertsNonExact => true;
+        public override bool UsesHeaderForVersion(uint version) => true;
+
+        public override Type[] ExactTypes { get; } = new Type[]
+        {
+            typeof(Array),
+            typeof(byte[]),
+            typeof(string[]),
+            typeof(int[]),
+        };
     }
 }
