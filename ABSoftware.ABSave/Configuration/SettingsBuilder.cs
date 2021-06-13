@@ -17,6 +17,7 @@ namespace ABCo.ABSave.Configuration
         public ABSaveSettings CreateSettings(ABSaveSettings template)
         {
             EnsureConvertersListInitialized();
+
             // Handle basic settings
             var lazyBitHandling = LazyBitHandling ?? template.LazyBitHandling;
             var useUTF8 = UseUTF8 ?? template.UseUTF8;

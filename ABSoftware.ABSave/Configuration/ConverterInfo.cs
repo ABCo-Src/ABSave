@@ -20,7 +20,7 @@ namespace ABCo.ABSave.Configuration
         public ConverterInfo(Type type, int converterId)
         {
             ConverterType = type;
-            converterId = converterId;
+            ConverterId = converterId;
         }
     }
 }
