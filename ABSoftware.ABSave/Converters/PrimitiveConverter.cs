@@ -11,11 +11,7 @@ namespace ABCo.ABSave.Converters
     // TODO: Add .NET 5 support for "nint"s
     public class PrimitiveConverter : Converter
     {
-        public static PrimitiveConverter Instance { get; } = new PrimitiveConverter();
-        private PrimitiveConverter() { }
-
-        public override bool UsesHeaderForVersion(uint version) => false;        
-        public override bool AlsoConvertsNonExact => true;
+        PrimitiveType _typeCode;
 
         public override Type[] ExactTypes { get; } = new Type[]
         {
@@ -36,11 +32,24 @@ namespace ABCo.ABSave.Converters
             typeof(bool)
         };
 
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
+        public override void Initialize(InitializeInfo info)
+        {
+            var typeCode = Type.GetTypeCode(info.Type);
+
+            // IntPtr
+            if (typeCode == TypeCode.Object)
+                throw new Exception("Unsupported primitive provided. Please note that ABSave does not currently support .NET 5 and above types.");
+
+            _typeCode = (PrimitiveType)typeCode;
+        }
+
+        public override bool CheckType(CheckTypeInfo info) => info.Type.IsPrimitive;
+
+        public override void Serialize(object obj, Type actualType, ref BitTarget header)
         {
             var serializer = header.Serializer;
 
-            switch (((Context)context).Type)
+            switch (_typeCode)
             {
                 case PrimitiveType.Boolean:
                     var bl = (bool)obj;
@@ -129,13 +138,13 @@ namespace ABCo.ABSave.Converters
             }
         }
 
-        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ref BitSource header)
         {
             var reader = header.Deserializer;
 
             unchecked
             {
-                return ((Context)context).Type switch
+                return _typeCode switch
                 {
                     PrimitiveType.Boolean => reader.ReadByte() > 0,
                     //PrimitiveType.IntPtr => IntPtr.Size == 8 ? (IntPtr)reader.ReadInt64() : (IntPtr)reader.ReadInt32(),
@@ -157,19 +166,6 @@ namespace ABCo.ABSave.Converters
             }
         }
 
-        public override void TryGenerateContext(ref ContextGen gen)
-        {
-            if (!gen.Type.IsPrimitive) return;
-
-            var typeCode = Type.GetTypeCode(gen.Type);
-
-            // IntPtr
-            if (typeCode == TypeCode.Object)
-                throw new Exception("Unsupported primitive provided. Please note that ABSave does not currently support .NET 5 and above types.");
-
-            gen.AssignContext(new Context((PrimitiveType)typeCode), 0);
-        }
-
         enum PrimitiveType
         {
             IntPtr = 1,
@@ -189,11 +185,7 @@ namespace ABCo.ABSave.Converters
             Decimal = 15,
         }
 
-        class Context : ConverterContext
-        {
-            public PrimitiveType Type;
-
-            public Context(PrimitiveType type) => Type = type;
-        }
+        public override bool UsesHeaderForVersion(uint version) => false;
+        public override bool AlsoConvertsNonExact => true;
     }
 }
