@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
@@ -27,7 +28,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public void Initialize() => Initialize(ABSaveSettings.ForSpeed);
         public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null)
         {
-            var settingsBuilder = new ABSaveSettingsBuilder
+            var settingsBuilder = new SettingsBuilder
             {
                 // Add "SubTypeConverter" as a converter.
                 CustomConverters = new List<Converter>()

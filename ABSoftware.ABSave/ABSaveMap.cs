@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping.Generation;

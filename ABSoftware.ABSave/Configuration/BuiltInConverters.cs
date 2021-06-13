@@ -5,9 +5,9 @@ using System.Text;
 
 namespace ABCo.ABSave.Configuration
 {
-    public class BuiltInConverters
+    internal class BuiltInConverters
     {
-        public static ConverterInfo[] Infos { get; } = new ConverterInfo[]
+        internal static ConverterInfo[] Infos { get; } = new ConverterInfo[]
         {
             new ConverterInfo(typeof(ArrayConverter), 0),
             new ConverterInfo(typeof(AssemblyConverter), 1),
