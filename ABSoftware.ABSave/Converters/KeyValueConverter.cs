@@ -12,30 +12,23 @@ namespace ABCo.ABSave.Converters
 {
     public class KeyValueConverter : Converter
     {
-        public static KeyValueConverter Instance { get; } = new KeyValueConverter();
-        private KeyValueConverter() { }
+        bool _isGeneric;
+        MapItemInfo _keyMap;
+        MapItemInfo _valueMap;
 
-        public override bool AlsoConvertsNonExact => true;
-        public override Type[] ExactTypes { get; } = new Type[]
+        public override void Serialize(object obj, Type actualType, ref BitTarget header)
         {
-            typeof(DictionaryEntry)
-        };
-
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
-        {
-            var actualContext = (Context)context;
-
-            if (actualContext.IsGeneric)
-                SerializeGeneric((dynamic)obj, actualContext, header.Serializer);
+            if (_isGeneric)
+                SerializeGeneric((dynamic)obj, header.Serializer);
                 
             else
-                SerializeNonGeneric((DictionaryEntry)obj, actualContext, header.Serializer);
+                SerializeNonGeneric((DictionaryEntry)obj, header.Serializer);
         }
 
-        static void SerializeGeneric(dynamic obj, Context context, ABSaveSerializer serializer)
+        void SerializeGeneric(dynamic obj, ABSaveSerializer serializer)
         {
-            serializer.SerializeItem(obj.Key, context.KeyMap);
-            serializer.SerializeItem(obj.Value, context.ValueMap);
+            serializer.SerializeItem(obj.Key, _keyMap);
+            serializer.SerializeItem(obj.Value, _valueMap);
         }
 
         static void SerializeNonGeneric(DictionaryEntry obj, Context context, ABSaveSerializer serializer)
@@ -95,11 +88,10 @@ namespace ABCo.ABSave.Converters
             }
         }
 
-        class Context : ConverterContext
+        public override bool AlsoConvertsNonExact => true;
+        public override Type[] ExactTypes { get; } = new Type[]
         {
-            public bool IsGeneric;
-            public MapItemInfo KeyMap;
-            public MapItemInfo ValueMap;
-        }
+            typeof(DictionaryEntry)
+        };
     }
 }
