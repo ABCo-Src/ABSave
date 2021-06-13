@@ -13,7 +13,7 @@ using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
-    public abstract class Converter<T> : MapItem
+    public abstract class Converter : MapItem
     {
         internal SaveInheritanceAttribute[]? _allInheritanceAttributes = null;
         internal Dictionary<uint, SaveInheritanceAttribute?>? _inheritanceValues = null;
@@ -28,12 +28,16 @@ namespace ABCo.ABSave.Converters
         /// </summary>
         public virtual Type[] ExactTypes { get; } = Array.Empty<Type>();
 
-        public abstract void Initialize(ref ContextGen gen);
+        /// <summary>
+        /// Called when initializing a converter for a given type. Returning false will fail the process.
+        /// </summary>
+        public abstract void Initialize(Type type);
 
         /// <summary>
-        /// Attempts to generate a context.
+        /// Check whether the converter supports a given type, used for non-exact types.
+        /// This method is allowed to modify variables, however it is nt.
         /// </summary>
-        public abstract void TryGenerateContext(ref ContextGen gen);
+        public virtual bool CheckType(Type type) => throw new Exception("Converter says it also converts non-exact but does not override 'CheckType' to check this.");
 
         public virtual bool UsesHeaderForVersion(uint version) => false;
         public abstract void Serialize(object obj, Type actualType, ref BitTarget header);
