@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABCo.ABSave.Helpers
+namespace ABCo.ABSave.Configuration
 {
     public class BuiltInConverters
     {
