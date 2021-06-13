@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
@@ -31,13 +32,13 @@ namespace ABCo.ABSave.Converters
         /// <summary>
         /// Called when initializing a converter for a given type. Returning false will fail the process.
         /// </summary>
-        public abstract void Initialize(Type type, MapRetriever retriever);
+        public abstract void Initialize(InitializeInfo info);
 
         /// <summary>
         /// Check whether the converter supports a given type, used for non-exact types.
         /// This method is allowed to modify variables, however it is nt.
         /// </summary>
-        public virtual bool CheckType(Type type) => throw new Exception("Converter says it also converts non-exact but does not override 'CheckType' to check this.");
+        public virtual bool CheckType(CheckTypeInfo info) => throw new Exception("Converter says it also converts non-exact but does not override 'CheckType' to check for one.");
 
         public virtual bool UsesHeaderForVersion(uint version) => false;
         public abstract void Serialize(object obj, Type actualType, ref BitTarget header);
