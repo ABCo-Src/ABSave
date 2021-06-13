@@ -16,18 +16,25 @@ namespace ABCo.ABSave.Configuration
         public static ABSaveSettings ForSpeed { get; } = new ABSaveSettings(true, true, false, true, Converter.BuiltInExact, Converter.BuiltInNonExact);
         public static ABSaveSettings ForSize { get; } = new ABSaveSettings(false, true, false, true, Converter.BuiltInExact, Converter.BuiltInNonExact);
 
+        static ABSaveSettings()
+        {
+            var builder = new SettingsBuilder();
+            ForSpeed = builder.CreateSettings(new ABSaveSettings(false, true, false, true, null, null));
+            ForSize = builder.CreateSettings(new ABSaveSettings(false, true, false, true, null, null));
+        }
+
         public bool LazyBitHandling { get; } = true;
         public bool UseUTF8 { get; } = true;
         public bool BypassDangerousTypeChecking { get; set; } = false;
         public bool UseLittleEndian { get; } = true;
 
-        public IReadOnlyDictionary<Type, Converter>? ExactConverters { get; } = Converter.BuiltInExact;
-        public IReadOnlyList<Converter>? NonExactConverters { get; } = Converter.BuiltInNonExact;
+        internal IReadOnlyDictionary<Type, ConverterInfo>? ExactConverters { get; }
+        internal IReadOnlyList<ConverterInfo>? NonExactConverters { get; }
 
         public ABSaveSettings() { }
 
-        public ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian,
-            IReadOnlyDictionary<Type, Converter>? exactConverters, IReadOnlyList<Converter>? nonExactConverters)
+        internal ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian,
+            IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, IReadOnlyList<ConverterInfo>? nonExactConverters)
         =>
             (LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ExactConverters, NonExactConverters) = 
             (lazyBitHandling, useUTF8, useLittleEndian, bypassDangerousTypeChecking, exactConverters, nonExactConverters);
