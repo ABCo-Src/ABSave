@@ -13,14 +13,14 @@ namespace ABCo.ABSave.Configuration
     /// </summary>
     public class ABSaveSettings
     {
-        public static ABSaveSettings ForSpeed { get; } = new ABSaveSettings(true, true, false, true, Converter.BuiltInExact, Converter.BuiltInNonExact);
-        public static ABSaveSettings ForSize { get; } = new ABSaveSettings(false, true, false, true, Converter.BuiltInExact, Converter.BuiltInNonExact);
+        public static ABSaveSettings ForSpeed { get; }
+        public static ABSaveSettings ForSize { get; }
 
         static ABSaveSettings()
         {
             var builder = new SettingsBuilder();
-            ForSpeed = builder.CreateSettings(new ABSaveSettings(false, true, false, true, null, null));
-            ForSize = builder.CreateSettings(new ABSaveSettings(false, true, false, true, null, null));
+            ForSpeed = builder.CreateSettings(new ABSaveSettings(true, true, false, true, null!, null!));
+            ForSize = builder.CreateSettings(new ABSaveSettings(false, true, false, true, null!, null!));
         }
 
         public bool LazyBitHandling { get; } = true;
@@ -28,13 +28,13 @@ namespace ABCo.ABSave.Configuration
         public bool BypassDangerousTypeChecking { get; set; } = false;
         public bool UseLittleEndian { get; } = true;
 
-        internal IReadOnlyDictionary<Type, ConverterInfo>? ExactConverters { get; }
-        internal IReadOnlyList<ConverterInfo>? NonExactConverters { get; }
+        internal IReadOnlyDictionary<Type, ConverterInfo> ExactConverters { get; }
+        internal IReadOnlyList<ConverterInfo> NonExactConverters { get; }
 
         public ABSaveSettings() { }
 
         internal ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian,
-            IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, IReadOnlyList<ConverterInfo>? nonExactConverters)
+            IReadOnlyDictionary<Type, ConverterInfo> exactConverters, IReadOnlyList<ConverterInfo> nonExactConverters)
         =>
             (LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ExactConverters, NonExactConverters) = 
             (lazyBitHandling, useUTF8, useLittleEndian, bypassDangerousTypeChecking, exactConverters, nonExactConverters);
