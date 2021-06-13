@@ -12,13 +12,13 @@ namespace ABCo.ABSave.Converters
 {
     public class EnumerableConverter : Converter
     {
-        public IEnumerableInfo Info = null!;
-        public Type ElementOrKeyType = null!;
-        public MapItemInfo ElementOrKeyMap;
+        public IEnumerableInfo _info = null!;
+        public Type _elementOrKeyType = null!;
+        public MapItemInfo _elementOrKeyMap;
 
         // Optional:
-        public Type? ValueType;
-        public MapItemInfo ValueMap;
+        public Type? _valueType;
+        public MapItemInfo _valueMap;
 
         public override void Initialize(InitializeInfo info)
         {
@@ -36,9 +36,9 @@ namespace ABCo.ABSave.Converters
 
         public override void Serialize(object obj, Type actualType, ref BitTarget header)
         {
-            if (Info is CollectionInfo collectionInfo)
+            if (_info is CollectionInfo collectionInfo)
                 SerializeCollection(obj, collectionInfo, ref header);
-            else if (Info is DictionaryInfo dictionaryInfo)
+            else if (_info is DictionaryInfo dictionaryInfo)
                 SerializeDictionary(obj, dictionaryInfo, ref header);
         }
 
@@ -48,7 +48,7 @@ namespace ABCo.ABSave.Converters
             header.Serializer.WriteCompressed((uint)size, ref header);
 
             var enumerator = info.GetEnumerator(obj);
-            while (enumerator.MoveNext()) header.Serializer.SerializeItem(enumerator.Current, ElementOrKeyMap);
+            while (enumerator.MoveNext()) header.Serializer.SerializeItem(enumerator.Current, _elementOrKeyMap);
         }
 
         void SerializeDictionary(object obj, DictionaryInfo info, ref BitTarget header)
@@ -59,8 +59,8 @@ namespace ABCo.ABSave.Converters
             var enumerator = info.GetEnumerator(obj);
             while (enumerator.MoveNext())
             {
-                header.Serializer.SerializeItem(enumerator.Key, ElementOrKeyMap);
-                header.Serializer.SerializeItem(enumerator.Value, ValueMap);
+                header.Serializer.SerializeItem(enumerator.Key, _elementOrKeyMap);
+                header.Serializer.SerializeItem(enumerator.Value, _valueMap);
             }
         }
 
@@ -70,9 +70,9 @@ namespace ABCo.ABSave.Converters
 
         public override object Deserialize(Type actualType, ref BitSource header)
         {
-            if (Info is CollectionInfo collectionInfo)
+            if (_info is CollectionInfo collectionInfo)
                 return DeserializeCollection(collectionInfo, actualType, ref header);
-            else if (Info is DictionaryInfo dictionaryInfo)
+            else if (_info is DictionaryInfo dictionaryInfo)
                 return DeserializeDictionary(dictionaryInfo, actualType, ref header);
             else throw new Exception("Unrecognized enumerable info.");
         }
@@ -83,7 +83,7 @@ namespace ABCo.ABSave.Converters
             var collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
-                info.AddItem(collection, header.Deserializer.DeserializeItem(ElementOrKeyMap));
+                info.AddItem(collection, header.Deserializer.DeserializeItem(_elementOrKeyMap));
 
             return collection;
         }
@@ -95,10 +95,10 @@ namespace ABCo.ABSave.Converters
 
             for (int i = 0; i < size; i++)
             {
-                var key = header.Deserializer.DeserializeItem(ElementOrKeyMap);
+                var key = header.Deserializer.DeserializeItem(_elementOrKeyMap);
                 if (key == null) throw new NullDictionaryKeyException();
 
-                var value = header.Deserializer.DeserializeItem(ValueMap);
+                var value = header.Deserializer.DeserializeItem(_valueMap);
                 info.AddItem(collection, key, value);
             }
 
@@ -125,13 +125,13 @@ namespace ABCo.ABSave.Converters
 
         void SetState(InitializeInfo info, IEnumerableInfo enumerableInfo, Type elementOrKeyType, Type? valueType)
         {
-            Info = enumerableInfo;
-            ElementOrKeyType = elementOrKeyType;
-            ValueType = valueType;
+            _info = enumerableInfo;
+            _elementOrKeyType = elementOrKeyType;
+            _valueType = valueType;
 
             // Fill in the maps.
-            ElementOrKeyMap = info.GetMap(elementOrKeyType);
-            if (valueType != null) ValueMap = info.GetMap(valueType);
+            _elementOrKeyMap = info.GetMap(elementOrKeyType);
+            if (valueType != null) _valueMap = info.GetMap(valueType);
         }
 
         static CollectionCategory DetectCollectionType(Type[] interfaces, out Type elementOrKeyType, out Type? valueType)
