@@ -31,7 +31,7 @@ namespace ABCo.ABSave.Converters
         /// <summary>
         /// Called when initializing a converter for a given type. Returning false will fail the process.
         /// </summary>
-        public abstract void Initialize(Type type);
+        public abstract void Initialize(Type type, MapRetriever retriever);
 
         /// <summary>
         /// Check whether the converter supports a given type, used for non-exact types.

@@ -31,7 +31,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             var settingsBuilder = new SettingsBuilder
             {
                 // Add "SubTypeConverter" as a converter.
-                CustomConverters = new List<Converter>()
+                CustomConverters = new List<ConverterInfo>()
                 {
                     new BaseTypeConverter(),
                     new SubTypeConverter()

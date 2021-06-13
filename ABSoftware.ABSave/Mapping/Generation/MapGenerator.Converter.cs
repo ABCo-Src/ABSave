@@ -34,7 +34,7 @@ namespace ABCo.ABSave.Mapping.Generation
 
         internal MapItem InitializeConverter(Converter converter, Type type)
         {
-            converter.Initialize(type);
+            converter.Initialize(type, new MapRetriever(this));
             converter._allInheritanceAttributes = GetInheritanceAttributes(type);
             return converter;
         }
