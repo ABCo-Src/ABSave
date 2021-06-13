@@ -11,15 +11,7 @@ namespace ABCo.ABSave.Converters
 {
     public class AssemblyConverter : Converter
     {
-        public readonly static AssemblyConverter Instance = new AssemblyConverter();
-        private AssemblyConverter() { }
-
-        public override bool AlsoConvertsNonExact => true;
-        public override bool UsesHeaderForVersion(uint version) => true;
-
-        public override Type[] ExactTypes { get; } = new Type[] { typeof(Assembly) };
-
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header) =>
+        public override void Serialize(object obj, Type actualType, ref BitTarget header) =>
             SerializeAssembly((Assembly)obj, ref header);
 
         public static void SerializeAssembly(Assembly assembly, ref BitTarget header)
@@ -64,7 +56,7 @@ namespace ABCo.ABSave.Converters
             return false;
         }
 
-        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header) =>
+        public override object Deserialize(Type actualType, ref BitSource header) =>
             DeserializeAssembly(ref header);
 
         public static Assembly DeserializeAssembly(ref BitSource header)
@@ -113,10 +105,11 @@ namespace ABCo.ABSave.Converters
             return null;
         }
 
-        public override void TryGenerateContext(ref ContextGen gen)
-        {
-            if (gen.Type == typeof(Assembly) || gen.Type.IsSubclassOf(typeof(Assembly)))
-                gen.AssignContext(null, 0);
-        }
+        public override bool AlsoConvertsNonExact => true;
+        public override bool UsesHeaderForVersion(uint version) => true;
+
+        public override Type[] ExactTypes { get; } = new Type[] { typeof(Assembly) };
+        public override bool CheckType(CheckTypeInfo info) => info.Type == typeof(Assembly) || info.Type.IsSubclassOf(typeof(Assembly));
+
     }
 }

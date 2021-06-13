@@ -30,9 +30,9 @@ namespace ABCo.ABSave.Converters
         public virtual Type[] ExactTypes { get; } = Array.Empty<Type>();
 
         /// <summary>
-        /// Called when initializing a converter for a given type. Returning false will fail the process.
+        /// Initializes a given converter for a given type.
         /// </summary>
-        public abstract void Initialize(InitializeInfo info);
+        public virtual void Initialize(InitializeInfo info) { }
 
         /// <summary>
         /// Check whether the converter supports a given type, used for non-exact types.
