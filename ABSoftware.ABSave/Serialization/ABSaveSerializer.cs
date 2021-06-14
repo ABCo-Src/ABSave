@@ -1,4 +1,5 @@
 ﻿using ABCo.ABSave;
+using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
@@ -117,8 +118,8 @@ namespace ABCo.ABSave.Serialization
 
             switch (item)
             {
-                case ConverterContext ctx:
-                    SerializeConverterItem(obj, ctx, ref header, skipHeader);
+                case Converter converter:
+                    SerializeConverterItem(obj, converter, ref header, skipHeader);
                     break;
                 case ObjectMapItem objMap:
                     SerializeObjectItem(obj, objMap, ref header, skipHeader);
@@ -131,7 +132,7 @@ namespace ABCo.ABSave.Serialization
             }
         }
 
-        void SerializeConverterItem(object obj, ConverterContext ctx, ref BitTarget header, bool skipHeader)
+        void SerializeConverterItem(object obj, Converter converter, ref BitTarget header, bool skipHeader)
         {
             var actualType = obj.GetType();
 
@@ -139,26 +140,26 @@ namespace ABCo.ABSave.Serialization
 
             // Write the null and inheritance bits.
             bool sameType = true;
-            if (!ctx.IsValueItemType && !skipHeader)
+            if (!converter.IsValueItemType && !skipHeader)
             {
-                sameType = WriteHeaderNullAndInheritance(actualType, ctx, ref header);
+                sameType = WriteHeaderNullAndInheritance(actualType, converter, ref header);
                 appliedHeader = false;
             }
 
             // Write and get the info for a version, if necessary
-            if (!_converterVersions.TryGetValue(ctx, out ConverterVersionInfo info))
+            if (!_converterVersions.TryGetValue(converter, out ConverterVersionInfo info))
             {
-                uint version = WriteNewVersionInfo(ctx, ref header);
+                uint version = WriteNewVersionInfo(converter, ref header);
                 appliedHeader = true;
 
-                info = ConverterVersionInfo.CreateFromContext(version, ctx);
-                _converterVersions.Add(ctx, info);
+                info = ConverterVersionInfo.CreateFromConverter(version, converter);
+                _converterVersions.Add(converter, info);
             }
 
             // Handle inheritance if needed.
             if (info.InheritanceInfo != null && !sameType)
             {
-                SerializeActualType(obj, info.InheritanceInfo, ctx.ItemType, actualType, ref header);
+                SerializeActualType(obj, info.InheritanceInfo, converter.ItemType, actualType, ref header);
                 return;
             }
 
@@ -166,7 +167,7 @@ namespace ABCo.ABSave.Serialization
             if (!info.UsesHeader && !appliedHeader)
                 header.Apply();
 
-            ctx._converter.Serialize(obj, actualType, ctx, ref header);
+            converter.Serialize(obj, actualType, ref header);
         }
 
         void SerializeObjectItem(object obj, ObjectMapItem item, ref BitTarget header, bool skipHeader)
@@ -286,7 +287,7 @@ namespace ABCo.ABSave.Serialization
             WriteType(type, ref header);
         }
 
-        public static void WriteType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeType(type, ref header);
+        public static void WriteType(Type type, ref BitTarget header) => new TypeConverter().SerializeType(type, ref header);
 
         public void WriteClosedType(Type type)
         {
@@ -294,9 +295,6 @@ namespace ABCo.ABSave.Serialization
             WriteClosedType(type, ref header);
         }
 
-        public static void WriteClosedType(Type type, ref BitTarget header) => TypeConverter.Instance.SerializeClosedType(type, ref header);
-
-        static bool ConverterUsesHeader(MapItem item, uint targetVersion) => 
-            Unsafe.As<ConverterContext>(item)._converter.UsesHeaderForVersion(targetVersion);
+        public static void WriteClosedType(Type type, ref BitTarget header) => new TypeConverter().SerializeClosedType(type, ref header);
     }
 }
