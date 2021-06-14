@@ -1,11 +1,13 @@
 ﻿using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
 
 namespace ABCo.ABSave.Converters
 {
+    [Select(typeof(Version))]
     public class VersionConverter : Converter
     {
         public override void Serialize(object obj, Type actualType, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
@@ -48,10 +50,6 @@ namespace ABCo.ABSave.Converters
             return new Version(major, minor, build, revision);
         }
 
-        public override bool CheckType(CheckTypeInfo info) => info.Type == typeof(Version);
-
-        public override bool AlsoConvertsNonExact => false;
         public override bool UsesHeaderForVersion(uint version) => true;
-        public override Type[] ExactTypes { get; } = new Type[] { typeof(Version) };
     }
 }

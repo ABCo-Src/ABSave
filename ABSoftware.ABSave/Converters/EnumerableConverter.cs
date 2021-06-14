@@ -2,6 +2,7 @@
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
@@ -10,6 +11,11 @@ using System.Collections.Generic;
 
 namespace ABCo.ABSave.Converters
 {
+    [Select(typeof(IList<>), 0)]
+    [Select(typeof(IDictionary<,>), 0, 1)]
+    [Select(typeof(List<>), 0)]
+    [Select(typeof(Dictionary<,>), 0, 1)]
+    [SelectOtherWithCheckType]
     public class EnumerableConverter : Converter
     {
         public IEnumerableInfo _info = null!;
@@ -251,12 +257,7 @@ namespace ABCo.ABSave.Converters
             None
         }
 
-        public override bool AlsoConvertsNonExact => true;
         public override bool UsesHeaderForVersion(uint version) => true;
-        public override Type[] ExactTypes { get; } = new Type[]
-        {
-            typeof(IEnumerable)
-        };
 
         private bool TryHandleDirectTypes(InitializeInfo info, Type type)
         {

@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
@@ -8,29 +9,24 @@ using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
-    // TODO: Add .NET 5 support for "nint"s
+    [Select(typeof(bool))]
+    [Select(typeof(byte))]
+    [Select(typeof(sbyte))]
+    [Select(typeof(char))]
+    [Select(typeof(ushort))]
+    [Select(typeof(short))]
+    [Select(typeof(uint))]
+    [Select(typeof(int))]
+    [Select(typeof(ulong))]
+    [Select(typeof(long))]
+    [Select(typeof(float))]
+    [Select(typeof(double))]
+    [Select(typeof(decimal))]
+    [Select(typeof(IntPtr))]
+    [Select(typeof(UIntPtr))]
     public class PrimitiveConverter : Converter
     {
         PrimitiveType _typeCode;
-
-        public override Type[] ExactTypes { get; } = new Type[]
-        {
-            typeof(byte),
-            typeof(sbyte),
-            typeof(char),
-            typeof(ushort),
-            typeof(short),
-            typeof(uint),
-            typeof(int),
-            typeof(ulong),
-            typeof(long),
-            typeof(float),
-            typeof(double),
-            typeof(decimal),
-            typeof(IntPtr),
-            typeof(UIntPtr),
-            typeof(bool)
-        };
 
         public override void Initialize(InitializeInfo info)
         {
@@ -186,6 +182,5 @@ namespace ABCo.ABSave.Converters
         }
 
         public override bool UsesHeaderForVersion(uint version) => false;
-        public override bool AlsoConvertsNonExact => true;
     }
 }

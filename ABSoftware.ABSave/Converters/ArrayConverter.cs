@@ -1,6 +1,7 @@
 ﻿using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
@@ -10,6 +11,11 @@ using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
+    [Select(typeof(Array))]
+    [Select(typeof(byte[]), typeof(byte))]
+    [Select(typeof(string[]), typeof(string))]
+    [Select(typeof(int[]), typeof(int))]
+    [SelectOtherWithCheckType]
     public class ArrayConverter : Converter
     {
         ArrayTypeInfo _info;
@@ -538,6 +544,8 @@ namespace ABCo.ABSave.Converters
             UShort
         }
 
+        public override bool UsesHeaderForVersion(uint version) => true;
+
         [StructLayout(LayoutKind.Auto)]
         struct ArrayTypeInfo
         {
@@ -558,16 +566,5 @@ namespace ABCo.ABSave.Converters
                 PerItem = perItem;
             }
         }
-
-        public override bool AlsoConvertsNonExact => true;
-        public override bool UsesHeaderForVersion(uint version) => true;
-
-        public override Type[] ExactTypes { get; } = new Type[]
-        {
-            typeof(Array),
-            typeof(byte[]),
-            typeof(string[]),
-            typeof(int[]),
-        };
     }
 }

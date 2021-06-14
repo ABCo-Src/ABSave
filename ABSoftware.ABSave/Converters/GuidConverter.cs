@@ -1,16 +1,15 @@
 ﻿using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
 
 namespace ABCo.ABSave.Converters
 {
+    [Select(typeof(Guid))]
     public class GuidConverter : Converter
     {
-        public override bool AlsoConvertsNonExact => false;
-        public override Type[] ExactTypes { get; } = new Type[] { typeof(Guid) };
-
         public override void Serialize(object obj, Type actualType, ref BitTarget header)
         {
             var guid = (Guid)obj;
