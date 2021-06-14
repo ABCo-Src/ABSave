@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Deserialization;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Serialization;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -55,7 +56,7 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             if (reversed)
             {
-                var builder = new ABSaveSettingsBuilder()
+                var builder = new SettingsBuilder()
                 {
                     UseLittleEndian = !BitConverter.IsLittleEndian
                 };

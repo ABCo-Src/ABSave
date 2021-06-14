@@ -31,8 +31,6 @@ namespace ABCo.ABSave.Configuration
         internal IReadOnlyDictionary<Type, ConverterInfo> ExactConverters { get; }
         internal IReadOnlyList<ConverterInfo> NonExactConverters { get; }
 
-        public ABSaveSettings() { }
-
         internal ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian,
             IReadOnlyDictionary<Type, ConverterInfo> exactConverters, IReadOnlyList<ConverterInfo> nonExactConverters)
         =>

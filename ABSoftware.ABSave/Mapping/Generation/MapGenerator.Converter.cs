@@ -22,9 +22,9 @@ namespace ABCo.ABSave.Mapping.Generation
             {
                 for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
                 {
-                    var converter = GetConverterInstance(currentConverter);
+                    var converter = GetConverterInstance(settings.NonExactConverters[i]);
 
-                    if (converter.CheckType(type))
+                    if (converter.CheckType(new CheckTypeInfo(type, settings)))
                         return InitializeConverter(converter, type);
                 }
             }
@@ -39,7 +39,7 @@ namespace ABCo.ABSave.Mapping.Generation
             return converter;
         }
 
-        Converter GetConverterInstance(ConverterInfo info) => (Converter)Activator.CreateInstance(info.ConverterType);
+        Converter GetConverterInstance(ConverterInfo info) => (Converter)Activator.CreateInstance(info.ConverterType)!;
 
         // Temporary helper until object conversion gets moved into its own converter
         internal static SaveInheritanceAttribute? GetConverterInheritanceInfoForVersion(uint version, Converter converter)

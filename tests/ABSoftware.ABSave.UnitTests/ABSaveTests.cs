@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Mapping;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Mapping;
 using ABCo.ABSave.UnitTests.Mapping;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

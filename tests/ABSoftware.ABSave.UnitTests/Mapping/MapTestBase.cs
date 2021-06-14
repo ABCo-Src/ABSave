@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Generation;
@@ -19,8 +20,8 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
         public void Setup()
         {
-            var builder = new ABSaveSettingsBuilder();
-            builder.CustomConverters = new List<Converter>() { new SubTypeConverter() };
+            var builder = new SettingsBuilder();
+            builder.AddConverter(typeof(SubTypeConverter));
             var settings = builder.CreateSettings(ABSaveSettings.ForSpeed);
 
             Map = new ABSaveMap(settings);

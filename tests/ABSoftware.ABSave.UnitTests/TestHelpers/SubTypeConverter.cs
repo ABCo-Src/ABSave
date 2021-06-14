@@ -13,14 +13,16 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 {
     public class SubTypeConverter : Converter
     {
+        bool _writesToHeader;
+
         public const int OUTPUT_BYTE = 110;
         public override bool AlsoConvertsNonExact => false;
         public override bool UsesHeaderForVersion(uint version) => true;
         public override Type[] ExactTypes => new Type[] { typeof(SubWithHeader), typeof(SubWithoutHeader) };
 
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ref BitTarget header)
         {
-            if (((Context)context).WritesToHeader)
+            if (_writesToHeader)
             {
                 header.WriteBitOn();
                 header.Apply();
@@ -29,9 +31,9 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             header.Serializer.WriteByte(OUTPUT_BYTE);
         }
 
-        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ref BitSource header)
         {
-            if (((Context)context).WritesToHeader)
+            if (_writesToHeader)
             {
                 if (!header.ReadBit()) throw new Exception("Sub deserialization failed.");
                 if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
@@ -42,18 +44,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
             return new SubWithoutHeader();
         }
-
-        public override void TryGenerateContext(ref ContextGen gen)
-        {
-            if (gen.Type == typeof(SubWithHeader))            
-                gen.AssignContext(new Context() { WritesToHeader = true }, 0);
-            else if (gen.Type == typeof(SubWithoutHeader))
-                gen.AssignContext(new Context() { WritesToHeader = false }, 0);
-        }
-
-        class Context : ConverterContext
-        {
-            public bool WritesToHeader;
-        }
+        
+        public override void Initialize(InitializeInfo info) =>        
+            _writesToHeader = info.Type == typeof(SubWithHeader);
     }
 }

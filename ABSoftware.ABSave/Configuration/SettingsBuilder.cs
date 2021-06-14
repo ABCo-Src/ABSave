@@ -35,7 +35,7 @@ namespace ABCo.ABSave.Configuration
                     var currentConverter = _converters[i];
 
                     // TODO: Use attributes instead of this - see issue #17.
-                    var tempInstance = (Converter)Activator.CreateInstance(_converters[i].ConverterType);
+                    var tempInstance = (Converter)Activator.CreateInstance(_converters[i].ConverterType)!;
                     var exactTypes = tempInstance.ExactTypes;
 
                     if (exactTypes.Length > 0)

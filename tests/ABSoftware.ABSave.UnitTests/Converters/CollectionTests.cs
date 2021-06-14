@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Generation;
@@ -17,12 +18,11 @@ namespace ABCo.ABSave.UnitTests.Converters
     {
         static ABSaveSettings Settings = null!;
         public MapGenerator CurrentGenerator;
-        ContextGen ContextGenInfo = new();
 
         [TestInitialize]
         public void Setup()
         {
-            var builder = new ABSaveSettingsBuilder
+            var builder = new SettingsBuilder
             {
                 BypassDangerousTypeChecking = true
             };
@@ -31,8 +31,16 @@ namespace ABCo.ABSave.UnitTests.Converters
             CurrentMap = new ABSaveMap(Settings);
             CurrentGenerator = new MapGenerator();
             CurrentGenerator.Initialize(CurrentMap);
+        }
 
-            ContextGenInfo = new ContextGen(typeof(object), CurrentGenerator);
+        EnumerableConverter InitializeNew(Type type)
+        {
+            var info = new InitializeInfo(type, CurrentGenerator);
+
+            var converter = new EnumerableConverter();
+            converter.Initialize(info);
+
+            return converter;
         }
 
         [TestCleanup]
@@ -44,88 +52,67 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Context_List()
         {
-            ContextGenInfo.Type = typeof(List<string>);
-            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            var converter = InitializeNew(typeof(List<string>));
 
-            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
-
-            Assert.IsInstanceOfType(ctx.Info, typeof(ListInfo));
-            Assert.AreEqual(typeof(string), ctx.ElementOrKeyType);
+            Assert.IsInstanceOfType(converter._info, typeof(ListInfo));
+            Assert.AreEqual(typeof(string), converter._elementOrKeyType);
         }
 
         [TestMethod]
         public void Context_GenericICollection_NonGenericIList()
         {
-            ContextGenInfo.Type = typeof(GenericAndNonGeneric);
-            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            var converter = InitializeNew(typeof(GenericAndNonGeneric));
 
-            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
-
-            Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIListInfo));
-            Assert.AreEqual(typeof(string), ctx.ElementOrKeyType);
+            Assert.IsInstanceOfType(converter._info, typeof(NonGenericIListInfo));
+            Assert.AreEqual(typeof(string), converter._elementOrKeyType);
         }
 
         [TestMethod]
         public void Context_GenericICollection()
         {
-            ContextGenInfo.Type = typeof(GenericICollection);
-            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            var converter = InitializeNew(typeof(GenericICollection));
 
-            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
-
-            Assert.IsInstanceOfType(ctx.Info, typeof(GenericICollectionInfo));
-            Assert.AreEqual(typeof(int), ctx.ElementOrKeyType);
+            Assert.IsInstanceOfType(converter._info, typeof(GenericICollectionInfo));
+            Assert.AreEqual(typeof(int), converter._elementOrKeyType);
         }
 
         [TestMethod]
         public void Context_NonGenericIList()
         {
-            ContextGenInfo.Type = typeof(ArrayList);
-            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            var converter = InitializeNew(typeof(ArrayList));
 
-            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
-
-            Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIListInfo));
-            Assert.AreEqual(typeof(object), ctx.ElementOrKeyType);
+            Assert.IsInstanceOfType(converter._info, typeof(NonGenericIListInfo));
+            Assert.AreEqual(typeof(object), converter._elementOrKeyType);
         }
 
         [TestMethod]
         public void Context_GenericIDictionary_NonGenericIDictionary()
         {
-            ContextGenInfo.Type = typeof(Dictionary<int, bool>);
-            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            var converter = InitializeNew(typeof(Dictionary<int, bool>));
 
-            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
-
-            Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIDictionaryInfo));
-            Assert.AreEqual(typeof(int), ctx.ElementOrKeyType);
-            Assert.AreEqual(typeof(bool), ctx.ValueType);
+            Assert.IsInstanceOfType(converter._info, typeof(NonGenericIDictionaryInfo));
+            Assert.AreEqual(typeof(int), converter._elementOrKeyType);
+            Assert.AreEqual(typeof(bool), converter._valueType);
         }
 
         [TestMethod]
         public void Context_GenericIDictionary()
         {
-            ContextGenInfo.Type = typeof(GenericIDictionary);
-            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            var converter = InitializeNew(typeof(GenericIDictionary));
 
-            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
-
-            Assert.IsInstanceOfType(ctx.Info, typeof(GenericIDictionaryInfo));
-            Assert.AreEqual(typeof(string), ctx.ElementOrKeyType);
-            Assert.AreEqual(typeof(int), ctx.ValueType);
+            Assert.IsInstanceOfType(converter._info, typeof(GenericIDictionaryInfo));
+            Assert.AreEqual(typeof(string), converter._elementOrKeyType);
+            Assert.AreEqual(typeof(int), converter._valueType);
         }
 
         [TestMethod]
         public void Context_NonGenericIDictionary()
         {
-            ContextGenInfo.Type = typeof(Hashtable);
-            EnumerableConverter.Instance.TryGenerateContext(ref ContextGenInfo);
+            var converter = InitializeNew(typeof(Hashtable));
 
-            var ctx = (EnumerableConverter.Context)ContextGenInfo.ContextInstance!;
-
-            Assert.IsInstanceOfType(ctx.Info, typeof(NonGenericIDictionaryInfo));
-            Assert.AreEqual(typeof(object), ctx.ElementOrKeyType);
-            Assert.AreEqual(typeof(object), ctx.ValueType);
+            Assert.IsInstanceOfType(converter._info, typeof(NonGenericIDictionaryInfo));
+            Assert.AreEqual(typeof(object), converter._elementOrKeyType);
+            Assert.AreEqual(typeof(object), converter._valueType);
         }
 
         [TestMethod]

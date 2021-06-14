@@ -30,14 +30,11 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         {
             var settingsBuilder = new SettingsBuilder
             {
-                // Add "SubTypeConverter" as a converter.
-                CustomConverters = new List<ConverterInfo>()
-                {
-                    new BaseTypeConverter(),
-                    new SubTypeConverter()
-                },
                 BypassDangerousTypeChecking = true
             };
+
+            settingsBuilder.AddConverter(typeof(BaseTypeConverter));
+            settingsBuilder.AddConverter(typeof(SubTypeConverter));
 
             CurrentMap = ABSaveMap.Get<EmptyClass>(settingsBuilder.CreateSettings(template));
 
