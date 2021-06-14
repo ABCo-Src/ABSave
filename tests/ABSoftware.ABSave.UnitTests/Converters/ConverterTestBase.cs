@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Serialization;
 using ABCo.ABSave.UnitTests.TestHelpers;

@@ -33,7 +33,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var res = Generator.TryGenerateConverter(typeof(string));
 
             Assert.IsNotNull(res);
-            Assert.AreEqual(TextConverter.Instance, ((ConverterContext)res)._converter);
+            Assert.IsInstanceOfType((Converter)res, typeof(TextConverter));
         }
 
         [TestMethod]
@@ -45,7 +45,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var res = Generator.TryGenerateConverter(typeof(KeyValuePair<int, int>));
  
             Assert.IsNotNull(res);
-            Assert.AreEqual(KeyValueConverter.Instance, ((ConverterContext)res)._converter);
+            Assert.IsInstanceOfType((Converter)res, typeof(KeyValueConverter));
         }
     }
 }

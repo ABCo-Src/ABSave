@@ -17,6 +17,7 @@ using System.Reflection;
 using BenchmarkDotNet.Diagnostics.Windows.Configs;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Configuration;
 
 namespace ABCo.ABSave.Testing.ConsoleApp
 {

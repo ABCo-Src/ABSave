@@ -83,12 +83,12 @@ namespace ABCo.ABSave.Mapping
         public bool UsesHeader;
         public SaveInheritanceAttribute? InheritanceInfo;
 
-        public static ConverterVersionInfo CreateFromContext(uint version, ConverterContext context)
+        public static ConverterVersionInfo CreateFromConverter(uint version, Converter converter)
         {
             return new ConverterVersionInfo(
                     version,
-                    context._converter.UsesHeaderForVersion(version),
-                    MapGenerator.GetConverterInheritanceInfoForVersion(version, context));
+                    converter.UsesHeaderForVersion(version),
+                    MapGenerator.GetConverterInheritanceInfoForVersion(version, converter));
         }
 
         public ConverterVersionInfo(uint versionInfo, bool usesHeader, SaveInheritanceAttribute? inheritanceInfo) =>

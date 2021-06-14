@@ -12,20 +12,27 @@ namespace ABCo.ABSave.Converters
 {
     public class TextConverter : Converter
     {
-        public static TextConverter Instance { get; } = new TextConverter();
-        private TextConverter() { }
+        StringType _type;
 
-        public override bool AlsoConvertsNonExact => false;        
-        public override bool UsesHeaderForVersion(uint version) => true;
-        public override Type[] ExactTypes { get; } = new Type[] { typeof(string), typeof(StringBuilder), typeof(char[]) };
+        public override bool CheckType(CheckTypeInfo info)
+        {
+            if (info.Type == typeof(string))
+                _type = StringType.String;
+            else if (info.Type == typeof(StringBuilder))
+                _type = StringType.StringBuilder;
+            else if (info.Type == typeof(char[]))
+                _type = StringType.CharArray;
+            else
+                return false;
+
+            return true;
+        }
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ref BitTarget header)
         {
-            var info = (Context)context;
-
-            switch (info.Type)
+            switch (_type)
             {
                 case StringType.String:
                     header.Serializer.WriteString((string)obj, ref header);
@@ -57,11 +64,9 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ref BitSource header)
         {
-            var info = (Context)context;
-
-            return info.Type switch
+            return _type switch
             {
                 StringType.String => header.Deserializer.ReadString(ref header),
                 StringType.CharArray => DeserializeCharArray(ref header),
@@ -90,16 +95,6 @@ namespace ABCo.ABSave.Converters
         #endregion
 
         #region Context
-        public override void TryGenerateContext(ref ContextGen gen)
-        {
-            if (gen.Type == typeof(string))
-                gen.AssignContext(Context.String, 0);
-            else if (gen.Type == typeof(StringBuilder))
-                gen.AssignContext(Context.StringBuilder, 0);
-            else if (gen.Type == typeof(char[])) 
-                gen.AssignContext(Context.CharArray, 0);
-        }
-
         enum StringType
         {
             String,
@@ -107,14 +102,15 @@ namespace ABCo.ABSave.Converters
             CharArray
         }
 
-        class Context : ConverterContext
-        {
-            public static readonly Context String = new Context() { Type = StringType.String };
-            public static readonly Context StringBuilder = new Context() { Type = StringType.StringBuilder };
-            public static readonly Context CharArray = new Context() { Type = StringType.StringBuilder };
-
-            public StringType Type;
-        }
         #endregion
+
+        public override bool AlsoConvertsNonExact => false;
+        public override bool UsesHeaderForVersion(uint version) => true;
+        public override Type[] ExactTypes { get; } = new Type[] 
+        { 
+            typeof(string), 
+            typeof(StringBuilder), 
+            typeof(char[]) 
+        };
     }
 }

@@ -11,16 +11,10 @@ namespace ABCo.ABSave.Converters
 {
     public class TypeConverter : Converter
     {
-        public static TypeConverter Instance { get; } = new TypeConverter();
-        private TypeConverter() { }
-
-        public override bool AlsoConvertsNonExact => true;        
-        public override bool UsesHeaderForVersion(uint version) => true;
-        public override Type[] ExactTypes { get; } = new Type[] { typeof(Type) };
 
         #region Serialize
 
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header) => SerializeType((Type)obj, ref header);
+        public override void Serialize(object obj, Type actualType, ref BitTarget header) => SerializeType((Type)obj, ref header);
 
         public void SerializeType(Type type, ref BitTarget header) => SerializeType(type, ref header, SerializeGenerics);
         public void SerializeClosedType(Type type, ref BitTarget header) => SerializeType(type, ref header, SerializeClosedGenerics);
@@ -78,7 +72,7 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialize
 
-        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header) => DeserializeType(ref header);
+        public override object Deserialize(Type actualType, ref BitSource header) => DeserializeType(ref header);
 
         public Type DeserializeType(ref BitSource header) => DeserializeType(ref header, DeserializeOpenGenerics);
         public Type DeserializeClosedType(ref BitSource header) => DeserializeType(ref header, DeserializeClosedGenerics);
@@ -175,10 +169,10 @@ namespace ABCo.ABSave.Converters
             return null;
         }
 
-        public override void TryGenerateContext(ref ContextGen gen)
-        {
-            if (gen.Type == typeof(Type) || gen.Type.IsSubclassOf(typeof(Type))) 
-                gen.AssignContext(null, 0);
-        }
+        public override bool CheckType(CheckTypeInfo info) => info.Type == typeof(Type) || info.Type.IsSubclassOf(typeof(Type));
+
+        public override bool AlsoConvertsNonExact => true;
+        public override bool UsesHeaderForVersion(uint version) => true;
+        public override Type[] ExactTypes { get; } = new Type[] { typeof(Type) };
     }
 }

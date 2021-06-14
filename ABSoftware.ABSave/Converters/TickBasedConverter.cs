@@ -10,21 +10,11 @@ namespace ABCo.ABSave.Converters
 {
     public class TickBasedConverter : Converter
     {
-        public static TickBasedConverter Instance { get; } = new TickBasedConverter();
-        private TickBasedConverter() { }
+        TicksType _type;
 
-        public override bool AlsoConvertsNonExact => false;
-        public override Type[] ExactTypes { get; } = new Type[]
+        public override void Serialize(object obj, Type actualType, ref BitTarget header)
         {
-            typeof(DateTime),
-            typeof(TimeSpan)
-        };
-
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
-        {
-            var asContext = (Context)context;
-
-            switch (asContext.Type)
+            switch (_type)
             {
                 case TicksType.DateTime:
                     SerializeTicks(((DateTime)obj).Ticks, header.Serializer);
@@ -37,11 +27,9 @@ namespace ABCo.ABSave.Converters
 
         public static void SerializeTicks(long ticks, ABSaveSerializer serializer) => serializer.WriteInt64(ticks);
 
-        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ref BitSource header)
         {
-            var asContext = (Context)context;
-
-            return asContext.Type switch
+            return _type switch
             {
                 TicksType.DateTime => new DateTime(DeserializeTicks(header.Deserializer)),
                 TicksType.TimeSpan => new TimeSpan(DeserializeTicks(header.Deserializer)),
@@ -51,13 +39,8 @@ namespace ABCo.ABSave.Converters
 
         public static long DeserializeTicks(ABSaveDeserializer deserializer) => deserializer.ReadInt64();
 
-        public override void TryGenerateContext(ref ContextGen gen)
-        {
-            if (gen.Type == typeof(DateTime))
-                gen.AssignContext(Context.DateTime, 0);
-            else if (gen.Type == typeof(TimeSpan))
-                gen.AssignContext(Context.TimeSpan, 0);
-        }
+        public override void Initialize(InitializeInfo info) =>
+            _type = info.Type == typeof(DateTime) ? TicksType.DateTime : TicksType.TimeSpan;
 
         enum TicksType
         {
@@ -65,12 +48,11 @@ namespace ABCo.ABSave.Converters
             TimeSpan
         }
 
-        class Context : ConverterContext
+        public override bool AlsoConvertsNonExact => false;
+        public override Type[] ExactTypes { get; } = new Type[]
         {
-            public static Context DateTime = new Context() { Type = TicksType.DateTime };
-            public static Context TimeSpan = new Context() { Type = TicksType.TimeSpan };
-
-            public TicksType Type;
-        }
+            typeof(DateTime),
+            typeof(TimeSpan)
+        };
     }
 }

@@ -12,38 +12,46 @@ namespace ABCo.ABSave.Converters
 {
     public class EnumerableConverter : Converter
     {
-        public static EnumerableConverter Instance { get; } = new EnumerableConverter();
-        private EnumerableConverter() { }
+        public IEnumerableInfo _info = null!;
+        public Type _elementOrKeyType = null!;
+        public MapItemInfo _elementOrKeyMap;
 
-        public override bool AlsoConvertsNonExact => true;
-        public override bool UsesHeaderForVersion(uint version) => true;
-        public override Type[] ExactTypes { get; } = new Type[]
+        // Optional:
+        public Type? _valueType;
+        public MapItemInfo _valueMap;
+
+        public override void Initialize(InitializeInfo info)
         {
-            typeof(IEnumerable)
-        };
+            // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
+            if (TryHandleDirectTypes(info, info.Type)) return;
+
+            // Work out what category this type falls under.
+            CollectionCategory category = DetectCollectionType(info.Type.GetInterfaces(), out Type elementOrKeyType, out Type? valueType);
+            SetStateFromCategory(info, category, elementOrKeyType, valueType);
+        }
+
+        public override bool CheckType(CheckTypeInfo info) => typeof(IEnumerable).IsAssignableFrom(info.Type);
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header)
+        public override void Serialize(object obj, Type actualType, ref BitTarget header)
         {
-            var actualContext = (Context)context;
-
-            if (actualContext.Info is CollectionInfo collectionInfo)
-                SerializeCollection(obj, collectionInfo, actualContext, ref header);
-            else if (actualContext.Info is DictionaryInfo dictionaryInfo)
-                SerializeDictionary(obj, dictionaryInfo, actualContext, ref header);
+            if (_info is CollectionInfo collectionInfo)
+                SerializeCollection(obj, collectionInfo, ref header);
+            else if (_info is DictionaryInfo dictionaryInfo)
+                SerializeDictionary(obj, dictionaryInfo, ref header);
         }
 
-        static void SerializeCollection(object obj, CollectionInfo info, Context context, ref BitTarget header)
+        void SerializeCollection(object obj, CollectionInfo info, ref BitTarget header)
         {
             var size = info.GetCount(obj);
             header.Serializer.WriteCompressed((uint)size, ref header);
 
             var enumerator = info.GetEnumerator(obj);
-            while (enumerator.MoveNext()) header.Serializer.SerializeItem(enumerator.Current, context.ElementOrKeyMap);
+            while (enumerator.MoveNext()) header.Serializer.SerializeItem(enumerator.Current, _elementOrKeyMap);
         }
 
-        static void SerializeDictionary(object obj, DictionaryInfo info, Context context, ref BitTarget header)
+        void SerializeDictionary(object obj, DictionaryInfo info, ref BitTarget header)
         {
             var size = info.GetCount(obj);
             header.Serializer.WriteCompressed((uint)size, ref header);
@@ -51,8 +59,8 @@ namespace ABCo.ABSave.Converters
             var enumerator = info.GetEnumerator(obj);
             while (enumerator.MoveNext())
             {
-                header.Serializer.SerializeItem(enumerator.Key, context.ElementOrKeyMap);
-                header.Serializer.SerializeItem(enumerator.Value, context.ValueMap);
+                header.Serializer.SerializeItem(enumerator.Key, _elementOrKeyMap);
+                header.Serializer.SerializeItem(enumerator.Value, _valueMap);
             }
         }
 
@@ -60,39 +68,37 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header)
+        public override object Deserialize(Type actualType, ref BitSource header)
         {
-            var actualContext = (Context)context;
-
-            if (actualContext.Info is CollectionInfo collectionInfo)
-                return DeserializeCollection(collectionInfo, actualType, actualContext, ref header);
-            else if (actualContext.Info is DictionaryInfo dictionaryInfo)
-                return DeserializeDictionary(dictionaryInfo, actualType, actualContext, ref header);
+            if (_info is CollectionInfo collectionInfo)
+                return DeserializeCollection(collectionInfo, actualType, ref header);
+            else if (_info is DictionaryInfo dictionaryInfo)
+                return DeserializeDictionary(dictionaryInfo, actualType, ref header);
             else throw new Exception("Unrecognized enumerable info.");
         }
 
-        static object DeserializeCollection(CollectionInfo info, Type type, Context context, ref BitSource header)
+        object DeserializeCollection(CollectionInfo info, Type type, ref BitSource header)
         {
             int size = (int)header.Deserializer.ReadCompressedInt(ref header);
             var collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
-                info.AddItem(collection, header.Deserializer.DeserializeItem(context.ElementOrKeyMap));
+                info.AddItem(collection, header.Deserializer.DeserializeItem(_elementOrKeyMap));
 
             return collection;
         }
 
-        static object DeserializeDictionary(DictionaryInfo info, Type type, Context context, ref BitSource header)
+        object DeserializeDictionary(DictionaryInfo info, Type type, ref BitSource header)
         {
             int size = (int)header.Deserializer.ReadCompressedInt(ref header);
             var collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
             {
-                var key = header.Deserializer.DeserializeItem(context.ElementOrKeyMap);
+                var key = header.Deserializer.DeserializeItem(_elementOrKeyMap);
                 if (key == null) throw new NullDictionaryKeyException();
 
-                var value = header.Deserializer.DeserializeItem(context.ValueMap);
+                var value = header.Deserializer.DeserializeItem(_valueMap);
                 info.AddItem(collection, key, value);
             }
 
@@ -103,66 +109,29 @@ namespace ABCo.ABSave.Converters
 
         #region Context
 
-        public override void TryGenerateContext(ref ContextGen gen)
+        void SetStateFromCategory(InitializeInfo info, CollectionCategory category, Type elementOrKeyType, Type? valueType)
         {
-            if (!typeof(IEnumerable).IsAssignableFrom(gen.Type)) return;
+            IEnumerableInfo enumerableInfo = category switch
+            {
+                CollectionCategory.GenericICollection => CollectionInfo.GenericICollection,
+                CollectionCategory.NonGenericIList => CollectionInfo.NonGenericIList,
+                CollectionCategory.GenericIDictionary => DictionaryInfo.GenericIDictionary,
+                CollectionCategory.NonGenericIDictionary => DictionaryInfo.NonGenericIDictionary,
+                _ => throw new Exception("Invalid collection category")
+            };
 
-            var ctx = CreateContext(ref gen);
-            gen.AssignContext(ctx, 0);
-
-            // Fill in the context's maps.
-            ctx.ElementOrKeyMap = gen.GetMap(ctx.ElementOrKeyType);
-            if (ctx.ValueType != null) ctx.ValueMap = gen.GetMap(ctx.ValueType);
+            SetState(info, enumerableInfo, elementOrKeyType, valueType);
         }
 
-        static Context CreateContext(ref ContextGen gen)
+        void SetState(InitializeInfo info, IEnumerableInfo enumerableInfo, Type elementOrKeyType, Type? valueType)
         {
-            // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
-            {
-                if (gen.Type.IsGenericType)
-                {
-                    var gtd = gen.Type.GetGenericTypeDefinition();
+            _info = enumerableInfo;
+            _elementOrKeyType = elementOrKeyType;
+            _valueType = valueType;
 
-                    if (gtd == typeof(List<>))
-                    {
-                        var argType = gen.Type.GetGenericArguments()[0];
-
-                        return new Context(CollectionInfo.List, argType, null);
-                    }
-                    else if (gen.Type.IsInterface)
-                    {
-                        if (gtd == typeof(ICollection<>))
-                            return GetContextForCategory(CollectionCategory.GenericICollection, gen.Type.GetGenericArguments()[0], null);
-                        else if (gtd == typeof(IDictionary<,>))
-                            return GetContextForCategory(CollectionCategory.GenericIDictionary, gen.Type.GetGenericArguments()[0], gen.Type.GetGenericArguments()[1]);
-                    }
-                }
-
-                if (gen.Type.IsInterface)
-                {
-                    if (gen.Type == typeof(IList))
-                        return GetContextForCategory(CollectionCategory.NonGenericIList, typeof(object), null);
-                    else if (gen.Type == typeof(IDictionary))
-                        return GetContextForCategory(CollectionCategory.NonGenericIDictionary, typeof(object), null);
-                }
-            }
-
-            // Work out what category this type falls under.
-            CollectionCategory category = DetectCollectionType(gen.Type.GetInterfaces(), out Type elementOrKeyType, out Type? valueType);
-            return GetContextForCategory(category, elementOrKeyType, valueType);
-
-            // Get the correct info for the given type.
-            static Context GetContextForCategory(CollectionCategory category, Type elementOrKeyType, Type? valueType)
-            {
-                return category switch
-                {
-                    CollectionCategory.GenericICollection => new Context(CollectionInfo.GenericICollection, elementOrKeyType, null),
-                    CollectionCategory.NonGenericIList => new Context(CollectionInfo.NonGenericIList, elementOrKeyType, null),
-                    CollectionCategory.GenericIDictionary => new Context(DictionaryInfo.GenericIDictionary, elementOrKeyType, valueType),
-                    CollectionCategory.NonGenericIDictionary => new Context(DictionaryInfo.NonGenericIDictionary, elementOrKeyType, valueType),
-                    _ => throw new UnrecognizedCollectionException(),
-                };
-            }
+            // Fill in the maps.
+            _elementOrKeyMap = info.GetMap(elementOrKeyType);
+            if (valueType != null) _valueMap = info.GetMap(valueType);
         }
 
         static CollectionCategory DetectCollectionType(Type[] interfaces, out Type elementOrKeyType, out Type? valueType)
@@ -282,22 +251,56 @@ namespace ABCo.ABSave.Converters
             None
         }
 
-        internal class Context : ConverterContext // Internal for testing
+        public override bool AlsoConvertsNonExact => true;
+        public override bool UsesHeaderForVersion(uint version) => true;
+        public override Type[] ExactTypes { get; } = new Type[]
         {
-            public IEnumerableInfo Info;
-            public Type ElementOrKeyType;
-            public MapItemInfo ElementOrKeyMap;
+            typeof(IEnumerable)
+        };
 
-            // Optional:
-            public Type? ValueType;
-            public MapItemInfo ValueMap;
-
-            public Context(IEnumerableInfo info, Type elementOrKeyType, Type? valueType)
+        private bool TryHandleDirectTypes(InitializeInfo info, Type type)
+        {
+            if (type.IsGenericType)
             {
-                Info = info;
-                ElementOrKeyType = elementOrKeyType;
-                ValueType = valueType;
+                var gtd = type.GetGenericTypeDefinition();
+
+                if (gtd == typeof(List<>))
+                {
+                    var argType = type.GetGenericArguments()[0];
+
+                    SetState(info, CollectionInfo.List, argType, null);
+                    return true;
+                }
+                else if (type.IsInterface)
+                {
+                    if (gtd == typeof(ICollection<>))
+                    {
+                        SetStateFromCategory(info, CollectionCategory.GenericICollection, type.GetGenericArguments()[0], null);
+                        return true;
+                    }
+                    else if (gtd == typeof(IDictionary<,>))
+                    {
+                        SetStateFromCategory(info, CollectionCategory.GenericIDictionary, type.GetGenericArguments()[0], type.GetGenericArguments()[1]);
+                        return true;
+                    }
+                }
             }
+
+            if (type.IsInterface)
+            {
+                if (type == typeof(IList))
+                {
+                    SetStateFromCategory(info, CollectionCategory.NonGenericIList, typeof(object), null);
+                    return true;
+                }
+                else if (type == typeof(IDictionary))
+                {
+                    SetStateFromCategory(info, CollectionCategory.NonGenericIDictionary, typeof(object), null);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         #endregion

@@ -8,14 +8,7 @@ namespace ABCo.ABSave.Converters
 {
     public class VersionConverter : Converter
     {
-        public static VersionConverter Instance { get; } = new VersionConverter();
-        private VersionConverter() { }
-
-        public override bool AlsoConvertsNonExact => false;
-        public override bool UsesHeaderForVersion(uint version) => true;
-        public override Type[] ExactTypes { get; } = new Type[] { typeof(Version) };
-
-        public override void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
+        public override void Serialize(object obj, Type actualType, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
 
         public static void SerializeVersion(Version version, ref BitTarget header)
         {
@@ -38,7 +31,7 @@ namespace ABCo.ABSave.Converters
             if (header.FreeBits < 8) header.Apply();
         }
 
-        public override object Deserialize(Type actualType, ConverterContext context, ref BitSource header) => DeserializeVersion(ref header);
+        public override object Deserialize(Type actualType, ref BitSource header) => DeserializeVersion(ref header);
 
         public static Version DeserializeVersion(ref BitSource header)
         {
@@ -55,10 +48,10 @@ namespace ABCo.ABSave.Converters
             return new Version(major, minor, build, revision);
         }
 
-        public override void TryGenerateContext(ref ContextGen gen)
-        {
-            if (gen.Type == typeof(Version)) 
-                gen.AssignContext(null, 0);
-        }
+        public override bool CheckType(CheckTypeInfo info) => info.Type == typeof(Version);
+
+        public override bool AlsoConvertsNonExact => false;
+        public override bool UsesHeaderForVersion(uint version) => true;
+        public override Type[] ExactTypes { get; } = new Type[] { typeof(Version) };
     }
 }

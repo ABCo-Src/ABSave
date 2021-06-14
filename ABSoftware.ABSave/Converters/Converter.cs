@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
@@ -13,18 +14,11 @@ using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
-    /// <summary>
-    /// Represents the information gathered about a type that's necessary for conversion.
-    /// </summary>
-    public class ConverterContext : MapItem
+    public abstract class Converter : MapItem
     {
-        internal Converter _converter = null!;
         internal SaveInheritanceAttribute[]? _allInheritanceAttributes = null;
         internal Dictionary<uint, SaveInheritanceAttribute?>? _inheritanceValues = null;
-    }
 
-    public abstract class Converter
-    {
         /// <summary>
         /// Whether this type converter can also convert things other than exact types. If this is enabled, ABSave will also call <see cref="TryGenerateContext(ABSaveSettings, Type)"/>, and if it generates a context this converter will be used.
         /// </summary>
@@ -36,58 +30,18 @@ namespace ABCo.ABSave.Converters
         public virtual Type[] ExactTypes { get; } = Array.Empty<Type>();
 
         /// <summary>
-        /// Attempts to generate a context.
+        /// Initializes a given converter for a given type.
         /// </summary>
-        public abstract void TryGenerateContext(ref ContextGen gen);
+        public virtual void Initialize(InitializeInfo info) { }
+
+        /// <summary>
+        /// Check whether the converter supports a given type, used for non-exact types.
+        /// This method is allowed to modify variables, however it is nt.
+        /// </summary>
+        public virtual bool CheckType(CheckTypeInfo info) => throw new Exception("Converter says it also converts non-exact but does not override 'CheckType' to check for one.");
 
         public virtual bool UsesHeaderForVersion(uint version) => false;
-        public abstract void Serialize(object obj, Type actualType, ConverterContext context, ref BitTarget header);
-        public abstract object Deserialize(Type actualType, ConverterContext context, ref BitSource header);
-
-        internal static readonly IReadOnlyDictionary<Type, Converter> BuiltInExact = new Dictionary<Type, Converter>()
-        {
-            { typeof(byte), PrimitiveConverter.Instance },
-            { typeof(sbyte), PrimitiveConverter.Instance },
-            { typeof(char), PrimitiveConverter.Instance },
-            { typeof(ushort), PrimitiveConverter.Instance },
-            { typeof(short), PrimitiveConverter.Instance },
-            { typeof(uint), PrimitiveConverter.Instance },
-            { typeof(int), PrimitiveConverter.Instance },
-            { typeof(ulong), PrimitiveConverter.Instance },
-            { typeof(long), PrimitiveConverter.Instance },
-            { typeof(float), PrimitiveConverter.Instance },
-            { typeof(double), PrimitiveConverter.Instance },
-            { typeof(decimal), PrimitiveConverter.Instance },
-            { typeof(IntPtr), PrimitiveConverter.Instance },
-            { typeof(UIntPtr), PrimitiveConverter.Instance },
-            { typeof(bool), PrimitiveConverter.Instance },
-            { typeof(Guid), GuidConverter.Instance },
-            { typeof(string), TextConverter.Instance },
-            { typeof(StringBuilder), TextConverter.Instance },
-            { typeof(char[]), TextConverter.Instance },
-            { typeof(Version), VersionConverter.Instance },
-            { typeof(DateTime), TickBasedConverter.Instance },
-            { typeof(TimeSpan), TickBasedConverter.Instance },
-            { typeof(DictionaryEntry), KeyValueConverter.Instance },
-            { typeof(Type), TypeConverter.Instance },
-            { typeof(Assembly), AssemblyConverter.Instance },
-            { typeof(IEnumerable), EnumerableConverter.Instance },
-
-            // Based on the most common array types in .NET, remember to update in "ArrayTypeConverter" too if changing.
-            { typeof(Array), ArrayConverter.Instance },
-            { typeof(byte[]), ArrayConverter.Instance },
-            { typeof(string[]), ArrayConverter.Instance },
-            { typeof(int[]), ArrayConverter.Instance },
-        };
-
-        internal static IReadOnlyList<Converter> BuiltInNonExact = new List<Converter>()
-        {
-            KeyValueConverter.Instance,
-            AssemblyConverter.Instance,
-            TypeConverter.Instance,
-            EnumerableConverter.Instance,
-            ArrayConverter.Instance,
-            PrimitiveConverter.Instance,
-        };
+        public abstract void Serialize(object obj, Type actualType, ref BitTarget header);
+        public abstract object Deserialize(Type actualType, ref BitSource header);
     }
 }

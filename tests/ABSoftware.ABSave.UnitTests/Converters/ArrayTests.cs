@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Serialization;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -20,7 +21,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestInitialize]
         public void SetupSettings()
         {
-            var builder = new ABSaveSettingsBuilder
+            var builder = new SettingsBuilder
             {
                 BypassDangerousTypeChecking = true
             };

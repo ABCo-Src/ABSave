@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
@@ -17,8 +18,8 @@ namespace ABCo.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {
-        readonly Dictionary<MapItem, ConverterVersionInfo> _converterVersions = new Dictionary<MapItem, ConverterVersionInfo>();
-        readonly Dictionary<MapItem, ObjectVersionInfo> _objectVersions = new Dictionary<MapItem, ObjectVersionInfo>();
+        readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
+        readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
 
         internal List<Assembly> SavedAssemblies = new List<Assembly>();
         internal List<Type> SavedTypes = new List<Type>();
@@ -118,33 +119,33 @@ namespace ABCo.ABSave.Deserialization
 
             return item switch
             {
-                ConverterContext converter => DeserializeConverterItem(converter, skipHeader),
+                Converter converter => DeserializeConverterItem(converter, skipHeader),
                 ObjectMapItem objItem => DeserializeObjectItem(objItem, skipHeader),
                 RuntimeMapItem runtime => DeserializeItemNoSetup(new MapItemInfo(runtime.InnerItem, info.IsNullable), skipHeader),
                 _ => throw new Exception("Unrecognized map item"),
             };
         }
 
-        private object DeserializeConverterItem(ConverterContext context, bool skipHeader)
+        private object DeserializeConverterItem(Converter converter, bool skipHeader)
         {
             // Handle the inheritance bit.
             bool sameType = true;
             if (!skipHeader)
-                sameType = ReadHeader(context);
+                sameType = ReadHeader(converter);
 
             // Read or create the version info if needed
-            if (!_converterVersions.TryGetValue(context, out ConverterVersionInfo info))
+            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo info))
             {
                 uint version = ReadNewVersionInfo();
-                info = ConverterVersionInfo.CreateFromContext(version, context);
-                _converterVersions.Add(context, info);
+                info = ConverterVersionInfo.CreateFromConverter(version, converter);
+                _converterVersions.Add(converter.ItemType, info);
             }
             
             // Handle inheritance.
             if (info.InheritanceInfo != null && !sameType)            
-                return DeserializeActualType(info.InheritanceInfo, context.ItemType);            
+                return DeserializeActualType(info.InheritanceInfo, converter.ItemType);            
             
-            return context._converter.Deserialize(context.ItemType, context, ref _currentHeader);
+            return converter.Deserialize(converter.ItemType, ref _currentHeader);
         }
 
         private object DeserializeObjectItem(ObjectMapItem item, bool skipHeader)
@@ -155,11 +156,11 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(item);
 
             // Read or create the version info if needed
-            if (_objectVersions.TryGetValue(item, out ObjectVersionInfo info))
+            if (_objectVersions.TryGetValue(item.ItemType, out ObjectVersionInfo info))
             {
                 uint version = ReadNewVersionInfo();
                 info = MapGenerator.GetVersionOrAddNull(version, item);
-                _objectVersions.Add(item, info);
+                _objectVersions.Add(item.ItemType, info);
             }
 
             // Handle inheritance.
@@ -246,7 +247,7 @@ namespace ABCo.ABSave.Deserialization
 
         public Type ReadType(Type requiredBaseType, ref BitSource header)
         {
-            var res = TypeConverter.Instance.DeserializeType(ref header);
+            var res = new TypeConverter().DeserializeType(ref header);
 
             // Safety check.
             if (!res.IsSubclassOf(requiredBaseType)) throw new UnsupportedSubTypeException(requiredBaseType, res);
@@ -262,7 +263,7 @@ namespace ABCo.ABSave.Deserialization
 
         public Type ReadClosedType(Type requiredBaseType, ref BitSource header)
         {
-            var res = TypeConverter.Instance.DeserializeClosedType(ref header);
+            var res = new TypeConverter().DeserializeClosedType(ref header);
 
             // Safety check.
             if (!res.IsSubclassOf(requiredBaseType)) throw new UnsupportedSubTypeException(requiredBaseType, res);

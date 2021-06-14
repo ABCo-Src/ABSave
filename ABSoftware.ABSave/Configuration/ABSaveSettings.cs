@@ -1,0 +1,43 @@
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Helpers;
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Reflection;
+using System.Text;
+
+namespace ABCo.ABSave.Configuration
+{
+    /// <summary>
+    /// Stores the configuration for serialization/deserialization.
+    /// </summary>
+    public class ABSaveSettings
+    {
+        public static ABSaveSettings ForSpeed { get; }
+        public static ABSaveSettings ForSize { get; }
+
+        static ABSaveSettings()
+        {
+            var builder = new SettingsBuilder();
+
+            // (The converter info is filled in by the builder so keep it blank)
+            ForSpeed = builder.CreateSettings(new ABSaveSettings(true, true, false, true, 0, null!, null!));
+            ForSize = builder.CreateSettings(new ABSaveSettings(false, true, false, true, 0, null!, null!));
+        }
+
+        public bool LazyBitHandling { get; } = true;
+        public bool UseUTF8 { get; } = true;
+        public bool BypassDangerousTypeChecking { get; set; } = false;
+        public bool UseLittleEndian { get; } = true;
+
+        internal IReadOnlyDictionary<Type, ConverterInfo> ExactConverters { get; }
+        internal IReadOnlyList<ConverterInfo> NonExactConverters { get; }
+        internal int ConverterCount { get; }
+
+        internal ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian, int converterCount,
+            IReadOnlyDictionary<Type, ConverterInfo> exactConverters, IReadOnlyList<ConverterInfo> nonExactConverters)
+        =>
+            (LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ConverterCount, ExactConverters, NonExactConverters) = 
+            (lazyBitHandling, useUTF8, useLittleEndian, bypassDangerousTypeChecking, converterCount, exactConverters, nonExactConverters);
+    }
+}
