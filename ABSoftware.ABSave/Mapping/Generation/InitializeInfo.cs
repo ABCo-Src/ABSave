@@ -8,16 +8,15 @@ namespace ABCo.ABSave.Mapping.Generation
     public struct InitializeInfo
     {
         public Type Type { get; }
-        public ABSaveSettings Settings { get; }
+        public ABSaveSettings Settings => _gen.Map.Settings;
 
         MapGenerator _gen;
 
         public MapItemInfo GetMap(Type type) => _gen.GetMap(type);
 
-        internal InitializeInfo(Type type, ABSaveSettings settings, MapGenerator gen)
+        internal InitializeInfo(Type type, MapGenerator gen)
         {
             Type = type;
-            Settings = settings;
             _gen = gen;
         }
     }
