@@ -27,8 +27,8 @@ namespace ABCo.ABSave.Serialization
     /// </summary>
     public sealed partial class ABSaveSerializer
     {
-        readonly Dictionary<MapItem, ObjectVersionInfo> _objectVersions = new Dictionary<MapItem, ObjectVersionInfo>();
-        readonly Dictionary<MapItem, ConverterVersionInfo> _converterVersions = new Dictionary<MapItem, ConverterVersionInfo>();
+        readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
+        readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
 
         internal Dictionary<Assembly, int> SavedAssemblies = new Dictionary<Assembly, int>();
         internal Dictionary<Type, int> SavedTypes = new Dictionary<Type, int>();
@@ -147,13 +147,13 @@ namespace ABCo.ABSave.Serialization
             }
 
             // Write and get the info for a version, if necessary
-            if (!_converterVersions.TryGetValue(converter, out ConverterVersionInfo info))
+            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo info))
             {
                 uint version = WriteNewVersionInfo(converter, ref header);
                 appliedHeader = true;
 
                 info = ConverterVersionInfo.CreateFromConverter(version, converter);
-                _converterVersions.Add(converter, info);
+                _converterVersions.Add(converter.ItemType, info);
             }
 
             // Handle inheritance if needed.
@@ -180,11 +180,11 @@ namespace ABCo.ABSave.Serialization
                 sameType = WriteHeaderNullAndInheritance(actualType, item, ref header);
 
             // Write and get the info for a version, if necessary
-            if (!_objectVersions.TryGetValue(item, out ObjectVersionInfo info))
+            if (!_objectVersions.TryGetValue(item.ItemType, out ObjectVersionInfo info))
             {
                 uint version = WriteNewVersionInfo(item, ref header);
                 info = MapGenerator.GetVersionOrAddNull(version, item);
-                _objectVersions.Add(item, info);
+                _objectVersions.Add(item.ItemType, info);
             }
 
             // Handle inheritance if needed.

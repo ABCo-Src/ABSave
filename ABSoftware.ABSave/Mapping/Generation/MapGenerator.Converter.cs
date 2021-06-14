@@ -34,6 +34,7 @@ namespace ABCo.ABSave.Mapping.Generation
 
         internal MapItem InitializeConverter(Converter converter, Type type)
         {
+            ApplyItem(converter, type);
             converter.Initialize(new InitializeInfo(type, this));
             converter._allInheritanceAttributes = GetInheritanceAttributes(type);
             return converter;
@@ -45,8 +46,9 @@ namespace ABCo.ABSave.Mapping.Generation
         internal static SaveInheritanceAttribute? GetConverterInheritanceInfoForVersion(uint version, Converter converter)
         {
             // Try to get it from the dictionary cache.
-            SaveInheritanceAttribute? cached = converter._inheritanceValues?.GetValueOrDefault(version);
-            if (cached != null) return cached;
+            if (converter._inheritanceValues != null && 
+                converter._inheritanceValues.TryGetValue(version, out SaveInheritanceAttribute? res))
+                return res;
 
             // If it's not in there, find it in the attribute array.
             if (converter._allInheritanceAttributes == null) return null;

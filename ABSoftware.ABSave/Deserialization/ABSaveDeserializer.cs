@@ -18,8 +18,8 @@ namespace ABCo.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {
-        readonly Dictionary<MapItem, ConverterVersionInfo> _converterVersions = new Dictionary<MapItem, ConverterVersionInfo>();
-        readonly Dictionary<MapItem, ObjectVersionInfo> _objectVersions = new Dictionary<MapItem, ObjectVersionInfo>();
+        readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
+        readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
 
         internal List<Assembly> SavedAssemblies = new List<Assembly>();
         internal List<Type> SavedTypes = new List<Type>();
@@ -134,11 +134,11 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(converter);
 
             // Read or create the version info if needed
-            if (!_converterVersions.TryGetValue(converter, out ConverterVersionInfo info))
+            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo info))
             {
                 uint version = ReadNewVersionInfo();
                 info = ConverterVersionInfo.CreateFromConverter(version, converter);
-                _converterVersions.Add(converter, info);
+                _converterVersions.Add(converter.ItemType, info);
             }
             
             // Handle inheritance.
@@ -156,11 +156,11 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(item);
 
             // Read or create the version info if needed
-            if (_objectVersions.TryGetValue(item, out ObjectVersionInfo info))
+            if (_objectVersions.TryGetValue(item.ItemType, out ObjectVersionInfo info))
             {
                 uint version = ReadNewVersionInfo();
                 info = MapGenerator.GetVersionOrAddNull(version, item);
-                _objectVersions.Add(item, info);
+                _objectVersions.Add(item.ItemType, info);
             }
 
             // Handle inheritance.

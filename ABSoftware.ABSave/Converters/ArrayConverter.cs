@@ -33,8 +33,8 @@ namespace ABCo.ABSave.Converters
         {
             if (_info.Type != ArrayType.Unknown) return;
 
-            var elemType = info.Type.GetElementType()!;
-            PopulateTypeInfo(ref _info, info.GetMap(elemType), elemType);
+            var elemType = info.Type.GetElementType();
+            PopulateTypeInfo(ref _info, info.GetMap(elemType!), info.Type);
         }
 
         static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, Type type)

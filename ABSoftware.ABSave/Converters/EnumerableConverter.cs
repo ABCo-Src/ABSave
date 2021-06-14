@@ -23,7 +23,7 @@ namespace ABCo.ABSave.Converters
         public override void Initialize(InitializeInfo info)
         {
             // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
-            TryHandleDirectTypes(info, info.Type);
+            if (TryHandleDirectTypes(info, info.Type)) return;
 
             // Work out what category this type falls under.
             CollectionCategory category = DetectCollectionType(info.Type.GetInterfaces(), out Type elementOrKeyType, out Type? valueType);
@@ -258,7 +258,7 @@ namespace ABCo.ABSave.Converters
             typeof(IEnumerable)
         };
 
-        private void TryHandleDirectTypes(InitializeInfo info, Type type)
+        private bool TryHandleDirectTypes(InitializeInfo info, Type type)
         {
             if (type.IsGenericType)
             {
@@ -269,23 +269,38 @@ namespace ABCo.ABSave.Converters
                     var argType = type.GetGenericArguments()[0];
 
                     SetState(info, CollectionInfo.List, argType, null);
+                    return true;
                 }
                 else if (type.IsInterface)
                 {
                     if (gtd == typeof(ICollection<>))
+                    {
                         SetStateFromCategory(info, CollectionCategory.GenericICollection, type.GetGenericArguments()[0], null);
+                        return true;
+                    }
                     else if (gtd == typeof(IDictionary<,>))
+                    {
                         SetStateFromCategory(info, CollectionCategory.GenericIDictionary, type.GetGenericArguments()[0], type.GetGenericArguments()[1]);
+                        return true;
+                    }
                 }
             }
 
             if (type.IsInterface)
             {
                 if (type == typeof(IList))
+                {
                     SetStateFromCategory(info, CollectionCategory.NonGenericIList, typeof(object), null);
+                    return true;
+                }
                 else if (type == typeof(IDictionary))
+                {
                     SetStateFromCategory(info, CollectionCategory.NonGenericIDictionary, typeof(object), null);
+                    return true;
+                }
             }
+
+            return false;
         }
 
         #endregion
