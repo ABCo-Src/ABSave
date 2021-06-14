@@ -28,35 +28,32 @@ namespace ABCo.ABSave.Configuration
             List<ConverterInfo> nonExactConverters = new List<ConverterInfo>();
 
             // Add custom converters.
-            if (_converters != null)
+            for (int i = 0; i < _converters!.Count; i++)
             {
-                for (int i = 0; i < _converters.Count; i++)
+                var currentConverter = _converters[i];
+
+                // TODO: Use attributes instead of this - see issue #17.
+                var tempInstance = (Converter)Activator.CreateInstance(_converters[i].ConverterType)!;
+                var exactTypes = tempInstance.ExactTypes;
+
+                if (exactTypes.Length > 0)
                 {
-                    var currentConverter = _converters[i];
+                    exactConverters ??= new Dictionary<Type, ConverterInfo>();
+                    exactConverters.EnsureCapacity(exactConverters.Count + exactTypes.Length);
 
-                    // TODO: Use attributes instead of this - see issue #17.
-                    var tempInstance = (Converter)Activator.CreateInstance(_converters[i].ConverterType)!;
-                    var exactTypes = tempInstance.ExactTypes;
+                    for (int j = 0; j < exactTypes.Length; j++)
+                        exactConverters.Add(exactTypes[j], currentConverter);
+                }
 
-                    if (exactTypes.Length > 0)
-                    {
-                        exactConverters ??= new Dictionary<Type, ConverterInfo>();
-                        exactConverters.EnsureCapacity(exactConverters.Count + exactTypes.Length);
-
-                        for (int j = 0; j < exactTypes.Length; j++)
-                            exactConverters.Add(exactTypes[j], currentConverter);
-                    }
-
-                    if (tempInstance.AlsoConvertsNonExact)
-                    {
-                        nonExactConverters ??= new List<ConverterInfo>();
-                        nonExactConverters.Add(currentConverter);
-                    }
+                if (tempInstance.AlsoConvertsNonExact)
+                {
+                    nonExactConverters ??= new List<ConverterInfo>();
+                    nonExactConverters.Add(currentConverter);
                 }
             }
 
             return new ABSaveSettings(lazyBitHandling, useUTF8, bypassDangerousTypeChecking, useLittleEndian,
-                exactConverters, nonExactConverters);
+                _converters.Count, exactConverters, nonExactConverters);
         }
 
         public void AddConverter(Type type)

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Reflection;
+using ABCo.ABSave.Converters;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -200,7 +201,12 @@ namespace ABCo.ABSave.Mapping.Generation
 
         internal MapGenerator() => CurrentReflectionMapper = new ReflectionMapper(this);
 
-        internal void Initialize(ABSaveMap map) => Map = map;
+        internal void Initialize(ABSaveMap map)
+        {
+            Map = map;
+            _converterCache = new Converter[map.Settings.ConverterCount];
+        }
+
         internal void FinishGeneration() => ProcessAllQueuedAccessors();
     }
 }

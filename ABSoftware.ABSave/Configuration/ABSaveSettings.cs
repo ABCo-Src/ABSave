@@ -19,8 +19,10 @@ namespace ABCo.ABSave.Configuration
         static ABSaveSettings()
         {
             var builder = new SettingsBuilder();
-            ForSpeed = builder.CreateSettings(new ABSaveSettings(true, true, false, true, null!, null!));
-            ForSize = builder.CreateSettings(new ABSaveSettings(false, true, false, true, null!, null!));
+
+            // (The converter info is filled in by the builder so keep it blank)
+            ForSpeed = builder.CreateSettings(new ABSaveSettings(true, true, false, true, 0, null!, null!));
+            ForSize = builder.CreateSettings(new ABSaveSettings(false, true, false, true, 0, null!, null!));
         }
 
         public bool LazyBitHandling { get; } = true;
@@ -30,11 +32,12 @@ namespace ABCo.ABSave.Configuration
 
         internal IReadOnlyDictionary<Type, ConverterInfo> ExactConverters { get; }
         internal IReadOnlyList<ConverterInfo> NonExactConverters { get; }
+        internal int ConverterCount { get; }
 
-        internal ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian,
+        internal ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian, int converterCount,
             IReadOnlyDictionary<Type, ConverterInfo> exactConverters, IReadOnlyList<ConverterInfo> nonExactConverters)
         =>
-            (LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ExactConverters, NonExactConverters) = 
-            (lazyBitHandling, useUTF8, useLittleEndian, bypassDangerousTypeChecking, exactConverters, nonExactConverters);
+            (LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ConverterCount, ExactConverters, NonExactConverters) = 
+            (lazyBitHandling, useUTF8, useLittleEndian, bypassDangerousTypeChecking, converterCount, exactConverters, nonExactConverters);
     }
 }
