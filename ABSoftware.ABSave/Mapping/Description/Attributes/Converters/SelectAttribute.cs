@@ -7,7 +7,7 @@ namespace ABCo.ABSave.Mapping.Description.Attributes.Converters
     /// <summary>
     /// Describes a type that a converter can 
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class)]
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
     public class SelectAttribute : Attribute
     {
         public Type Type;
