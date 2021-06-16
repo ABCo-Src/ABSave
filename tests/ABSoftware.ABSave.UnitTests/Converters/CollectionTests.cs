@@ -22,12 +22,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestInitialize]
         public void Setup()
         {
-            var builder = new SettingsBuilder
-            {
-                _bypassDangerousTypeChecking = true
-            };
-
-            Settings = builder.CreateSettings(ABSaveSettings.ForSize);
+            Settings = ABSaveSettings.ForSize.Customize(b => b.SetBypassDangerousTypeChecking(true));
             CurrentMap = new ABSaveMap(Settings);
             CurrentGenerator = new MapGenerator();
             CurrentGenerator.Initialize(CurrentMap);

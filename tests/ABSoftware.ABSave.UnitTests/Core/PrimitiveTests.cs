@@ -56,12 +56,7 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             if (reversed)
             {
-                var builder = new SettingsBuilder()
-                {
-                    _useLittleEndian = !BitConverter.IsLittleEndian
-                };
-
-                Initialize(builder.CreateSettings(ABSaveSettings.ForSpeed));
+                Initialize(ABSaveSettings.ForSpeed.Customize(b => b.SetUseLittleEndian(!BitConverter.IsLittleEndian)));
 
                 write(val);
                 AssertAndGoToStart(((byte[])BitConverter.GetBytes(val)).Reverse().ToArray());

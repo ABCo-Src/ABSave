@@ -28,15 +28,13 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public void Initialize() => Initialize(ABSaveSettings.ForSpeed);
         public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null)
         {
-            var settingsBuilder = new SettingsBuilder
-            {
-                _bypassDangerousTypeChecking = true
-            };
+            var settings = template.Customize(b => b
+                .SetBypassDangerousTypeChecking(true)
+                .AddConverter<BaseTypeConverter>()
+                .AddConverter<SubTypeConverter>()
+            );
 
-            settingsBuilder.AddConverter(typeof(BaseTypeConverter));
-            settingsBuilder.AddConverter(typeof(SubTypeConverter));
-
-            CurrentMap = ABSaveMap.Get<EmptyClass>(settingsBuilder.CreateSettings(template));
+            CurrentMap = ABSaveMap.Get<EmptyClass>(settings);
 
             Stream = new MemoryStream();
             Serializer = new ABSaveSerializer();

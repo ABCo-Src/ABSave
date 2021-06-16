@@ -20,9 +20,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
         public void Setup()
         {
-            var builder = new SettingsBuilder();
-            builder.AddConverter(typeof(SubTypeConverter));
-            var settings = builder.CreateSettings(ABSaveSettings.ForSpeed);
+            var settings = ABSaveSettings.ForSpeed.Customize(b => b.AddConverter<SubTypeConverter>());
 
             Map = new ABSaveMap(settings);
             Generator = new MapGenerator();
