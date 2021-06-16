@@ -14,8 +14,8 @@ namespace ABCo.ABSave.Mapping.Generation
             var settings = Map.Settings;
 
             // Exact converter
-            if (settings.ExactConverters.TryGetValue(type, out var currentConverter))
-                return UseConverter(GetConverterInstance(currentConverter), currentConverter.ConverterId, type);
+            if (settings.ExactConverters.TryGetValue(type, out var currentConv))
+                return UseConverter(GetConverterInstance(currentConv), currentConv.ConverterId, type);
 
             // Non-exact converter
             if (settings.NonExactConverters != null)

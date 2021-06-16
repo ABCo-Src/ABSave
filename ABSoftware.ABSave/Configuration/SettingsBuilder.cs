@@ -1,6 +1,8 @@
 ﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 
 namespace ABCo.ABSave.Configuration
@@ -31,10 +33,12 @@ namespace ABCo.ABSave.Configuration
             for (int i = 0; i < _converters!.Count; i++)
             {
                 var currentConverter = _converters[i];
+                var currentConverterType = currentConverter.ConverterType;
 
-                // TODO: Use attributes instead of this - see issue #17.
-                var tempInstance = (Converter)Activator.CreateInstance(_converters[i].ConverterType)!;
-                var exactTypes = tempInstance.ExactTypes;
+                var exactTypes = 
+                    (SelectAttribute[])currentConverterType.GetCustomAttributes<SelectAttribute>(false);
+                var alsoNeedsCheckType = 
+                    Attribute.IsDefined(currentConverterType, typeof(SelectOtherWithCheckTypeAttribute));
 
                 if (exactTypes.Length > 0)
                 {
@@ -42,10 +46,10 @@ namespace ABCo.ABSave.Configuration
                     exactConverters.EnsureCapacity(exactConverters.Count + exactTypes.Length);
 
                     for (int j = 0; j < exactTypes.Length; j++)
-                        exactConverters.Add(exactTypes[j], currentConverter);
+                        exactConverters.Add(exactTypes[j].Type, currentConverter);
                 }
 
-                if (tempInstance.AlsoConvertsNonExact)
+                if (alsoNeedsCheckType)
                 {
                     nonExactConverters ??= new List<ConverterInfo>();
                     nonExactConverters.Add(currentConverter);
