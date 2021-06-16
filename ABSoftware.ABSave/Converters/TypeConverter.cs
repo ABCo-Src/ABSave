@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
@@ -9,6 +10,8 @@ using System.Runtime.CompilerServices;
 
 namespace ABCo.ABSave.Converters
 {
+    [Select(typeof(Type), typeof(Assembly))]
+    [SelectOtherWithCheckType]
     public class TypeConverter : Converter
     {
 
@@ -171,8 +174,6 @@ namespace ABCo.ABSave.Converters
 
         public override bool CheckType(CheckTypeInfo info) => info.Type == typeof(Type) || info.Type.IsSubclassOf(typeof(Type));
 
-        public override bool AlsoConvertsNonExact => true;
         public override bool UsesHeaderForVersion(uint version) => true;
-        public override Type[] ExactTypes { get; } = new Type[] { typeof(Type) };
     }
 }

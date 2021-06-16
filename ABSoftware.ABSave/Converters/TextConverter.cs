@@ -1,6 +1,7 @@
 ﻿using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
@@ -10,6 +11,9 @@ using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
+    [Select(typeof(string))]
+    [Select(typeof(StringBuilder))]
+    [Select(typeof(char[]))]
     public class TextConverter : Converter
     {
         StringType _type;
@@ -104,13 +108,6 @@ namespace ABCo.ABSave.Converters
 
         #endregion
 
-        public override bool AlsoConvertsNonExact => false;
         public override bool UsesHeaderForVersion(uint version) => true;
-        public override Type[] ExactTypes { get; } = new Type[] 
-        { 
-            typeof(string), 
-            typeof(StringBuilder), 
-            typeof(char[]) 
-        };
     }
 }

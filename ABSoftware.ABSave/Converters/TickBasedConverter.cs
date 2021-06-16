@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
@@ -8,6 +9,8 @@ using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
+    [Select(typeof(DateTime))]
+    [Select(typeof(TimeSpan))]
     public class TickBasedConverter : Converter
     {
         TicksType _type;
@@ -47,12 +50,5 @@ namespace ABCo.ABSave.Converters
             DateTime,
             TimeSpan
         }
-
-        public override bool AlsoConvertsNonExact => false;
-        public override Type[] ExactTypes { get; } = new Type[]
-        {
-            typeof(DateTime),
-            typeof(TimeSpan)
-        };
     }
 }

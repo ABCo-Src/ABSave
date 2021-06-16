@@ -1,6 +1,7 @@
 ﻿using ABCo.ABSave.Converters;
 using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
@@ -12,6 +13,9 @@ using System.Threading.Tasks;
 namespace ABCo.ABSave.UnitTests.TestHelpers
 {
     // A type converter with customizable properties for easy testing.
+    [Select(typeof(BaseIndex))]
+    [Select(typeof(ConverterValueType))]
+    [SelectOtherWithCheckType]
     class BaseTypeConverter : Converter
     {
         public const int OUTPUT_BYTE = 55;
@@ -19,9 +23,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public static bool WritesToHeader;
         
         public override bool UsesHeaderForVersion(uint version) => WritesToHeader;
-
-        public override bool AlsoConvertsNonExact => true;
-        public override Type[] ExactTypes => new Type[] { typeof(BaseIndex), typeof(ConverterValueType) };
 
         public override bool CheckType(CheckTypeInfo info) =>
             info.Type == typeof(BaseIndex) || info.Type.IsSubclassOf(typeof(BaseIndex));

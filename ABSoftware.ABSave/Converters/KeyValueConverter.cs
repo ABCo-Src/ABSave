@@ -1,6 +1,7 @@
 ﻿using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
@@ -10,6 +11,8 @@ using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
+    [Select(typeof(DictionaryEntry), typeof(object))]
+    [Select(typeof(KeyValuePair<,>), 0, 1)]
     public class KeyValueConverter : Converter
     {
         bool _isGeneric;
@@ -64,6 +67,8 @@ namespace ABCo.ABSave.Converters
 
         public override void Initialize(InitializeInfo info)
         {
+            _isGeneric = info.Type.IsGenericType;
+            // KeyValuePair<,>
             if (_isGeneric)
             {
                 var genericArgs = info.Type.GetGenericArguments();
@@ -71,19 +76,12 @@ namespace ABCo.ABSave.Converters
                 _keyMap = info.GetMap(genericArgs[0]);
                 _valueMap = info.GetMap(genericArgs[1]);
             }
+
+            // DictionaryEntry
             else
             {
                 _keyMap = _valueMap = info.GetMap(typeof(object));
             }
         }
-
-        public override bool CheckType(CheckTypeInfo info) =>
-            _isGeneric = info.Type.IsGenericType && info.Type.GetGenericTypeDefinition() == typeof(KeyValuePair<,>);
-
-        public override bool AlsoConvertsNonExact => true;
-        public override Type[] ExactTypes { get; } = new Type[]
-        {
-            typeof(DictionaryEntry)
-        };
     }
 }

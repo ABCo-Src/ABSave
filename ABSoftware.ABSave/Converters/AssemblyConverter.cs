@@ -1,6 +1,7 @@
 ﻿using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
@@ -9,6 +10,8 @@ using System.Reflection;
 
 namespace ABCo.ABSave.Converters
 {
+    [Select(typeof(Assembly), typeof(Version))]
+    [SelectOtherWithCheckType]
     public class AssemblyConverter : Converter
     {
         public override void Serialize(object obj, Type actualType, ref BitTarget header) =>
@@ -105,10 +108,7 @@ namespace ABCo.ABSave.Converters
             return null;
         }
 
-        public override bool AlsoConvertsNonExact => true;
         public override bool UsesHeaderForVersion(uint version) => true;
-
-        public override Type[] ExactTypes { get; } = new Type[] { typeof(Assembly) };
         public override bool CheckType(CheckTypeInfo info) => info.Type == typeof(Assembly) || info.Type.IsSubclassOf(typeof(Assembly));
 
     }

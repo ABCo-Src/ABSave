@@ -20,16 +20,6 @@ namespace ABCo.ABSave.Converters
         internal Dictionary<uint, SaveInheritanceAttribute?>? _inheritanceValues = null;
 
         /// <summary>
-        /// Whether this type converter can also convert things other than exact types. If this is enabled, ABSave will also call <see cref="TryGenerateContext(ABSaveSettings, Type)"/>, and if it generates a context this converter will be used.
-        /// </summary>
-        public abstract bool AlsoConvertsNonExact { get; }
-
-        /// <summary>
-        /// All the exact types of data this converter can convert.
-        /// </summary>
-        public virtual Type[] ExactTypes { get; } = Array.Empty<Type>();
-
-        /// <summary>
         /// Initializes a given converter for a given type.
         /// </summary>
         public virtual void Initialize(InitializeInfo info) { }
