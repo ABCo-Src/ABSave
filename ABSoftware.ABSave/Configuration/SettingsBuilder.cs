@@ -35,9 +35,9 @@ namespace ABCo.ABSave.Configuration
             return this;
         }
 
-        public SettingsBuilder SetBypassDangerousTypeChecking(bool useLittleEndian)
+        public SettingsBuilder SetBypassDangerousTypeChecking(bool bypassDangerousTypeChecking)
         {
-            _useLittleEndian = useLittleEndian;
+            _bypassDangerousTypeChecking = bypassDangerousTypeChecking;
             return this;
         }
 
