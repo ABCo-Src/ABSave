@@ -13,9 +13,17 @@ namespace ABCo.ABSave.Mapping.Generation
         {
             var settings = Map.Settings;
 
-            // Exact converter
-            if (settings.ExactConverters.TryGetValue(type, out var currentConv))
-                return UseConverter(GetConverterInstance(currentConv), currentConv.ConverterId, type);
+            if (type.IsGenericType)
+            {
+                var genericType = type.GetGenericTypeDefinition();
+                if (settings.ExactConverters.TryGetValue(genericType, out var currentGenericConv))
+                    return UseConverter(GetConverterInstance(currentGenericConv), currentGenericConv.ConverterId, type);
+            }
+            else
+            {
+                if (settings.ExactConverters.TryGetValue(type, out var currentConv))
+                    return UseConverter(GetConverterInstance(currentConv), currentConv.ConverterId, type);
+            }
 
             // Non-exact converter
             if (settings.NonExactConverters != null)
