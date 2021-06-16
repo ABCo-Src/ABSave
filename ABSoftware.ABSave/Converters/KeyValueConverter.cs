@@ -67,6 +67,8 @@ namespace ABCo.ABSave.Converters
 
         public override void Initialize(InitializeInfo info)
         {
+            _isGeneric = info.Type.IsGenericType;
+            // KeyValuePair<,>
             if (_isGeneric)
             {
                 var genericArgs = info.Type.GetGenericArguments();
@@ -74,6 +76,8 @@ namespace ABCo.ABSave.Converters
                 _keyMap = info.GetMap(genericArgs[0]);
                 _valueMap = info.GetMap(genericArgs[1]);
             }
+
+            // DictionaryEntry
             else
             {
                 _keyMap = _valueMap = info.GetMap(typeof(object));
