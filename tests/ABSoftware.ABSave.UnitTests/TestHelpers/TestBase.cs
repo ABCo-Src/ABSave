@@ -30,7 +30,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         {
             var settingsBuilder = new SettingsBuilder
             {
-                BypassDangerousTypeChecking = true
+                _bypassDangerousTypeChecking = true
             };
 
             settingsBuilder.AddConverter(typeof(BaseTypeConverter));

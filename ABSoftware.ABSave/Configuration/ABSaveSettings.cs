@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Converters;
 using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,21 +19,29 @@ namespace ABCo.ABSave.Configuration
 
         static ABSaveSettings()
         {
-            var builder = new SettingsBuilder();
+            SettingsConverterProcessor.Split(BuiltInConverters.Infos, out var exactConverters, out var nonExactConverters);
 
             // (The converter info is filled in by the builder so keep it blank)
-            ForSpeed = builder.CreateSettings(new ABSaveSettings(true, true, false, true, 0, null!, null!));
-            ForSize = builder.CreateSettings(new ABSaveSettings(false, true, false, true, 0, null!, null!));
+            ForSpeed = new ABSaveSettings(true, true, false, true, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
+            ForSize = new ABSaveSettings(false, true, false, true, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
         }
 
-        public bool LazyBitHandling { get; } = true;
-        public bool UseUTF8 { get; } = true;
-        public bool BypassDangerousTypeChecking { get; set; } = false;
-        public bool UseLittleEndian { get; } = true;
+        public bool LazyBitHandling { get; }
+        public bool UseUTF8 { get; }
+        public bool BypassDangerousTypeChecking { get; }
+        public bool UseLittleEndian { get; }
 
         internal IReadOnlyDictionary<Type, ConverterInfo> ExactConverters { get; }
         internal IReadOnlyList<ConverterInfo> NonExactConverters { get; }
         internal int ConverterCount { get; }
+
+        internal ABSaveSettings Customize(Action<SettingsBuilder> customizer)
+        {
+            var builder = new SettingsBuilder();
+            customizer(builder);
+
+            return builder.CreateSettings(this);
+        }
 
         internal ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian, int converterCount,
             IReadOnlyDictionary<Type, ConverterInfo> exactConverters, IReadOnlyList<ConverterInfo> nonExactConverters)

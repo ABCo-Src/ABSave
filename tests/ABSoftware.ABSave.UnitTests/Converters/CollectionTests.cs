@@ -24,7 +24,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         {
             var builder = new SettingsBuilder
             {
-                BypassDangerousTypeChecking = true
+                _bypassDangerousTypeChecking = true
             };
 
             Settings = builder.CreateSettings(ABSaveSettings.ForSize);

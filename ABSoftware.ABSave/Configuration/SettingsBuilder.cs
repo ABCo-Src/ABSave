@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Converters;
 using ABCo.ABSave.Mapping.Description.Attributes.Converters;
+using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,55 +10,52 @@ namespace ABCo.ABSave.Configuration
 {
     public struct SettingsBuilder
     {
-        public bool? LazyBitHandling { get; set; }
-        public bool? UseUTF8 { get; set; }
-        public bool? UseLittleEndian { get; set; }
-        public bool? BypassDangerousTypeChecking { get; set; }
+        bool? _lazyBitHandling;
+        bool? _useUTF8;
+        bool? _useLittleEndian;
+        bool? _bypassDangerousTypeChecking;        
 
         List<ConverterInfo>? _converters;
 
-        public ABSaveSettings CreateSettings(ABSaveSettings template)
+        public SettingsBuilder SetLazyBitHandling(bool lazyBitHandling)
         {
-            EnsureConvertersListInitialized();
+            _lazyBitHandling = lazyBitHandling;
+            return this;
+        }
 
+        public SettingsBuilder SetUseUTF8(bool useUTF8)
+        {
+            _useUTF8 = useUTF8;
+            return this;
+        }
+
+        public SettingsBuilder SetUseLittleEndian(bool useLittleEndian)
+        {
+            _useLittleEndian = useLittleEndian;
+            return this;
+        }
+
+        public SettingsBuilder SetBypassDangerousTypeChecking(bool useLittleEndian)
+        {
+            _useLittleEndian = useLittleEndian;
+            return this;
+        }
+
+        internal ABSaveSettings CreateSettings(ABSaveSettings template)
+        {
             // Handle basic settings
-            var lazyBitHandling = LazyBitHandling ?? template.LazyBitHandling;
-            var useUTF8 = UseUTF8 ?? template.UseUTF8;
-            var useLittleEndian = UseLittleEndian ?? template.UseLittleEndian;
-            var bypassDangerousTypeChecking = BypassDangerousTypeChecking ?? template.BypassDangerousTypeChecking;
+            var lazyBitHandling = _lazyBitHandling ?? template.LazyBitHandling;
+            var useUTF8 = _useUTF8 ?? template.UseUTF8;
+            var useLittleEndian = _useLittleEndian ?? template.UseLittleEndian;
+            var bypassDangerousTypeChecking = _bypassDangerousTypeChecking ?? template.BypassDangerousTypeChecking;
 
-            Dictionary<Type, ConverterInfo> exactConverters = new Dictionary<Type, ConverterInfo>();
-            List<ConverterInfo> nonExactConverters = new List<ConverterInfo>();
+            // Process converters
+            EnsureConvertersListInitialized();
+            SettingsConverterProcessor.Split(_converters!, out var exactConverters, out var nonExactConverter);
 
-            // Add custom converters.
-            for (int i = 0; i < _converters!.Count; i++)
-            {
-                var currentConverter = _converters[i];
-                var currentConverterType = currentConverter.ConverterType;
-
-                var exactTypes = 
-                    (SelectAttribute[])currentConverterType.GetCustomAttributes<SelectAttribute>(false);
-                var alsoNeedsCheckType = 
-                    Attribute.IsDefined(currentConverterType, typeof(SelectOtherWithCheckTypeAttribute));
-
-                if (exactTypes.Length > 0)
-                {
-                    exactConverters ??= new Dictionary<Type, ConverterInfo>();
-                    exactConverters.EnsureCapacity(exactConverters.Count + exactTypes.Length);
-
-                    for (int j = 0; j < exactTypes.Length; j++)
-                        exactConverters.Add(exactTypes[j].Type, currentConverter);
-                }
-
-                if (alsoNeedsCheckType)
-                {
-                    nonExactConverters ??= new List<ConverterInfo>();
-                    nonExactConverters.Add(currentConverter);
-                }
-            }
-
+            // Create the new settings.
             return new ABSaveSettings(lazyBitHandling, useUTF8, bypassDangerousTypeChecking, useLittleEndian,
-                _converters.Count, exactConverters, nonExactConverters);
+                _converters!.Count, exactConverters, nonExactConverter);
         }
 
         public void AddConverter(Type type)

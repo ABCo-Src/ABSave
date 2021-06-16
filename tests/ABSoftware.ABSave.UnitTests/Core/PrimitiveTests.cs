@@ -58,7 +58,7 @@ namespace ABCo.ABSave.UnitTests.Core
             {
                 var builder = new SettingsBuilder()
                 {
-                    UseLittleEndian = !BitConverter.IsLittleEndian
+                    _useLittleEndian = !BitConverter.IsLittleEndian
                 };
 
                 Initialize(builder.CreateSettings(ABSaveSettings.ForSpeed));
