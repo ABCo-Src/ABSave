@@ -8,7 +8,7 @@ using System.Text;
 
 namespace ABCo.ABSave.Configuration
 {
-    public struct SettingsBuilder
+    public class SettingsBuilder
     {
         bool? _lazyBitHandling;
         bool? _useUTF8;
@@ -58,10 +58,13 @@ namespace ABCo.ABSave.Configuration
                 _converters!.Count, exactConverters, nonExactConverter);
         }
 
-        public void AddConverter(Type type)
+        public SettingsBuilder AddConverter<T>() => AddConverterNonGeneric(typeof(T));
+        public SettingsBuilder AddConverterNonGeneric(Type type)
         {
             EnsureConvertersListInitialized();
             _converters!.Add(new ConverterInfo(type, _converters.Count));
+
+            return this;
         }
 
         void EnsureConvertersListInitialized() =>
