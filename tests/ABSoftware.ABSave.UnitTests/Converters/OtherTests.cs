@@ -17,9 +17,6 @@ namespace ABCo.ABSave.UnitTests.Converters
     [TestClass]
     public class OtherTests : ConverterTestBase
     {
-        Action<Type> _typeSerialize;
-        Func<Type> _typeDeserialize;
-
         [TestMethod]
         public void Guid()
         {
@@ -103,116 +100,109 @@ namespace ABCo.ABSave.UnitTests.Converters
                 Assert.AreEqual(versions[i], DoDeserialize<Version>());
         }
 
-        [TestMethod]
-        public void Assembly_NoCulture_PublicKeyToken()
-        {
-            Setup<Assembly>(ABSaveSettings.ForSpeed);
-            var assembly = typeof(OtherTests).Assembly;
+        //[TestMethod]
+        //public void Assembly_NoCulture_PublicKeyToken()
+        //{
+        //    Setup<Assembly>(ABSaveSettings.ForSpeed);
+        //    var assembly = typeof(OtherTests).Assembly;
 
-            // Non-saved
-            {
-                DoSerialize(assembly);
-                AssertAndGoToStart(GetByteArr(
-                    new object[] { typeof(OtherTests).Assembly.GetName().Name, typeof(OtherTests).Assembly.GetName().GetPublicKeyToken() }, 
-                    0, 96, 0, 21, (short)GenType.String, (short)GenType.ByteArr));
-                Assert.AreEqual(assembly, DoDeserialize<Assembly>());
-            }
+        //    // Non-saved
+        //    {
+        //        DoSerialize(assembly);
+        //        AssertAndGoToStart(GetByteArr(
+        //            new object[] { typeof(OtherTests).Assembly.GetName().Name, typeof(OtherTests).Assembly.GetName().GetPublicKeyToken() }, 
+        //            0, 96, 0, 21, (short)GenType.String, (short)GenType.ByteArr));
+        //        Assert.AreEqual(assembly, DoDeserialize<Assembly>());
+        //    }
 
-            // Saved
-            ResetPosition();
-            {
-                DoSerialize(assembly);
-                AssertAndGoToStart(128);
-                Assert.AreEqual(assembly, DoDeserialize<Assembly>());
-            }
-        }
+        //    // Saved
+        //    ResetPosition();
+        //    {
+        //        DoSerialize(assembly);
+        //        AssertAndGoToStart(128);
+        //        Assert.AreEqual(assembly, DoDeserialize<Assembly>());
+        //    }
+        //}
 
-        [TestMethod]
-        public void Type()
-        {
-            Setup<Type>(ABSaveSettings.ForSpeed);
+        //[TestMethod]
+        //public void Type()
+        //{
+        //    Setup<Type>(ABSaveSettings.ForSpeed);
 
-            _typeSerialize = t => DoSerialize(t);
-            _typeDeserialize = () => DoDeserialize<Type>();
+        //    _typeSerialize = t => DoSerialize(t);
+        //    _typeDeserialize = () => DoDeserialize<Type>();
 
-            Action<ABSaveSerializer> convAsm = s =>
-            {
-                var header = new BitTarget(s, 8);
-                AssemblyConverter.SerializeAssembly(typeof(BaseIndex).Assembly, ref header);
-            };
+        //    Action<ABSaveSerializer> convAsm = s =>
+        //    {
+        //        var header = new BitTarget(s, 8);
+        //        AssemblyConverter.SerializeAssembly(typeof(BaseIndex).Assembly, ref header);
+        //    };
 
-            // Non-generic
-            {
-                TestType(typeof(BaseIndex), GetByteArr(
-                    new object[] { convAsm, typeof(BaseIndex).FullName },
-                    0, 0, (short)GenType.Action, 43, (short)GenType.String));
-            }
+        //    // Non-generic
+        //    {
+        //        TestType(typeof(BaseIndex), GetByteArr(
+        //            new object[] { convAsm, typeof(BaseIndex).FullName },
+        //            0, 0, (short)GenType.Action, 43, (short)GenType.String));
+        //    }
 
-            // Generic
-            ResetState();
-            {
-                var genericType = typeof(GenericType<,,>);
-                var filledType = typeof(GenericType<,,>).MakeGenericType(typeof(SubWithHeader), genericType.GetGenericArguments()[1], typeof(SubWithoutHeader));
+        //    // Generic
+        //    ResetState();
+        //    {
+        //        var genericType = typeof(GenericType<,,>);
+        //        var filledType = typeof(GenericType<,,>).MakeGenericType(typeof(SubWithHeader), genericType.GetGenericArguments()[1], typeof(SubWithoutHeader));
 
-                TestType(filledType, GetByteArr(
-                    new object[] { convAsm, typeof(GenericType<,,>).FullName },
-                    0, 0, (short)GenType.Action, 47, (short)GenType.String, 192, 97));
-            }
-        }
+        //        TestType(filledType, GetByteArr(
+        //            new object[] { convAsm, typeof(GenericType<,,>).FullName },
+        //            0, 0, (short)GenType.Action, 47, (short)GenType.String, 192, 97));
+        //    }
+        //}
 
-        [TestMethod]
-        public unsafe void Type_Closed()
-        {
-            Setup<Type>(ABSaveSettings.ForSpeed);
-            SaveCurrentAssembly();
+        //[TestMethod]
+        //public unsafe void Type_Closed()
+        //{
+        //    Setup<Type>(ABSaveSettings.ForSpeed);
+        //    SaveCurrentAssembly();
 
-            _typeSerialize = t => Serializer.WriteClosedType(t);
-            _typeDeserialize = () => Deserializer.ReadClosedType(typeof(object));
+        //    _typeSerialize = t => Serializer.WriteClosedType(t);
+        //    _typeDeserialize = () => Deserializer.ReadClosedType(typeof(object));
 
-            // Non-generic
-            {
-                var type = typeof(BaseIndex);
-                TestType(type, GetByteArr(
-                    new object[] { type.FullName }, 
-                    0, 128, 43, (short)GenType.String));
-            }
+        //    // Non-generic
+        //    {
+        //        var type = typeof(BaseIndex);
+        //        TestType(type, GetByteArr(
+        //            new object[] { type.FullName }, 
+        //            0, 128, 43, (short)GenType.String));
+        //    }
 
-            // Generic
-            ResetState();
-            SaveCurrentAssembly();
-            {
-                var type = typeof(GenericType<SubWithHeader, SubWithoutHeader, SubNoConverter>);
-                TestType(type, GetByteArr(
-                    new object[] { typeof(GenericType<,,>).FullName }, 
-                    0, 128, 47, (short)GenType.String, 128, 129, 130));
-            }
-        }
+        //    // Generic
+        //    ResetState();
+        //    SaveCurrentAssembly();
+        //    {
+        //        var type = typeof(GenericType<SubWithHeader, SubWithoutHeader, SubNoConverter>);
+        //        TestType(type, GetByteArr(
+        //            new object[] { typeof(GenericType<,,>).FullName }, 
+        //            0, 128, 47, (short)GenType.String, 128, 129, 130));
+        //    }
+        //}
 
-        void TestType(Type type, params byte[] expected)
-        {
-            // Saved
-            ResetPosition();
-            {
-                _typeSerialize(type);
-                AssertAndGoToStart(expected);
-                Assert.AreEqual(type, _typeDeserialize());
-            }
+        //void TestType(Type type, params byte[] expected)
+        //{
+        //    // Saved
+        //    ResetPosition();
+        //    {
+        //        _typeSerialize(type);
+        //        AssertAndGoToStart(expected);
+        //        Assert.AreEqual(type, _typeDeserialize());
+        //    }
 
-            // Non-saved
-            ResetPosition();
-            {
-                _typeSerialize(type);
-                AssertAndGoToStart((byte)(127 + Serializer.SavedTypes.Count));
-                Assert.AreEqual(type, _typeDeserialize());
-            }
-        }
-
-        void SaveCurrentAssembly()
-        {
-            // Save the current assembly so we don't have to test for it.
-            Serializer.SavedAssemblies.Add(typeof(BaseIndex).Assembly, Serializer.SavedAssemblies.Count);
-            Deserializer.SavedAssemblies.Add(typeof(BaseIndex).Assembly);
-        }
+        //    // Non-saved
+        //    ResetPosition();
+        //    {
+        //        _typeSerialize(type);
+        //        AssertAndGoToStart((byte)(127 + Serializer.SavedTypes.Count));
+        //        Assert.AreEqual(type, _typeDeserialize());
+        //    }
+        //}
 
         //[TestMethod]
         //public void Type()

@@ -42,24 +42,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
             Deserializer = new ABSaveDeserializer();
             Deserializer.Initialize(Stream, CurrentMap);
-
-            // NOTE: To make testing easier, add some test types as saved so they have a consistent single byte for type writing.
-            InitializeSerializerSavedTypes();
-        }
-
-        private void InitializeSerializerSavedTypes()
-        {
-            Serializer.SavedTypes.Add(typeof(SubWithHeader), 0);
-            Deserializer.SavedTypes.Add(typeof(SubWithHeader));
-
-            Serializer.SavedTypes.Add(typeof(SubWithoutHeader), 1);
-            Deserializer.SavedTypes.Add(typeof(SubWithoutHeader));
-
-            Serializer.SavedTypes.Add(typeof(SubNoConverter), 2);
-            Deserializer.SavedTypes.Add(typeof(SubNoConverter));
-
-            Serializer.SavedTypes.Add(typeof(NestedClass), 3);
-            Deserializer.SavedTypes.Add(typeof(NestedClass));
         }
 
         public void GoToStart() => Stream.Position = 0;
@@ -80,7 +62,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             // Reset the serializer and deserializer
             Serializer.Reset();
             Deserializer.Reset();
-            InitializeSerializerSavedTypes();
 
             ResetPosition();
         }

@@ -15,8 +15,6 @@ namespace ABCo.ABSave.Mapping
     {
         internal static ThreadLocal<MapGenerator> GeneratorPool = new ThreadLocal<MapGenerator>(() => new MapGenerator());
         internal MapItemInfo RootItem;
-        internal MapItemInfo AssemblyItem;
-        internal MapItemInfo VersionItem;
 
         /// <summary>
         /// All the types present throughout the map, and their respective map item.
@@ -43,9 +41,6 @@ namespace ABCo.ABSave.Mapping
             var generator = map.GetGenerator();
 
             map.RootItem = generator.GetMap(type);
-            map.AssemblyItem = generator.GetMap(typeof(Assembly));
-            map.VersionItem = generator.GetMap(typeof(Version));
-
             map.ReleaseGenerator(generator);
             return map;
         }

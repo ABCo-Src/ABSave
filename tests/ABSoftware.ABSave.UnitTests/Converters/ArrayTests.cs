@@ -162,14 +162,14 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             if (unknown)
             {
-                Setup<Array>(Settings);
+                //Setup<Array>(Settings);
 
-                DoSerialize(arr);
+                //DoSerialize(arr);
 
-                Action<ABSaveSerializer> getElemType = s => s.WriteClosedType(typeof(byte));
+                //Action<ABSaveSerializer> getElemType = s => s.WriteClosedType(typeof(byte));
 
-                AssertAndGoToStart(GetByteArr(new object[] { getElemType }, (short)GenType.Action, 196, 2, 2, 9, 6, 2, 7, 167, 43));
-                CollectionAssert.AreEqual(arr, DoDeserialize<Array>());
+                //AssertAndGoToStart(GetByteArr(new object[] { getElemType }, (short)GenType.Action, 196, 2, 2, 9, 6, 2, 7, 167, 43));
+                //CollectionAssert.AreEqual(arr, DoDeserialize<Array>());
             }
             else
             {

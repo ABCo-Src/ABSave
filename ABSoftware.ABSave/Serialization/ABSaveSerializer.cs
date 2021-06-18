@@ -30,9 +30,6 @@ namespace ABCo.ABSave.Serialization
         readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
         readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
 
-        internal Dictionary<Assembly, int> SavedAssemblies = new Dictionary<Assembly, int>();
-        internal Dictionary<Type, int> SavedTypes = new Dictionary<Type, int>();
-
         public Dictionary<Type, uint>? TargetVersions { get; private set; }
         public ABSaveMap Map { get; private set; } = null!;
         public ABSaveSettings Settings { get; private set; } = null!;
@@ -59,8 +56,6 @@ namespace ABCo.ABSave.Serialization
 
         public void Reset()
         {
-            SavedAssemblies.Clear();
-            SavedTypes.Clear();
             _objectVersions.Clear();
             _converterVersions.Clear();
         }
