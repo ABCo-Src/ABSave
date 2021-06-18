@@ -134,7 +134,7 @@ namespace ABCo.ABSave.Converters
             var context = new ArrayTypeInfo();
             PopulateTypeInfo(ref context, typeHeader.Serializer.GetRuntimeMapItem(actualType.GetElementType()!), actualType);
 
-            ABSaveSerializer.WriteClosedType(context.ElementType, ref typeHeader);
+            // TODO: Write the element type.
 
             var header = new BitTarget(typeHeader.Serializer);
 
@@ -305,7 +305,7 @@ namespace ABCo.ABSave.Converters
         private object DeserializeUnknown(ref BitSource typeHeader)
         {
             // Get type information.
-            Type elementType = typeHeader.Deserializer.ReadClosedType(typeof(object), ref typeHeader);
+            Type elementType = null!; // TODO: Get element type
             var perItem = typeHeader.Deserializer.GetRuntimeMapItem(elementType);
 
             // Read the header information

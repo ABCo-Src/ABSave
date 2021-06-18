@@ -21,9 +21,6 @@ namespace ABCo.ABSave.Deserialization
         readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
         readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
 
-        internal List<Assembly> SavedAssemblies = new List<Assembly>();
-        internal List<Type> SavedTypes = new List<Type>();
-
         public ABSaveMap Map { get; private set; } = null!;
         public ABSaveSettings Settings { get; private set; } = null!;
         public Stream Source { get; private set; } = null!;
@@ -41,8 +38,6 @@ namespace ABCo.ABSave.Deserialization
 
         public void Reset()
         {
-            SavedAssemblies.Clear();
-            SavedTypes.Clear();
             _objectVersions.Clear();
             _converterVersions.Clear();
         }
@@ -236,39 +231,6 @@ namespace ABCo.ABSave.Deserialization
                 _currentHeader = new BitSource(this, 8);
                 _readHeader = true;
             }
-        }
-
-        // TODO: Use map guides to implement proper "Type" handling via map.
-        public Type ReadType(Type requiredBaseType)
-        {
-            var header = new BitSource(this);
-            return ReadType(requiredBaseType, ref header);
-        }
-
-        public Type ReadType(Type requiredBaseType, ref BitSource header)
-        {
-            var res = new TypeConverter().DeserializeType(ref header);
-
-            // Safety check.
-            if (!res.IsSubclassOf(requiredBaseType)) throw new UnsupportedSubTypeException(requiredBaseType, res);
-
-            return res;
-        }
-
-        public Type ReadClosedType(Type requiredBaseType) 
-        {
-            var header = new BitSource(this);
-            return ReadClosedType(requiredBaseType, ref header);
-        }
-
-        public Type ReadClosedType(Type requiredBaseType, ref BitSource header)
-        {
-            var res = new TypeConverter().DeserializeClosedType(ref header);
-
-            // Safety check.
-            if (!res.IsSubclassOf(requiredBaseType)) throw new UnsupportedSubTypeException(requiredBaseType, res);
-
-            return res;
         }
     }
 }
