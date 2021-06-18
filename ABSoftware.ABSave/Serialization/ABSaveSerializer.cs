@@ -279,22 +279,5 @@ namespace ABCo.ABSave.Serialization
             var newTarget = new BitTarget(this);
             SerializeItemNoSetup(obj, info, ref newTarget, true);
         }
-
-        // TODO: Use map guides to implement proper "Type" handling via map.
-        public void WriteType(Type type)
-        {
-            var header = new BitTarget(this);
-            WriteType(type, ref header);
-        }
-
-        public static void WriteType(Type type, ref BitTarget header) => new TypeConverter().SerializeType(type, ref header);
-
-        public void WriteClosedType(Type type)
-        {
-            var header = new BitTarget(this);
-            WriteClosedType(type, ref header);
-        }
-
-        public static void WriteClosedType(Type type, ref BitTarget header) => new TypeConverter().SerializeClosedType(type, ref header);
     }
 }
