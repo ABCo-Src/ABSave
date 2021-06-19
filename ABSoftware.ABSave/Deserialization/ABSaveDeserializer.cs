@@ -216,13 +216,12 @@ namespace ABCo.ABSave.Deserialization
             // Make sure the info is initialized for deserialization.
             KeyInheritanceHandler.EnsureHasAllTypeCache(baseType, info);
 
-            // Read in the key from the file.
+            // Read in the key from the source.
             string key = ReadString(ref _currentHeader);
 
             // See if there's an item with that key.
             return info.KeyDeserializeCache!.GetValueOrDefault(key);
         }
-
 
         void EnsureReadHeader()
         {
