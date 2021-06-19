@@ -257,7 +257,7 @@ namespace ABCo.ABSave.Converters
             None
         }
 
-        public override bool UsesHeaderForVersion(uint version) => true;
+        public override (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
 
         private bool TryHandleDirectTypes(InitializeInfo info, Type type)
         {

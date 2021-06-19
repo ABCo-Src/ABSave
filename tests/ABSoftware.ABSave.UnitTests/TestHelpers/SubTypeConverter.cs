@@ -19,7 +19,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         bool _writesToHeader;
 
         public const int OUTPUT_BYTE = 110;
-        public override bool UsesHeaderForVersion(uint version) => true;
+        public override (ConverterVersionInfo, bool) GetVersionInfo(uint version) => (null, true);
 
         public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {

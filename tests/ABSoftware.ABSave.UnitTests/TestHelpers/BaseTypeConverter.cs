@@ -21,8 +21,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public const int OUTPUT_BYTE = 55;
 
         public static bool WritesToHeader;
-        
-        public override bool UsesHeaderForVersion(uint version) => WritesToHeader;
+
+        public override (ConverterVersionInfo, bool) GetVersionInfo(uint version) => (null, WritesToHeader);
 
         public override bool CheckType(CheckTypeInfo info) =>
             info.Type == typeof(BaseIndex) || info.Type.IsSubclassOf(typeof(BaseIndex));

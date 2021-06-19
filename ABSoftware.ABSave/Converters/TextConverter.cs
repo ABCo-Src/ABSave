@@ -108,6 +108,6 @@ namespace ABCo.ABSave.Converters
 
         #endregion
 
-        public override bool UsesHeaderForVersion(uint version) => true;
+        public override (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
     }
 }
