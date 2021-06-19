@@ -10,7 +10,7 @@ namespace ABCo.ABSave.Converters
     [Select(typeof(Version))]
     public class VersionConverter : Converter
     {
-        public override void Serialize(in SerializeInfo info, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
+        public override void Serialize(in SerializeInfo info, ref BitTarget header) => SerializeVersion((Version)info.Instance, ref header);
 
         public static void SerializeVersion(Version version, ref BitTarget header)
         {
