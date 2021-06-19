@@ -19,7 +19,7 @@ namespace ABCo.ABSave.Deserialization
     public sealed partial class ABSaveDeserializer
     {
         readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
-        readonly Dictionary<Type, VersionInfoCache> _converterVersions = new Dictionary<Type, VersionInfoCache>();
+        readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
 
         public ABSaveMap Map { get; private set; } = null!;
         public ABSaveSettings Settings { get; private set; } = null!;
@@ -129,18 +129,24 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(converter);
 
             // Read or create the version info if needed
-            if (!_converterVersions.TryGetValue(converter.ItemType, out VersionInfoCache info))
+            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo? info))
             {
                 uint version = ReadNewVersionInfo();
-                info = VersionInfoCache.CreateFromConverter(version, converter);
+
+                bool usesHeader;
+                (info, usesHeader) = converter.GetVersionInfo(version);
+
+                info ??= new ConverterVersionInfo(usesHeader);
+                info.Initialize(version, usesHeader, converter);
+
                 _converterVersions.Add(converter.ItemType, info);
             }
             
             // Handle inheritance.
-            if (info.InheritanceInfo != null && !sameType)            
-                return DeserializeActualType(info.InheritanceInfo, converter.ItemType);
+            if (info._inheritanceInfo != null && !sameType)            
+                return DeserializeActualType(info._inheritanceInfo, converter.ItemType);
 
-            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType);
+            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info);
             return converter.Deserialize(in deserializeInfo, ref _currentHeader);
         }
 

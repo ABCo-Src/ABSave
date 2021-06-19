@@ -30,16 +30,16 @@ namespace ABCo.ABSave.Converters
         /// </summary>
         public virtual bool CheckType(CheckTypeInfo info) => throw new Exception("Converter says it also converts non-exact but does not override 'CheckType' to check for one.");
 
-        public virtual (ConverterVersionInfo, bool) GetVersionInfo(uint version) => (null, false);
+        public virtual (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, false);
         public virtual bool UsesHeaderForVersion(uint version) => false;
 
         public struct SerializeInfo
         {
             public object Instance { get; }
             public Type ActualType { get; }
-            internal VersionInfoCache _versionInfo;
+            internal ConverterVersionInfo _versionInfo;
 
-            internal SerializeInfo(object instance, Type actualType, object versionInfo) => 
+            internal SerializeInfo(object instance, Type actualType, ConverterVersionInfo versionInfo) => 
                 (Instance, ActualType, _versionInfo) = (instance, actualType, versionInfo);
         }
 
@@ -48,9 +48,9 @@ namespace ABCo.ABSave.Converters
         public struct DeserializeInfo
         {
             public Type ActualType { get; }
-            internal VersionInfoCache _versionInfo;
+            internal ConverterVersionInfo _versionInfo;
 
-            internal DeserializeInfo(Type actualType, object versionInfo) => 
+            internal DeserializeInfo(Type actualType, ConverterVersionInfo versionInfo) => 
                 (ActualType, _versionInfo) = (actualType, versionInfo);
         }
 
