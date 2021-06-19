@@ -142,19 +142,26 @@ namespace ABCo.ABSave.Serialization
             }
 
             // Write and get the info for a version, if necessary
-            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo info))
+            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo? info))
             {
                 uint version = WriteNewVersionInfo(converter, ref header);
                 appliedHeader = true;
 
-                info = ConverterVersionInfo.CreateFromConverter(version, converter);
+                // Get the converter version info
+                bool usesHeader;
+                (info, usesHeader) = converter.GetVersionInfo(version);
+                
+                // TODO: Pool this allocation.
+                info ??= new ConverterVersionInfo(usesHeader);
+                info.Initialize(version, usesHeader, converter);
+
                 _converterVersions.Add(converter.ItemType, info);
             }
 
             // Handle inheritance if needed.
-            if (info.InheritanceInfo != null && !sameType)
+            if (info._inheritanceInfo != null && !sameType)
             {
-                SerializeActualType(obj, info.InheritanceInfo, converter.ItemType, actualType, ref header);
+                SerializeActualType(obj, info._inheritanceInfo, converter.ItemType, actualType, ref header);
                 return;
             }
 
@@ -162,7 +169,8 @@ namespace ABCo.ABSave.Serialization
             if (!info.UsesHeader && !appliedHeader)
                 header.Apply();
 
-            converter.Serialize(obj, actualType, ref header);
+            var serializeInfo = new Converter.SerializeInfo(obj, actualType, info);
+            converter.Serialize(in serializeInfo, ref header);
         }
 
         void SerializeObjectItem(object obj, ObjectMapItem item, ref BitTarget header, bool skipHeader)

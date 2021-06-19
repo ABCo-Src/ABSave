@@ -69,10 +69,8 @@ namespace ABCo.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, ref BitTarget header)
-        {            
-            Serialize((Array)obj, actualType, ref header);
-        }
+        public override void Serialize(in SerializeInfo info, ref BitTarget header) =>
+            Serialize((Array)info.Instance, info.ActualType, ref header);
 
         void Serialize(Array arr, Type actualType, ref BitTarget header)
         {
@@ -257,7 +255,7 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
             return Deserialize(ref header);
         }
@@ -544,7 +542,7 @@ namespace ABCo.ABSave.Converters
             UShort
         }
 
-        public override bool UsesHeaderForVersion(uint version) => true;
+        public override (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
 
         [StructLayout(LayoutKind.Auto)]
         struct ArrayTypeInfo

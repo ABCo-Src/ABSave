@@ -40,12 +40,12 @@ namespace ABCo.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
             if (_info is CollectionInfo collectionInfo)
-                SerializeCollection(obj, collectionInfo, ref header);
+                SerializeCollection(info.Instance, collectionInfo, ref header);
             else if (_info is DictionaryInfo dictionaryInfo)
-                SerializeDictionary(obj, dictionaryInfo, ref header);
+                SerializeDictionary(info.Instance, dictionaryInfo, ref header);
         }
 
         void SerializeCollection(object obj, CollectionInfo info, ref BitTarget header)
@@ -74,12 +74,12 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
             if (_info is CollectionInfo collectionInfo)
-                return DeserializeCollection(collectionInfo, actualType, ref header);
+                return DeserializeCollection(collectionInfo, info.ActualType, ref header);
             else if (_info is DictionaryInfo dictionaryInfo)
-                return DeserializeDictionary(dictionaryInfo, actualType, ref header);
+                return DeserializeDictionary(dictionaryInfo, info.ActualType, ref header);
             else throw new Exception("Unrecognized enumerable info.");
         }
 
@@ -257,7 +257,7 @@ namespace ABCo.ABSave.Converters
             None
         }
 
-        public override bool UsesHeaderForVersion(uint version) => true;
+        public override (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
 
         private bool TryHandleDirectTypes(InitializeInfo info, Type type)
         {

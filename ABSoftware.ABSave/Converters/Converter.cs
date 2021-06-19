@@ -30,8 +30,32 @@ namespace ABCo.ABSave.Converters
         /// </summary>
         public virtual bool CheckType(CheckTypeInfo info) => throw new Exception("Converter says it also converts non-exact but does not override 'CheckType' to check for one.");
 
-        public virtual bool UsesHeaderForVersion(uint version) => false;
-        public abstract void Serialize(object obj, Type actualType, ref BitTarget header);
-        public abstract object Deserialize(Type actualType, ref BitSource header);
+        /// <summary>
+        /// Gets information that can be used by the converter and varies dependig on the version number in the source.
+        /// </summary>
+        public virtual (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, false);
+
+        public struct SerializeInfo
+        {
+            public object Instance { get; }
+            public Type ActualType { get; }
+            public ConverterVersionInfo VersionInfo { get; }
+
+            internal SerializeInfo(object instance, Type actualType, ConverterVersionInfo versionInfo) => 
+                (Instance, ActualType, VersionInfo) = (instance, actualType, versionInfo);
+        }
+
+        public abstract void Serialize(in SerializeInfo info, ref BitTarget header);
+
+        public struct DeserializeInfo
+        {
+            public Type ActualType { get; }
+            internal ConverterVersionInfo VersionInfo { get; }
+
+            internal DeserializeInfo(Type actualType, ConverterVersionInfo versionInfo) => 
+                (ActualType, VersionInfo) = (actualType, versionInfo);
+        }
+
+        public abstract object Deserialize(in DeserializeInfo info, ref BitSource header);
     }
 }

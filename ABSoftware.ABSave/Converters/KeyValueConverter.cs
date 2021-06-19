@@ -19,13 +19,13 @@ namespace ABCo.ABSave.Converters
         MapItemInfo _keyMap;
         MapItemInfo _valueMap;
 
-        public override void Serialize(object obj, Type actualType, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
             if (_isGeneric)
-                SerializeGeneric((dynamic)obj, header.Serializer);
+                SerializeGeneric((dynamic)info.Instance, header.Serializer);
                 
             else
-                SerializeNonGeneric((DictionaryEntry)obj, header.Serializer);
+                SerializeNonGeneric((DictionaryEntry)info.Instance, header.Serializer);
         }
 
         void SerializeGeneric(dynamic obj, ABSaveSerializer serializer)
@@ -40,10 +40,10 @@ namespace ABCo.ABSave.Converters
             serializer.SerializeItem(obj.Value, _valueMap);
         }
 
-        public override object Deserialize(Type actualType, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
             if (_isGeneric)
-                return DeserializeGeneric(actualType, header.Deserializer);
+                return DeserializeGeneric(info.ActualType, header.Deserializer);
             else
                 return DeserializeNonGeneric(header.Deserializer);
         }

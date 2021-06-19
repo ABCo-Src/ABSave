@@ -129,18 +129,25 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(converter);
 
             // Read or create the version info if needed
-            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo info))
+            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo? info))
             {
                 uint version = ReadNewVersionInfo();
-                info = ConverterVersionInfo.CreateFromConverter(version, converter);
+
+                bool usesHeader;
+                (info, usesHeader) = converter.GetVersionInfo(version);
+
+                info ??= new ConverterVersionInfo(usesHeader);
+                info.Initialize(version, usesHeader, converter);
+
                 _converterVersions.Add(converter.ItemType, info);
             }
             
             // Handle inheritance.
-            if (info.InheritanceInfo != null && !sameType)            
-                return DeserializeActualType(info.InheritanceInfo, converter.ItemType);            
-            
-            return converter.Deserialize(converter.ItemType, ref _currentHeader);
+            if (info._inheritanceInfo != null && !sameType)            
+                return DeserializeActualType(info._inheritanceInfo, converter.ItemType);
+
+            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info);
+            return converter.Deserialize(in deserializeInfo, ref _currentHeader);
         }
 
         private object DeserializeObjectItem(ObjectMapItem item, bool skipHeader)
@@ -216,13 +223,12 @@ namespace ABCo.ABSave.Deserialization
             // Make sure the info is initialized for deserialization.
             KeyInheritanceHandler.EnsureHasAllTypeCache(baseType, info);
 
-            // Read in the key from the file.
+            // Read in the key from the source.
             string key = ReadString(ref _currentHeader);
 
             // See if there's an item with that key.
             return info.KeyDeserializeCache!.GetValueOrDefault(key);
         }
-
 
         void EnsureReadHeader()
         {

@@ -21,13 +21,13 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public const int OUTPUT_BYTE = 55;
 
         public static bool WritesToHeader;
-        
-        public override bool UsesHeaderForVersion(uint version) => WritesToHeader;
+
+        public override (ConverterVersionInfo, bool) GetVersionInfo(uint version) => (null, WritesToHeader);
 
         public override bool CheckType(CheckTypeInfo info) =>
             info.Type == typeof(BaseIndex) || info.Type.IsSubclassOf(typeof(BaseIndex));
 
-        public override void Serialize(object obj, Type actualType, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
             if (WritesToHeader)
             {
@@ -38,7 +38,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             header.Serializer.WriteByte(OUTPUT_BYTE);
         }
 
-        public override object Deserialize(Type actualType, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
             if (WritesToHeader && !header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
             if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");

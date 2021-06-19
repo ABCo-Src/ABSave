@@ -41,14 +41,14 @@ namespace ABCo.ABSave.Converters
 
         public override bool CheckType(CheckTypeInfo info) => info.Type.IsPrimitive;
 
-        public override void Serialize(object obj, Type actualType, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
             var serializer = header.Serializer;
 
             switch (_typeCode)
             {
                 case PrimitiveType.Boolean:
-                    var bl = (bool)obj;
+                    var bl = (bool)info.Instance;
                     if (bl) serializer.WriteByte(1);
                     else serializer.WriteByte(0);
 
@@ -72,69 +72,69 @@ namespace ABCo.ABSave.Converters
 
                 case PrimitiveType.Byte:
 
-                    serializer.WriteByte((byte)obj);
+                    serializer.WriteByte((byte)info.Instance);
                     break;
 
                 case PrimitiveType.SByte:
 
-                    serializer.WriteByte((byte)(sbyte)obj);
+                    serializer.WriteByte((byte)(sbyte)info.Instance);
                     break;
 
                 case PrimitiveType.UInt16:
 
-                    serializer.WriteInt16((short)(ushort)obj);
+                    serializer.WriteInt16((short)(ushort)info.Instance);
                     break;
 
                 case PrimitiveType.Int16:
 
-                    serializer.WriteInt16((short)obj);
+                    serializer.WriteInt16((short)info.Instance);
                     break;
 
                 case PrimitiveType.Char:
 
-                    serializer.WriteInt16((short)(char)obj);
+                    serializer.WriteInt16((short)(char)info.Instance);
                     break;
 
                 case PrimitiveType.UInt32:
 
-                    serializer.WriteInt32((int)(uint)obj);
+                    serializer.WriteInt32((int)(uint)info.Instance);
                     break;
 
                 case PrimitiveType.Int32:
 
-                    serializer.WriteInt32((int)obj);
+                    serializer.WriteInt32((int)info.Instance);
                     break;
 
                 case PrimitiveType.UInt64:
 
-                    serializer.WriteInt64((long)(ulong)obj);
+                    serializer.WriteInt64((long)(ulong)info.Instance);
                     break;
 
                 case PrimitiveType.Int64:
 
-                    serializer.WriteInt64((long)obj);
+                    serializer.WriteInt64((long)info.Instance);
                     break;
 
                 case PrimitiveType.Single:
 
-                    serializer.WriteSingle((float)obj);
+                    serializer.WriteSingle((float)info.Instance);
                     break;
 
                 case PrimitiveType.Double:
 
-                    serializer.WriteDouble((double)obj);
+                    serializer.WriteDouble((double)info.Instance);
                     break;
 
                 case PrimitiveType.Decimal:
 
-                    serializer.WriteDecimal((decimal)obj);
+                    serializer.WriteDecimal((decimal)info.Instance);
                     break;
                 default:
                     throw new Exception("ABSAVE: Invalid numerical type.");
             }
         }
 
-        public override object Deserialize(Type actualType, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
             var reader = header.Deserializer;
 
@@ -181,6 +181,6 @@ namespace ABCo.ABSave.Converters
             Decimal = 15,
         }
 
-        public override bool UsesHeaderForVersion(uint version) => false;
+        public override (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
     }
 }

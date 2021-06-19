@@ -34,19 +34,19 @@ namespace ABCo.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(object obj, Type actualType, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
             switch (_type)
             {
                 case StringType.String:
-                    header.Serializer.WriteString((string)obj, ref header);
+                    header.Serializer.WriteString((string)info.Instance, ref header);
                     break;
                 case StringType.CharArray:
-                    SerializeCharArray((char[])obj, ref header);
+                    SerializeCharArray((char[])info.Instance, ref header);
                     break;
                 case StringType.StringBuilder:
                     
-                    SerializeStringBuilder((StringBuilder)obj, ref header);
+                    SerializeStringBuilder((StringBuilder)info.Instance, ref header);
                     break;
             }
         }
@@ -68,7 +68,7 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(Type actualType, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
             return _type switch
             {
@@ -108,6 +108,6 @@ namespace ABCo.ABSave.Converters
 
         #endregion
 
-        public override bool UsesHeaderForVersion(uint version) => true;
+        public override (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
     }
 }

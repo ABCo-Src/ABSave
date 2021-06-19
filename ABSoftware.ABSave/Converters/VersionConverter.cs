@@ -10,7 +10,7 @@ namespace ABCo.ABSave.Converters
     [Select(typeof(Version))]
     public class VersionConverter : Converter
     {
-        public override void Serialize(object obj, Type actualType, ref BitTarget header) => SerializeVersion((Version)obj, ref header);
+        public override void Serialize(in SerializeInfo info, ref BitTarget header) => SerializeVersion((Version)info.Instance, ref header);
 
         public static void SerializeVersion(Version version, ref BitTarget header)
         {
@@ -33,7 +33,7 @@ namespace ABCo.ABSave.Converters
             if (header.FreeBits < 8) header.Apply();
         }
 
-        public override object Deserialize(Type actualType, ref BitSource header) => DeserializeVersion(ref header);
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header) => DeserializeVersion(ref header);
 
         public static Version DeserializeVersion(ref BitSource header)
         {
@@ -50,6 +50,6 @@ namespace ABCo.ABSave.Converters
             return new Version(major, minor, build, revision);
         }
 
-        public override bool UsesHeaderForVersion(uint version) => true;
+        public override (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
     }
 }
