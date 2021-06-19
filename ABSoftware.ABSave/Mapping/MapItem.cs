@@ -77,24 +77,6 @@ namespace ABCo.ABSave.Mapping
             (Members, InheritanceInfo) = (members, inheritanceInfo);
     }
 
-    internal struct ConverterVersionInfo
-    {
-        public uint VersionNumber;
-        public bool UsesHeader;
-        public SaveInheritanceAttribute? InheritanceInfo;
-
-        public static ConverterVersionInfo CreateFromConverter(uint version, Converter converter)
-        {
-            return new ConverterVersionInfo(
-                    version,
-                    converter.UsesHeaderForVersion(version),
-                    MapGenerator.GetConverterInheritanceInfoForVersion(version, converter));
-        }
-
-        public ConverterVersionInfo(uint versionInfo, bool usesHeader, SaveInheritanceAttribute? inheritanceInfo) =>
-            (VersionNumber, UsesHeader, InheritanceInfo) = (versionInfo, usesHeader, inheritanceInfo);
-    }
-
     /// <summary>
     /// Represents a map item that was retrieved during serialization-time. It has extra code-gen information as map items
     /// retrieved at serialization-time won't have been code-generated as a part of the main type.

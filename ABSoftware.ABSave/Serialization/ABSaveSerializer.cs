@@ -142,12 +142,12 @@ namespace ABCo.ABSave.Serialization
             }
 
             // Write and get the info for a version, if necessary
-            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo info))
+            if (!_converterVersions.TryGetValue(converter.ItemType, out VersionInfoCache info))
             {
                 uint version = WriteNewVersionInfo(converter, ref header);
                 appliedHeader = true;
 
-                info = ConverterVersionInfo.CreateFromConverter(version, converter);
+                info = VersionInfoCache.CreateFromConverter(version, converter);
                 _converterVersions.Add(converter.ItemType, info);
             }
 
