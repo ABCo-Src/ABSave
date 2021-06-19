@@ -21,7 +21,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public const int OUTPUT_BYTE = 110;
         public override bool UsesHeaderForVersion(uint version) => true;
 
-        public override void Serialize(object obj, Type actualType, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
             if (_writesToHeader)
             {
@@ -32,7 +32,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             header.Serializer.WriteByte(OUTPUT_BYTE);
         }
 
-        public override object Deserialize(Type actualType, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
             if (_writesToHeader)
             {
