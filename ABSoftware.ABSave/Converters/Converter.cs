@@ -36,6 +36,9 @@ namespace ABCo.ABSave.Converters
         {
             public object Instance { get; }
             public Type ActualType { get; }
+
+            internal SerializeInfo(object instance, Type actualType) => 
+                (Instance, ActualType) = (instance, actualType);
         }
 
         public abstract void Serialize(in SerializeInfo info, ref BitTarget header);
@@ -43,6 +46,8 @@ namespace ABCo.ABSave.Converters
         public struct DeserializeInfo
         {
             public Type ActualType { get; }
+
+            internal DeserializeInfo(Type actualType) => ActualType = actualType;
         }
 
         public abstract object Deserialize(in DeserializeInfo info, ref BitSource header);

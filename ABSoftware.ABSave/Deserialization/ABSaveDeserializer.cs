@@ -138,9 +138,10 @@ namespace ABCo.ABSave.Deserialization
             
             // Handle inheritance.
             if (info.InheritanceInfo != null && !sameType)            
-                return DeserializeActualType(info.InheritanceInfo, converter.ItemType);            
-            
-            return converter.Deserialize(converter.ItemType, ref _currentHeader);
+                return DeserializeActualType(info.InheritanceInfo, converter.ItemType);
+
+            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType);
+            return converter.Deserialize(in deserializeInfo, ref _currentHeader);
         }
 
         private object DeserializeObjectItem(ObjectMapItem item, bool skipHeader)

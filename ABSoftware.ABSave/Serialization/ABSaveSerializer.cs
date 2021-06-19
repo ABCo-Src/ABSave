@@ -162,7 +162,8 @@ namespace ABCo.ABSave.Serialization
             if (!info.UsesHeader && !appliedHeader)
                 header.Apply();
 
-            converter.Serialize(obj, actualType, ref header);
+            var serializeInfo = new Converter.SerializeInfo(obj, actualType);
+            converter.Serialize(in info, ref header);
         }
 
         void SerializeObjectItem(object obj, ObjectMapItem item, ref BitTarget header, bool skipHeader)
