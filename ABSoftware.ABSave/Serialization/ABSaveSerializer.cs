@@ -192,12 +192,6 @@ namespace ABCo.ABSave.Serialization
             SerializeFromMembers(obj, info.Members!);
         }
 
-        void SerializeFromMembers(object obj, ObjectMemberSharedInfo[] members)
-        {
-            for (int i = 0; i < members.Length; i++)
-                SerializeItem(members[i].Accessor.Getter(obj), members[i].Map);
-        }
-
         // Returns: Whether the type has changed.
         bool WriteHeaderNullAndInheritance(Type actualType, MapItem item, ref BitTarget target)
         {

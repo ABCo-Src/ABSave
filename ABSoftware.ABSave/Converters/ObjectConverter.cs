@@ -47,12 +47,22 @@ namespace ABCo.ABSave.Converters
 
         public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
-            throw new NotImplementedException();
+            var instance = info.Instance;
+            var members = ((ObjectVersionInfo)info.VersionInfo).Members;
+
+            for (int i = 0; i < members.Length; i++)
+                header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map);
         }
 
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
-            throw new NotImplementedException();
+            var res = Activator.CreateInstance(info.ActualType);
+            var members = ((ObjectVersionInfo)info.VersionInfo).Members;
+
+            for (int i = 0; i < members.Length; i++)
+                members[i].Accessor.Setter(res!, header.Deserializer.DeserializeItem(members[i].Map));
+
+            return res!;
         }
 
         class ObjectVersionInfo : VersionInfo

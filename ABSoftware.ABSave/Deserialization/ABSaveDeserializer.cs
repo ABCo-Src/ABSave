@@ -165,16 +165,6 @@ namespace ABCo.ABSave.Deserialization
             return DeserializeObjectMembers(item.ItemType, info.Members!);
         }
 
-        object DeserializeObjectMembers(Type type, ObjectMemberSharedInfo[] members)
-        {
-            var res = Activator.CreateInstance(type);
-
-            for (int i = 0; i < members.Length; i++)
-                members[i].Accessor.Setter(res!, DeserializeItem(members[i].Map));
-
-            return res!;
-        }
-
         // Returns: Whether the type has changed
         bool ReadHeader(MapItem item)
         {
