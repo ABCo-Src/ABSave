@@ -35,19 +35,11 @@ namespace ABCo.ABSave.Mapping.Generation
         {
             EnsureTypeSafety(type);
 
-            // Converter
-            MapItem? converterItem = TryGenerateConverter(type);
-            if (converterItem != null) return FinishItem(converterItem);
+            MapItem? item= TryGenerateConverter(type);
+            if (item == null) throw new UnserializableTypeException(type);
 
-            // Object
-            MapItem objItem = MapInitialMapper.GenerateNewObject(type);
-            return FinishItem(objItem);
-
-            MapItemInfo FinishItem(MapItem item)
-            {
-                item.IsGenerating = false;
-                return new MapItemInfo(item, isNullable);
-            }
+            item.IsGenerating = false;
+            return new MapItemInfo(item, isNullable);
         }
 
         internal MapItemInfo GetRuntimeMap(Type type)

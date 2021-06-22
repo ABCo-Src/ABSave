@@ -205,7 +205,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            Assert.ThrowsException<UnserializableType>(() =>
+            Assert.ThrowsException<UnserializableTypeException>(() =>
             {
                 var info = new ObjectIntermediateInfo();
                 Generator.CreateIntermediateObjectInfo(typeof(UnserializableClass), ref info);

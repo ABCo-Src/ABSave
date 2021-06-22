@@ -16,7 +16,8 @@ namespace ABCo.ABSave.Configuration
             new ConverterInfo(typeof(GuidConverter), 4),
             new ConverterInfo(typeof(TextConverter), 5),
             new ConverterInfo(typeof(TickBasedConverter), 6),
-            new ConverterInfo(typeof(VersionConverter), 7)
+            new ConverterInfo(typeof(VersionConverter), 7),
+            new ConverterInfo(typeof(ObjectConverter), 8)
         };
     }
 }
