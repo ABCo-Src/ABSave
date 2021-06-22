@@ -14,7 +14,7 @@ namespace ABCo.ABSave.Mapping.Generation
 {
     public partial class MapGenerator
     {
-        internal ABSaveMap Map = null!;
+        internal ABSaveMap Map = null!;  
         internal MapItemInfo CurrentItem;
 
         // A list of all the property members to still have their accessor processed. These get
