@@ -93,7 +93,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
             var (newVer, usesHeader) = converter.GetVersionInfo(version);
 
             SaveInheritanceAttribute? inheritanceInfo = null;
-            if (converter._allInheritanceAttributes != null);
+            if (converter._allInheritanceAttributes != null)
                 inheritanceInfo = InheritanceHandler.GetAttributeForVersion(converter._allInheritanceAttributes, version);
 
             newVer ??= new VersionInfo(usesHeader);
