@@ -72,22 +72,5 @@ namespace ABCo.ABSave.Mapping.Generation
 
         Converter GetConverterInstance(ConverterInfo info) =>
             _converterCache[info.ConverterId] ??= (Converter)Activator.CreateInstance(info.ConverterType)!;
-
-        // Temporary helper until object conversion gets moved into its own converter
-        internal static SaveInheritanceAttribute? GetConverterInheritanceInfoForVersion(uint version, Converter converter)
-        {
-            // Try to get it from the dictionary cache.
-            if (converter._inheritanceValues != null && 
-                converter._inheritanceValues.TryGetValue(version, out SaveInheritanceAttribute? res))
-                return res;
-
-            // If it's not in there, find it in the attribute array.
-            if (converter._allInheritanceAttributes == null) return null;
-            SaveInheritanceAttribute? attribute = FindInheritanceAttributeForVersion(converter._allInheritanceAttributes, version);
-
-            converter._inheritanceValues ??= new Dictionary<uint, SaveInheritanceAttribute?>();
-            converter._inheritanceValues.Add(version, attribute);
-            return attribute;
-        }
     }
 }
