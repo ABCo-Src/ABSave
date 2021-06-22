@@ -1,6 +1,8 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
 using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation.General;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -44,9 +46,17 @@ namespace ABCo.ABSave.Mapping.Generation
             // Remove it from the cache.
             _converterCache[id] = null;
 
+            // Apply the converter
             ApplyItem(converter, type);
+
+            // Call the user initialization
             converter.Initialize(new InitializeInfo(type, this));
-            converter._allInheritanceAttributes = GetInheritanceAttributes(type);
+
+            // Setup the backing information for the converter.
+            converter._allInheritanceAttributes =
+                InheritanceHandler.GetInheritanceAttributes(type, ref converter.HighestVersion);
+
+            VersionCacheHandler.SetupVersionCacheOnItem(converter, this);
             return converter;
         }
 

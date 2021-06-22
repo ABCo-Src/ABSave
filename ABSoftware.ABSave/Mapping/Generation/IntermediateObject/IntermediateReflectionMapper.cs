@@ -25,21 +25,21 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 
             // Process the members
             var dest = new List<ObjectIntermediateItem>(currentFields.Length + currentProperties.Length);
-            AddMembers(currentFields, dest);
-            AddMembers(currentProperties, dest);
+            AddMembers(ref ctx, currentFields, dest);
+            AddMembers(ref ctx, currentProperties, dest);
             return dest.ToArray();
         }
 
-        static void AddMembers(MemberInfo[] members, List<ObjectIntermediateItem> dest)
+        static void AddMembers(ref IntermediateMappingContext ctx, MemberInfo[] members, List<ObjectIntermediateItem> dest)
         {
             for (int i = 0; i < members.Length; i++)
             {
-                var newItem = GetItemForMember(members[i]);
+                var newItem = GetItemForMember(ref ctx, members[i]);
                 if (newItem != null) dest.Add(newItem);
             }
         }
 
-        static ObjectIntermediateItem? GetItemForMember(MemberInfo info)
+        internal static ObjectIntermediateItem? GetItemForMember(ref IntermediateMappingContext ctx, MemberInfo info)
         {
             // Get the attributes - skip this item if there are none
             var attributes = info.GetCustomAttributes(typeof(MapAttr), false);
@@ -51,6 +51,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             bool successful = FillItemFromAttributes(newItem, info, attributes);
             if (!successful) throw new IncompleteDetailsException(info);
 
+            IntermediateMapper.UpdateContextFromItem(ref ctx, newItem);
             return newItem;
         }
 

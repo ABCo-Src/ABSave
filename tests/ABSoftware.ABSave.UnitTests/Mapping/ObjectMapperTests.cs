@@ -5,6 +5,7 @@ using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Object;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -47,7 +48,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var memberInfo = typeof(FieldClass).GetField(nameof(FieldClass.A));
 
             var item = new ObjectMemberSharedInfo();
-            MapGenerator.GenerateFieldAccessor(ref item.Accessor, memberInfo);
+            MemberAccessorGenerator.GenerateFieldAccessor(ref item.Accessor, memberInfo);
 
             Assert.IsInstanceOfType(item.Accessor.Object1, typeof(FieldInfo));
             Assert.AreEqual(MemberAccessorType.Field, item.Accessor.Type);
@@ -60,7 +61,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var item = Generator.GetMap(type);
             var parent = Generator.GetMap(parentType);
 
-            MapGenerator.GeneratePropertyAccessor(ref dest, item, parent._innerItem, info);
+            MemberAccessorGenerator.DoGeneratePropertyAccessor(ref dest, item, parent._innerItem, info);
         }
 
         [TestMethod]
@@ -91,7 +92,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var item = new ObjectMemberSharedInfo();
             RunGenerateAccessor(ref item.Accessor, typeof(SubWithHeader), typeof(NestedClass), memberInfo);
 
-            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(MapGenerator.ReferenceGetterDelegate<NestedClass>));
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(MemberAccessorGenerator.ReferenceGetterDelegate<NestedClass>));
             Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<NestedClass, SubWithHeader>));
             Assert.AreEqual(MemberAccessorType.AllRefProperty, item.Accessor.Type);
 

@@ -1,6 +1,9 @@
 ﻿using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.IntermediateObject;
+using ABCo.ABSave.Mapping.Generation.Object;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -13,7 +16,7 @@ using System.Threading.Tasks;
 namespace ABCo.ABSave.UnitTests.Mapping
 {
     [TestClass]
-    public class IntermediateObjInfoMapperTests : MapTestBase
+    public class IntermediateMapperTests : MapTestBase
     {
         public int A;
         public int B;
@@ -23,7 +26,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         public void FillMainInfo_CorrectValues()
         {
             ObjectIntermediateItem info = new ObjectIntermediateItem();
-            MapGenerator.FillMainInfo(info, 3, 6, -1);
+            IntermediateMapper.FillMainInfo(info, 3, 6, -1);
 
             Assert.AreEqual(3, info.Order);
             Assert.AreEqual(6u, info.StartVer);
@@ -33,39 +36,39 @@ namespace ABCo.ABSave.UnitTests.Mapping
         [TestMethod]
         public void FillMainInfo_CorrectHighestVersion_NoCustomHighs()
         {
-            var ctx = new MapGenerator();            
+            var ctx = new IntermediateMappingContext();            
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
-            MapGenerator.FillMainInfo(info, 3, 6, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 3, 6, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 5, 8, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 5, 8, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 9, 11, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 9, 11, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            Assert.AreEqual(9, ctx._intermediateContext.TranslationCurrentOrderInfo);
-            Assert.AreEqual(11u, ctx._intermediateContext.HighestVersion);
+            Assert.AreEqual(9, ctx.TranslationCurrentOrderInfo);
+            Assert.AreEqual(11u, ctx.HighestVersion);
         }
 
         [TestMethod]
         public void FillMainInfo_CorrectHighestVersion_CustomHighs()
         {
-            var ctx = new MapGenerator();
+            var ctx = new IntermediateMappingContext();
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
-            MapGenerator.FillMainInfo(info, 3, 6, 7);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 3, 6, 7);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 5, 8, 34);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 5, 8, 34);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 9, 11, 59);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 9, 11, 59);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            Assert.AreEqual(9, ctx._intermediateContext.TranslationCurrentOrderInfo);
-            Assert.AreEqual(59u, ctx._intermediateContext.HighestVersion);
+            Assert.AreEqual(9, ctx.TranslationCurrentOrderInfo);
+            Assert.AreEqual(59u, ctx.HighestVersion);
         }
 
         [TestMethod]
@@ -73,20 +76,20 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var ctx = new MapGenerator();
+            var ctx = new IntermediateMappingContext();
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
-            MapGenerator.FillMainInfo(info, 3, 0, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 3, 0, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 5, 0, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 5, 0, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 9, 0, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 9, 0, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            Assert.AreEqual(9, ctx._intermediateContext.TranslationCurrentOrderInfo);
-            Assert.AreEqual(0u, ctx._intermediateContext.HighestVersion);
+            Assert.AreEqual(9, ctx.TranslationCurrentOrderInfo);
+            Assert.AreEqual(0u, ctx.HighestVersion);
         }
 
         [TestMethod]
@@ -94,20 +97,20 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var ctx = new MapGenerator();
+            var ctx = new IntermediateMappingContext();
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
 
-            MapGenerator.FillMainInfo(info, 3, 0, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 3, 0, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 5, 0, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 5, 0, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 9, 0, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 9, 0, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            Assert.AreEqual(9, ctx._intermediateContext.TranslationCurrentOrderInfo);
+            Assert.AreEqual(9, ctx.TranslationCurrentOrderInfo);
         }
 
         [TestMethod]
@@ -115,37 +118,31 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var ctx = new MapGenerator();
+            var ctx = new IntermediateMappingContext();
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
 
-            MapGenerator.FillMainInfo(info, 9, 0, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 9, 0, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 5, 0, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 5, 0, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            MapGenerator.FillMainInfo(info, 7, 0, -1);
-            ctx.UpdateContextFromItem(info);
+            IntermediateMapper.FillMainInfo(info, 7, 0, -1);
+            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
-            Assert.AreEqual(-1, ctx._intermediateContext.TranslationCurrentOrderInfo);
+            Assert.AreEqual(-1, ctx.TranslationCurrentOrderInfo);
         }
 
         [TestMethod]
-        public void ProcessItemAttributes_NoAttribute()
+        public void GetItemForMember_NoAttribute()
         {
             Setup();
 
-            var ctx = Generator.CurrentReflectionMapper;
+            var ctx = new IntermediateMappingContext();
             var member = typeof(ClassWithSkippableItem).GetProperty(nameof(ClassWithSkippableItem.Skippable));
-            ctx.PrepareBufferForSize(3);
 
-            ObjectIntermediateItem item = null;
-            int count = 0;
-
-            MapGenerator.ReflectionMapper.ProcessMemberAttributes(member, ref item, ref count);
-            Assert.AreEqual(0, count);
-            Assert.IsNull(item);
+            Assert.IsNull(IntermediateReflectionMapper.GetItemForMember(ref ctx, member));
         }
 
         [TestMethod]
@@ -153,15 +150,11 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var ctx = Generator.CurrentReflectionMapper;
+            var ctx = new IntermediateMappingContext();
             var member = typeof(VersionedClass).GetProperty(nameof(VersionedClass.B));
-            ctx.PrepareBufferForSize(3);
 
-            ObjectIntermediateItem item = null;
-            int count = 0;
+            var item = IntermediateReflectionMapper.GetItemForMember(ref ctx, member);
 
-            MapGenerator.ReflectionMapper.ProcessMemberAttributes(member, ref item, ref count);
-            Assert.AreEqual(1, count);
             Assert.AreEqual(1, item.Order);
             Assert.AreEqual(1u, item.StartVer);
             Assert.AreEqual(1u, item.EndVer);
@@ -201,18 +194,6 @@ namespace ABCo.ABSave.UnitTests.Mapping
         //}
 
         [TestMethod]
-        public void Class_NoAttribute()
-        {
-            Setup();
-
-            Assert.ThrowsException<UnserializableTypeException>(() =>
-            {
-                var info = new ObjectIntermediateInfo();
-                Generator.CreateIntermediateObjectInfo(typeof(UnserializableClass), ref info);
-            });
-        }
-
-        [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
         public void Fields(bool isValueTypeParent)
@@ -225,16 +206,16 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
         void TestFields(bool isValueTypeParent)
         {
-            var info = new ObjectIntermediateInfo();
-            uint version = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(FieldStruct) : typeof(FieldClass), ref info);
+            var highestVersion = IntermediateMapper.CreateIntermediateObjectInfo(
+                isValueTypeParent ? typeof(FieldStruct) : typeof(FieldClass), SaveMembersMode.Fields, out var members);
 
-            Assert.AreEqual(0u, version);
-            Assert.AreEqual(2, info.RawMembers.Length);
+            Assert.AreEqual(0u, highestVersion);
+            Assert.AreEqual(2, members.Length);
 
-            for (int i = 0; i < info.RawMembers.Length; i++)
+            for (int i = 0; i < members.Length; i++)
             {
-                Assert.IsFalse(info.RawMembers[i].IsProcessed);
-                Assert.IsInstanceOfType(info.RawMembers[i].Details.Unprocessed, typeof(FieldInfo));
+                Assert.IsFalse(members[i].IsProcessed);
+                Assert.IsInstanceOfType(members[i].Details.Unprocessed, typeof(FieldInfo));
 
                 Type expectedType = i switch
                 {
@@ -243,7 +224,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
                     _ => throw new Exception("Incorrect key")
                 };
 
-                Assert.AreEqual(expectedType, ((FieldInfo)info.RawMembers[i].Details.Unprocessed).FieldType);
+                Assert.AreEqual(expectedType, ((FieldInfo)members[i].Details.Unprocessed).FieldType);
             }
         }
 
@@ -258,16 +239,16 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
         void TestProperties(bool isValueTypeParent)
         {
-            var info = new ObjectIntermediateInfo();
-            uint version = Generator.CreateIntermediateObjectInfo(isValueTypeParent ? typeof(AllPrimitiveStruct) : typeof(AllPrimitiveClass), ref info);
+            var highestVersion = IntermediateMapper.CreateIntermediateObjectInfo(
+               isValueTypeParent ? typeof(AllPrimitiveStruct) : typeof(AllPrimitiveClass), SaveMembersMode.Properties, out var members);
 
-            Assert.AreEqual(0u, version);
-            Assert.AreEqual(3, info.RawMembers.Length);
+            Assert.AreEqual(0u, highestVersion);
+            Assert.AreEqual(3, members.Length);
 
-            for (int i = 0; i < info.RawMembers.Length; i++)
+            for (int i = 0; i < members.Length; i++)
             {
-                Assert.IsFalse(info.RawMembers[i].IsProcessed);
-                Assert.IsInstanceOfType(info.RawMembers[i].Details.Unprocessed, typeof(PropertyInfo));
+                Assert.IsFalse(members[i].IsProcessed);
+                Assert.IsInstanceOfType(members[i].Details.Unprocessed, typeof(PropertyInfo));
 
                 Type expectedType = i switch
                 {
@@ -277,7 +258,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
                     _ => throw new Exception("Invalid key")
                 };
 
-                Assert.AreEqual(expectedType, ((PropertyInfo)info.RawMembers[i].Details.Unprocessed)!.PropertyType);
+                Assert.AreEqual(expectedType, ((PropertyInfo)members[i].Details.Unprocessed)!.PropertyType);
             }
         }
 
@@ -312,15 +293,15 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            var info = new ObjectIntermediateInfo();
-            uint version = Generator.CreateIntermediateObjectInfo(typeof(UnorderedClass), ref info);
+            uint highestVersion = 
+                IntermediateMapper.CreateIntermediateObjectInfo(typeof(UnorderedClass), SaveMembersMode.Properties, out var members);
 
-            Assert.AreEqual(0u, version);
+            Assert.AreEqual(0u, highestVersion);
 
-            for (int i = 0; i < info.RawMembers.Length; i++)
+            for (int i = 0; i < members.Length; i++)
             {
-                Assert.IsFalse(info.RawMembers[i].IsProcessed);
-                Assert.IsInstanceOfType(info.RawMembers[i].Details.Unprocessed, typeof(PropertyInfo));
+                Assert.IsFalse(members[i].IsProcessed);
+                Assert.IsInstanceOfType(members[i].Details.Unprocessed, typeof(PropertyInfo));
 
                 Type expectedType = i switch
                 {
@@ -329,7 +310,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
                     _ => throw new Exception("Invalid key")
                 };
 
-                Assert.AreEqual(expectedType, ((PropertyInfo)info.RawMembers[i].Details.Unprocessed).PropertyType);
+                Assert.AreEqual(expectedType, ((PropertyInfo)members[i].Details.Unprocessed).PropertyType);
                 i++;
             }
         }

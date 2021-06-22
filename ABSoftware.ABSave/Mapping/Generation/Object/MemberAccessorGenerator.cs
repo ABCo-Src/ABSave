@@ -30,7 +30,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
         /// <summary>
         /// Generate the fastest possible accessor for the given property. See more details on <see cref="MemberAccessor"/>
         /// </summary>
-        static void DoGeneratePropertyAccessor(ref MemberAccessor accessor, MapItemInfo item, MapItem parentItem, PropertyInfo property)
+        internal static void DoGeneratePropertyAccessor(ref MemberAccessor accessor, MapItemInfo item, MapItem parentItem, PropertyInfo property)
         {
             // All property optimizations rely on the parent being a reference-type.
             if (!parentItem.IsValueItemType)

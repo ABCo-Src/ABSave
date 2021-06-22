@@ -35,7 +35,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
         static void FillDestWithOneVersion(Converter dest, MapGenerator gen)
         {
             dest.HasOneVersion = true;
-            dest.VersionCache.OneVersion = GetVersionInfo(dest, 0);
+            dest.VersionCache.OneVersion = GetVersionInfo(dest, 0, gen);
 
             // There are no more versions here, so call the release for that.
             dest.HandleAllVersionsGenerated();
@@ -44,10 +44,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
         public static VersionInfo? GetVersionOrAddNull(Converter item, uint version)
         {
             if (item.HasOneVersion)
-            {
-                Debug.Assert(version != 0);
                 return version > 0 ? null : item.VersionCache.OneVersion;
-            }
 
             while (true)
             {

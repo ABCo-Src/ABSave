@@ -180,8 +180,6 @@ namespace ABCo.ABSave.Mapping.Generation
             return false;
         }
 
-        SaveInheritanceAttribute[] GetInheritanceAttributes(Type classType) => (SaveInheritanceAttribute[])classType.GetCustomAttributes<SaveInheritanceAttribute>(false);
-
         internal void Initialize(ABSaveMap map)
         {
             Map = map;

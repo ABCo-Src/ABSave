@@ -51,7 +51,7 @@ namespace ABCo.ABSave.Converters
             var members = ((ObjectVersionInfo)info.VersionInfo).Members;
 
             for (int i = 0; i < members.Length; i++)
-                header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map);
+                header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map, ref header);
         }
 
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)

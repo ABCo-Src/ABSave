@@ -3,6 +3,7 @@ using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Object;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
@@ -14,6 +15,8 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
     {
         public static uint CreateIntermediateObjectInfo(Type type, SaveMembersMode mode, out ObjectIntermediateItem[] members)
         {
+            Debug.Assert(Attribute.IsDefined(type, typeof(SaveMembersAttribute)));
+
             var ctx = new IntermediateMappingContext(type, mode);
 
             // Coming soon: Settings-based mapping
