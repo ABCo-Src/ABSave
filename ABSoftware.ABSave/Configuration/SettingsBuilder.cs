@@ -1,10 +1,6 @@
-﻿using ABCo.ABSave.Converters;
-using ABCo.ABSave.Mapping.Description.Attributes.Converters;
-using ABCo.ABSave.Mapping.Generation;
+﻿using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 
 namespace ABCo.ABSave.Configuration
 {
@@ -13,7 +9,7 @@ namespace ABCo.ABSave.Configuration
         bool? _lazyBitHandling;
         bool? _useUTF8;
         bool? _useLittleEndian;
-        bool? _bypassDangerousTypeChecking;        
+        bool? _bypassDangerousTypeChecking;
 
         List<ConverterInfo>? _converters;
 

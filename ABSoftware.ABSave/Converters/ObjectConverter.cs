@@ -1,16 +1,46 @@
 ﻿using ABCo.ABSave.Deserialization;
-using ABCo.ABSave.Mapping.Generation;
-using ABCo.ABSave.Serialization;
-using System;
-using System.Reflection;
+using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description;
+/* Unmerged change from project 'ABCo.ABSave (net5.0)'
+Before:
 using System.Collections.Generic;
 using System.Text;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
-using ABCo.ABSave.Mapping.Generation.IntermediateObject;
+After:
+using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
+using ABCo.ABSave.Mapping.Generation;
+*/
+using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Description.Attributes.Converters;
+using ABCo.ABSave.Mapping.Generation;
+/* Unmerged change from project 'ABCo.ABSave (net5.0)'
+Before:
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation.Object;
+After:
+using ABCo.ABSave.Mapping.Generation.Object;
+using ABCo.ABSave.Serialization;
+using System;
+using ABCo.ABSave.Generic;
+using System.Reflection;
+using System.Text;
+*/
+using ABCo.ABSave.Mapping.Generation.IntermediateObject;
+using ABCo.ABSave.Mapping.Generation.Object;
+
+/* Unmerged change from project 'ABCo.ABSave (net5.0)'
+Before:
+using System.Collections.Serialization;
+using System;
+After:
+using System;
+using System.Collections.Serialization;
+*/
+using System;
+using System.Reflection;
 
 namespace ABCo.ABSave.Converters
 {

@@ -1,17 +1,11 @@
-﻿using ABCo.ABSave.Exceptions;
-using ABCo.ABSave.Helpers;
-using ABCo.ABSave.Mapping.Description;
+﻿using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using ABCo.ABSave.Mapping.Generation.Object;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.Mapping
 {
@@ -36,7 +30,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         [TestMethod]
         public void FillMainInfo_CorrectHighestVersion_NoCustomHighs()
         {
-            var ctx = new IntermediateMappingContext();            
+            var ctx = new IntermediateMappingContext();
 
             ObjectIntermediateItem info = new ObjectIntermediateItem();
             IntermediateMapper.FillMainInfo(info, 3, 6, -1);
@@ -293,7 +287,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            uint highestVersion = 
+            uint highestVersion =
                 IntermediateMapper.CreateIntermediateObjectInfo(typeof(UnorderedClass), SaveMembersMode.Properties, out var members);
 
             Assert.AreEqual(0u, highestVersion);

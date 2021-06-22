@@ -5,10 +5,6 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.TestHelpers
 {
@@ -45,8 +41,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
             return new SubWithoutHeader();
         }
-        
-        public override void Initialize(InitializeInfo info) =>        
+
+        public override void Initialize(InitializeInfo info) =>
             _writesToHeader = info.Type == typeof(SubWithHeader);
     }
 }

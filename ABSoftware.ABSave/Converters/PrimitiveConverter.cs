@@ -4,8 +4,6 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Converters
 {

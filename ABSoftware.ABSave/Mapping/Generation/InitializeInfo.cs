@@ -1,7 +1,5 @@
 ﻿using ABCo.ABSave.Configuration;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation
 {

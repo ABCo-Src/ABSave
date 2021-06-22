@@ -5,9 +5,7 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
@@ -181,7 +179,7 @@ namespace ABCo.ABSave.Converters
                     header.WriteInteger(context.Rank, 5);
                     header.Apply();
 
-                    header.Serializer.WriteCompressed((uint)firstLength);                   
+                    header.Serializer.WriteCompressed((uint)firstLength);
 
                     SerializeMultiDimensionalArrayData(arr, ref context, ref mdContext, firstLength, lowerBounds, header.Serializer);
 
@@ -223,7 +221,7 @@ namespace ABCo.ABSave.Converters
 
             // Deepest dimension
             if (nextDimension == mdInfo.Array.Rank)
-                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) 
+                for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
                     mdInfo.Serializer.SerializeItem(mdInfo.Array.GetValue(currentPos), info.PerItem);
 
             // Outer dimension
@@ -390,7 +388,7 @@ namespace ABCo.ABSave.Converters
 
             // Deepest dimension
             if (nextDimension == mdContext.Result.Rank)
-                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) 
+                for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
                     mdContext.Result.SetValue(mdContext.Deserializer.DeserializeItem(context.PerItem), currentPos);
 
             // Outer dimension

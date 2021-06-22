@@ -1,15 +1,7 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Converters;
-using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.UnitTests.TestHelpers;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.Mapping
 {

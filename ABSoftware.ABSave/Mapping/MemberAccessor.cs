@@ -1,9 +1,6 @@
-﻿using ABCo.ABSave.Helpers;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping
 {
@@ -56,7 +53,7 @@ namespace ABCo.ABSave.Mapping
             };
         }
 
-        object PrimitiveGetter<T>(object parent) where T : struct 
+        object PrimitiveGetter<T>(object parent) where T : struct
             => Unsafe.As<Func<object, T>>(Object1)!(parent);
 
         public void Setter(object parent, object? value)
@@ -128,7 +125,7 @@ namespace ABCo.ABSave.Mapping
             };
         }
 
-        void PrimitiveSetter<T>(object parent, object value) where T : struct 
+        void PrimitiveSetter<T>(object parent, object value) where T : struct
             => Unsafe.As<Action<object, T>>(Object2)!(parent, (T)value);
 
         public void Initialize(MemberAccessorType type, object obj1, object? obj2) =>
