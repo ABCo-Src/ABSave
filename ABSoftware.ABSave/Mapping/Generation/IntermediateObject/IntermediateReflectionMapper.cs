@@ -5,6 +5,7 @@ using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.Object
 {

@@ -1,7 +1,10 @@
 ﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.Object
 {

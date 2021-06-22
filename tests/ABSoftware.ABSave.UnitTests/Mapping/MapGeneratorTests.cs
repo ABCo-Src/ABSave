@@ -3,6 +3,9 @@ using ABCo.ABSave.Mapping;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -71,7 +74,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             // Make an "Allocating" item.
             Generator.GetExistingOrAddNull(typeof(int));
-
+            
             waiter.Start();
 
             // Wait a second - this should be more than enough time for the waiter to be stuck in the waiting cycle.
@@ -93,7 +96,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             Setup();
 
             var secondGenerator = Map.GetGenerator();
-
+            
             MapItem first = null;
             MapItem second = null;
 
@@ -128,7 +131,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         [TestMethod]
         public void Generate_Nullable()
         {
-            Setup();
+            Setup(); 
 
             // Inner does not exist
             var pos = Generator.GetMap(typeof(AllPrimitiveStruct?));
@@ -178,7 +181,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         [TestMethod]
         public void Generate_SafetyChecks()
         {
-            Setup();
+            Setup(); 
 
             Assert.ThrowsException<DangerousTypeException>(() => Generator.GetMap(typeof(object)));
             Assert.ThrowsException<DangerousTypeException>(() => Generator.GetMap(typeof(ValueType)));

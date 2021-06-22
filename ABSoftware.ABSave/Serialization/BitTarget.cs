@@ -1,5 +1,8 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -17,7 +20,7 @@ namespace ABCo.ABSave.Serialization
             Serializer = serializer;
 
             Result = 0;
-        }
+        }        
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteBitOn()

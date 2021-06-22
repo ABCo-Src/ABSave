@@ -1,4 +1,8 @@
-﻿namespace ABCo.ABSave.Mapping.Generation
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ABCo.ABSave.Mapping.Generation
 {
     internal static class MappingHelpers
     {

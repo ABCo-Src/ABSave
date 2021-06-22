@@ -3,6 +3,7 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -39,9 +40,9 @@ namespace ABCo.ABSave.Mapping.Generation
                 }
 
                 if (alsoNeedsCheckType)
-                    nonExactConverters.Add(currentConverter);
+                    nonExactConverters.Add(currentConverter);                
             }
-
+             
             outExactConverters = exactConverters;
             outNonExactConverters = nonExactConverters;
         }

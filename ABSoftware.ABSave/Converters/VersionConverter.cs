@@ -14,7 +14,7 @@ namespace ABCo.ABSave.Converters
 
         public static void SerializeVersion(Version version, ref BitTarget header)
         {
-            var hasMajor = version.Major != 1;
+            var hasMajor = version.Major != 1; 
             var hasMinor = version.Minor > 0;
             var hasBuild = version.Build > 0;
             var hasRevision = version.Revision > 0;

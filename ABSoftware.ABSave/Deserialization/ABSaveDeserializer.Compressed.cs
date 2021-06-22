@@ -1,4 +1,8 @@
-﻿namespace ABCo.ABSave.Deserialization
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ABCo.ABSave.Deserialization
 {
     // ===============================================
     // NOTE: Full details about the "compressed numerical" structure can be seen in the TXT file: CompressedPlan.txt in the project root

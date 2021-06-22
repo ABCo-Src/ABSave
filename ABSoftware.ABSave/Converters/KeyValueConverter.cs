@@ -7,6 +7,7 @@ using ABCo.ABSave.Serialization;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
@@ -22,7 +23,7 @@ namespace ABCo.ABSave.Converters
         {
             if (_isGeneric)
                 SerializeGeneric((dynamic)info.Instance, header.Serializer);
-
+                
             else
                 SerializeNonGeneric((DictionaryEntry)info.Instance, header.Serializer);
         }

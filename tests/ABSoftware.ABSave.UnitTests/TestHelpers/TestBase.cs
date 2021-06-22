@@ -1,12 +1,18 @@
 ﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.TestHelpers
 {
@@ -71,7 +77,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             AssertOutput(data);
             GoToStart();
         }
-
+        
         public void AssertOutput(params byte[] expected)
         {
             var actual = Stream.ToArray();
@@ -83,7 +89,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                 var actualStr = BitConverter.ToString(actual);
 
                 throw new Exception($"Non-matching assert!\nExpected: {expectedStr}\nActual: {actualStr}");
-            }
+            }   
         }
 
         public byte[] GetByteArr(params short[] data) => GetByteArr(null, data);
@@ -151,7 +157,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                 {
                     serializer.Reset();
                     serializer.Output.Position = 0;
-                }
+                } 
             }
         }
 

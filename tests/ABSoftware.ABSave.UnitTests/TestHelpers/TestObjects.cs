@@ -2,6 +2,10 @@
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.TestOtherAssembly;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.TestHelpers
 {
@@ -22,7 +26,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     class SubEmpty : BaseIndex { }
 
     [SaveMembers]
-    class SubNoConverter : BaseIndex
+    class SubNoConverter : BaseIndex 
     {
         [Save(0)]
         public byte A { get; set; }

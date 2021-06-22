@@ -2,7 +2,9 @@
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Object;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
 {
