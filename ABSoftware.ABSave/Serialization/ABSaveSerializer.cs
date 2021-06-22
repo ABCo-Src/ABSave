@@ -28,7 +28,7 @@ namespace ABCo.ABSave.Serialization
     /// </summary>
     public sealed partial class ABSaveSerializer
     {
-        readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
+        readonly Dictionary<Type, VersionInfo> _objectVersions = new Dictionary<Type, VersionInfo>();
         readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
 
         public Dictionary<Type, uint>? TargetVersions { get; private set; }
@@ -184,7 +184,7 @@ namespace ABCo.ABSave.Serialization
                 sameType = WriteHeaderNullAndInheritance(actualType, item, ref header);
 
             // Write and get the info for a version, if necessary
-            if (!_objectVersions.TryGetValue(item.ItemType, out ObjectVersionInfo info))
+            if (!_objectVersions.TryGetValue(item.ItemType, out VersionInfo info))
             {
                 uint version = WriteNewVersionInfo(item, ref header);
                 info = Map.GetMembersForVersion(item, version);

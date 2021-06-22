@@ -9,7 +9,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 {
     internal static class ObjectVersionMapper
     {
-        public static ObjectVersionInfo GenerateNewVersion(MapGenerator gen, uint targetVersion, ObjectMapItem parent)
+        public static VersionInfo GenerateNewVersion(MapGenerator gen, uint targetVersion, ObjectMapItem parent)
         {
             var intermediate = parent.Intermediate;
             var lst = new List<ObjectMemberSharedInfo>();
@@ -24,10 +24,10 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             }
 
             var inheritanceInfo = InheritanceHandler.GetAttributeForVersion(intermediate.AllInheritanceAttributes, targetVersion);
-            return new ObjectVersionInfo(lst.ToArray(), inheritanceInfo);
+            return new VersionInfo(lst.ToArray(), inheritanceInfo);
         }
 
-        public static ObjectVersionInfo GenerateForOneVersion(MapGenerator gen, uint version, ObjectMapItem parent)
+        public static VersionInfo GenerateForOneVersion(MapGenerator gen, uint version, ObjectMapItem parent)
         {
             var intermediate = parent.Intermediate;
 
@@ -38,7 +38,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
                 outputArr[i] = CreateItem(parent, intermediate.RawMembers[i], gen);
 
             SaveInheritanceAttribute? inheritanceInfo = InheritanceHandler.GetAttributeForVersion(intermediate.AllInheritanceAttributes, version);
-            return new ObjectVersionInfo(outputArr, inheritanceInfo);
+            return new VersionInfo(outputArr, inheritanceInfo);
         }
 
         static ObjectMemberSharedInfo CreateItem(ObjectMapItem parent, ObjectIntermediateItem intermediate, MapGenerator gen)

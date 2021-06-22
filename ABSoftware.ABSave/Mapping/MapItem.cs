@@ -45,36 +45,29 @@ namespace ABCo.ABSave.Mapping
         internal volatile bool IsGenerating;
         internal bool HasOneVersion;
         public uint HighestVersion;
+    }
 
-        // All the base types have been checked already and are definitely supported.
-        public List<Type>? DefiniteSupportedBaseTypes;
+    public class VersionInfo
+    {
+        public uint VersionNumber { get; private set; }
+        public bool UsesHeader { get; private set; }
+
+        internal SaveInheritanceAttribute? _inheritanceInfo;
+
+        public VersionInfo(bool usesHeader) =>
+            UsesHeader = usesHeader;
+
+        internal void Initialize(uint version, bool usesHeader, Converter converter)
+        {
+            VersionNumber = version;
+            UsesHeader = usesHeader;
+            _inheritanceInfo = MapGenerator.GetConverterInheritanceInfoForVersion(version, converter);
+        }
     }
 
     internal sealed class ObjectMapItem : MapItem
     {
-        public ObjectMembers Members;
         public ObjectIntermediateInfo Intermediate;
-
-        [StructLayout(LayoutKind.Explicit)]
-        public struct ObjectMembers
-        {
-            [FieldOffset(0)]
-            public ObjectVersionInfo OneVersion;
-             
-            [FieldOffset(0)]
-            public Dictionary<uint, ObjectVersionInfo> MultipleVersions;
-        }
-    }
-
-    internal struct ObjectVersionInfo
-    {
-        public static ObjectVersionInfo None => new ObjectVersionInfo(null, null);
-
-        public ObjectMemberSharedInfo[]? Members;
-        public SaveInheritanceAttribute? InheritanceInfo;
-
-        public ObjectVersionInfo(ObjectMemberSharedInfo[]? members, SaveInheritanceAttribute? inheritanceInfo) =>
-            (Members, InheritanceInfo) = (members, inheritanceInfo);
     }
 
     /// <summary>

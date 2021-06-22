@@ -19,7 +19,7 @@ namespace ABCo.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {
-        readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
+        readonly Dictionary<Type, VersionInfo> _objectVersions = new Dictionary<Type, VersionInfo>();
         readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
 
         public ABSaveMap Map { get; private set; } = null!;
@@ -137,8 +137,7 @@ namespace ABCo.ABSave.Deserialization
                 bool usesHeader;
                 (info, usesHeader) = converter.GetVersionInfo(version);
 
-                info ??= new ConverterVersionInfo(usesHeader);
-                info.Initialize(version, usesHeader, converter);
+
 
                 _converterVersions.Add(converter.ItemType, info);
             }
@@ -159,10 +158,10 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(item);
 
             // Read or create the version info if needed
-            if (_objectVersions.TryGetValue(item.ItemType, out ObjectVersionInfo info))
+            if (_objectVersions.TryGetValue(item.ItemType, out VersionInfo info))
             {
                 uint version = ReadNewVersionInfo();
-                info = MapGenerator.GetVersionOrAddNull(version, item);
+                info = Map.GetMembersForVersion(item, version);
                 _objectVersions.Add(item.ItemType, info);
             }
 

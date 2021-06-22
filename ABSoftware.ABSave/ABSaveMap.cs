@@ -3,6 +3,7 @@ using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.General;
 using ABCo.ABSave.Mapping.Generation.Object;
 using System;
 using System.Collections.Concurrent;
@@ -46,15 +47,15 @@ namespace ABCo.ABSave.Mapping
             return map;
         }
 
-        internal ObjectVersionInfo GetMembersForVersion(ObjectMapItem item, uint version)
+        internal VersionInfo GetMembersForVersion(ObjectMapItem item, uint version)
         {
             // Try to get the version if it already exists.
-            var existing = ObjectVersionHandler.GetVersionOrAddNull(version, item);
+            var existing = VersionCacheHandler.GetVersionOrAddNull(version, item);
             if (existing.Members != null) return existing;
 
             // If it doesn't, generate it.
             var gen = GetGenerator();
-            var res = ObjectVersionHandler.AddNewVersion(gen, version, item);
+            var res = VersionCacheHandler.AddNewVersion(gen, version, item);
             ReleaseGenerator(gen);
             return res;
         }
