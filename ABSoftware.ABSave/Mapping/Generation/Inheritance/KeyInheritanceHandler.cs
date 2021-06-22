@@ -9,7 +9,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ABCo.ABSave.Mapping
+namespace ABCo.ABSave.Mapping.Generation.Inheritance
 {
     public static class KeyInheritanceHandler
     {

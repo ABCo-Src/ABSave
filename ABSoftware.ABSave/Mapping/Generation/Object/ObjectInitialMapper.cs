@@ -20,9 +20,9 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             if (res.Intermediate.RawMembers!.Length == 0)
                 FillDestWithNoMembers(res);
             else if (res.HighestVersion == 0)
-                FillDestWithOneVersion(res);
+                FillDestWithOneVersion(gen, res);
             else
-                FillDestWithMultipleVersions(res);
+                FillDestWithMultipleVersions(gen, res);
 
             return res;
         }

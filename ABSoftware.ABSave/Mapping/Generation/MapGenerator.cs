@@ -40,7 +40,7 @@ namespace ABCo.ABSave.Mapping.Generation
             if (converterItem != null) return FinishItem(converterItem);
 
             // Object
-            MapItem objItem = GenerateNewObject(type);
+            MapItem objItem = ObjectInitialMapper.GenerateNewObject(type);
             return FinishItem(objItem);
 
             MapItemInfo FinishItem(MapItem item)
@@ -186,20 +186,6 @@ namespace ABCo.ABSave.Mapping.Generation
             }
 
             return false;
-        }
-
-        internal static SaveInheritanceAttribute? FindInheritanceAttributeForVersion(SaveInheritanceAttribute[]? attributes, uint version)
-        {
-            if (attributes == null) return null;
-
-            for (int i = 0; i < attributes.Length; i++)
-            {
-                var currentAttribute = attributes[i];
-                if (currentAttribute.FromVer <= version && currentAttribute.ToVer >= version)
-                    return currentAttribute;
-            }
-
-            return null;
         }
 
         SaveInheritanceAttribute[] GetInheritanceAttributes(Type classType) => (SaveInheritanceAttribute[])classType.GetCustomAttributes<SaveInheritanceAttribute>(false);

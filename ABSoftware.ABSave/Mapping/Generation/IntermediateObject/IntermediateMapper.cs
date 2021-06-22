@@ -45,24 +45,7 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
                     ctx.TranslationCurrentOrderInfo = -1;
             }
 
-            UpdateCtxVersionBounds(ref ctx, newItem.StartVer, newItem.EndVer);
-        }
-
-        public static void UpdateCtxVersionBounds(ref IntermediateMappingContext ctx, uint startVer, uint endVer)
-        {
-            // If there is no upper we'll only update the highest version based on what the minimum is.
-            if (endVer == uint.MaxValue)
-            {
-                if (startVer > ctx.HighestVersion)
-                    ctx.HighestVersion = startVer;
-            }
-
-            // If not update based on what their custom high is.
-            else
-            {
-                if (endVer > ctx.HighestVersion)
-                    ctx.HighestVersion = endVer;
-            }
+            MappingHelpers.UpdateHighestVersionFromRange(ref ctx.HighestVersion, newItem.StartVer, newItem.EndVer);
         }
     }
 }

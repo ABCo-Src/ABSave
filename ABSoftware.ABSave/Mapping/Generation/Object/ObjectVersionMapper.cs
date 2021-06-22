@@ -1,4 +1,5 @@
 ﻿using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -22,7 +23,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
                     lst.Add(GetOrCreateItemFrom(intermediateItm, parent, gen));
             }
 
-            var inheritanceInfo = gen.FindInheritanceAttributeForVersion(intermediate.AllInheritanceAttributes, targetVersion);
+            var inheritanceInfo = InheritanceHandler.GetAttributeForVersion(intermediate.AllInheritanceAttributes, targetVersion);
             return new ObjectVersionInfo(lst.ToArray(), inheritanceInfo);
         }
 
@@ -36,7 +37,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             for (int i = 0; i < outputArr.Length; i++)
                 outputArr[i] = CreateItem(parent, intermediate.RawMembers[i], gen);
 
-            SaveInheritanceAttribute? inheritanceInfo = gen.FindInheritanceAttributeForVersion(intermediate.AllInheritanceAttributes, version);
+            SaveInheritanceAttribute? inheritanceInfo = InheritanceHandler.GetAttributeForVersion(intermediate.AllInheritanceAttributes, version);
             return new ObjectVersionInfo(outputArr, inheritanceInfo);
         }
 

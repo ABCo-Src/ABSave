@@ -6,6 +6,7 @@ using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;

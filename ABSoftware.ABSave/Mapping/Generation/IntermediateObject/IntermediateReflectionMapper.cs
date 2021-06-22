@@ -79,18 +79,6 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             // TODO: This is just to temporarily support "object" until proper settings mapping comes in.
             SaveMembersMode res = GetClassMode(classType);
 
-            inheritanceInfo = (SaveInheritanceAttribute[])classType.GetCustomAttributes<SaveInheritanceAttribute>(false);
-
-            if (inheritanceInfo.Length == 0)
-                inheritanceInfo = null;
-            else
-            {
-                for (int i = 0; i < inheritanceInfo.Length; i++)
-                {
-                    var info = inheritanceInfo[i];
-                    IntermediateMapper.UpdateCtxVersionBounds(ref ctx, info.FromVer, info.ToVer);
-                }
-            }
 
             return res;
         }
