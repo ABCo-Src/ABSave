@@ -65,7 +65,7 @@ namespace ABCo.ABSave.Converters
             return res!;
         }
 
-        class ObjectVersionInfo : VersionInfo
+        internal class ObjectVersionInfo : VersionInfo
         {
             public ObjectMemberSharedInfo[] Members;
 

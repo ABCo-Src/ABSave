@@ -67,11 +67,6 @@ namespace ABCo.ABSave.Mapping
         }
     }
 
-    internal sealed class ObjectMapItem : MapItem
-    {
-        public ObjectIntermediateInfo Intermediate;
-    }
-
     /// <summary>
     /// Represents a map item that was retrieved during serialization-time. It has extra code-gen information as map items
     /// retrieved at serialization-time won't have been code-generated as a part of the main type.
