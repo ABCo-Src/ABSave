@@ -1,5 +1,7 @@
 ﻿using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -90,8 +92,12 @@ namespace ABCo.ABSave.Mapping.Generation.General
         {
             var (newVer, usesHeader) = converter.GetVersionInfo(version);
 
+            SaveInheritanceAttribute? inheritanceInfo = null;
+            if (converter._allInheritanceAttributes != null);
+                inheritanceInfo = InheritanceHandler.GetAttributeForVersion(converter._allInheritanceAttributes, version);
+
             newVer ??= new VersionInfo(usesHeader);
-            newVer.Initialize(version, usesHeader, converter);
+            newVer.Assign(version, usesHeader, inheritanceInfo);
 
             return newVer;
         }

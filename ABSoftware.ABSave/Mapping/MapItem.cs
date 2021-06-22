@@ -3,6 +3,7 @@ using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using ABCo.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
@@ -57,11 +58,11 @@ namespace ABCo.ABSave.Mapping
         public VersionInfo(bool usesHeader) =>
             UsesHeader = usesHeader;
 
-        internal void Initialize(uint version, bool usesHeader, Converter converter)
+        internal void Assign(uint version, bool usesHeader, SaveInheritanceAttribute? inheritanceInfo)
         {
             VersionNumber = version;
             UsesHeader = usesHeader;
-            _inheritanceInfo = MapGenerator.GetConverterInheritanceInfoForVersion(version, converter);
+            _inheritanceInfo = inheritanceInfo;
         }
     }
 
