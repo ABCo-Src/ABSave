@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Exceptions;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
@@ -203,17 +204,17 @@ namespace ABCo.ABSave.UnitTests.Mapping
             Setup();
 
             // Prepare the class for mapping.
-            var item = (ObjectMapItem)Generator.GetMap(typeof(VersionedClass))._innerItem;
+            var item = (ObjectConverter)Generator.GetMap(typeof(VersionedClass))._innerItem;
 
             // Create a new version - version 1.
             {
-                var info = Map.GetVersionInfo(item, 1);
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(item, 1);
 
                 Assert.AreEqual(3, info.Members.Length);
                 Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(bool)), info.Members[1].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[2].Map);
-                Assert.AreEqual(SaveInheritanceMode.Key, info.InheritanceInfo!.Mode);
+                Assert.AreEqual(SaveInheritanceMode.Key, info._inheritanceInfo!.Mode);
 
                 var infoAgain = Map.GetVersionInfo(item, 1);
                 Assert.AreEqual(info, infoAgain);
@@ -221,11 +222,11 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             // Create a new version - version 0.
             {
-                var info = Map.GetVersionInfo(item, 0);
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(item, 0);
 
                 Assert.AreEqual(1, info.Members.Length);
                 Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
-                Assert.AreEqual(SaveInheritanceMode.Key, info.InheritanceInfo!.Mode);
+                Assert.AreEqual(SaveInheritanceMode.Key, info._inheritanceInfo!.Mode);
 
                 var infoAgain = Map.GetVersionInfo(item, 0);
                 Assert.AreEqual(info, infoAgain);
@@ -233,13 +234,13 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             // Create a new version - version 2.
             {
-                var info = Map.GetVersionInfo(item, 2);
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(item, 2);
 
                 Assert.AreEqual(3, info.Members.Length);
                 Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[1].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[2].Map);
-                Assert.IsNull(info.InheritanceInfo);
+                Assert.IsNull(info._inheritanceInfo);
 
                 var infoAgain = Map.GetVersionInfo(item, 2);
                 Assert.AreEqual(info, infoAgain);
@@ -247,7 +248,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             // Create a new version - version 3.
             {
-                var info = Map.GetVersionInfo(item, 3);
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(item, 3);
 
                 // The same members as version 2
                 Assert.AreEqual(3, info.Members.Length);
@@ -256,7 +257,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
                 Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[2].Map);
 
                 // No inheritance
-                Assert.AreEqual(SaveInheritanceMode.IndexOrKey, info.InheritanceInfo!.Mode);
+                Assert.AreEqual(SaveInheritanceMode.IndexOrKey, info._inheritanceInfo!.Mode);
 
                 var infoAgain = Map.GetVersionInfo(item, 3);
                 Assert.AreEqual(info, infoAgain);
@@ -270,7 +271,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var pos = Generator.GetMap(typeof(VersionedClass));
 
-            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetVersionInfo((ObjectMapItem)pos._innerItem, 4));
+            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetVersionInfo((ObjectConverter)pos._innerItem, 4));
         }
     }
 }
