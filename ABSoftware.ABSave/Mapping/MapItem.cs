@@ -55,7 +55,8 @@ namespace ABCo.ABSave.Mapping
 
         internal SaveInheritanceAttribute? _inheritanceInfo;
 
-        public VersionInfo(bool usesHeader) =>
+        protected VersionInfo() { }
+        internal VersionInfo(bool usesHeader) =>
             UsesHeader = usesHeader;
 
         internal void Assign(uint version, bool usesHeader, SaveInheritanceAttribute? inheritanceInfo)
