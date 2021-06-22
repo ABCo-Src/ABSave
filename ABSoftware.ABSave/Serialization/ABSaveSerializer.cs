@@ -186,7 +186,7 @@ namespace ABCo.ABSave.Serialization
             if (!_objectVersions.TryGetValue(item.ItemType, out ObjectVersionInfo info))
             {
                 uint version = WriteNewVersionInfo(item, ref header);
-                info = MapGenerator.GetVersionOrAddNull(version, item);
+                info = Map.GetMembersForVersion(item, version);
                 _objectVersions.Add(item.ItemType, info);
             }
 

@@ -8,6 +8,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Reflection;
 using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Generation.Object;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -15,6 +16,10 @@ namespace ABCo.ABSave.Mapping.Generation
     {
         internal ABSaveMap Map = null!;
         internal MapItemInfo CurrentItem;
+
+        // A list of all the property members to still have their accessor processed. These get
+        // parallel processed at the very end of the generation process.
+        List<MemberAccessorGenerator.PropertyToProcess> _propertyAccessorsToProcess = new List<MemberAccessorGenerator.PropertyToProcess>();
 
         public MapItemInfo GetMap(Type type)
         {
@@ -183,7 +188,7 @@ namespace ABCo.ABSave.Mapping.Generation
             return false;
         }
 
-        private static SaveInheritanceAttribute? FindInheritanceAttributeForVersion(SaveInheritanceAttribute[]? attributes, uint version)
+        internal static SaveInheritanceAttribute? FindInheritanceAttributeForVersion(SaveInheritanceAttribute[]? attributes, uint version)
         {
             if (attributes == null) return null;
 
@@ -199,14 +204,15 @@ namespace ABCo.ABSave.Mapping.Generation
 
         SaveInheritanceAttribute[] GetInheritanceAttributes(Type classType) => (SaveInheritanceAttribute[])classType.GetCustomAttributes<SaveInheritanceAttribute>(false);
 
-        internal MapGenerator() => CurrentReflectionMapper = new ReflectionMapper(this);
-
         internal void Initialize(ABSaveMap map)
         {
             Map = map;
             _converterCache = new Converter[map.Settings.ConverterCount];
         }
 
-        internal void FinishGeneration() => ProcessAllQueuedAccessors();
+        internal void QueuePropertyForProcessing(MemberAccessorGenerator.PropertyToProcess process) =>
+            _propertyAccessorsToProcess.Add(process);
+
+        internal void FinishGeneration() => MemberAccessorGenerator.ProcessAllQueuedAccessors(_propertyAccessorsToProcess);
     }
 }
