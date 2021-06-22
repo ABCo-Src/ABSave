@@ -10,7 +10,7 @@ namespace ABCo.ABSave.Mapping.Generation
         public Type Type { get; }
         public ABSaveSettings Settings => _gen.Map.Settings;
 
-        MapGenerator _gen;
+        internal MapGenerator _gen;
 
         public MapItemInfo GetMap(Type type) => _gen.GetMap(type);
 

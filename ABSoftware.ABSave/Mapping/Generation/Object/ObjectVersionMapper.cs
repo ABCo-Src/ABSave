@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             return lst.ToArray();
         }
 
-        public static ObjectMemberSharedInfo[] GenerateForOneVersion(ObjectConverter item, MapGenerator gen, uint version)
+        public static ObjectMemberSharedInfo[] GenerateForOneVersion(ObjectConverter item, MapGenerator gen)
         {
             var rawMembers = item._rawMembers!;
 

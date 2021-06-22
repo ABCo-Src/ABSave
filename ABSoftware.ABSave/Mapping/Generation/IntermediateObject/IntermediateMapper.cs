@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Mapping.Description;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Object;
 using System;
 using System.Collections.Generic;
@@ -11,17 +12,16 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
     // intermediary form, that can then used to make the final maps for all the different version numbers.
     internal static class IntermediateMapper
     {
-        public static uint CreateIntermediateObjectInfo(Type type, ref ObjectIntermediateInfo info)
+        public static uint CreateIntermediateObjectInfo(Type type, SaveMembersMode mode, out ObjectIntermediateItem[] members)
         {
-            var ctx = new IntermediateMappingContext(type);
+            var ctx = new IntermediateMappingContext(type, mode);
 
             // Coming soon: Settings-based mapping
-            var members = IntermediateReflectionMapper.FillInfo(ref ctx, out SaveInheritanceAttribute[]? attr);
+            members = IntermediateReflectionMapper.FillInfo(ref ctx);
 
             if (ctx.TranslationCurrentOrderInfo == -1)
                 Array.Sort(members);
 
-            info = new ObjectIntermediateInfo(members, attr);
             return ctx.HighestVersion;
         }
 

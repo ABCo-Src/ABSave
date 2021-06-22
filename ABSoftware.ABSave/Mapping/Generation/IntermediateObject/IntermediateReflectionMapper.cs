@@ -14,15 +14,14 @@ namespace ABCo.ABSave.Mapping.Generation.Object
     /// </summary>
     internal static class IntermediateReflectionMapper
     {
-        public static ObjectIntermediateItem[] FillInfo(ref IntermediateMappingContext ctx, out SaveInheritanceAttribute[]? inheritanceInfo)
+        public static ObjectIntermediateItem[] FillInfo(ref IntermediateMappingContext ctx)
         {
             var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
             var classType = ctx.ClassType;
-            var mode = GetClassInfo(ref ctx, classType, out inheritanceInfo);
 
             // Get the members
-            FieldInfo[] currentFields = GetFields(bindingFlags, classType, mode);
-            PropertyInfo[] currentProperties = GetProperties(bindingFlags, classType, mode);
+            FieldInfo[] currentFields = GetFields(bindingFlags, classType, ctx.Mode);
+            PropertyInfo[] currentProperties = GetProperties(bindingFlags, classType, ctx.Mode);
 
             // Process the members
             var dest = new List<ObjectIntermediateItem>(currentFields.Length + currentProperties.Length);
@@ -72,25 +71,6 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             }
 
             return loadedSaveAttribute;
-        }
-
-        static SaveMembersMode GetClassInfo(ref IntermediateMappingContext ctx, Type classType, out SaveInheritanceAttribute[]? inheritanceInfo)
-        {
-            // TODO: This is just to temporarily support "object" until proper settings mapping comes in.
-            SaveMembersMode res = GetClassMode(classType);
-
-
-            return res;
-        }
-
-        static SaveMembersMode GetClassMode(Type classType)
-        {
-            if (classType == typeof(object)) return SaveMembersMode.Fields;
-
-            var attribute = classType.GetCustomAttribute<SaveMembersAttribute>(false);
-            if (attribute == null) throw new UnserializableType(classType);
-
-            return attribute.Mode;
         }
 
         static FieldInfo[] GetFields(BindingFlags bindingFlags, Type classType, SaveMembersMode mode)
