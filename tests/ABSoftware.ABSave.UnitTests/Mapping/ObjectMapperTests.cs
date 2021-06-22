@@ -1,19 +1,12 @@
 ﻿using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
-using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
-using ABCo.ABSave.Mapping.Description.Attributes;
-using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.Object;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.Mapping
 {
@@ -25,15 +18,26 @@ namespace ABCo.ABSave.UnitTests.Mapping
             object obj = new TParent();
             object expected = null;
             if (typeof(TItem) == typeof(int))
+            {
                 expected = 123;
+            }
+
             if (typeof(TItem) == typeof(byte))
+            {
                 expected = (byte)123;
+            }
             else if (typeof(TItem) == typeof(bool))
+            {
                 expected = true;
+            }
             else if (typeof(TItem) == typeof(string))
+            {
                 expected = "ABC";
+            }
             else if (typeof(TItem) == typeof(AllPrimitiveStruct))
+            {
                 expected = new AllPrimitiveStruct(true, 172, "d");
+            }
 
             accessor.Setter(obj, expected);
 

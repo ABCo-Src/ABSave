@@ -1,16 +1,7 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Converters;
-using ABCo.ABSave.Serialization;
-using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.Converters
 {
@@ -90,14 +81,18 @@ namespace ABCo.ABSave.UnitTests.Converters
                 new Version(1, 0, 1258215, 0),
                 new Version(1, 0, 0, 1258215)
             };
-            
+
             for (int i = 0; i < versions.Length; i++)
+            {
                 DoSerialize(versions[i]);
+            }
 
             GoToStart();
 
             for (int i = 0; i < versions.Length; i++)
+            {
                 Assert.AreEqual(versions[i], DoDeserialize<Version>());
+            }
         }
 
         //[TestMethod]

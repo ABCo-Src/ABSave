@@ -2,11 +2,6 @@
 using ABCo.ABSave.Serialization;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.Core
 {
@@ -25,13 +20,23 @@ namespace ABCo.ABSave.UnitTests.Core
             target.WriteBitOn();
 
             if (overflow)
+            {
                 for (int i = 0; i < 8; i++)
+                {
                     target.WriteBitOn();
+                }
+            }
 
             target.Apply();
 
-            if (overflow) AssertAndGoToStart(255, 128);
-            else AssertAndGoToStart(128);
+            if (overflow)
+            {
+                AssertAndGoToStart(255, 128);
+            }
+            else
+            {
+                AssertAndGoToStart(128);
+            }
         }
 
         [TestMethod]
@@ -48,13 +53,21 @@ namespace ABCo.ABSave.UnitTests.Core
             if (overflow)
             {
                 for (int i = 0; i < 8; i++)
+                {
                     target.WriteBitOff();
+                }
             }
 
             target.Apply();
 
-            if (overflow) AssertAndGoToStart(0, 0);
-            else AssertAndGoToStart(0);
+            if (overflow)
+            {
+                AssertAndGoToStart(0, 0);
+            }
+            else
+            {
+                AssertAndGoToStart(0);
+            }
         }
 
         [TestMethod]
@@ -82,11 +95,17 @@ namespace ABCo.ABSave.UnitTests.Core
             target.WriteInteger(42, 6);
             target.Apply();
 
-            if (lazy) AssertAndGoToStart(0, 42 << 2);
-            else AssertAndGoToStart(10, 128);
+            if (lazy)
+            {
+                AssertAndGoToStart(0, 42 << 2);
+            }
+            else
+            {
+                AssertAndGoToStart(10, 128);
+            }
         }
 
-        [TestMethod]       
+        [TestMethod]
         public void FreeBits()
         {
             Initialize(ABSaveSettings.ForSize);

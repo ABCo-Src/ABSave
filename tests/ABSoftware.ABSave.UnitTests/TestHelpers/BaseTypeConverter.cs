@@ -5,10 +5,6 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.TestHelpers
 {
@@ -40,8 +36,15 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
-            if (WritesToHeader && !header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
-            if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
+            if (WritesToHeader && !header.ReadBit())
+            {
+                throw new Exception("Deserialize read invalid header bit");
+            }
+
+            if (header.Deserializer.ReadByte() != OUTPUT_BYTE)
+            {
+                throw new Exception("Deserialize read invalid byte");
+            }
 
             return OUTPUT_BYTE;
         }

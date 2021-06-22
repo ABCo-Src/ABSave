@@ -3,11 +3,6 @@ using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Serialization;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.Core
 {
@@ -124,9 +119,13 @@ namespace ABCo.ABSave.UnitTests.Core
                 var header = new BitTarget(Serializer, bitsFree);
 
                 if (data < uint.MaxValue)
+                {
                     Serializer.WriteCompressed((uint)data, ref header);
+                }
                 else
+                {
                     Serializer.WriteCompressed(data, ref header);
+                }
             }
 
             GoToStart();
@@ -135,9 +134,13 @@ namespace ABCo.ABSave.UnitTests.Core
             {
                 var header = new BitSource(Deserializer, bitsFree);
                 if (data < uint.MaxValue)
+                {
                     Assert.AreEqual((uint)data, Deserializer.ReadCompressedInt(ref header));
+                }
                 else
+                {
                     Assert.AreEqual(data, Deserializer.ReadCompressedLong(ref header));
+                }
             }
         }
 
