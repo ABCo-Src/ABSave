@@ -114,7 +114,6 @@ namespace ABCo.ABSave.Deserialization
             return item switch
             {
                 Converter converter => DeserializeConverterItem(converter, skipHeader),
-                ObjectMapItem objItem => DeserializeObjectItem(objItem, skipHeader),
                 RuntimeMapItem runtime => DeserializeItemNoSetup(new MapItemInfo(runtime.InnerItem, info.IsNullable), skipHeader),
                 _ => throw new Exception("Unrecognized map item"),
             };
@@ -141,28 +140,6 @@ namespace ABCo.ABSave.Deserialization
 
             var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info);
             return converter.Deserialize(in deserializeInfo, ref _currentHeader);
-        }
-
-        private object DeserializeObjectItem(ObjectMapItem item, bool skipHeader)
-        {
-            // Handle the inheritance bit.
-            bool sameType = true;
-            if (!skipHeader)
-                sameType = ReadHeader(item);
-
-            // Read or create the version info if needed
-            if (_objectVersions.TryGetValue(item.ItemType, out VersionInfo info))
-            {
-                uint version = ReadNewVersionInfo();
-                info = Map.GetVersionInfo(item, version);
-                _objectVersions.Add(item.ItemType, info);
-            }
-
-            // Handle inheritance.
-            if (info.InheritanceInfo != null && !sameType)
-                return DeserializeActualType(info.InheritanceInfo, item.ItemType);
-
-            return DeserializeObjectMembers(item.ItemType, info.Members!);
         }
 
         // Returns: Whether the type has changed

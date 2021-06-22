@@ -115,9 +115,6 @@ namespace ABCo.ABSave.Serialization
                 case Converter converter:
                     SerializeConverterItem(obj, converter, ref header, skipHeader);
                     break;
-                case ObjectMapItem objMap:
-                    SerializeObjectItem(obj, objMap, ref header, skipHeader);
-                    break;
                 case RuntimeMapItem runtime:
                     SerializeItemNoSetup(obj, new MapItemInfo(runtime.InnerItem, info.IsNullable), ref header, skipHeader);
                     break;
@@ -163,33 +160,6 @@ namespace ABCo.ABSave.Serialization
 
             var serializeInfo = new Converter.SerializeInfo(obj, actualType, info);
             converter.Serialize(in serializeInfo, ref header);
-        }
-
-        void SerializeObjectItem(object obj, ObjectMapItem item, ref BitTarget header, bool skipHeader)
-        {
-            var actualType = obj.GetType();
-
-            // Write the null and inheritance bits.
-            bool sameType = true;
-            if (!item.IsValueItemType && !skipHeader) 
-                sameType = WriteHeaderNullAndInheritance(actualType, item, ref header);
-
-            // Write and get the info for a version, if necessary
-            if (!_objectVersions.TryGetValue(item.ItemType, out VersionInfo info))
-            {
-                uint version = WriteNewVersionInfo(item, ref header);
-                info = Map.GetVersionInfo(item, version);
-                _objectVersions.Add(item.ItemType, info);
-            }
-
-            // Handle inheritance if needed.
-            if (info.InheritanceInfo != null && !sameType)
-            {
-                SerializeActualType(obj, info.InheritanceInfo, item.ItemType, actualType, ref header);
-                return;
-            }
-
-            SerializeFromMembers(obj, info.Members!);
         }
 
         // Returns: Whether the type has changed.
