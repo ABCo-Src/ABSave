@@ -1,14 +1,9 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
-using ABCo.ABSave.Exceptions;
-using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.General;
-using ABCo.ABSave.Mapping.Generation.Object;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 
 namespace ABCo.ABSave.Mapping
@@ -51,7 +46,10 @@ namespace ABCo.ABSave.Mapping
         {
             // Try to get the version if it already exists.
             var existing = VersionCacheHandler.GetVersionOrAddNull(converter, version);
-            if (existing != null) return existing;
+            if (existing != null)
+            {
+                return existing;
+            }
 
             // If it doesn't, generate it.
             var gen = GetGenerator();

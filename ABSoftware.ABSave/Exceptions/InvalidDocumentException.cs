@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ABCo.ABSave.Exceptions
+﻿namespace ABCo.ABSave.Exceptions
 {
     public class InvalidDocumentException : ABSaveException
     {

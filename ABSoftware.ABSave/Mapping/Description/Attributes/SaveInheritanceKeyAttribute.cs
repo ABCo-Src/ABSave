@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Description.Attributes
 {
@@ -10,7 +8,11 @@ namespace ABCo.ABSave.Mapping.Description.Attributes
         public string Key;
         public SaveInheritanceKeyAttribute(string key)
         {
-            if (key == "") throw new Exception("The key used cannot be empty.");
+            if (key == "")
+            {
+                throw new Exception("The key used cannot be empty.");
+            }
+
             Key = key;
         }
     }

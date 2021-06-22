@@ -1,10 +1,6 @@
 ﻿using ABCo.ABSave.Exceptions;
-using ABCo.ABSave.Mapping;
 using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Text;
 
 namespace ABCo.ABSave.Helpers
 {
@@ -68,8 +64,14 @@ namespace ABCo.ABSave.Helpers
         public override int GetCount(object obj) => ((dynamic)obj).Count;
         public override IDictionaryEnumerator GetEnumerator(object obj)
         {
-            if (((dynamic)obj).GetEnumerator() is IDictionaryEnumerator asDictEnumerator) return asDictEnumerator;
-            else throw new InvalidDictionaryException(obj.GetType());
+            if (((dynamic)obj).GetEnumerator() is IDictionaryEnumerator asDictEnumerator)
+            {
+                return asDictEnumerator;
+            }
+            else
+            {
+                throw new InvalidDictionaryException(obj.GetType());
+            }
         }
 
         public override object CreateCollection(Type type, int count) => (dynamic)Activator.CreateInstance(type)!;

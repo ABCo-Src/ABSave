@@ -5,9 +5,7 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
@@ -22,11 +20,17 @@ namespace ABCo.ABSave.Converters
 
         public override bool CheckType(CheckTypeInfo info)
         {
-            if (info.Type.IsArray) return true;
+            if (info.Type.IsArray)
+            {
+                return true;
+            }
 
             if (info.Type == typeof(Array))
             {
-                if (!info.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'Array' type that could contain any type of element");
+                if (!info.Settings.BypassDangerousTypeChecking)
+                {
+                    throw new DangerousTypeException("a general 'Array' type that could contain any type of element");
+                }
 
                 _info.Type = ArrayType.Unknown;
                 return true;
@@ -37,7 +41,10 @@ namespace ABCo.ABSave.Converters
 
         public override void Initialize(InitializeInfo info)
         {
-            if (_info.Type != ArrayType.Unknown) return;
+            if (_info.Type != ArrayType.Unknown)
+            {
+                return;
+            }
 
             var elemType = info.Type.GetElementType();
             PopulateTypeInfo(ref _info, info.GetMap(elemType!), info.Type);
@@ -61,7 +68,11 @@ namespace ABCo.ABSave.Converters
             }
             else
             {
-                if (rank == 32) throw new Exception("ABSave does not support arrays with exactly 32 dimensions, only below.");
+                if (rank == 32)
+                {
+                    throw new Exception("ABSave does not support arrays with exactly 32 dimensions, only below.");
+                }
+
                 info.Rank = (byte)rank;
                 info.Type = ArrayType.MultiDimensional;
             }
@@ -88,7 +99,10 @@ namespace ABCo.ABSave.Converters
                 case ArrayType.SZArrayManual:
                     {
                         header.Serializer.WriteCompressed((uint)len, ref header);
-                        for (int i = 0; i < len; i++) header.Serializer.SerializeItem(arr.GetValue(i), _info.PerItem);
+                        for (int i = 0; i < len; i++)
+                        {
+                            header.Serializer.SerializeItem(arr.GetValue(i), _info.PerItem);
+                        }
 
                         break;
                     }
@@ -102,7 +116,10 @@ namespace ABCo.ABSave.Converters
                         header.Serializer.WriteCompressed((uint)i);
 
                         int end = i + len;
-                        for (; i < end; i++) header.Serializer.SerializeItem(arr.GetValue(i), _info.PerItem);
+                        for (; i < end; i++)
+                        {
+                            header.Serializer.SerializeItem(arr.GetValue(i), _info.PerItem);
+                        }
 
                         break;
                     }
@@ -153,7 +170,10 @@ namespace ABCo.ABSave.Converters
                     header.WriteBitOff();
                     header.Serializer.WriteCompressed((uint)arr.Length, ref header);
 
-                    for (int i = 0; i < arr.Length; i++) header.Serializer.SerializeItem(arr.GetValue(i), context.PerItem);
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        header.Serializer.SerializeItem(arr.GetValue(i), context.PerItem);
+                    }
 
                     break;
                 case ArrayType.SNZArray:
@@ -167,7 +187,10 @@ namespace ABCo.ABSave.Converters
                     header.Serializer.WriteCompressed((ulong)j);
 
                     int endIndex = j + arr.Length;
-                    for (; j < endIndex; j++) header.Serializer.SerializeItem(arr.GetValue(j), context.PerItem);
+                    for (; j < endIndex; j++)
+                    {
+                        header.Serializer.SerializeItem(arr.GetValue(j), context.PerItem);
+                    }
 
                     break;
                 case ArrayType.MultiDimensional:
@@ -181,7 +204,7 @@ namespace ABCo.ABSave.Converters
                     header.WriteInteger(context.Rank, 5);
                     header.Apply();
 
-                    header.Serializer.WriteCompressed((uint)firstLength);                   
+                    header.Serializer.WriteCompressed((uint)firstLength);
 
                     SerializeMultiDimensionalArrayData(arr, ref context, ref mdContext, firstLength, lowerBounds, header.Serializer);
 
@@ -206,8 +229,12 @@ namespace ABCo.ABSave.Converters
 
             // Write the lower bounds
             if (mdContext.CustomLowerBounds)
+            {
                 for (int i = 0; i < lengths.Length; i++)
+                {
                     serializer.WriteCompressed((ulong)lowerBounds[i]);
+                }
+            }
 
             SerializeDimension(0, lengths, lowerBounds, ref mdContext, ref context);
         }
@@ -223,13 +250,21 @@ namespace ABCo.ABSave.Converters
 
             // Deepest dimension
             if (nextDimension == mdInfo.Array.Rank)
-                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) 
+            {
+                for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
+                {
                     mdInfo.Serializer.SerializeItem(mdInfo.Array.GetValue(currentPos), info.PerItem);
+                }
+            }
 
             // Outer dimension
             else
+            {
                 for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
+                {
                     SerializeDimension(nextDimension, lengths, currentPos, ref mdInfo, ref info);
+                }
+            }
 
             currentPos[dimension] = originalPos;
         }
@@ -245,7 +280,9 @@ namespace ABCo.ABSave.Converters
                 lowerBounds[i] = current;
 
                 if (current != 0)
+                {
                     customLowerBounds = true;
+                }
             }
 
             return new MDSerializeArrayInfo(arr, serializer, customLowerBounds);
@@ -272,7 +309,11 @@ namespace ABCo.ABSave.Converters
                         int arrSize = (int)header.Deserializer.ReadCompressedInt(ref header);
                         Array arr = Array.CreateInstance(_info.ElementType, arrSize);
 
-                        for (int i = 0; i < arrSize; i++) arr.SetValue(header.Deserializer.DeserializeItem(_info.PerItem), i);
+                        for (int i = 0; i < arrSize; i++)
+                        {
+                            arr.SetValue(header.Deserializer.DeserializeItem(_info.PerItem), i);
+                        }
+
                         return arr;
                     }
                 case ArrayType.SNZArray:
@@ -283,7 +324,11 @@ namespace ABCo.ABSave.Converters
                         var arr = Array.CreateInstance(_info.ElementType, new int[] { arrSize }, new int[] { i });
 
                         int end = i + arrSize;
-                        for (; i < end; i++) arr.SetValue(header.Deserializer.DeserializeItem(_info.PerItem), i);
+                        for (; i < end; i++)
+                        {
+                            arr.SetValue(header.Deserializer.DeserializeItem(_info.PerItem), i);
+                        }
+
                         return arr;
                     }
                 case ArrayType.MultiDimensional:
@@ -333,7 +378,11 @@ namespace ABCo.ABSave.Converters
                     var arr = Array.CreateInstance(elementType, new int[] { size }, new int[] { i });
 
                     int end = i + size;
-                    for (; i < end; i++) arr.SetValue(header.Deserializer.DeserializeItem(perItem), i);
+                    for (; i < end; i++)
+                    {
+                        arr.SetValue(header.Deserializer.DeserializeItem(perItem), i);
+                    }
+
                     return arr;
                 }
 
@@ -348,7 +397,11 @@ namespace ABCo.ABSave.Converters
                     int size = (int)header.Deserializer.ReadCompressedInt(ref header);
                     var arr = Array.CreateInstance(elementType, size);
 
-                    for (int i = 0; i < size; i++) arr.SetValue(header.Deserializer.DeserializeItem(perItem), i);
+                    for (int i = 0; i < size; i++)
+                    {
+                        arr.SetValue(header.Deserializer.DeserializeItem(perItem), i);
+                    }
+
                     return arr;
                 }
             }
@@ -361,14 +414,18 @@ namespace ABCo.ABSave.Converters
             lengths[0] = firstLength;
 
             for (int i = 1; i < context.Rank; i++)
+            {
                 lengths[i] = (int)deserializer.ReadCompressedInt();
+            }
 
             // Read the lower bounds.
             int[] lowerBounds = new int[context.Rank];
             if (hasCustomLowerBounds)
             {
                 for (int i = 0; i < context.Rank; i++)
+                {
                     lowerBounds[i] = (int)deserializer.ReadCompressedInt();
+                }
             }
 
             // Create the array, and deserialize.
@@ -390,13 +447,21 @@ namespace ABCo.ABSave.Converters
 
             // Deepest dimension
             if (nextDimension == mdContext.Result.Rank)
-                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) 
+            {
+                for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
+                {
                     mdContext.Result.SetValue(mdContext.Deserializer.DeserializeItem(context.PerItem), currentPos);
+                }
+            }
 
             // Outer dimension
             else
+            {
                 for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
+                {
                     DeserializeDimension(nextDimension, lengths, currentPos, in context, in mdContext);
+                }
+            }
 
             currentPos[dimension] = oldPos;
         }

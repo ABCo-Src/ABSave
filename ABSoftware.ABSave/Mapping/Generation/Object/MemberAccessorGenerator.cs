@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ABCo.ABSave.Mapping.Generation.Object
@@ -44,7 +43,10 @@ namespace ABCo.ABSave.Mapping.Generation.Object
                     // we only support the very basic primitives (which are very common anyway)
                     // and nothing more. "MakeGenericMethod" is too expensive.
                     var successful = TryGenerateAccessorPrimitive(ref accessor, parentItem.ItemType, item.GetItemType(), property);
-                    if (successful) return;
+                    if (successful)
+                    {
+                        return;
+                    }
                 }
 
                 // Reference type property - Simply force cast to "object".
@@ -71,7 +73,10 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             TypeCode typeCode = Type.GetTypeCode(type);
 
             // If it's not in the range of supported types (bool, DateTime, primitives) don't do the primitive accessor.
-            if (typeCode < TypeCode.Boolean || typeCode > TypeCode.DateTime) return false;
+            if (typeCode < TypeCode.Boolean || typeCode > TypeCode.DateTime)
+            {
+                return false;
+            }
 
             var getter = property.GetGetMethod()!.CreateDelegate(GenericPrimitivePropertyGetter.MakeGenericType(parentType, type));
             var setter = property.GetSetMethod()!.CreateDelegate(GenericPropertySetter.MakeGenericType(parentType, type));

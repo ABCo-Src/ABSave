@@ -21,13 +21,21 @@ namespace ABCo.ABSave.Converters
         public override bool CheckType(CheckTypeInfo info)
         {
             if (info.Type == typeof(string))
+            {
                 _type = StringType.String;
+            }
             else if (info.Type == typeof(StringBuilder))
+            {
                 _type = StringType.StringBuilder;
+            }
             else if (info.Type == typeof(char[]))
+            {
                 _type = StringType.CharArray;
+            }
             else
+            {
                 return false;
+            }
 
             return true;
         }
@@ -45,7 +53,7 @@ namespace ABCo.ABSave.Converters
                     SerializeCharArray((char[])info.Instance, ref header);
                     break;
                 case StringType.StringBuilder:
-                    
+
                     SerializeStringBuilder((StringBuilder)info.Instance, ref header);
                     break;
             }
@@ -82,7 +90,9 @@ namespace ABCo.ABSave.Converters
         public static char[] DeserializeCharArray(ref BitSource header)
         {
             if (header.Deserializer.Settings.UseUTF8)
+            {
                 return header.Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header);
+            }
             else
             {
                 int size = (int)header.Deserializer.ReadCompressedInt(ref header);

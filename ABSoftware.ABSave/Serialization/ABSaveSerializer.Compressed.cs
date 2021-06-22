@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -25,7 +23,10 @@ namespace ABCo.ABSave.Serialization
         public void WriteCompressed(uint data, ref BitTarget target) => WriteCompressed((ulong)data, ref target);
         public void WriteCompressed(ulong data, ref BitTarget target)
         {
-            if (target.FreeBits == 0) target.Apply();
+            if (target.FreeBits == 0)
+            {
+                target.Apply();
+            }
 
             byte contBytesNo = GetContBytesNo(data, target.FreeBits);
             byte bitsToGo = (byte)(8 * contBytesNo);
@@ -55,16 +56,25 @@ namespace ABCo.ABSave.Serialization
             if (isExtendedByte)
             {
                 // Write any free "y"s.
-                if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data >> noOfContBits >> 8), target.FreeBits);
+                if (byteWillHaveFreeSpace)
+                {
+                    target.WriteInteger((byte)(data >> noOfContBits >> 8), target.FreeBits);
+                }
 
                 // The next byte will definitely have some free space, as we can not physically fill all of the remaining "xxxxxxxx"s with the header.
                 // Ensure we're definitely ready for the next byte.
-                if (target.FreeBits == 0) target.Apply();
+                if (target.FreeBits == 0)
+                {
+                    target.Apply();
+                }
 
                 byteWillHaveFreeSpace = true;
             }
 
-            if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data >> noOfContBits), target.FreeBits);
+            if (byteWillHaveFreeSpace)
+            {
+                target.WriteInteger((byte)(data >> noOfContBits), target.FreeBits);
+            }
 
             target.Apply();
         }
@@ -91,17 +101,47 @@ namespace ABCo.ABSave.Serialization
             ulong mask = (1UL << bitsFree) >> 1;
 
             // Extended byte
-            if (bitsFree < 4) mask <<= 8;
+            if (bitsFree < 4)
+            {
+                mask <<= 8;
+            }
 
-            if (num < mask) return 0;
-            else if (num < (mask << 7)) return 1;
-            else if (num < (mask << 14)) return 2;
-            else if (num < (mask << 21)) return 3;
-            else if (num < (mask << 28)) return 4;
-            else if (num < (mask << 35)) return 5;
-            else if (num < (mask << 42)) return 6;
-            else if (num < (mask << 49)) return 7;
-            else return 8;
+            if (num < mask)
+            {
+                return 0;
+            }
+            else if (num < (mask << 7))
+            {
+                return 1;
+            }
+            else if (num < (mask << 14))
+            {
+                return 2;
+            }
+            else if (num < (mask << 21))
+            {
+                return 3;
+            }
+            else if (num < (mask << 28))
+            {
+                return 4;
+            }
+            else if (num < (mask << 35))
+            {
+                return 5;
+            }
+            else if (num < (mask << 42))
+            {
+                return 6;
+            }
+            else if (num < (mask << 49))
+            {
+                return 7;
+            }
+            else
+            {
+                return 8;
+            }
         }
     }
 }

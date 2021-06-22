@@ -2,9 +2,7 @@
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Object;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
 {
@@ -23,7 +21,9 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             members = IntermediateReflectionMapper.FillInfo(ref ctx);
 
             if (ctx.TranslationCurrentOrderInfo == -1)
+            {
                 Array.Sort(members);
+            }
 
             return ctx.HighestVersion;
         }
@@ -43,9 +43,13 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             if (ctx.TranslationCurrentOrderInfo != -1)
             {
                 if (newItem.Order >= ctx.TranslationCurrentOrderInfo)
+                {
                     ctx.TranslationCurrentOrderInfo = newItem.Order;
+                }
                 else
+                {
                     ctx.TranslationCurrentOrderInfo = -1;
+                }
             }
 
             MappingHelpers.UpdateHighestVersionFromRange(ref ctx.HighestVersion, newItem.StartVer, newItem.EndVer);

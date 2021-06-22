@@ -2,10 +2,7 @@
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Threading;
 
 namespace ABCo.ABSave.Mapping.Generation.General
@@ -18,9 +15,13 @@ namespace ABCo.ABSave.Mapping.Generation.General
         public static void SetupVersionCacheOnItem(Converter dest, MapGenerator gen)
         {
             if (dest.HighestVersion == 0)
+            {
                 FillDestWithOneVersion(dest, gen);
+            }
             else
+            {
                 FillDestWithMultipleVersions(dest, gen);
+            }
         }
 
         static void FillDestWithMultipleVersions(Converter dest, MapGenerator gen)
@@ -44,7 +45,9 @@ namespace ABCo.ABSave.Mapping.Generation.General
         public static VersionInfo? GetVersionOrAddNull(Converter item, uint version)
         {
             if (item.HasOneVersion)
+            {
                 return version > 0 ? null : item.VersionCache.OneVersion;
+            }
 
             while (true)
             {
@@ -55,7 +58,10 @@ namespace ABCo.ABSave.Mapping.Generation.General
                     // Exists and is not null - Is ready to use.
                     if (item.VersionCache.MultipleVersions.TryGetValue(version, out VersionInfo? info))
                     {
-                        if (info != null) return info;
+                        if (info != null)
+                        {
+                            return info;
+                        }
                     }
                     else
                     {
@@ -71,7 +77,9 @@ namespace ABCo.ABSave.Mapping.Generation.General
         public static VersionInfo AddNewVersion(Converter converter, uint version, MapGenerator gen)
         {
             if (converter.HasOneVersion || version > converter.HighestVersion)
+            {
                 throw new UnsupportedVersionException(converter.ItemType, version);
+            }
 
             var newVer = GetVersionInfo(converter, version, gen);
 
@@ -79,7 +87,9 @@ namespace ABCo.ABSave.Mapping.Generation.General
             {
                 converter.VersionCache.MultipleVersions[version] = newVer;
                 if (converter.VersionCache.MultipleVersions.Count > converter.HighestVersion)
+                {
                     converter.HandleAllVersionsGenerated();
+                }
             }
 
             return newVer;
@@ -91,7 +101,9 @@ namespace ABCo.ABSave.Mapping.Generation.General
 
             SaveInheritanceAttribute? inheritanceInfo = null;
             if (converter._allInheritanceAttributes != null)
+            {
                 inheritanceInfo = InheritanceHandler.GetAttributeForVersion(converter._allInheritanceAttributes, version);
+            }
 
             newVer ??= new VersionInfo(usesHeader);
             newVer.Assign(version, usesHeader, inheritanceInfo);

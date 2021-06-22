@@ -1,10 +1,7 @@
 ﻿using ABCo.ABSave.Converters;
-using ABCo.ABSave.Mapping.Description.Attributes;
-using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.Object
 {
@@ -21,7 +18,9 @@ namespace ABCo.ABSave.Mapping.Generation.Object
                 var intermediateItm = rawMembers[i];
 
                 if (targetVersion >= intermediateItm.StartVer && targetVersion <= intermediateItm.EndVer)
+                {
                     lst.Add(GetOrCreateItemFrom(item, intermediateItm, gen));
+                }
             }
 
             return lst.ToArray();
@@ -35,7 +34,9 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             var outputArr = new ObjectMemberSharedInfo[rawMembers.Length];
 
             for (int i = 0; i < outputArr.Length; i++)
+            {
                 outputArr[i] = CreateItem(item, rawMembers[i], gen);
+            }
 
             return outputArr;
         }
@@ -57,7 +58,10 @@ namespace ABCo.ABSave.Mapping.Generation.Object
                 itemType = property.PropertyType;
                 MemberAccessorGenerator.GeneratePropertyAccessor(gen, dest, property, item);
             }
-            else throw new Exception("Unrecognized member info in shared info");
+            else
+            {
+                throw new Exception("Unrecognized member info in shared info");
+            }
 
             dest.Map = gen.GetMap(itemType);
             return dest;

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ABCo.ABSave.Deserialization
+﻿namespace ABCo.ABSave.Deserialization
 {
     // ===============================================
     // NOTE: Full details about the "compressed numerical" structure can be seen in the TXT file: CompressedPlan.txt in the project root
@@ -28,7 +24,10 @@ namespace ABCo.ABSave.Deserialization
 
         public ulong ReadCompressed(bool canBeLong, ref BitSource source)
         {
-            if (source.FreeBits == 0) source = new BitSource(this, 8);
+            if (source.FreeBits == 0)
+            {
+                source = new BitSource(this, 8);
+            }
 
             // Process header
             byte preHeaderCapacity = source.FreeBits;
@@ -55,10 +54,16 @@ namespace ABCo.ABSave.Deserialization
             if (isExtended)
             {
                 // If there are still "y" bits left, get them.
-                if (headerLen < preHeaderCapacity) res = (ulong)source.ReadInteger(source.FreeBits) << noContBits << 8;
+                if (headerLen < preHeaderCapacity)
+                {
+                    res = (ulong)source.ReadInteger(source.FreeBits) << noContBits << 8;
+                }
 
                 // Make sure we're ready to read "x"s. There will always be "x"es as the header can not physically take them all up.
-                if (source.FreeBits == 0) source.MoveToNewByte();
+                if (source.FreeBits == 0)
+                {
+                    source.MoveToNewByte();
+                }
             }
 
             return res | ((ulong)source.ReadInteger(source.FreeBits) << noContBits);
@@ -68,7 +73,10 @@ namespace ABCo.ABSave.Deserialization
         {
             for (byte i = 0; i < 8; i++)
             {
-                if (!source.ReadBit()) return (i, (byte)(i + 1));
+                if (!source.ReadBit())
+                {
+                    return (i, (byte)(i + 1));
+                }
             }
 
             return (8, 8);

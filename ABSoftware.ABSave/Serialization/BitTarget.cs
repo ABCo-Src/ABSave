@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -20,27 +17,41 @@ namespace ABCo.ABSave.Serialization
             Serializer = serializer;
 
             Result = 0;
-        }        
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteBitOn()
         {
-            if (FreeBits == 0) Apply();
+            if (FreeBits == 0)
+            {
+                Apply();
+            }
+
             Result |= 1 << --FreeBits;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteBitOff()
         {
-            if (FreeBits == 0) Apply();
+            if (FreeBits == 0)
+            {
+                Apply();
+            }
+
             FreeBits--;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteBitWith(bool value)
         {
-            if (value) WriteBitOn();
-            else WriteBitOff();
+            if (value)
+            {
+                WriteBitOn();
+            }
+            else
+            {
+                WriteBitOff();
+            }
         }
 
         public void WriteInteger(byte number, byte bitsRequired)

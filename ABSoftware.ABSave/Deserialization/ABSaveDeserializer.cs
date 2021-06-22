@@ -5,15 +5,10 @@ using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
-using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ABCo.ABSave.Deserialization
 {
@@ -43,7 +38,7 @@ namespace ABCo.ABSave.Deserialization
 
         BitSource _currentHeader;
         bool _readHeader;
-    
+
         public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
 
         public object? DeserializeRoot()
@@ -62,11 +57,14 @@ namespace ABCo.ABSave.Deserialization
             else
             {
                 _currentHeader = new BitSource(this);
-                if (!_currentHeader.ReadBit()) return null;
+                if (!_currentHeader.ReadBit())
+                {
+                    return null;
+                }
 
                 _readHeader = true;
             }
-            
+
             return DeserializeNullableItem(info, false);
         }
 
@@ -80,8 +78,11 @@ namespace ABCo.ABSave.Deserialization
         public object? DeserializeItem(MapItemInfo info, ref BitSource header)
         {
             // Do null checks
-            if (!info.IsValueTypeItem && !header.ReadBit()) return null;
-            
+            if (!info.IsValueTypeItem && !header.ReadBit())
+            {
+                return null;
+            }
+
             _currentHeader = header;
             _readHeader = true;
             return DeserializeNullableItem(info, false);
@@ -99,7 +100,11 @@ namespace ABCo.ABSave.Deserialization
             if (info.IsNullable)
             {
                 EnsureReadHeader();
-                if (!_currentHeader.ReadBit()) return null;
+                if (!_currentHeader.ReadBit())
+                {
+                    return null;
+                }
+
                 skipHeader = true;
             }
 
@@ -124,7 +129,9 @@ namespace ABCo.ABSave.Deserialization
             // Handle the inheritance bit.
             bool sameType = true;
             if (!skipHeader)
+            {
                 sameType = ReadHeader(converter);
+            }
 
             // Read or create the version info if needed
             if (!_versions.TryGetValue(converter.ItemType, out VersionInfo? info))
@@ -133,10 +140,12 @@ namespace ABCo.ABSave.Deserialization
                 info = Map.GetVersionInfo(converter, version);
                 _versions.Add(converter.ItemType, info);
             }
-            
+
             // Handle inheritance.
-            if (info._inheritanceInfo != null && !sameType)            
+            if (info._inheritanceInfo != null && !sameType)
+            {
                 return DeserializeActualType(info._inheritanceInfo, converter.ItemType);
+            }
 
             var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info);
             return converter.Deserialize(in deserializeInfo, ref _currentHeader);
@@ -145,7 +154,10 @@ namespace ABCo.ABSave.Deserialization
         // Returns: Whether the type has changed
         bool ReadHeader(MapItem item)
         {
-            if (item.IsValueItemType) return false;
+            if (item.IsValueItemType)
+            {
+                return false;
+            }
 
             EnsureReadHeader();
 
@@ -166,7 +178,10 @@ namespace ABCo.ABSave.Deserialization
                 _ => throw new Exception("Invalid save inheritance mode")
             };
 
-            if (actualType == null) throw new InvalidSubTypeInfoException(baseType);
+            if (actualType == null)
+            {
+                throw new InvalidSubTypeInfoException(baseType);
+            }
 
             // Deserialize the actual type.
             return DeserializeItemNoSetup(GetRuntimeMapItem(actualType), true);
