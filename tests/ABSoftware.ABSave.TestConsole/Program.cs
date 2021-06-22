@@ -1,23 +1,11 @@
-﻿using ABCo.ABSave.Mapping;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Mapping;
 using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
-using BinaryPack;
-using MessagePack;
-using System.Text.Json;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.Serialization.Formatters.Binary;
-using System.Text;
-using System.Xml.Serialization;
-using ABCo.ABSave.Serialization;
-using System.Reflection;
-using BenchmarkDotNet.Diagnostics.Windows.Configs;
-using ABCo.ABSave.Mapping.Description.Attributes;
-using ABCo.ABSave.Mapping.Generation;
-using ABCo.ABSave.Configuration;
+using System.Text.Json;
 
 namespace ABCo.ABSave.Testing.ConsoleApp
 {
@@ -183,14 +171,18 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             benchmarks.Setup();
 
             for (int i = 0; i < 4; i++)
+            {
                 benchmarks.ABSave();
+            }
 
             GC.Collect();
 
             Debugger.Break();
 
             for (int i = 0; i < 100000; i++)
+            {
                 benchmarks.ABSave();
+            }
 
             Debugger.Break();
         }

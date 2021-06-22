@@ -1,10 +1,8 @@
 ﻿using ABCo.ABSave.Mapping.Description.Attributes;
 using MessagePack;
-using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ABCo.ABSave.Testing.ConsoleApp
 {
@@ -17,9 +15,12 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
         public JsonResponseModel(bool initialize)
         {
-            if (initialize) Initialize();
+            if (initialize)
+            {
+                Initialize();
+            }
         }
-        
+
         [Save(0)]
         public string Id { get; set; }
 
@@ -70,8 +71,16 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         /// <inheritdoc/>
         public bool Equals(JsonResponseModel other)
         {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return
                 Id == other.Id &&
                 Type == other.Type &&
@@ -119,8 +128,16 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         /// <inheritdoc/>
         public bool Equals(ApiModelContainer other)
         {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other)) throw new InvalidOperationException();
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                throw new InvalidOperationException();
+            }
+
             return
                 Id?.Equals(other.Id) == true &&
                 Type?.Equals(other.Type) == true &&
@@ -145,7 +162,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
         [Save(1)]
         public string Type { get; set; }
-        
+
         [Save(2)]
         public string Parent { get; set; }
 
@@ -257,9 +274,21 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             Flag3 = Randomizer.NextBool();
             Flag4 = Randomizer.NextBool();
             Flag5 = Randomizer.NextBool();
-            if (Randomizer.NextBool()) Optional1 = Randomizer.NextString(Randomizer.NextInt(6, 20));
-            if (Randomizer.NextBool()) Optional2 = Randomizer.NextString(Randomizer.NextInt(6, 20));
-            if (Randomizer.NextBool()) Optional3 = Randomizer.NextString(Randomizer.NextInt(6, 20));
+            if (Randomizer.NextBool())
+            {
+                Optional1 = Randomizer.NextString(Randomizer.NextInt(6, 20));
+            }
+
+            if (Randomizer.NextBool())
+            {
+                Optional2 = Randomizer.NextString(Randomizer.NextInt(6, 20));
+            }
+
+            if (Randomizer.NextBool())
+            {
+                Optional3 = Randomizer.NextString(Randomizer.NextInt(6, 20));
+            }
+
             if (Randomizer.NextBool())
             {
                 Info = new MediaInfoModel();
@@ -270,8 +299,16 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         /// <inheritdoc/>
         public bool Equals(RestApiModel other)
         {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return
                 Id == other.Id &&
                 Type == other.Type &&
@@ -347,8 +384,16 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         /// <inheritdoc/>
         public bool Equals(MediaInfoModel other)
         {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other)) return true;
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                return true;
+            }
+
             return
                 Id?.Equals(other.Id) == true &&
                 AlbumUrl?.Equals(other.AlbumUrl) == true &&
@@ -394,8 +439,16 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         /// <inheritdoc/>
         public bool Equals(ImageModel other)
         {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other)) throw new InvalidOperationException();
+            if (other is null)
+            {
+                return false;
+            }
+
+            if (ReferenceEquals(this, other))
+            {
+                throw new InvalidOperationException();
+            }
+
             return
                 Url?.Equals(other.Url) == true &&
                 Width == other.Width &&
@@ -423,7 +476,9 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         public static string NextString(int length) => string.Create(length, Random, (chars, r) =>
         {
             for (int i = 0; i < chars.Length; i++)
+            {
                 chars[i] = (char)r.Next(65, 90);
+            }
         });
     }
 }
