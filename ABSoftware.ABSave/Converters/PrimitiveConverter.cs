@@ -181,6 +181,6 @@ namespace ABCo.ABSave.Converters
             Decimal = 15,
         }
 
-        public override (VersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
+        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, true);
     }
 }

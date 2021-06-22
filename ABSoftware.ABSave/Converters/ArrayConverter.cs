@@ -542,7 +542,7 @@ namespace ABCo.ABSave.Converters
             UShort
         }
 
-        public override (VersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
+        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo version, uint version) => (null, true);
 
         [StructLayout(LayoutKind.Auto)]
         struct ArrayTypeInfo

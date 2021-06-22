@@ -76,7 +76,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
             if (converter.HasOneVersion || version > converter.HighestVersion)
                 throw new UnsupportedVersionException(converter.ItemType, version);
 
-            var newVer = GetVersionInfo(converter, version);
+            var newVer = GetVersionInfo(converter, version, gen);
 
             lock (converter.VersionCache.MultipleVersions)
             {
@@ -88,9 +88,9 @@ namespace ABCo.ABSave.Mapping.Generation.General
             return newVer;
         }
 
-        static VersionInfo GetVersionInfo(Converter converter, uint version)
+        static VersionInfo GetVersionInfo(Converter converter, uint version, MapGenerator gen)
         {
-            var (newVer, usesHeader) = converter.GetVersionInfo(version);
+            var (newVer, usesHeader) = converter.GetVersionInfo(new InitializeInfo(converter.ItemType, gen), version);
 
             SaveInheritanceAttribute? inheritanceInfo = null;
             if (converter._allInheritanceAttributes != null)
