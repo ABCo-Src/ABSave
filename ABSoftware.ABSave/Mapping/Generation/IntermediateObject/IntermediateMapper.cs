@@ -1,4 +1,6 @@
-﻿using System;
+﻿using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation.Object;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -9,36 +11,18 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
     // intermediary form, that can then used to make the final maps for all the different version numbers.
     internal static class IntermediateMapper
     {
-        // Context used while creating intermediate info.
-        internal static TranslationContext _intermediateContext = new TranslationContext();
-
-        /// <summary>
-        /// Clears the list <see cref="MapGenerator.CurrentObjMembers"/> and inserts all of the members and information attached to them.
-        /// </summary>
-        internal uint CreateIntermediateObjectInfo(Type type, ref ObjectIntermediateInfo info)
+        public static uint CreateIntermediateObjectInfo(Type type, ref ObjectIntermediateInfo info)
         {
-            _intermediateContext = new TranslationContext(type);
+            var ctx = new IntermediateMappingContext(type);
 
             // Coming soon: Settings-based mapping
-            var members = IntermediateReflectionInfo.FillInfo(out SaveInheritanceAttribute[]? attr);
+            var members = IntermediateReflectionMapper.FillInfo(ref ctx, out SaveInheritanceAttribute[]? attr);
 
-            if (_intermediateContext.TranslationCurrentOrderInfo == -1)
+            if (ctx.TranslationCurrentOrderInfo == -1)
                 Array.Sort(members);
 
             info = new ObjectIntermediateInfo(members, attr);
-            return _intermediateContext.HighestVersion;
-        }
-
-        internal class ReflectionMapper
-        {
-            internal MapGenerator Gen;
-            internal ReflectionMapper(MapGenerator gen)
-            {
-                Gen = gen;
-                _threadPoolAddItem = ProcessAttributesOnThreadPool;
-            }
-
-
+            return ctx.HighestVersion;
         }
 
         internal static void FillMainInfo(ObjectIntermediateItem newItem, int order, int startVer, int endVer)
@@ -50,70 +34,34 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             newItem.EndVer = endVer == -1 ? uint.MaxValue : checked((uint)endVer);
         }
 
-        internal void UpdateContextFromItem(ObjectIntermediateItem newItem)
+        internal static void UpdateContextFromItem(ref IntermediateMappingContext ctx, ObjectIntermediateItem newItem)
         {
             // Check ordering
-            if (_intermediateContext.TranslationCurrentOrderInfo != -1)
+            if (ctx.TranslationCurrentOrderInfo != -1)
             {
-                if (newItem.Order >= _intermediateContext.TranslationCurrentOrderInfo)
-                    _intermediateContext.TranslationCurrentOrderInfo = newItem.Order;
+                if (newItem.Order >= ctx.TranslationCurrentOrderInfo)
+                    ctx.TranslationCurrentOrderInfo = newItem.Order;
                 else
-                    _intermediateContext.TranslationCurrentOrderInfo = -1;
+                    ctx.TranslationCurrentOrderInfo = -1;
             }
 
-            UpdateVersionInfo(newItem.StartVer, newItem.EndVer);
+            UpdateCtxVersionBounds(ref ctx, newItem.StartVer, newItem.EndVer);
         }
 
-        void UpdateVersionInfo(uint startVer, uint endVer)
+        public static void UpdateCtxVersionBounds(ref IntermediateMappingContext ctx, uint startVer, uint endVer)
         {
             // If there is no upper we'll only update the highest version based on what the minimum is.
             if (endVer == uint.MaxValue)
             {
-                if (startVer > _intermediateContext.HighestVersion)
-                    _intermediateContext.HighestVersion = startVer;
+                if (startVer > ctx.HighestVersion)
+                    ctx.HighestVersion = startVer;
             }
 
             // If not update based on what their custom high is.
             else
             {
-                if (endVer > _intermediateContext.HighestVersion)
-                    _intermediateContext.HighestVersion = endVer;
-            }
-        }
-
-        internal struct TranslationContext
-        {
-            public Type ClassType;
-            public int TranslationCurrentOrderInfo;
-
-            // Used to count how many unskipped members were present so we know the size for our final array.
-            public int UnskippedMemberCount;
-            public uint HighestVersion;
-
-            public TranslationContext(Type classType)
-            {
-                ClassType = classType;
-                TranslationCurrentOrderInfo = 0;
-                UnskippedMemberCount = 0;
-                HighestVersion = 0;
-            }
-        }
-
-        internal struct TranslationContext
-        {
-            public Type ClassType;
-            public int TranslationCurrentOrderInfo;
-
-            // Used to count how many unskipped members were present so we know the size for our final array.
-            public int UnskippedMemberCount;
-            public uint HighestVersion;
-
-            public TranslationContext(Type classType)
-            {
-                ClassType = classType;
-                TranslationCurrentOrderInfo = 0;
-                UnskippedMemberCount = 0;
-                HighestVersion = 0;
+                if (endVer > ctx.HighestVersion)
+                    ctx.HighestVersion = endVer;
             }
         }
     }

@@ -1,6 +1,7 @@
 ﻿using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -13,29 +14,33 @@ namespace ABCo.ABSave.Mapping.Generation.Object
     /// </summary>
     internal static class IntermediateReflectionMapper
     {
-        public ObjectIntermediateItem[] FillInfo(out SaveInheritanceAttribute[]? inheritanceInfo)
+        public static ObjectIntermediateItem[] FillInfo(ref IntermediateMappingContext ctx, out SaveInheritanceAttribute[]? inheritanceInfo)
         {
             var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-            var classType = Gen._intermediateContext.ClassType;
-            var mode = GetClassInfo(classType, out inheritanceInfo);
+            var classType = ctx.ClassType;
+            var mode = GetClassInfo(ref ctx, classType, out inheritanceInfo);
 
             // Get the members
-            FieldInfo[] _currentFields = GetFields(bindingFlags, classType, mode);
-            PropertyInfo[] _currentProperties = GetProperties(bindingFlags, classType, mode);
-
-            PrepareBuffer(_currentFields.Length + _currentProperties.Length);
+            FieldInfo[] currentFields = GetFields(bindingFlags, classType, mode);
+            PropertyInfo[] currentProperties = GetProperties(bindingFlags, classType, mode);
 
             // Process the members
-            return ProcessMembers();
+            var dest = new List<ObjectIntermediateItem>(currentFields.Length + currentProperties.Length);
+            AddMembers(currentFields, dest);
+            AddMembers(currentProperties, dest);
+            return dest.ToArray();
         }
 
-        static void ProcessMembers(MemberInfo[] members, List<ObjectIntermediateItem> dest)
+        static void AddMembers(MemberInfo[] members, List<ObjectIntermediateItem> dest)
         {
             for (int i = 0; i < members.Length; i++)
-                dest.Add(GetItemForMember(members[i]));
+            {
+                var newItem = GetItemForMember(members[i]);
+                if (newItem != null) dest.Add(newItem);
+            }
         }
 
-        internal static ObjectIntermediateItem? GetItemForMember(MemberInfo info)
+        static ObjectIntermediateItem? GetItemForMember(MemberInfo info)
         {
             // Get the attributes - skip this item if there are none
             var attributes = info.GetCustomAttributes(typeof(MapAttr), false);
@@ -47,13 +52,12 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             bool successful = FillItemFromAttributes(newItem, info, attributes);
             if (!successful) throw new IncompleteDetailsException(info);
 
-            dest = newItem;
-            count++;
+            return newItem;
         }
 
-        private static bool FillItemFromAttributes(ObjectIntermediateItem dest, MemberInfo info, object[] attributes)
+        static bool FillItemFromAttributes(ObjectIntermediateItem dest, MemberInfo info, object[] attributes)
         {
-            newItem.Details.Unprocessed = info;
+            dest.Details.Unprocessed = info;
 
             bool loadedSaveAttribute = false;
             for (int i = 0; i < attributes.Length; i++)
@@ -61,7 +65,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
                 switch (attributes[i])
                 {
                     case SaveAttribute save:
-                        FillMainInfo(newItem, save.Order, save.FromVer, save.ToVer);
+                        IntermediateMapper.FillMainInfo(dest, save.Order, save.FromVer, save.ToVer);
                         loadedSaveAttribute = true;
                         break;
                 }
@@ -70,7 +74,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             return loadedSaveAttribute;
         }
 
-        SaveMembersMode GetClassInfo(Type classType, out SaveInheritanceAttribute[]? inheritanceInfo)
+        static SaveMembersMode GetClassInfo(ref IntermediateMappingContext ctx, Type classType, out SaveInheritanceAttribute[]? inheritanceInfo)
         {
             // TODO: This is just to temporarily support "object" until proper settings mapping comes in.
             SaveMembersMode res = GetClassMode(classType);
@@ -84,14 +88,14 @@ namespace ABCo.ABSave.Mapping.Generation.Object
                 for (int i = 0; i < inheritanceInfo.Length; i++)
                 {
                     var info = inheritanceInfo[i];
-                    Gen.UpdateVersionInfo(info.FromVer, info.ToVer);
+                    IntermediateMapper.UpdateCtxVersionBounds(ref ctx, info.FromVer, info.ToVer);
                 }
             }
 
             return res;
         }
 
-        private static SaveMembersMode GetClassMode(Type classType)
+        static SaveMembersMode GetClassMode(Type classType)
         {
             if (classType == typeof(object)) return SaveMembersMode.Fields;
 
