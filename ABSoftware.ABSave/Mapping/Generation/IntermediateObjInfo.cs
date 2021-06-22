@@ -9,23 +9,6 @@ using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
-    internal struct ObjectIntermediateInfo
-    {
-        internal ObjectIntermediateItem[] RawMembers;
-        internal SaveInheritanceAttribute[]? AllInheritanceAttributes;
-
-        internal ObjectIntermediateInfo(ObjectIntermediateItem[] rawMembers, SaveInheritanceAttribute[]? allInheritanceAttributes) =>
-            (RawMembers, AllInheritanceAttributes) = (rawMembers, allInheritanceAttributes);
-
-        public void Release()
-        {
-            // No one should be looking at this once it's been released, and as such them being null
-            // even when they're not nullable is fine, as no one should ever see that.
-            RawMembers = null!;
-            AllInheritanceAttributes = null;
-        }
-    }
-
     internal sealed class ObjectIntermediateItem : IComparable<ObjectIntermediateItem>
     {
         public static readonly ObjectIntermediateItem InvalidMember = new ObjectIntermediateItem();
@@ -59,13 +42,5 @@ namespace ABCo.ABSave.Mapping.Generation
 
         // For sorting:
         public int CompareTo(ObjectIntermediateItem? other) => Order.CompareTo(other!.Order);
-    }
-
-    internal struct ObjectTranslatedSortInfo : IComparable<ObjectTranslatedSortInfo>
-    {
-        public int Order;
-        public short Index;
-
-        public int CompareTo(ObjectTranslatedSortInfo other) => Order.CompareTo(other.Order);
     }
 }

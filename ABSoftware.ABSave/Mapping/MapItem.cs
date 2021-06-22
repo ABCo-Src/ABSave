@@ -3,6 +3,7 @@ using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using ABCo.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
@@ -45,36 +46,25 @@ namespace ABCo.ABSave.Mapping
         internal volatile bool IsGenerating;
         internal bool HasOneVersion;
         public uint HighestVersion;
-
-        // All the base types have been checked already and are definitely supported.
-        public List<Type>? DefiniteSupportedBaseTypes;
     }
 
-    internal sealed class ObjectMapItem : MapItem
+    public class VersionInfo
     {
-        public ObjectMembers Members;
-        public ObjectIntermediateInfo Intermediate;
+        public uint VersionNumber { get; private set; }
+        public bool UsesHeader { get; private set; }
 
-        [StructLayout(LayoutKind.Explicit)]
-        public struct ObjectMembers
+        internal SaveInheritanceAttribute? _inheritanceInfo;
+
+        protected VersionInfo() { }
+        internal VersionInfo(bool usesHeader) =>
+            UsesHeader = usesHeader;
+
+        internal void Assign(uint version, bool usesHeader, SaveInheritanceAttribute? inheritanceInfo)
         {
-            [FieldOffset(0)]
-            public ObjectVersionInfo OneVersion;
-             
-            [FieldOffset(0)]
-            public Dictionary<uint, ObjectVersionInfo> MultipleVersions;
+            VersionNumber = version;
+            UsesHeader = usesHeader;
+            _inheritanceInfo = inheritanceInfo;
         }
-    }
-
-    internal struct ObjectVersionInfo
-    {
-        public static ObjectVersionInfo None => new ObjectVersionInfo(null, null);
-
-        public ObjectMemberSharedInfo[]? Members;
-        public SaveInheritanceAttribute? InheritanceInfo;
-
-        public ObjectVersionInfo(ObjectMemberSharedInfo[]? members, SaveInheritanceAttribute? inheritanceInfo) =>
-            (Members, InheritanceInfo) = (members, inheritanceInfo);
     }
 
     /// <summary>

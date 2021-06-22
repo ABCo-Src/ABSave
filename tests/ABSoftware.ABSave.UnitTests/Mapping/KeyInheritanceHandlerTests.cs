@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using ABCo.ABSave.TestOtherAssembly;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

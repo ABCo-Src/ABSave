@@ -1,9 +1,11 @@
-﻿using ABCo.ABSave.Exceptions;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Object;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -46,7 +48,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var memberInfo = typeof(FieldClass).GetField(nameof(FieldClass.A));
 
             var item = new ObjectMemberSharedInfo();
-            MapGenerator.GenerateFieldAccessor(ref item.Accessor, memberInfo);
+            MemberAccessorGenerator.GenerateFieldAccessor(ref item.Accessor, memberInfo);
 
             Assert.IsInstanceOfType(item.Accessor.Object1, typeof(FieldInfo));
             Assert.AreEqual(MemberAccessorType.Field, item.Accessor.Type);
@@ -59,7 +61,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var item = Generator.GetMap(type);
             var parent = Generator.GetMap(parentType);
 
-            MapGenerator.GeneratePropertyAccessor(ref dest, item, parent._innerItem, info);
+            MemberAccessorGenerator.DoGeneratePropertyAccessor(ref dest, item, parent._innerItem, info);
         }
 
         [TestMethod]
@@ -90,7 +92,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var item = new ObjectMemberSharedInfo();
             RunGenerateAccessor(ref item.Accessor, typeof(SubWithHeader), typeof(NestedClass), memberInfo);
 
-            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(MapGenerator.ReferenceGetterDelegate<NestedClass>));
+            Assert.IsInstanceOfType(item.Accessor.Object1, typeof(MemberAccessorGenerator.ReferenceGetterDelegate<NestedClass>));
             Assert.IsInstanceOfType(item.Accessor.Object2, typeof(Action<NestedClass, SubWithHeader>));
             Assert.AreEqual(MemberAccessorType.AllRefProperty, item.Accessor.Type);
 
@@ -203,51 +205,51 @@ namespace ABCo.ABSave.UnitTests.Mapping
             Setup();
 
             // Prepare the class for mapping.
-            var item = (ObjectMapItem)Generator.GetMap(typeof(VersionedClass))._innerItem;
+            var item = (ObjectConverter)Generator.GetMap(typeof(VersionedClass))._innerItem;
 
             // Create a new version - version 1.
             {
-                var info = Map.GetMembersForVersion(item, 1);
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(item, 1);
 
                 Assert.AreEqual(3, info.Members.Length);
                 Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(bool)), info.Members[1].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[2].Map);
-                Assert.AreEqual(SaveInheritanceMode.Key, info.InheritanceInfo!.Mode);
+                Assert.AreEqual(SaveInheritanceMode.Key, info._inheritanceInfo!.Mode);
 
-                var infoAgain = Map.GetMembersForVersion(item, 1);
+                var infoAgain = Map.GetVersionInfo(item, 1);
                 Assert.AreEqual(info, infoAgain);
             }
 
             // Create a new version - version 0.
             {
-                var info = Map.GetMembersForVersion(item, 0);
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(item, 0);
 
                 Assert.AreEqual(1, info.Members.Length);
                 Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
-                Assert.AreEqual(SaveInheritanceMode.Key, info.InheritanceInfo!.Mode);
+                Assert.AreEqual(SaveInheritanceMode.Key, info._inheritanceInfo!.Mode);
 
-                var infoAgain = Map.GetMembersForVersion(item, 0);
+                var infoAgain = Map.GetVersionInfo(item, 0);
                 Assert.AreEqual(info, infoAgain);
             }
 
             // Create a new version - version 2.
             {
-                var info = Map.GetMembersForVersion(item, 2);
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(item, 2);
 
                 Assert.AreEqual(3, info.Members.Length);
                 Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[0].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[1].Map);
                 Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[2].Map);
-                Assert.IsNull(info.InheritanceInfo);
+                Assert.IsNull(info._inheritanceInfo);
 
-                var infoAgain = Map.GetMembersForVersion(item, 2);
+                var infoAgain = Map.GetVersionInfo(item, 2);
                 Assert.AreEqual(info, infoAgain);
             }
 
             // Create a new version - version 3.
             {
-                var info = Map.GetMembersForVersion(item, 3);
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(item, 3);
 
                 // The same members as version 2
                 Assert.AreEqual(3, info.Members.Length);
@@ -256,9 +258,9 @@ namespace ABCo.ABSave.UnitTests.Mapping
                 Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[2].Map);
 
                 // No inheritance
-                Assert.AreEqual(SaveInheritanceMode.IndexOrKey, info.InheritanceInfo!.Mode);
+                Assert.AreEqual(SaveInheritanceMode.IndexOrKey, info._inheritanceInfo!.Mode);
 
-                var infoAgain = Map.GetMembersForVersion(item, 3);
+                var infoAgain = Map.GetVersionInfo(item, 3);
                 Assert.AreEqual(info, infoAgain);
             }
         }
@@ -270,7 +272,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var pos = Generator.GetMap(typeof(VersionedClass));
 
-            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetMembersForVersion((ObjectMapItem)pos._innerItem, 4));
+            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetVersionInfo((ObjectConverter)pos._innerItem, 4));
         }
     }
 }

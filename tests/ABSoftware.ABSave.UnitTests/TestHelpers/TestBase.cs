@@ -81,15 +81,15 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public void AssertOutput(params byte[] expected)
         {
             var actual = Stream.ToArray();
-            try
+            var matches = expected.SequenceEqual(actual);
+
+            if (!matches)
             {
-                CollectionAssert.AreEqual(expected, actual);
-            }
-            catch
-            {
-                Debugger.Break();
-                throw;
-            }
+                var expectedStr = BitConverter.ToString(expected);
+                var actualStr = BitConverter.ToString(actual);
+
+                throw new Exception($"Non-matching assert!\nExpected: {expectedStr}\nActual: {actualStr}");
+            }   
         }
 
         public byte[] GetByteArr(params short[] data) => GetByteArr(null, data);

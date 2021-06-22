@@ -7,6 +7,7 @@ using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -27,8 +28,7 @@ namespace ABCo.ABSave.Serialization
     /// </summary>
     public sealed partial class ABSaveSerializer
     {
-        readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
-        readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
+        readonly Dictionary<Type, VersionInfo> _versions = new Dictionary<Type, VersionInfo>();
 
         public Dictionary<Type, uint>? TargetVersions { get; private set; }
         public ABSaveMap Map { get; private set; } = null!;
@@ -56,8 +56,7 @@ namespace ABCo.ABSave.Serialization
 
         public void Reset()
         {
-            _objectVersions.Clear();
-            _converterVersions.Clear();
+            _versions.Clear();
         }
 
         public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
@@ -116,9 +115,6 @@ namespace ABCo.ABSave.Serialization
                 case Converter converter:
                     SerializeConverterItem(obj, converter, ref header, skipHeader);
                     break;
-                case ObjectMapItem objMap:
-                    SerializeObjectItem(obj, objMap, ref header, skipHeader);
-                    break;
                 case RuntimeMapItem runtime:
                     SerializeItemNoSetup(obj, new MapItemInfo(runtime.InnerItem, info.IsNullable), ref header, skipHeader);
                     break;
@@ -142,20 +138,13 @@ namespace ABCo.ABSave.Serialization
             }
 
             // Write and get the info for a version, if necessary
-            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo? info))
+            if (!_versions.TryGetValue(converter.ItemType, out VersionInfo? info))
             {
                 uint version = WriteNewVersionInfo(converter, ref header);
                 appliedHeader = true;
 
-                // Get the converter version info
-                bool usesHeader;
-                (info, usesHeader) = converter.GetVersionInfo(version);
-                
-                // TODO: Pool this allocation.
-                info ??= new ConverterVersionInfo(usesHeader);
-                info.Initialize(version, usesHeader, converter);
-
-                _converterVersions.Add(converter.ItemType, info);
+                info = Map.GetVersionInfo(converter, version);
+                _versions.Add(converter.ItemType, info);
             }
 
             // Handle inheritance if needed.
@@ -171,39 +160,6 @@ namespace ABCo.ABSave.Serialization
 
             var serializeInfo = new Converter.SerializeInfo(obj, actualType, info);
             converter.Serialize(in serializeInfo, ref header);
-        }
-
-        void SerializeObjectItem(object obj, ObjectMapItem item, ref BitTarget header, bool skipHeader)
-        {
-            var actualType = obj.GetType();
-
-            // Write the null and inheritance bits.
-            bool sameType = true;
-            if (!item.IsValueItemType && !skipHeader) 
-                sameType = WriteHeaderNullAndInheritance(actualType, item, ref header);
-
-            // Write and get the info for a version, if necessary
-            if (!_objectVersions.TryGetValue(item.ItemType, out ObjectVersionInfo info))
-            {
-                uint version = WriteNewVersionInfo(item, ref header);
-                info = MapGenerator.GetVersionOrAddNull(version, item);
-                _objectVersions.Add(item.ItemType, info);
-            }
-
-            // Handle inheritance if needed.
-            if (info.InheritanceInfo != null && !sameType)
-            {
-                SerializeActualType(obj, info.InheritanceInfo, item.ItemType, actualType, ref header);
-                return;
-            }
-
-            SerializeFromMembers(obj, info.Members!);
-        }
-
-        void SerializeFromMembers(object obj, ObjectMemberSharedInfo[] members)
-        {
-            for (int i = 0; i < members.Length; i++)
-                SerializeItem(members[i].Accessor.Getter(obj), members[i].Map);
         }
 
         // Returns: Whether the type has changed.

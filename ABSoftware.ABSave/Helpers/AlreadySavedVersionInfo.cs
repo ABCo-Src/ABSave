@@ -13,6 +13,6 @@ namespace ABCo.ABSave.Helpers
         public int Converter;
 
         [FieldOffset(0)]
-        public ObjectVersionInfo Object;
+        public VersionInfo Object;
     }
 }

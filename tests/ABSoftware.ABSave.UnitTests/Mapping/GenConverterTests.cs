@@ -20,8 +20,8 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             Setup();
 
-            Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass));
-            Assert.IsNull(Generator.TryGenerateConverter(typeof(AllPrimitiveClass)));
+            Generator.GetExistingOrAddNull(typeof(UnserializableClass));
+            Assert.IsNull(Generator.TryGenerateConverter(typeof(UnserializableClass)));
         }
 
         [TestMethod]

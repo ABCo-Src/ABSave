@@ -1,6 +1,8 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
 using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation.General;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -44,9 +46,17 @@ namespace ABCo.ABSave.Mapping.Generation
             // Remove it from the cache.
             _converterCache[id] = null;
 
+            // Apply the converter
             ApplyItem(converter, type);
+
+            // Call the user initialization
             converter.Initialize(new InitializeInfo(type, this));
-            converter._allInheritanceAttributes = GetInheritanceAttributes(type);
+
+            // Setup the backing information for the converter.
+            converter._allInheritanceAttributes =
+                InheritanceHandler.GetInheritanceAttributes(type, ref converter.HighestVersion);
+
+            VersionCacheHandler.SetupVersionCacheOnItem(converter, this);
             return converter;
         }
 
@@ -72,22 +82,5 @@ namespace ABCo.ABSave.Mapping.Generation
 
         Converter GetConverterInstance(ConverterInfo info) =>
             _converterCache[info.ConverterId] ??= (Converter)Activator.CreateInstance(info.ConverterType)!;
-
-        // Temporary helper until object conversion gets moved into its own converter
-        internal static SaveInheritanceAttribute? GetConverterInheritanceInfoForVersion(uint version, Converter converter)
-        {
-            // Try to get it from the dictionary cache.
-            if (converter._inheritanceValues != null && 
-                converter._inheritanceValues.TryGetValue(version, out SaveInheritanceAttribute? res))
-                return res;
-
-            // If it's not in there, find it in the attribute array.
-            if (converter._allInheritanceAttributes == null) return null;
-            SaveInheritanceAttribute? attribute = FindInheritanceAttributeForVersion(converter._allInheritanceAttributes, version);
-
-            converter._inheritanceValues ??= new Dictionary<uint, SaveInheritanceAttribute?>();
-            converter._inheritanceValues.Add(version, attribute);
-            return attribute;
-        }
     }
 }

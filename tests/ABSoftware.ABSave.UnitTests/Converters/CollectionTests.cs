@@ -71,14 +71,14 @@ namespace ABCo.ABSave.UnitTests.Converters
             Assert.AreEqual(typeof(int), converter._elementOrKeyType);
         }
 
-        [TestMethod]
-        public void Context_NonGenericIList()
-        {
-            var converter = InitializeNew(typeof(ArrayList));
+        //[TestMethod]
+        //public void Context_NonGenericIList()
+        //{
+        //    var converter = InitializeNew(typeof(ArrayList));
 
-            Assert.IsInstanceOfType(converter._info, typeof(NonGenericIListInfo));
-            Assert.AreEqual(typeof(object), converter._elementOrKeyType);
-        }
+        //    Assert.IsInstanceOfType(converter._info, typeof(NonGenericIListInfo));
+        //    Assert.AreEqual(typeof(object), converter._elementOrKeyType);
+        //}
 
         [TestMethod]
         public void Context_GenericIDictionary_NonGenericIDictionary()
@@ -100,15 +100,15 @@ namespace ABCo.ABSave.UnitTests.Converters
             Assert.AreEqual(typeof(int), converter._valueType);
         }
 
-        [TestMethod]
-        public void Context_NonGenericIDictionary()
-        {
-            var converter = InitializeNew(typeof(Hashtable));
+        //[TestMethod]
+        //public void Context_NonGenericIDictionary()
+        //{
+        //    var converter = InitializeNew(typeof(Hashtable));
 
-            Assert.IsInstanceOfType(converter._info, typeof(NonGenericIDictionaryInfo));
-            Assert.AreEqual(typeof(object), converter._elementOrKeyType);
-            Assert.AreEqual(typeof(object), converter._valueType);
-        }
+        //    Assert.IsInstanceOfType(converter._info, typeof(NonGenericIDictionaryInfo));
+        //    Assert.AreEqual(typeof(object), converter._elementOrKeyType);
+        //    Assert.AreEqual(typeof(object), converter._valueType);
+        //}
 
         [TestMethod]
         public void Convert_List()

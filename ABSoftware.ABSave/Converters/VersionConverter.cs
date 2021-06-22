@@ -50,6 +50,6 @@ namespace ABCo.ABSave.Converters
             return new Version(major, minor, build, revision);
         }
 
-        public override (ConverterVersionInfo?, bool) GetVersionInfo(uint version) => (null, true);
+        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, true);
     }
 }

@@ -6,6 +6,7 @@ using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -18,8 +19,7 @@ namespace ABCo.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {
-        readonly Dictionary<Type, ObjectVersionInfo> _objectVersions = new Dictionary<Type, ObjectVersionInfo>();
-        readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
+        readonly Dictionary<Type, VersionInfo> _versions = new Dictionary<Type, VersionInfo>();
 
         public ABSaveMap Map { get; private set; } = null!;
         public ABSaveSettings Settings { get; private set; } = null!;
@@ -38,8 +38,7 @@ namespace ABCo.ABSave.Deserialization
 
         public void Reset()
         {
-            _objectVersions.Clear();
-            _converterVersions.Clear();
+            _versions.Clear();
         }
 
         BitSource _currentHeader;
@@ -115,7 +114,6 @@ namespace ABCo.ABSave.Deserialization
             return item switch
             {
                 Converter converter => DeserializeConverterItem(converter, skipHeader),
-                ObjectMapItem objItem => DeserializeObjectItem(objItem, skipHeader),
                 RuntimeMapItem runtime => DeserializeItemNoSetup(new MapItemInfo(runtime.InnerItem, info.IsNullable), skipHeader),
                 _ => throw new Exception("Unrecognized map item"),
             };
@@ -129,17 +127,11 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(converter);
 
             // Read or create the version info if needed
-            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo? info))
+            if (!_versions.TryGetValue(converter.ItemType, out VersionInfo? info))
             {
                 uint version = ReadNewVersionInfo();
-
-                bool usesHeader;
-                (info, usesHeader) = converter.GetVersionInfo(version);
-
-                info ??= new ConverterVersionInfo(usesHeader);
-                info.Initialize(version, usesHeader, converter);
-
-                _converterVersions.Add(converter.ItemType, info);
+                info = Map.GetVersionInfo(converter, version);
+                _versions.Add(converter.ItemType, info);
             }
             
             // Handle inheritance.
@@ -148,38 +140,6 @@ namespace ABCo.ABSave.Deserialization
 
             var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info);
             return converter.Deserialize(in deserializeInfo, ref _currentHeader);
-        }
-
-        private object DeserializeObjectItem(ObjectMapItem item, bool skipHeader)
-        {
-            // Handle the inheritance bit.
-            bool sameType = true;
-            if (!skipHeader)
-                sameType = ReadHeader(item);
-
-            // Read or create the version info if needed
-            if (_objectVersions.TryGetValue(item.ItemType, out ObjectVersionInfo info))
-            {
-                uint version = ReadNewVersionInfo();
-                info = MapGenerator.GetVersionOrAddNull(version, item);
-                _objectVersions.Add(item.ItemType, info);
-            }
-
-            // Handle inheritance.
-            if (info.InheritanceInfo != null && !sameType)
-                return DeserializeActualType(info.InheritanceInfo, item.ItemType);
-
-            return DeserializeObjectMembers(item.ItemType, info.Members!);
-        }
-
-        object DeserializeObjectMembers(Type type, ObjectMemberSharedInfo[] members)
-        {
-            var res = Activator.CreateInstance(type);
-
-            for (int i = 0; i < members.Length; i++)
-                members[i].Accessor.Setter(res!, DeserializeItem(members[i].Map));
-
-            return res!;
         }
 
         // Returns: Whether the type has changed
