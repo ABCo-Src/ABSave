@@ -28,8 +28,7 @@ namespace ABCo.ABSave.Serialization
     /// </summary>
     public sealed partial class ABSaveSerializer
     {
-        readonly Dictionary<Type, VersionInfo> _objectVersions = new Dictionary<Type, VersionInfo>();
-        readonly Dictionary<Type, ConverterVersionInfo> _converterVersions = new Dictionary<Type, ConverterVersionInfo>();
+        readonly Dictionary<Type, VersionInfo> _versions = new Dictionary<Type, VersionInfo>();
 
         public Dictionary<Type, uint>? TargetVersions { get; private set; }
         public ABSaveMap Map { get; private set; } = null!;
@@ -57,8 +56,7 @@ namespace ABCo.ABSave.Serialization
 
         public void Reset()
         {
-            _objectVersions.Clear();
-            _converterVersions.Clear();
+            _versions.Clear();
         }
 
         public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
@@ -143,20 +141,13 @@ namespace ABCo.ABSave.Serialization
             }
 
             // Write and get the info for a version, if necessary
-            if (!_converterVersions.TryGetValue(converter.ItemType, out ConverterVersionInfo? info))
+            if (!_versions.TryGetValue(converter.ItemType, out VersionInfo? info))
             {
                 uint version = WriteNewVersionInfo(converter, ref header);
                 appliedHeader = true;
 
-                // Get the converter version info
-                bool usesHeader;
-                (info, usesHeader) = converter.GetVersionInfo(version);
-                
-                // TODO: Pool this allocation.
-                info ??= new ConverterVersionInfo(usesHeader);
-                info.Initialize(version, usesHeader, converter);
-
-                _converterVersions.Add(converter.ItemType, info);
+                info = Map.GetVersionInfo(converter, version);
+                _versions.Add(converter.ItemType, info);
             }
 
             // Handle inheritance if needed.
@@ -187,7 +178,7 @@ namespace ABCo.ABSave.Serialization
             if (!_objectVersions.TryGetValue(item.ItemType, out VersionInfo info))
             {
                 uint version = WriteNewVersionInfo(item, ref header);
-                info = Map.GetMembersForVersion(item, version);
+                info = Map.GetVersionInfo(item, version);
                 _objectVersions.Add(item.ItemType, info);
             }
 

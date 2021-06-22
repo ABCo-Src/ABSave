@@ -47,15 +47,15 @@ namespace ABCo.ABSave.Mapping
             return map;
         }
 
-        internal VersionInfo GetMembersForVersion(ObjectMapItem item, uint version)
+        internal VersionInfo GetVersionInfo(Converter converter, uint version)
         {
             // Try to get the version if it already exists.
-            var existing = VersionCacheHandler.GetVersionOrAddNull(version, item);
-            if (existing.Members != null) return existing;
+            var existing = VersionCacheHandler.GetVersionOrAddNull(converter, version);
+            if (existing != null) return existing;
 
             // If it doesn't, generate it.
             var gen = GetGenerator();
-            var res = VersionCacheHandler.AddNewVersion(gen, version, item);
+            var res = VersionCacheHandler.AddNewVersion(converter, version, gen);
             ReleaseGenerator(gen);
             return res;
         }

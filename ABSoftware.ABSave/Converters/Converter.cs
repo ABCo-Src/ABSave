@@ -75,9 +75,9 @@ namespace ABCo.ABSave.Converters
         public struct DeserializeInfo
         {
             public Type ActualType { get; }
-            internal ConverterVersionInfo VersionInfo { get; }
+            internal VersionInfo VersionInfo { get; }
 
-            internal DeserializeInfo(Type actualType, ConverterVersionInfo versionInfo) => 
+            internal DeserializeInfo(Type actualType, VersionInfo versionInfo) => 
                 (ActualType, VersionInfo) = (actualType, versionInfo);
         }
 
