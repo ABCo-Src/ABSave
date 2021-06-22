@@ -40,7 +40,7 @@ namespace ABCo.ABSave.Mapping.Generation
             if (converterItem != null) return FinishItem(converterItem);
 
             // Object
-            MapItem objItem = ObjectInitialMapper.GenerateNewObject(type);
+            MapItem objItem = MapInitialMapper.GenerateNewObject(type);
             return FinishItem(objItem);
 
             MapItemInfo FinishItem(MapItem item)

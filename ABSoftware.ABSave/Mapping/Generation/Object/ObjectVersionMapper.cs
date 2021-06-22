@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
@@ -9,39 +10,37 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 {
     internal static class ObjectVersionMapper
     {
-        public static VersionInfo GenerateNewVersion(MapGenerator gen, uint targetVersion, ObjectMapItem parent)
+        public static ObjectMemberSharedInfo[] GenerateNewVersion(ObjectConverter item, MapGenerator gen, uint targetVersion)
         {
-            var intermediate = parent.Intermediate;
+            var rawMembers = item._rawMembers!;
             var lst = new List<ObjectMemberSharedInfo>();
 
             // Get the members
-            for (int i = 0; i < intermediate.RawMembers.Length; i++)
+            for (int i = 0; i < rawMembers.Length; i++)
             {
-                var intermediateItm = intermediate.RawMembers[i];
+                var intermediateItm = rawMembers[i];
 
                 if (targetVersion >= intermediateItm.StartVer && targetVersion <= intermediateItm.EndVer)
-                    lst.Add(GetOrCreateItemFrom(intermediateItm, parent, gen));
+                    lst.Add(GetOrCreateItemFrom(item, intermediateItm, gen));
             }
 
-            var inheritanceInfo = InheritanceHandler.GetAttributeForVersion(intermediate.AllInheritanceAttributes, targetVersion);
-            return new VersionInfo(lst.ToArray(), inheritanceInfo);
+            return lst.ToArray();
         }
 
-        public static VersionInfo GenerateForOneVersion(MapGenerator gen, uint version, ObjectMapItem parent)
+        public static ObjectMemberSharedInfo[] GenerateForOneVersion(ObjectConverter item, MapGenerator gen, uint version)
         {
-            var intermediate = parent.Intermediate;
+            var rawMembers = item._rawMembers!;
 
             // No need to do any checks at all - just copy the items right across!
-            var outputArr = new ObjectMemberSharedInfo[intermediate.RawMembers.Length];
+            var outputArr = new ObjectMemberSharedInfo[rawMembers.Length];
 
             for (int i = 0; i < outputArr.Length; i++)
-                outputArr[i] = CreateItem(parent, intermediate.RawMembers[i], gen);
+                outputArr[i] = CreateItem(item, rawMembers[i], gen);
 
-            SaveInheritanceAttribute? inheritanceInfo = InheritanceHandler.GetAttributeForVersion(intermediate.AllInheritanceAttributes, version);
-            return new VersionInfo(outputArr, inheritanceInfo);
+            return outputArr;
         }
 
-        static ObjectMemberSharedInfo CreateItem(ObjectMapItem parent, ObjectIntermediateItem intermediate, MapGenerator gen)
+        static ObjectMemberSharedInfo CreateItem(ObjectConverter item, ObjectIntermediateItem intermediate, MapGenerator gen)
         {
             var dest = new ObjectMemberSharedInfo();
             var memberInfo = intermediate.Details.Unprocessed;
@@ -56,7 +55,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             else if (memberInfo is PropertyInfo property)
             {
                 itemType = property.PropertyType;
-                MemberAccessorGenerator.GeneratePropertyAccessor(gen, dest, property, parent);
+                MemberAccessorGenerator.GeneratePropertyAccessor(gen, dest, property, item);
             }
             else throw new Exception("Unrecognized member info in shared info");
 
@@ -64,7 +63,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             return dest;
         }
 
-        static ObjectMemberSharedInfo GetOrCreateItemFrom(ObjectIntermediateItem intermediate, ObjectMapItem parent, MapGenerator gen)
+        static ObjectMemberSharedInfo GetOrCreateItemFrom(ObjectConverter item, ObjectIntermediateItem intermediate, MapGenerator gen)
         {
             if (!intermediate.IsProcessed)
             {
@@ -74,7 +73,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
                     // So check one more time to ensure that isn't the case.
                     if (!intermediate.IsProcessed)
                     {
-                        intermediate.Details.Processed = CreateItem(parent, intermediate, gen);
+                        intermediate.Details.Processed = CreateItem(item, intermediate, gen);
                         intermediate.IsProcessed = true;
                     }
                 }

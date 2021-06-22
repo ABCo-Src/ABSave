@@ -53,7 +53,13 @@ namespace ABCo.ABSave.Converters
         /// Called when all of the different possible versions right up to the highest version have been generated.
         /// Can be used to free resources that aren't needed if all versions are generated.
         /// </summary>
-        public virtual void HandleAllVersionsGenerated() { }
+        protected virtual void DoHandleAllVersionsGenerated() { }
+
+        public void HandleAllVersionsGenerated()
+        {
+            _allInheritanceAttributes = null;
+            DoHandleAllVersionsGenerated();
+        }
 
         public struct SerializeInfo
         {
