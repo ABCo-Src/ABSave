@@ -1,14 +1,37 @@
-﻿using ABCo.ABSave.Exceptions;
-using ABCo.ABSave.Helpers;
-using ABCo.ABSave.Mapping.Description.Attributes;
-using ABCo.ABSave.Mapping.Generation;
+﻿
+/* Unmerged change from project 'ABCo.ABSave (net5.0)'
+Before:
+using ABCo.ABSave.Exceptions;
+After:
+using ABCo.ABSave.Converters;
+using ABCo.ABSave.Exceptions;
+*/
+using ABCo.ABSave.Converters;
+using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Generation.Object;
+using
+/* Unmerged change from project 'ABCo.ABSave (net5.0)'
+Before:
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Reflection;
+After:
+using ABCo.Collections.Generic;
+using System;
+using System.Collections.Generic;
+*/
+System;
+using System.Threading;
+/* Unmerged change from project 'ABCo.ABSave (net5.0)'
+Before:
 using ABCo.ABSave.Converters;
 using ABCo.ABSave.Mapping.Generation.Object;
+After:
+using System.Runtime.CompilerServices;
+using System.Threading;
+*/
+
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -35,7 +58,7 @@ namespace ABCo.ABSave.Mapping.Generation
         {
             EnsureTypeSafety(type);
 
-            MapItem? item= TryGenerateConverter(type);
+            MapItem? item = TryGenerateConverter(type);
             if (item == null) throw new UnserializableTypeException(type);
 
             item.IsGenerating = false;

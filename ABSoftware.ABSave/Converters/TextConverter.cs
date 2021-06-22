@@ -45,7 +45,7 @@ namespace ABCo.ABSave.Converters
                     SerializeCharArray((char[])info.Instance, ref header);
                     break;
                 case StringType.StringBuilder:
-                    
+
                     SerializeStringBuilder((StringBuilder)info.Instance, ref header);
                     break;
             }

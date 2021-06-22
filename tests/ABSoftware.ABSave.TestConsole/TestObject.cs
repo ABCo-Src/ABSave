@@ -1,10 +1,8 @@
 ﻿using ABCo.ABSave.Mapping.Description.Attributes;
 using MessagePack;
-using Microsoft.Diagnostics.Tracing.Parsers.AspNet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace ABCo.ABSave.Testing.ConsoleApp
 {
@@ -19,7 +17,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         {
             if (initialize) Initialize();
         }
-        
+
         [Save(0)]
         public string Id { get; set; }
 
@@ -145,7 +143,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
         [Save(1)]
         public string Type { get; set; }
-        
+
         [Save(2)]
         public string Parent { get; set; }
 

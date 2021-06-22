@@ -2,10 +2,7 @@
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Threading;
 
 namespace ABCo.ABSave.Mapping.Generation.General

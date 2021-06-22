@@ -1,8 +1,12 @@
 ﻿using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
-using System.Reflection;
+/* Unmerged change from project 'ABCo.ABSave (net5.0)'
+Before:
 using System.Collections.Generic;
-using System.Text;
+After:
+using System.Reflection;
+*/
+
 
 namespace ABCo.ABSave.Mapping.Generation.Inheritance
 {

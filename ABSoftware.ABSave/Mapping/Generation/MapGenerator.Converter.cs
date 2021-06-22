@@ -1,11 +1,8 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
-using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.General;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -23,7 +20,7 @@ namespace ABCo.ABSave.Mapping.Generation
             }
 
             if (settings.ExactConverters.TryGetValue(type, out var currentConv))
-                return UseConverter(GetConverterInstance(currentConv), currentConv.ConverterId, type);            
+                return UseConverter(GetConverterInstance(currentConv), currentConv.ConverterId, type);
 
             // Non-exact converter
             if (settings.NonExactConverters != null)

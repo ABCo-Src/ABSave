@@ -2,11 +2,6 @@
 using ABCo.ABSave.Serialization;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.Core
 {
@@ -86,7 +81,7 @@ namespace ABCo.ABSave.UnitTests.Core
             else AssertAndGoToStart(10, 128);
         }
 
-        [TestMethod]       
+        [TestMethod]
         public void FreeBits()
         {
             Initialize(ABSaveSettings.ForSize);
