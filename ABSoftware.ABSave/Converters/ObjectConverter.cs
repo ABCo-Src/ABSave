@@ -16,6 +16,7 @@ namespace ABCo.ABSave.Converters
     public class ObjectConverter : Converter
     {
         internal ObjectIntermediateItem[]? _rawMembers;
+        ObjectConverter _baseType;
         SaveMembersMode _saveMode;
 
         public override void Initialize(InitializeInfo info)

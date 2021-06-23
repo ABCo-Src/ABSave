@@ -7,8 +7,6 @@ namespace ABCo.ABSave.Mapping.Generation
 {
     internal sealed class ObjectIntermediateItem : IComparable<ObjectIntermediateItem>
     {
-        public static readonly ObjectIntermediateItem InvalidMember = new ObjectIntermediateItem();
-
         public int Order;
 
         // Whether this item has been processed into an "ObjectMemberSharedInfo" yet or not.
