@@ -15,7 +15,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
     {
         public static ObjectIntermediateItem[] FillInfo(ref IntermediateMappingContext ctx)
         {
-            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
+            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
             var classType = ctx.ClassType;
 
             // Get the members
@@ -34,10 +34,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             for (int i = 0; i < members.Length; i++)
             {
                 var newItem = GetItemForMember(ref ctx, members[i]);
-                if (newItem != null)
-                {
-                    dest.Add(newItem);
-                }
+                if (newItem != null) dest.Add(newItem);
             }
         }
 
