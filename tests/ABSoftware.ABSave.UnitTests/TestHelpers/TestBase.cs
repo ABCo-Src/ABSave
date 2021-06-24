@@ -48,7 +48,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
             var gen = CurrentMap.GetGenerator();
             CurrentMapItem = gen.GetMap(type);
-            CurrentMap.ReleaseGenerator(gen);
+            ABSaveMap.ReleaseGenerator(gen);
         }
 
         public void ResetState()

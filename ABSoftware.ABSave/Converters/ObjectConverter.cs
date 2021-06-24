@@ -16,28 +16,21 @@ namespace ABCo.ABSave.Converters
     public class ObjectConverter : Converter
     {
         internal ObjectIntermediateItem[]? _rawMembers;
-        readonly ObjectConverter _baseType;
         SaveMembersMode _saveMode;
 
         public override void Initialize(InitializeInfo info) => HighestVersion = IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _rawMembers);
 
         public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version)
         {
-            ObjectMemberSharedInfo[]? members = HasOneVersion ?
+            ObjectMemberSharedInfo[]? members = _hasOneVersion ?
                 ObjectVersionMapper.GenerateForOneVersion(this, info._gen) :
                 ObjectVersionMapper.GenerateNewVersion(this, info._gen, version);
 
             return (new ObjectVersionInfo(members), true);
         }
 
-        public override bool CheckType(CheckTypeInfo info)
-        {
-            SaveMembersAttribute? attribute = info.Type.GetCustomAttribute<SaveMembersAttribute>(false);
-            if (attribute == null) return false;
-
-            _saveMode = attribute.Mode;
-            return true;
-        }
+        public override bool CheckType(CheckTypeInfo info) =>
+            ObjectEligibilityChecker.CheckIfEligibleAndGetSaveMode(info.Type, out _saveMode);
 
         protected override void DoHandleAllVersionsGenerated() => _rawMembers = null;
 
@@ -64,8 +57,10 @@ namespace ABCo.ABSave.Converters
         internal class ObjectVersionInfo : VersionInfo
         {
             public ObjectMemberSharedInfo[] Members;
+            public ObjectConverter? BaseType;
 
-            public ObjectVersionInfo(ObjectMemberSharedInfo[] members) => Members = members;
+            public ObjectVersionInfo(ObjectMemberSharedInfo[] members, ObjectConverter? baseType) => 
+                (Members, BaseType) = (members, baseTyoe);
         }
     }
 }

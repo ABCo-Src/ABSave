@@ -33,8 +33,8 @@ namespace ABCo.ABSave.Mapping
         public Type ItemType = null!;
         public bool IsValueItemType;
 
-        internal volatile bool IsGenerating;
-        internal bool HasOneVersion;
+        internal volatile bool _isGenerating;
+        internal bool _hasOneVersion;
         public uint HighestVersion;
     }
 
@@ -43,6 +43,7 @@ namespace ABCo.ABSave.Mapping
         public uint VersionNumber { get; private set; }
         public bool UsesHeader { get; private set; }
 
+        internal MapItem BaseItem;
         internal SaveInheritanceAttribute? _inheritanceInfo;
 
         protected VersionInfo() { }

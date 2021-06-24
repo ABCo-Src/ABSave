@@ -38,7 +38,7 @@ namespace ABCo.ABSave.Mapping
             MapGenerator? generator = map.GetGenerator();
 
             map.RootItem = generator.GetMap(type);
-            map.ReleaseGenerator(generator);
+            ReleaseGenerator(generator);
             return map;
         }
 
@@ -72,6 +72,6 @@ namespace ABCo.ABSave.Mapping
 
         // NOTE: It's generally not a good idea to call this from a "finally" just in case it pools
         // a generator that's been left in an invalid state.
-        internal void ReleaseGenerator(MapGenerator gen) => gen.FinishGeneration();
+        internal static void ReleaseGenerator(MapGenerator gen) => gen.FinishGeneration();
     }
 }

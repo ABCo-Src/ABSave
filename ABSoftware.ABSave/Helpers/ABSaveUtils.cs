@@ -34,10 +34,10 @@ namespace ABCo.ABSave.Helpers
 
         internal static void WaitUntilNotGenerating(MapItem item)
         {
-            if (item.IsGenerating)
+            if (item._isGenerating)
             {
                 var waiter = new SpinWait();
-                while (item.IsGenerating) waiter.SpinOnce();
+                while (item._isGenerating) waiter.SpinOnce();
             }
         }
 

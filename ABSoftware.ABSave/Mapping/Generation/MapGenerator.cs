@@ -33,7 +33,7 @@ namespace ABCo.ABSave.Mapping.Generation
             MapItem? item = TryGenerateConverter(type);
             if (item == null) throw new UnserializableTypeException(type);
 
-            item.IsGenerating = false;
+            item._isGenerating = false;
             return new MapItemInfo(item, isNullable);
         }
 
@@ -60,7 +60,7 @@ namespace ABCo.ABSave.Mapping.Generation
                 Map.AllTypes[type] = newRuntime;
             }
 
-            newRuntime.IsGenerating = false;
+            newRuntime._isGenerating = false;
             return new MapItemInfo(newRuntime, isNullable);
         }
 
@@ -152,7 +152,7 @@ namespace ABCo.ABSave.Mapping.Generation
         {
             item.ItemType = type;
             item.IsValueItemType = type.IsValueType;
-            item.IsGenerating = true;
+            item._isGenerating = true;
         }
 
         void EnsureTypeSafety(Type type)

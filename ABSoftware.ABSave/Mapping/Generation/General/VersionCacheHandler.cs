@@ -22,7 +22,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
 
         static void FillDestWithMultipleVersions(Converter dest, MapGenerator gen)
         {
-            dest.HasOneVersion = false;
+            dest._hasOneVersion = false;
             dest.VersionCache.MultipleVersions = new Dictionary<uint, VersionInfo?>();
 
             // Generate the highest version.
@@ -31,7 +31,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
 
         static void FillDestWithOneVersion(Converter dest, MapGenerator gen)
         {
-            dest.HasOneVersion = true;
+            dest._hasOneVersion = true;
             dest.VersionCache.OneVersion = GetVersionInfo(dest, 0, gen);
 
             // There are no more versions here, so call the release for that.
@@ -40,7 +40,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
 
         public static VersionInfo? GetVersionOrAddNull(Converter item, uint version)
         {
-            if (item.HasOneVersion)
+            if (item._hasOneVersion)
                 return version > 0 ? null : item.VersionCache.OneVersion;
 
             while (true)
@@ -67,7 +67,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
 
         public static VersionInfo AddNewVersion(Converter converter, uint version, MapGenerator gen)
         {
-            if (converter.HasOneVersion || version > converter.HighestVersion)
+            if (converter._hasOneVersion || version > converter.HighestVersion)
                 throw new UnsupportedVersionException(converter.ItemType, version);
 
             VersionInfo? newVer = GetVersionInfo(converter, version, gen);
