@@ -1,4 +1,8 @@
-﻿namespace ABCo.ABSave.Mapping.Description
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ABCo.ABSave.Mapping.Description
 {
     public enum SaveMembersMode : byte
     {

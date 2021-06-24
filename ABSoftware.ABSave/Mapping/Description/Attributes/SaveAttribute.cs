@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace ABCo.ABSave.Mapping.Description.Attributes
 {
@@ -19,7 +21,7 @@ namespace ABCo.ABSave.Mapping.Description.Attributes
         /// </summary>
         public int ToVer = -1; // -1 marks that this is available up to any version.
 
-        public SaveAttribute([CallerLineNumber] int order = 0)
+        public SaveAttribute([CallerLineNumber]int order = 0)
             => Order = order;
     }
 }

@@ -5,6 +5,7 @@ using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.Object
 {
@@ -42,19 +43,13 @@ namespace ABCo.ABSave.Mapping.Generation.Object
         {
             // Get the attributes - skip this item if there are none
             var attributes = info.GetCustomAttributes(typeof(MapAttr), false);
-            if (attributes.Length == 0)
-            {
-                return null;
-            }
+            if (attributes.Length == 0) return null;
 
             var newItem = new ObjectIntermediateItem();
 
             // Create the item.
             bool successful = FillItemFromAttributes(newItem, info, attributes);
-            if (!successful)
-            {
-                throw new IncompleteDetailsException(info);
-            }
+            if (!successful) throw new IncompleteDetailsException(info);
 
             IntermediateMapper.UpdateContextFromItem(ref ctx, newItem);
             return newItem;
@@ -84,9 +79,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             var fields = Array.Empty<FieldInfo>();
 
             if ((mode & SaveMembersMode.Fields) > 0)
-            {
                 fields = classType.GetFields(bindingFlags);
-            }
 
             return fields;
         }
@@ -96,9 +89,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             var properties = Array.Empty<PropertyInfo>();
 
             if ((mode & SaveMembersMode.Properties) > 0)
-            {
                 properties = classType.GetProperties(bindingFlags);
-            }
 
             return properties;
         }

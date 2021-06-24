@@ -1,6 +1,11 @@
-﻿using ABCo.ABSave.Mapping.Generation;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Reflection;
+using System.Text;
 
 namespace ABCo.ABSave.Configuration
 {
@@ -41,7 +46,7 @@ namespace ABCo.ABSave.Configuration
         internal ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool bypassDangerousTypeChecking, bool useLittleEndian, int converterCount,
             IReadOnlyDictionary<Type, ConverterInfo> exactConverters, IReadOnlyList<ConverterInfo> nonExactConverters)
         =>
-            (LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ConverterCount, ExactConverters, NonExactConverters) =
+            (LazyBitHandling, UseUTF8, UseLittleEndian, BypassDangerousTypeChecking, ConverterCount, ExactConverters, NonExactConverters) = 
             (lazyBitHandling, useUTF8, useLittleEndian, bypassDangerousTypeChecking, converterCount, exactConverters, nonExactConverters);
     }
 }

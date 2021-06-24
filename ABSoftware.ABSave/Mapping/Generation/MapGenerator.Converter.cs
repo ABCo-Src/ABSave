@@ -1,8 +1,11 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.General;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -16,15 +19,11 @@ namespace ABCo.ABSave.Mapping.Generation
             {
                 var genericType = type.GetGenericTypeDefinition();
                 if (settings.ExactConverters.TryGetValue(genericType, out var currentGenericConv))
-                {
                     return UseConverter(GetConverterInstance(currentGenericConv), currentGenericConv.ConverterId, type);
-                }
             }
 
             if (settings.ExactConverters.TryGetValue(type, out var currentConv))
-            {
-                return UseConverter(GetConverterInstance(currentConv), currentConv.ConverterId, type);
-            }
+                return UseConverter(GetConverterInstance(currentConv), currentConv.ConverterId, type);            
 
             // Non-exact converter
             if (settings.NonExactConverters != null)
@@ -35,9 +34,7 @@ namespace ABCo.ABSave.Mapping.Generation
                     var converter = GetConverterInstance(converterInfo);
 
                     if (converter.CheckType(new CheckTypeInfo(type, settings)))
-                    {
                         return UseConverter(converter, converterInfo.ConverterId, type);
-                    }
                 }
             }
 

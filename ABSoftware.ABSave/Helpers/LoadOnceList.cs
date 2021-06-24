@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace ABCo.ABSave.Helpers
 {
@@ -33,10 +35,7 @@ namespace ABCo.ABSave.Helpers
             int totalLen = (_blockCountBeforeCurrent * BLOCK_SIZE) + _currentBlockFilled;
 
             // If we've managed to somehow EXACTLY fill a single block, we'll just use the data from that.
-            if (totalLen == BLOCK_SIZE)
-            {
-                return _startBlock.Data;
-            }
+            if (totalLen == BLOCK_SIZE) return _startBlock.Data;
 
             var res = ABSaveUtils.CreateUninitializedArray<T>(totalLen);
 

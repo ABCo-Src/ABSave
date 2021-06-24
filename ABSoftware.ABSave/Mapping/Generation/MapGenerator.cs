@@ -1,15 +1,20 @@
-﻿using ABCo.ABSave.Converters;
-using ABCo.ABSave.Exceptions;
-using ABCo.ABSave.Mapping.Generation.Object;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Reflection;
+using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Generation.Object;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
     public partial class MapGenerator
     {
-        internal ABSaveMap Map = null!;
+        internal ABSaveMap Map = null!;  
         internal MapItemInfo CurrentItem;
 
         // A list of all the property members to still have their accessor processed. These get
@@ -21,10 +26,7 @@ namespace ABCo.ABSave.Mapping.Generation
             bool isNullable = TryExpandNullable(ref type);
 
             MapItem? existingItem = GetExistingOrAddNull(type);
-            if (existingItem != null)
-            {
-                return new MapItemInfo(existingItem, isNullable);
-            }
+            if (existingItem != null) return new MapItemInfo(existingItem, isNullable);
 
             return GenerateMap(type, isNullable);
         }
@@ -33,11 +35,8 @@ namespace ABCo.ABSave.Mapping.Generation
         {
             EnsureTypeSafety(type);
 
-            MapItem? item = TryGenerateConverter(type);
-            if (item == null)
-            {
-                throw new UnserializableTypeException(type);
-            }
+            MapItem? item= TryGenerateConverter(type);
+            if (item == null) throw new UnserializableTypeException(type);
 
             item.IsGenerating = false;
             return new MapItemInfo(item, isNullable);
@@ -48,10 +47,7 @@ namespace ABCo.ABSave.Mapping.Generation
             bool isNullable = TryExpandNullable(ref type);
 
             MapItem? existing = GetExistingOrAddNull(type);
-            if (existing is RuntimeMapItem)
-            {
-                return new MapItemInfo(existing, isNullable);
-            }
+            if (existing is RuntimeMapItem) return new MapItemInfo(existing, isNullable);
 
             MapItem newItem = existing ?? GenerateMap(type, isNullable)._innerItem;
 
@@ -61,9 +57,7 @@ namespace ABCo.ABSave.Mapping.Generation
             {
                 // Check one more time to make sure the runtime item wasn't generated since we last looked at it.
                 if (Map.AllTypes[type] is RuntimeMapItem itm)
-                {
                     return new MapItemInfo(itm, isNullable);
-                }
 
                 // Generate the new item!
                 newRuntime = new RuntimeMapItem(newItem);
@@ -111,13 +105,9 @@ namespace ABCo.ABSave.Mapping.Generation
                     {
                         // Allocating, try again
                         if (val == null)
-                        {
                             goto Retry;
-                        }
                         else
-                        {
                             return val;
-                        }
                     }
 
                     // Start generating this item.
@@ -141,9 +131,7 @@ namespace ABCo.ABSave.Mapping.Generation
                     {
                         // Allocating, try again
                         if (val == null)
-                        {
                             goto Retry;
-                        }
                     }
 
                     // Start generating this item.
@@ -162,9 +150,7 @@ namespace ABCo.ABSave.Mapping.Generation
             ApplyItemProperties(item, type);
 
             lock (Map.AllTypes)
-            {
                 Map.AllTypes[type] = item;
-            }
         }
 
         internal static void ApplyItemProperties(MapItem item, Type type)
@@ -178,15 +164,8 @@ namespace ABCo.ABSave.Mapping.Generation
         {
             if (!Map.Settings.BypassDangerousTypeChecking)
             {
-                if (type == typeof(object))
-                {
-                    throw new DangerousTypeException("an 'object' member");
-                }
-
-                if (type == typeof(ValueType))
-                {
-                    throw new DangerousTypeException("a 'ValueType' member");
-                }
+                if (type == typeof(object)) throw new DangerousTypeException("an 'object' member");
+                if (type == typeof(ValueType)) throw new DangerousTypeException("a 'ValueType' member");
             }
         }
 

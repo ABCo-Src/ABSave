@@ -1,4 +1,10 @@
-﻿namespace ABCo.ABSave.Helpers
+﻿using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+
+namespace ABCo.ABSave.Helpers
 {
     internal class LightConcurrentPool<T> where T : class
     {
@@ -11,11 +17,7 @@
         {
             lock (_items)
             {
-                if (_itemCount == 0)
-                {
-                    return null;
-                }
-
+                if (_itemCount == 0) return null;
                 return _items[_itemCount--];
             }
         }
@@ -25,10 +27,7 @@
             lock (_items)
             {
                 int newCount = _itemCount + 1;
-                if (newCount == _items.Length)
-                {
-                    return;
-                }
+                if (newCount == _items.Length) return;
 
                 _items[_itemCount] = item;
                 _itemCount = newCount;

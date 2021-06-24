@@ -3,6 +3,7 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -35,17 +36,13 @@ namespace ABCo.ABSave.Mapping.Generation
                     exactConverters.EnsureCapacity(exactConverters.Count + exactTypes.Length);
 
                     for (int j = 0; j < exactTypes.Length; j++)
-                    {
                         exactConverters.Add(exactTypes[j].Type, currentConverter);
-                    }
                 }
 
                 if (alsoNeedsCheckType)
-                {
-                    nonExactConverters.Add(currentConverter);
-                }
+                    nonExactConverters.Add(currentConverter);                
             }
-
+             
             outExactConverters = exactConverters;
             outNonExactConverters = nonExactConverters;
         }

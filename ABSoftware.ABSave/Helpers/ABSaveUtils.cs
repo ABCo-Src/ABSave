@@ -1,7 +1,11 @@
-﻿using ABCo.ABSave.Mapping;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 
 namespace ABCo.ABSave.Helpers
@@ -33,10 +37,7 @@ namespace ABCo.ABSave.Helpers
             if (item.IsGenerating)
             {
                 var waiter = new SpinWait();
-                while (item.IsGenerating)
-                {
-                    waiter.SpinOnce();
-                }
+                while (item.IsGenerating) waiter.SpinOnce();
             }
         }
 

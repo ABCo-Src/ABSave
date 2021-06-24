@@ -4,6 +4,8 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
+using System.Collections.Generic;
+using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
@@ -32,9 +34,7 @@ namespace ABCo.ABSave.Converters
 
             // IntPtr
             if (typeCode == TypeCode.Object)
-            {
                 throw new Exception("Unsupported primitive provided. Please note that ABSave does not currently support .NET 5 and above types.");
-            }
 
             _typeCode = (PrimitiveType)typeCode;
         }
@@ -49,14 +49,8 @@ namespace ABCo.ABSave.Converters
             {
                 case PrimitiveType.Boolean:
                     var bl = (bool)info.Instance;
-                    if (bl)
-                    {
-                        serializer.WriteByte(1);
-                    }
-                    else
-                    {
-                        serializer.WriteByte(0);
-                    }
+                    if (bl) serializer.WriteByte(1);
+                    else serializer.WriteByte(0);
 
                     break;
 

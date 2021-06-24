@@ -1,11 +1,17 @@
-﻿using ABCo.ABSave.Deserialization;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
+using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
@@ -60,7 +66,7 @@ namespace ABCo.ABSave.Converters
             public Type ActualType { get; }
             public VersionInfo VersionInfo { get; }
 
-            internal SerializeInfo(object instance, Type actualType, VersionInfo versionInfo) =>
+            internal SerializeInfo(object instance, Type actualType, VersionInfo versionInfo) => 
                 (Instance, ActualType, VersionInfo) = (instance, actualType, versionInfo);
         }
 
@@ -71,7 +77,7 @@ namespace ABCo.ABSave.Converters
             public Type ActualType { get; }
             internal VersionInfo VersionInfo { get; }
 
-            internal DeserializeInfo(Type actualType, VersionInfo versionInfo) =>
+            internal DeserializeInfo(Type actualType, VersionInfo versionInfo) => 
                 (ActualType, VersionInfo) = (actualType, versionInfo);
         }
 

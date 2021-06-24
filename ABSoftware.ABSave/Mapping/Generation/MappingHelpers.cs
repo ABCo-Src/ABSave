@@ -1,4 +1,8 @@
-﻿namespace ABCo.ABSave.Mapping.Generation
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+
+namespace ABCo.ABSave.Mapping.Generation
 {
     internal static class MappingHelpers
     {
@@ -8,18 +12,14 @@
             if (endVer == uint.MaxValue)
             {
                 if (startVer > highestVersion)
-                {
                     highestVersion = startVer;
-                }
             }
 
             // If not update based on what their custom high is.
             else
             {
                 if (endVer > highestVersion)
-                {
                     highestVersion = endVer;
-                }
             }
         }
     }

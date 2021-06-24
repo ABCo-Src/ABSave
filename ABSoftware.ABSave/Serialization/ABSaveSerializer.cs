@@ -1,14 +1,25 @@
-﻿using ABCo.ABSave.Configuration;
+﻿using ABCo.ABSave;
+using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
+using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Globalization;
 using System.IO;
+using System.Numerics;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
+using System.Runtime.InteropServices;
+using System.Text;
+using System.Xml.Serialization;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -30,9 +41,7 @@ namespace ABCo.ABSave.Serialization
         public void Initialize(Stream output, ABSaveMap map, Dictionary<Type, uint>? targetVersions)
         {
             if (!output.CanWrite)
-            {
                 throw new Exception("Cannot use unwriteable stream.");
-            }
 
             Output = output;
 
@@ -60,9 +69,8 @@ namespace ABCo.ABSave.Serialization
         public void SerializeItem(object? obj, MapItemInfo item)
         {
             if (obj == null)
-            {
                 WriteByte(0);
-            }
+
             else
             {
                 var currentHeader = new BitTarget(this);
@@ -78,10 +86,7 @@ namespace ABCo.ABSave.Serialization
                 header.Apply();
             }
 
-            else
-            {
-                SerializePossibleNullableItem(obj, item, ref header);
-            }
+            else SerializePossibleNullableItem(obj, item, ref header);
         }
 
         public void SerializeExactNonNullItem(object obj, MapItemInfo item)
@@ -90,17 +95,13 @@ namespace ABCo.ABSave.Serialization
             SerializeItemNoSetup(obj, item, ref currentHeader, true);
         }
 
-        public void SerializeExactNonNullItem(object obj, MapItemInfo item, ref BitTarget header) =>
+        public void SerializeExactNonNullItem(object obj, MapItemInfo item, ref BitTarget header) => 
             SerializeItemNoSetup(obj, item, ref header, true);
 
         public void SerializePossibleNullableItem(object obj, MapItemInfo info, ref BitTarget header)
         {
             // Say it's "not null" if it is nullable.
-            if (info.IsNullable)
-            {
-                header.WriteBitOn();
-            }
-
+            if (info.IsNullable) header.WriteBitOn();
             SerializeItemNoSetup(obj, info, ref header, info.IsNullable);
         }
 
@@ -155,9 +156,7 @@ namespace ABCo.ABSave.Serialization
 
             // Apply the header if it's not being used and hasn't already been applied.
             if (!info.UsesHeader && !appliedHeader)
-            {
                 header.Apply();
-            }
 
             var serializeInfo = new Converter.SerializeInfo(obj, actualType, info);
             converter.Serialize(in serializeInfo, ref header);
@@ -179,9 +178,7 @@ namespace ABCo.ABSave.Serialization
 
             // Try to get the custom target version and if there is none use the latest.
             if (TargetVersions?.TryGetValue(item.ItemType, out targetVersion) != true)
-            {
                 targetVersion = item.HighestVersion;
-            }
 
             WriteCompressed(targetVersion, ref target);
             return targetVersion;
@@ -193,10 +190,8 @@ namespace ABCo.ABSave.Serialization
             switch (info.Mode)
             {
                 case SaveInheritanceMode.Index:
-                    if (!TryWriteListInheritance(info, actualType, ref header))
-                    {
+                    if (!TryWriteListInheritance(info, actualType, ref header))                    
                         throw new UnsupportedSubTypeException(baseType, actualType);
-                    }
 
                     break;
                 case SaveInheritanceMode.Key:
@@ -205,9 +200,7 @@ namespace ABCo.ABSave.Serialization
                     break;
                 case SaveInheritanceMode.IndexOrKey:
                     if (TryWriteListInheritance(info, actualType, ref header))
-                    {
                         header.WriteBitOn();
-                    }
                     else
                     {
                         header.WriteBitOff();
@@ -228,7 +221,7 @@ namespace ABCo.ABSave.Serialization
                 WriteCompressed(pos, ref header);
                 return true;
             }
-
+            
             return false;
         }
 

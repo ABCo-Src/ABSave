@@ -1,6 +1,8 @@
 ﻿using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Reflection;
+using System.Collections.Generic;
+using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.Inheritance
 {
@@ -11,9 +13,7 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
             var inheritanceInfo = (SaveInheritanceAttribute[])classType.GetCustomAttributes<SaveInheritanceAttribute>(false);
 
             if (inheritanceInfo.Length == 0)
-            {
                 inheritanceInfo = null;
-            }
             else
             {
                 for (int i = 0; i < inheritanceInfo.Length; i++)

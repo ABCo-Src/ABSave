@@ -1,6 +1,10 @@
 ﻿using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Serialization;
+using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ABCo.ABSave.Deserialization
 {
@@ -31,11 +35,7 @@ namespace ABCo.ABSave.Deserialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadBit()
         {
-            if (FreeBits == 0)
-            {
-                MoveToNewByte();
-            }
-
+            if (FreeBits == 0) MoveToNewByte();
             return (Source & (1 << --FreeBits)) > 0;
         }
 

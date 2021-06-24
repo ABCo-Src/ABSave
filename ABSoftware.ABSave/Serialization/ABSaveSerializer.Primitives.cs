@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Buffers.Binary;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -23,31 +25,19 @@ namespace ABCo.ABSave.Serialization
 
         public unsafe void WriteInt16(short num)
         {
-            if (ShouldReverseEndian)
-            {
-                num = BinaryPrimitives.ReverseEndianness(num);
-            }
-
+            if (ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
             WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 2));
         }
 
         public unsafe void WriteInt32(int num)
         {
-            if (ShouldReverseEndian)
-            {
-                num = BinaryPrimitives.ReverseEndianness(num);
-            }
-
+            if (ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
             WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 4));
         }
 
         public unsafe void WriteInt64(long num)
         {
-            if (ShouldReverseEndian)
-            {
-                num = BinaryPrimitives.ReverseEndianness(num);
-            }
-
+            if (ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
             WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 8));
         }
 
@@ -59,10 +49,7 @@ namespace ABCo.ABSave.Serialization
                 asInt = BinaryPrimitives.ReverseEndianness(asInt);
                 WriteBytes(new ReadOnlySpan<byte>((byte*)&asInt, 4));
             }
-            else
-            {
-                WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 4));
-            }
+            else WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 4));
         }
 
         public unsafe void WriteDouble(double num)
@@ -73,19 +60,14 @@ namespace ABCo.ABSave.Serialization
                 asInt = BinaryPrimitives.ReverseEndianness(asInt);
                 WriteBytes(new ReadOnlySpan<byte>((byte*)&asInt, 8));
             }
-            else
-            {
-                WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 8));
-            }
+            else WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 8));
         }
 
         public void WriteDecimal(decimal num)
         {
             var bits = decimal.GetBits(num);
             for (int i = 0; i < 4; i++)
-            {
                 WriteInt32(bits[i]);
-            }
         }
 
         #endregion

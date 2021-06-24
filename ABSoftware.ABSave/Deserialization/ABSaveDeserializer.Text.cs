@@ -1,5 +1,7 @@
 ﻿using ABCo.ABSave.Helpers;
 using System;
+using System.Buffers;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -75,22 +77,14 @@ namespace ABCo.ABSave.Deserialization
                     destBytes[i++] = buffer[0];
                 }
             }
-            else
-            {
-                Source.Read(destBytes);
-            }
+            else Source.Read(destBytes);
         }
 
         public byte[] GetStringBuffer(int length)
         {
             if (_stringBuffer == null || _stringBuffer.Length < length)
-            {
                 return _stringBuffer = ABSaveUtils.CreateUninitializedArray<byte>(length);
-            }
-            else
-            {
-                return _stringBuffer;
-            }
+            else return _stringBuffer;
         }
 
         #endregion
