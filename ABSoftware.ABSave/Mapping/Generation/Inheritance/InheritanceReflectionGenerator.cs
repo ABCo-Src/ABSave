@@ -1,8 +1,6 @@
 ﻿using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Reflection;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.Inheritance
 {
@@ -18,7 +16,7 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
             {
                 for (int i = 0; i < inheritanceInfo.Length; i++)
                 {
-                    var info = inheritanceInfo[i];
+                    SaveInheritanceAttribute? info = inheritanceInfo[i];
                     MappingHelpers.UpdateHighestVersionFromRange(ref highestVersion, info.FromVer, info.ToVer);
                 }
             }

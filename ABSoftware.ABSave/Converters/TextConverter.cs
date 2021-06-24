@@ -45,7 +45,7 @@ namespace ABCo.ABSave.Converters
                     SerializeCharArray((char[])info.Instance, ref header);
                     break;
                 case StringType.StringBuilder:
-                    
+
                     SerializeStringBuilder((StringBuilder)info.Instance, ref header);
                     break;
             }
@@ -68,16 +68,13 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header) => _type switch
         {
-            return _type switch
-            {
-                StringType.String => header.Deserializer.ReadString(ref header),
-                StringType.CharArray => DeserializeCharArray(ref header),
-                StringType.StringBuilder => DeserializeStringBuilder(ref header),
-                _ => throw new Exception("Invalid StringType in text converter context"),
-            };
-        }
+            StringType.String => header.Deserializer.ReadString(ref header),
+            StringType.CharArray => DeserializeCharArray(ref header),
+            StringType.StringBuilder => DeserializeStringBuilder(ref header),
+            _ => throw new Exception("Invalid StringType in text converter context"),
+        };
 
         public static char[] DeserializeCharArray(ref BitSource header)
         {
@@ -86,7 +83,7 @@ namespace ABCo.ABSave.Converters
             else
             {
                 int size = (int)header.Deserializer.ReadCompressedInt(ref header);
-                var chArr = new char[size];
+                char[]? chArr = new char[size];
 
                 header.Deserializer.FastReadShorts(MemoryMarshal.Cast<char, short>(chArr.AsSpan()));
 

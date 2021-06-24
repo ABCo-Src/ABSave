@@ -1,12 +1,9 @@
 ﻿using ABCo.ABSave.Exceptions;
-using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace ABCo.ABSave.Mapping.Generation.Inheritance
@@ -24,7 +21,7 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
                 Debug.Assert(!info.HasGeneratedFullKeyCache);
 
                 // If it's not in the cache, get and add it now.
-                var attribute = type.GetCustomAttribute<SaveInheritanceKeyAttribute>(false);
+                SaveInheritanceKeyAttribute? attribute = type.GetCustomAttribute<SaveInheritanceKeyAttribute>(false);
                 if (attribute == null) throw new UnsupportedSubTypeException(baseType, type);
 
                 info.KeySerializeCache ??= new Dictionary<Type, string>(1);
@@ -44,7 +41,7 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
                 // Just use one of them to see if the cache is valid or not.
                 if (info.HasGeneratedFullKeyCache) return;
 
-                var keyedInfo = GetKeyedSubTypesFor(type);
+                KeyedSubTypeInfo[]? keyedInfo = GetKeyedSubTypesFor(type);
 
                 // We'll also fill in the serialize cache since we've now gone through all the types.
                 info.KeySerializeCache = new Dictionary<Type, string>(keyedInfo.Length);
@@ -52,7 +49,7 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
 
                 for (int i = 0; i < keyedInfo.Length; i++)
                 {
-                    var currentInfo = keyedInfo[i];
+                    KeyedSubTypeInfo currentInfo = keyedInfo[i];
 
                     info.KeySerializeCache.Add(currentInfo.Type, currentInfo.Key);
                     info.KeyDeserializeCache.Add(currentInfo.Key, currentInfo.Type);
@@ -73,14 +70,14 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
 
         static KeyedSubTypeInfo[] GetKeyedSubTypesFor(Type type)
         {
-            var typeAssemblyName = type.Assembly.GetName();
-            var currentAssemblies = AppDomain.CurrentDomain.GetAssemblies();
+            AssemblyName? typeAssemblyName = type.Assembly.GetName();
+            Assembly[]? currentAssemblies = AppDomain.CurrentDomain.GetAssemblies();
 
-            List<KeyedSubTypeInfo> res = new List<KeyedSubTypeInfo>();
+            var res = new List<KeyedSubTypeInfo>();
 
             for (int i = 0; i < currentAssemblies.Length; i++)
             {
-                var referenced = currentAssemblies[i].GetReferencedAssemblies();
+                AssemblyName[]? referenced = currentAssemblies[i].GetReferencedAssemblies();
 
                 if (currentAssemblies[i] == type.Assembly)
                     goto Accept;
@@ -93,13 +90,13 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
 
             Accept:
                 {
-                    var subTypes = currentAssemblies[i].GetTypes();
+                    Type[]? subTypes = currentAssemblies[i].GetTypes();
 
                     Parallel.ForEach(subTypes, t =>
                     {
                         if (!t.IsSubclassOf(type)) return;
 
-                        var attribute = t.GetCustomAttribute<SaveInheritanceKeyAttribute>(false);
+                        SaveInheritanceKeyAttribute? attribute = t.GetCustomAttribute<SaveInheritanceKeyAttribute>(false);
                         if (attribute == null) return;
 
                         var newInfo = new KeyedSubTypeInfo(t, attribute.Key);

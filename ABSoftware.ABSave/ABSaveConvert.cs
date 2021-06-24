@@ -5,7 +5,6 @@ using ABCo.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 
 namespace ABCo.ABSave
 {
@@ -24,17 +23,17 @@ namespace ABCo.ABSave
             return stream.ToArray();
         }
 
-        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream, Dictionary<Type, uint>? targetVersions = null) => 
+        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream, Dictionary<Type, uint>? targetVersions = null) =>
             SerializeNonGeneric(obj, map, stream, targetVersions);
         public static void SerializeNonGeneric(object? obj, ABSaveMap map, Stream stream, Dictionary<Type, uint>? targetVersions = null)
         {
-            var serializer = SerializerPool.TryRent() ?? new ABSaveSerializer();
+            ABSaveSerializer? serializer = SerializerPool.TryRent() ?? new ABSaveSerializer();
             serializer.Initialize(stream, map, targetVersions);
             serializer.SerializeRoot(obj);
             SerializerPool.Release(serializer);
         }
 
-        public static T Deserialize<T>(byte[] arr, ABSaveMap map) => 
+        public static T Deserialize<T>(byte[] arr, ABSaveMap map) =>
             (T)DeserializeNonGeneric(arr, map)!;
 
         public static object? DeserializeNonGeneric(byte[] arr, ABSaveMap map)
@@ -43,12 +42,12 @@ namespace ABCo.ABSave
             return DeserializeNonGeneric(stream, map);
         }
 
-        public static T Deserialize<T>(Stream stream, ABSaveMap map) where T : class? => 
+        public static T Deserialize<T>(Stream stream, ABSaveMap map) where T : class? =>
             (T)DeserializeNonGeneric(stream, map)!;
 
         public static object? DeserializeNonGeneric(Stream stream, ABSaveMap map)
         {
-            var deserializer = DeserializerPool.TryRent() ?? new ABSaveDeserializer();
+            ABSaveDeserializer? deserializer = DeserializerPool.TryRent() ?? new ABSaveDeserializer();
             deserializer.Initialize(stream, map);
             return deserializer.DeserializeRoot();
         }

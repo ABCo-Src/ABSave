@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace ABCo.ABSave.Deserialization
 {
@@ -79,7 +77,7 @@ namespace ABCo.ABSave.Deserialization
         public decimal ReadDecimal()
         {
             // TODO: Optimize this.
-            var bits = new int[4];
+            int[]? bits = new int[4];
 
             for (int i = 0; i < 4; i++)
                 bits[i] = ReadInt32();

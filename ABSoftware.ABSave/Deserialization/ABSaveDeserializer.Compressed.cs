@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace ABCo.ABSave.Deserialization
+﻿namespace ABCo.ABSave.Deserialization
 {
     // ===============================================
     // NOTE: Full details about the "compressed numerical" structure can be seen in the TXT file: CompressedPlan.txt in the project root
@@ -32,10 +28,10 @@ namespace ABCo.ABSave.Deserialization
 
             // Process header
             byte preHeaderCapacity = source.FreeBits;
-            var (noContBytes, headerLen) = ReadNoContBytes(ref source);
+            (byte noContBytes, byte headerLen) = ReadNoContBytes(ref source);
 
             byte bitsToGo = (byte)(8 * noContBytes);
-            var res = ReadFirstByteData(ref source, headerLen, bitsToGo, preHeaderCapacity);
+            ulong res = ReadFirstByteData(ref source, headerLen, bitsToGo, preHeaderCapacity);
 
             while (bitsToGo > 0)
             {

@@ -1,25 +1,14 @@
-﻿using ABCo.ABSave;
-using ABCo.ABSave.Configuration;
+﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
-using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Numerics;
-using System.Reflection;
-using System.Runtime.CompilerServices;
-using System.Runtime.ExceptionServices;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Xml.Serialization;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -54,17 +43,11 @@ namespace ABCo.ABSave.Serialization
             Reset();
         }
 
-        public void Reset()
-        {
-            _versions.Clear();
-        }
+        public void Reset() => _versions.Clear();
 
         public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
 
-        public void SerializeRoot(object? obj)
-        {
-            SerializeItem(obj, Map.RootItem);
-        }
+        public void SerializeRoot(object? obj) => SerializeItem(obj, Map.RootItem);
 
         public void SerializeItem(object? obj, MapItemInfo item)
         {
@@ -95,7 +78,7 @@ namespace ABCo.ABSave.Serialization
             SerializeItemNoSetup(obj, item, ref currentHeader, true);
         }
 
-        public void SerializeExactNonNullItem(object obj, MapItemInfo item, ref BitTarget header) => 
+        public void SerializeExactNonNullItem(object obj, MapItemInfo item, ref BitTarget header) =>
             SerializeItemNoSetup(obj, item, ref header, true);
 
         public void SerializePossibleNullableItem(object obj, MapItemInfo info, ref BitTarget header)
@@ -125,7 +108,7 @@ namespace ABCo.ABSave.Serialization
 
         void SerializeConverterItem(object obj, Converter converter, ref BitTarget header, bool skipHeader)
         {
-            var actualType = obj.GetType();
+            Type? actualType = obj.GetType();
 
             bool appliedHeader = true;
 
@@ -190,7 +173,7 @@ namespace ABCo.ABSave.Serialization
             switch (info.Mode)
             {
                 case SaveInheritanceMode.Index:
-                    if (!TryWriteListInheritance(info, actualType, ref header))                    
+                    if (!TryWriteListInheritance(info, actualType, ref header))
                         throw new UnsupportedSubTypeException(baseType, actualType);
 
                     break;
@@ -221,7 +204,7 @@ namespace ABCo.ABSave.Serialization
                 WriteCompressed(pos, ref header);
                 return true;
             }
-            
+
             return false;
         }
 
@@ -233,7 +216,7 @@ namespace ABCo.ABSave.Serialization
 
         void SerializeActualType(object obj, Type type)
         {
-            var info = GetRuntimeMapItem(type);
+            MapItemInfo info = GetRuntimeMapItem(type);
 
             var newTarget = new BitTarget(this);
             SerializeItemNoSetup(obj, info, ref newTarget, true);

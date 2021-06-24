@@ -2,10 +2,7 @@
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Text;
 using System.Threading;
 
 namespace ABCo.ABSave.Mapping.Generation.General
@@ -73,7 +70,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
             if (converter.HasOneVersion || version > converter.HighestVersion)
                 throw new UnsupportedVersionException(converter.ItemType, version);
 
-            var newVer = GetVersionInfo(converter, version, gen);
+            VersionInfo? newVer = GetVersionInfo(converter, version, gen);
 
             lock (converter.VersionCache.MultipleVersions)
             {
@@ -87,7 +84,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
 
         static VersionInfo GetVersionInfo(Converter converter, uint version, MapGenerator gen)
         {
-            var (newVer, usesHeader) = converter.GetVersionInfo(new InitializeInfo(converter.ItemType, gen), version);
+            (VersionInfo? newVer, bool usesHeader) = converter.GetVersionInfo(new InitializeInfo(converter.ItemType, gen), version);
 
             SaveInheritanceAttribute? inheritanceInfo = null;
             if (converter._allInheritanceAttributes != null)

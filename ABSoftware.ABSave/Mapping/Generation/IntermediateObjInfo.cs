@@ -1,11 +1,7 @@
-﻿using ABCo.ABSave.Helpers;
-using ABCo.ABSave.Mapping.Description;
-using ABCo.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation
 {

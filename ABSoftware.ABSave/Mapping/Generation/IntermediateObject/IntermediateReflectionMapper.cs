@@ -5,7 +5,6 @@ using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.Object
 {
@@ -16,8 +15,8 @@ namespace ABCo.ABSave.Mapping.Generation.Object
     {
         public static ObjectIntermediateItem[] FillInfo(ref IntermediateMappingContext ctx)
         {
-            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
-            var classType = ctx.ClassType;
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+            Type? classType = ctx.ClassType;
 
             // Get the members
             FieldInfo[] currentFields = GetFields(bindingFlags, classType, ctx.Mode);
@@ -34,7 +33,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
         {
             for (int i = 0; i < members.Length; i++)
             {
-                var newItem = GetItemForMember(ref ctx, members[i]);
+                ObjectIntermediateItem? newItem = GetItemForMember(ref ctx, members[i]);
                 if (newItem != null) dest.Add(newItem);
             }
         }
@@ -42,7 +41,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
         internal static ObjectIntermediateItem? GetItemForMember(ref IntermediateMappingContext ctx, MemberInfo info)
         {
             // Get the attributes - skip this item if there are none
-            var attributes = info.GetCustomAttributes(typeof(MapAttr), false);
+            object[]? attributes = info.GetCustomAttributes(typeof(MapAttr), false);
             if (attributes.Length == 0) return null;
 
             var newItem = new ObjectIntermediateItem();
@@ -76,7 +75,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 
         static FieldInfo[] GetFields(BindingFlags bindingFlags, Type classType, SaveMembersMode mode)
         {
-            var fields = Array.Empty<FieldInfo>();
+            FieldInfo[]? fields = Array.Empty<FieldInfo>();
 
             if ((mode & SaveMembersMode.Fields) > 0)
                 fields = classType.GetFields(bindingFlags);
@@ -86,7 +85,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 
         static PropertyInfo[] GetProperties(BindingFlags bindingFlags, Type classType, SaveMembersMode mode)
         {
-            var properties = Array.Empty<PropertyInfo>();
+            PropertyInfo[]? properties = Array.Empty<PropertyInfo>();
 
             if ((mode & SaveMembersMode.Properties) > 0)
                 properties = classType.GetProperties(bindingFlags);

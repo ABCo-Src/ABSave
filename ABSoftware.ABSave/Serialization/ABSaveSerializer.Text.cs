@@ -1,7 +1,5 @@
 ﻿using ABCo.ABSave.Helpers;
 using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -61,7 +59,7 @@ namespace ABCo.ABSave.Serialization
 
         public unsafe void FastWriteShorts(ReadOnlySpan<short> shorts)
         {
-            var bytes = MemoryMarshal.Cast<short, byte>(shorts);
+            ReadOnlySpan<byte> bytes = MemoryMarshal.Cast<short, byte>(shorts);
 
             if (ShouldReverseEndian)
             {

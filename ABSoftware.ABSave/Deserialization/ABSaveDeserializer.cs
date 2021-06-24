@@ -5,15 +5,10 @@ using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
-using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.IO;
-using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ABCo.ABSave.Deserialization
 {
@@ -36,20 +31,14 @@ namespace ABCo.ABSave.Deserialization
             Source = source;
         }
 
-        public void Reset()
-        {
-            _versions.Clear();
-        }
+        public void Reset() => _versions.Clear();
 
         BitSource _currentHeader;
         bool _readHeader;
-    
+
         public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
 
-        public object? DeserializeRoot()
-        {
-            return DeserializeItem(Map.RootItem);
-        }
+        public object? DeserializeRoot() => DeserializeItem(Map.RootItem);
 
         public object? DeserializeItem(MapItemInfo info)
         {
@@ -66,7 +55,7 @@ namespace ABCo.ABSave.Deserialization
 
                 _readHeader = true;
             }
-            
+
             return DeserializeNullableItem(info, false);
         }
 
@@ -81,7 +70,7 @@ namespace ABCo.ABSave.Deserialization
         {
             // Do null checks
             if (!info.IsValueTypeItem && !header.ReadBit()) return null;
-            
+
             _currentHeader = header;
             _readHeader = true;
             return DeserializeNullableItem(info, false);
@@ -133,9 +122,9 @@ namespace ABCo.ABSave.Deserialization
                 info = Map.GetVersionInfo(converter, version);
                 _versions.Add(converter.ItemType, info);
             }
-            
+
             // Handle inheritance.
-            if (info._inheritanceInfo != null && !sameType)            
+            if (info._inheritanceInfo != null && !sameType)
                 return DeserializeActualType(info._inheritanceInfo, converter.ItemType);
 
             var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info);

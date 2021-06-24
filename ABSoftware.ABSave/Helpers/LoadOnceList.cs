@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace ABCo.ABSave.Helpers
 {
@@ -37,7 +35,7 @@ namespace ABCo.ABSave.Helpers
             // If we've managed to somehow EXACTLY fill a single block, we'll just use the data from that.
             if (totalLen == BLOCK_SIZE) return _startBlock.Data;
 
-            var res = ABSaveUtils.CreateUninitializedArray<T>(totalLen);
+            T[]? res = ABSaveUtils.CreateUninitializedArray<T>(totalLen);
 
             // Go through every block right up towards the last one and copy the data out of them into our final array.
             int currentPos = 0;

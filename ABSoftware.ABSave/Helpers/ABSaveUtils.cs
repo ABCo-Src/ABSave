@@ -1,12 +1,12 @@
-﻿using ABCo.ABSave.Converters;
-using ABCo.ABSave.Mapping;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using ABCo.ABSave.Mapping;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Threading;
+
+// GC API:
+#if NET5_0_OR_GREATER
+using System;
+#endif
 
 namespace ABCo.ABSave.Helpers
 {
@@ -45,14 +45,13 @@ namespace ABCo.ABSave.Helpers
         // as it is VERY important that it does, so as to elide the possible generic overhead of "new T",
         // (if "T" is a reference type and won't get its own JIT instantiation anyway)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static T[] CreateUninitializedArray<T>(int length)
-        {
+        internal static T[] CreateUninitializedArray<T>(int length) =>
             // TODO: Add .NET 5 GC.GetUnintiailizedArray support
 #if NET5_0_OR_GREATER
-            return GC.AllocateUninitializedArray<T>(length);
+            GC.AllocateUninitializedArray<T>(length);
 #else
-            return new T[length];
+            new T[length];
 #endif
-        }
+
     }
 }

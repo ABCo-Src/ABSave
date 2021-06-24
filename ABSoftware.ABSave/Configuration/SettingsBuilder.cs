@@ -1,10 +1,6 @@
-﻿using ABCo.ABSave.Converters;
-using ABCo.ABSave.Mapping.Description.Attributes.Converters;
-using ABCo.ABSave.Mapping.Generation;
+﻿using ABCo.ABSave.Mapping.Generation;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Text;
 
 namespace ABCo.ABSave.Configuration
 {
@@ -13,7 +9,7 @@ namespace ABCo.ABSave.Configuration
         bool? _lazyBitHandling;
         bool? _useUTF8;
         bool? _useLittleEndian;
-        bool? _bypassDangerousTypeChecking;        
+        bool? _bypassDangerousTypeChecking;
 
         List<ConverterInfo>? _converters;
 
@@ -44,14 +40,14 @@ namespace ABCo.ABSave.Configuration
         internal ABSaveSettings CreateSettings(ABSaveSettings template)
         {
             // Handle basic settings
-            var lazyBitHandling = _lazyBitHandling ?? template.LazyBitHandling;
-            var useUTF8 = _useUTF8 ?? template.UseUTF8;
-            var useLittleEndian = _useLittleEndian ?? template.UseLittleEndian;
-            var bypassDangerousTypeChecking = _bypassDangerousTypeChecking ?? template.BypassDangerousTypeChecking;
+            bool lazyBitHandling = _lazyBitHandling ?? template.LazyBitHandling;
+            bool useUTF8 = _useUTF8 ?? template.UseUTF8;
+            bool useLittleEndian = _useLittleEndian ?? template.UseLittleEndian;
+            bool bypassDangerousTypeChecking = _bypassDangerousTypeChecking ?? template.BypassDangerousTypeChecking;
 
             // Process converters
             EnsureConvertersListInitialized();
-            SettingsConverterProcessor.Split(_converters!, out var exactConverters, out var nonExactConverter);
+            SettingsConverterProcessor.Split(_converters!, out IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, out IReadOnlyList<ConverterInfo>? nonExactConverter);
 
             // Create the new settings.
             return new ABSaveSettings(lazyBitHandling, useUTF8, bypassDangerousTypeChecking, useLittleEndian,

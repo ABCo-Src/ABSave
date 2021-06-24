@@ -1,14 +1,9 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
-using ABCo.ABSave.Exceptions;
-using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.General;
-using ABCo.ABSave.Mapping.Generation.Object;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
 
 namespace ABCo.ABSave.Mapping
@@ -40,7 +35,7 @@ namespace ABCo.ABSave.Mapping
         public static ABSaveMap GetNonGeneric(Type type, ABSaveSettings settings)
         {
             var map = new ABSaveMap(settings);
-            var generator = map.GetGenerator();
+            MapGenerator? generator = map.GetGenerator();
 
             map.RootItem = generator.GetMap(type);
             map.ReleaseGenerator(generator);
@@ -50,20 +45,20 @@ namespace ABCo.ABSave.Mapping
         internal VersionInfo GetVersionInfo(Converter converter, uint version)
         {
             // Try to get the version if it already exists.
-            var existing = VersionCacheHandler.GetVersionOrAddNull(converter, version);
+            VersionInfo? existing = VersionCacheHandler.GetVersionOrAddNull(converter, version);
             if (existing != null) return existing;
 
             // If it doesn't, generate it.
-            var gen = GetGenerator();
-            var res = VersionCacheHandler.AddNewVersion(converter, version, gen);
+            MapGenerator? gen = GetGenerator();
+            VersionInfo? res = VersionCacheHandler.AddNewVersion(converter, version, gen);
             ReleaseGenerator(gen);
             return res;
         }
 
         internal MapItemInfo GetRuntimeMapItem(Type type)
         {
-            var gen = GetGenerator();
-            var map = gen.GetRuntimeMap(type);
+            MapGenerator? gen = GetGenerator();
+            MapItemInfo map = gen.GetRuntimeMap(type);
             ReleaseGenerator(gen);
             return map;
         }
@@ -77,9 +72,6 @@ namespace ABCo.ABSave.Mapping
 
         // NOTE: It's generally not a good idea to call this from a "finally" just in case it pools
         // a generator that's been left in an invalid state.
-        internal void ReleaseGenerator(MapGenerator gen)
-        {
-            gen.FinishGeneration();
-        }
+        internal void ReleaseGenerator(MapGenerator gen) => gen.FinishGeneration();
     }
 }

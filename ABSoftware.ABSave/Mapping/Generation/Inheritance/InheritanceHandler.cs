@@ -1,7 +1,5 @@
 ﻿using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation.Inheritance
 {
@@ -13,7 +11,7 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
 
             for (int i = 0; i < attributes.Length; i++)
             {
-                var currentAttribute = attributes[i];
+                SaveInheritanceAttribute? currentAttribute = attributes[i];
                 if (currentAttribute.FromVer <= version && currentAttribute.ToVer >= version)
                     return currentAttribute;
             }
@@ -21,10 +19,8 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
             return null;
         }
 
-        internal static SaveInheritanceAttribute[]? GetInheritanceAttributes(Type classType, ref uint highestVersion)
-        {
+        internal static SaveInheritanceAttribute[]? GetInheritanceAttributes(Type classType, ref uint highestVersion) =>
             // Coming soon: Setting-based mapping
-            return InheritanceReflectionGenerator.GetInheritanceAttributes(classType, ref highestVersion);
-        }
+            InheritanceReflectionGenerator.GetInheritanceAttributes(classType, ref highestVersion);
     }
 }

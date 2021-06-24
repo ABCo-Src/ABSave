@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Description.Attributes
 {
@@ -33,7 +32,7 @@ namespace ABCo.ABSave.Mapping.Description.Attributes
 
             for (uint i = 0; i < list.Length; i++)
             {
-                var currentItem = list[i];
+                Type? currentItem = list[i];
                 IndexSerializeCache.Add(currentItem, i);
                 IndexDeserializeCache.Add(i, currentItem);
             }

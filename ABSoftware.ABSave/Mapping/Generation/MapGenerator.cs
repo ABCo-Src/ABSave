@@ -1,25 +1,20 @@
-﻿using ABCo.ABSave.Exceptions;
-using ABCo.ABSave.Helpers;
-using ABCo.ABSave.Mapping.Description.Attributes;
-using ABCo.ABSave.Mapping.Generation;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Generation.Object;
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Reflection;
-using ABCo.ABSave.Converters;
-using ABCo.ABSave.Mapping.Generation.Object;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
     public partial class MapGenerator
     {
-        internal ABSaveMap Map = null!;  
+        internal ABSaveMap Map = null!;
         internal MapItemInfo CurrentItem;
 
         // A list of all the property members to still have their accessor processed. These get
         // parallel processed at the very end of the generation process.
-        List<MemberAccessorGenerator.PropertyToProcess> _propertyAccessorsToProcess = new List<MemberAccessorGenerator.PropertyToProcess>();
+        readonly List<MemberAccessorGenerator.PropertyToProcess> _propertyAccessorsToProcess = new List<MemberAccessorGenerator.PropertyToProcess>();
 
         public MapItemInfo GetMap(Type type)
         {
@@ -35,7 +30,7 @@ namespace ABCo.ABSave.Mapping.Generation
         {
             EnsureTypeSafety(type);
 
-            MapItem? item= TryGenerateConverter(type);
+            MapItem? item = TryGenerateConverter(type);
             if (item == null) throw new UnserializableTypeException(type);
 
             item.IsGenerating = false;

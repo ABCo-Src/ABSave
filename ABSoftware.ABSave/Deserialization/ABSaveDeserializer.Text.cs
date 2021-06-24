@@ -1,7 +1,5 @@
 ﻿using ABCo.ABSave.Helpers;
 using System;
-using System.Buffers;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -50,8 +48,8 @@ namespace ABCo.ABSave.Deserialization
 
             // Allocate the destination with the correct size.
             int charSize = Encoding.UTF8.GetCharCount(buffer);
-            var dest = createDest(byteSize);
-            var destMem = castDest(dest);
+            T? dest = createDest(byteSize);
+            Memory<char> destMem = castDest(dest);
 
             // Encode
             Encoding.UTF8.GetChars(buffer, destMem.Span);
@@ -60,7 +58,7 @@ namespace ABCo.ABSave.Deserialization
 
         public unsafe void FastReadShorts(Span<short> dest)
         {
-            var destBytes = MemoryMarshal.Cast<short, byte>(dest);
+            Span<byte> destBytes = MemoryMarshal.Cast<short, byte>(dest);
 
             if (ShouldReverseEndian)
             {

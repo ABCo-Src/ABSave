@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Buffers.Binary;
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -65,7 +63,7 @@ namespace ABCo.ABSave.Serialization
 
         public void WriteDecimal(decimal num)
         {
-            var bits = decimal.GetBits(num);
+            int[]? bits = decimal.GetBits(num);
             for (int i = 0; i < 4; i++)
                 WriteInt32(bits[i]);
         }

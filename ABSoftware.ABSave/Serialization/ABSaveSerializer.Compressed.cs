@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -69,22 +67,19 @@ namespace ABCo.ABSave.Serialization
             target.Apply();
         }
 
-        private static (byte header, byte headerLen) GetHeader(byte contBytesRequired)
+        private static (byte header, byte headerLen) GetHeader(byte contBytesRequired) => contBytesRequired switch
         {
-            return contBytesRequired switch
-            {
-                0 => (0, 1),
-                1 => (0b10, 2),
-                2 => (0b110, 3),
-                3 => (0b1110, 4),
-                4 => (0b11110, 5),
-                5 => (0b111110, 6),
-                6 => (0b1111110, 7),
-                7 => (0b11111110, 8),
-                8 => (0b11111111, 8),
-                _ => throw new Exception("ABSAVE: Invalid 'contBytesRequired' given to 'WriteVariableData'")
-            };
-        }
+            0 => (0, 1),
+            1 => (0b10, 2),
+            2 => (0b110, 3),
+            3 => (0b1110, 4),
+            4 => (0b11110, 5),
+            5 => (0b111110, 6),
+            6 => (0b1111110, 7),
+            7 => (0b11111110, 8),
+            8 => (0b11111111, 8),
+            _ => throw new Exception("ABSAVE: Invalid 'contBytesRequired' given to 'WriteVariableData'")
+        };
 
         byte GetContBytesNo(ulong num, byte bitsFree)
         {

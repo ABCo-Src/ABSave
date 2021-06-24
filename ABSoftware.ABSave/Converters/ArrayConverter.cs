@@ -5,9 +5,7 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
@@ -39,13 +37,13 @@ namespace ABCo.ABSave.Converters
         {
             if (_info.Type != ArrayType.Unknown) return;
 
-            var elemType = info.Type.GetElementType();
+            Type? elemType = info.Type.GetElementType();
             PopulateTypeInfo(ref _info, info.GetMap(elemType!), info.Type);
         }
 
         static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, Type type)
         {
-            var rank = type.GetArrayRank();
+            int rank = type.GetArrayRank();
             info.ElementType = itemInfo.GetItemType();
             info.PerItem = itemInfo;
 
@@ -74,7 +72,7 @@ namespace ABCo.ABSave.Converters
 
         void Serialize(Array arr, Type actualType, ref BitTarget header)
         {
-            var len = arr.Length;
+            int len = arr.Length;
 
             switch (_info.Type)
             {
@@ -109,7 +107,7 @@ namespace ABCo.ABSave.Converters
                 case ArrayType.MultiDimensional:
                     {
                         // Get information about the array.
-                        var mdContext = GetMultiDimensionInfo(arr, ref _info, header.Serializer, out int[] lowerBounds);
+                        MDSerializeArrayInfo mdContext = GetMultiDimensionInfo(arr, ref _info, header.Serializer, out int[] lowerBounds);
                         int firstLength = arr.GetLength(0);
 
                         header.WriteBitWith(mdContext.CustomLowerBounds);
@@ -173,7 +171,7 @@ namespace ABCo.ABSave.Converters
                 case ArrayType.MultiDimensional:
 
                     // Get information
-                    var mdContext = GetMultiDimensionInfo(arr, ref context, header.Serializer, out int[] lowerBounds);
+                    MDSerializeArrayInfo mdContext = GetMultiDimensionInfo(arr, ref context, header.Serializer, out int[] lowerBounds);
                     int firstLength = arr.GetLength(0);
 
                     header.WriteBitOn();
@@ -181,7 +179,7 @@ namespace ABCo.ABSave.Converters
                     header.WriteInteger(context.Rank, 5);
                     header.Apply();
 
-                    header.Serializer.WriteCompressed((uint)firstLength);                   
+                    header.Serializer.WriteCompressed((uint)firstLength);
 
                     SerializeMultiDimensionalArrayData(arr, ref context, ref mdContext, firstLength, lowerBounds, header.Serializer);
 
@@ -223,7 +221,7 @@ namespace ABCo.ABSave.Converters
 
             // Deepest dimension
             if (nextDimension == mdInfo.Array.Rank)
-                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) 
+                for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
                     mdInfo.Serializer.SerializeItem(mdInfo.Array.GetValue(currentPos), info.PerItem);
 
             // Outer dimension
@@ -255,10 +253,7 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
-        {
-            return Deserialize(ref header);
-        }
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header) => Deserialize(ref header);
 
         object Deserialize(ref BitSource header)
         {
@@ -270,7 +265,7 @@ namespace ABCo.ABSave.Converters
                 case ArrayType.SZArrayManual:
                     {
                         int arrSize = (int)header.Deserializer.ReadCompressedInt(ref header);
-                        Array arr = Array.CreateInstance(_info.ElementType, arrSize);
+                        var arr = Array.CreateInstance(_info.ElementType, arrSize);
 
                         for (int i = 0; i < arrSize; i++) arr.SetValue(header.Deserializer.DeserializeItem(_info.PerItem), i);
                         return arr;
@@ -304,7 +299,7 @@ namespace ABCo.ABSave.Converters
         {
             // Get type information.
             Type elementType = null!; // TODO: Get element type
-            var perItem = typeHeader.Deserializer.GetRuntimeMapItem(elementType);
+            MapItemInfo perItem = typeHeader.Deserializer.GetRuntimeMapItem(elementType);
 
             // Read the header information
             var header = new BitSource(typeHeader.Deserializer);
@@ -390,7 +385,7 @@ namespace ABCo.ABSave.Converters
 
             // Deepest dimension
             if (nextDimension == mdContext.Result.Rank)
-                for (; currentPos[dimension] < endIndex; currentPos[dimension]++) 
+                for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
                     mdContext.Result.SetValue(mdContext.Deserializer.DeserializeItem(context.PerItem), currentPos);
 
             // Outer dimension

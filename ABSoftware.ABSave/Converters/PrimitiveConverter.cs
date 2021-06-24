@@ -4,8 +4,6 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace ABCo.ABSave.Converters
 {
@@ -30,7 +28,7 @@ namespace ABCo.ABSave.Converters
 
         public override void Initialize(InitializeInfo info)
         {
-            var typeCode = Type.GetTypeCode(info.Type);
+            TypeCode typeCode = Type.GetTypeCode(info.Type);
 
             // IntPtr
             if (typeCode == TypeCode.Object)
@@ -43,12 +41,12 @@ namespace ABCo.ABSave.Converters
 
         public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
-            var serializer = header.Serializer;
+            ABSaveSerializer? serializer = header.Serializer;
 
             switch (_typeCode)
             {
                 case PrimitiveType.Boolean:
-                    var bl = (bool)info.Instance;
+                    bool bl = (bool)info.Instance;
                     if (bl) serializer.WriteByte(1);
                     else serializer.WriteByte(0);
 
@@ -136,7 +134,7 @@ namespace ABCo.ABSave.Converters
 
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
-            var reader = header.Deserializer;
+            ABSaveDeserializer? reader = header.Deserializer;
 
             unchecked
             {

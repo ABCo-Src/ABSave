@@ -3,7 +3,6 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -18,17 +17,17 @@ namespace ABCo.ABSave.Mapping.Generation
             out IReadOnlyDictionary<Type, ConverterInfo> outExactConverters,
             out IReadOnlyList<ConverterInfo> outNonExactConverters)
         {
-            Dictionary<Type, ConverterInfo>? exactConverters = new Dictionary<Type, ConverterInfo>();
-            List<ConverterInfo> nonExactConverters = new List<ConverterInfo>();
+            var exactConverters = new Dictionary<Type, ConverterInfo>();
+            var nonExactConverters = new List<ConverterInfo>();
 
             for (int i = 0; i < converters.Count; i++)
             {
-                var currentConverter = converters[i];
-                var currentConverterType = currentConverter.ConverterType;
+                ConverterInfo? currentConverter = converters[i];
+                Type? currentConverterType = currentConverter.ConverterType;
 
                 var exactTypes =
                     (SelectAttribute[])currentConverterType.GetCustomAttributes<SelectAttribute>(false);
-                var alsoNeedsCheckType =
+                bool alsoNeedsCheckType =
                     Attribute.IsDefined(currentConverterType, typeof(SelectOtherWithCheckTypeAttribute));
 
                 if (exactTypes.Length > 0)
@@ -40,9 +39,9 @@ namespace ABCo.ABSave.Mapping.Generation
                 }
 
                 if (alsoNeedsCheckType)
-                    nonExactConverters.Add(currentConverter);                
+                    nonExactConverters.Add(currentConverter);
             }
-             
+
             outExactConverters = exactConverters;
             outNonExactConverters = nonExactConverters;
         }
