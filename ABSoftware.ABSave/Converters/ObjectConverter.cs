@@ -16,9 +16,31 @@ namespace ABCo.ABSave.Converters
     public class ObjectConverter : Converter
     {
         internal ObjectIntermediateItem[]? _rawMembers;
+
+        // The first base type that's object-converted - this may be moved into the version info
+        // if the attribute "SaveBaseOldAttribute" is added and allows different bases per version.
+        public MapItemInfo? ObjectBaseType;
+
         SaveMembersMode _saveMode;
 
-        public override void Initialize(InitializeInfo info) => HighestVersion = IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _rawMembers);
+        public override void Initialize(InitializeInfo info)
+        {
+            HighestVersion = IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _rawMembers);
+
+            // Set the "ObjectBaseType" by going through all the base types and finding the first one
+            // that's object converted and using that.
+            Type? currentType = info.Type.BaseType;
+            while (currentType != null)
+            {
+                if (ObjectEligibilityChecker.IsEligible(info.Type))
+                {
+                    ObjectBaseType = info.GetMap(info.Type);
+                    break;
+                }
+
+                currentType = currentType.BaseType;
+            }
+        }
 
         public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version)
         {
@@ -57,10 +79,9 @@ namespace ABCo.ABSave.Converters
         internal class ObjectVersionInfo : VersionInfo
         {
             public ObjectMemberSharedInfo[] Members;
-            public ObjectConverter? BaseType;
 
-            public ObjectVersionInfo(ObjectMemberSharedInfo[] members, ObjectConverter? baseType) => 
-                (Members, BaseType) = (members, baseTyoe);
+            public ObjectVersionInfo(ObjectMemberSharedInfo[] members) => 
+                Members = members;
         }
     }
 }

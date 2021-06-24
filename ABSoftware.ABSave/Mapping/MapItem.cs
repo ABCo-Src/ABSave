@@ -43,7 +43,6 @@ namespace ABCo.ABSave.Mapping
         public uint VersionNumber { get; private set; }
         public bool UsesHeader { get; private set; }
 
-        internal MapItem BaseItem;
         internal SaveInheritanceAttribute? _inheritanceInfo;
 
         protected VersionInfo() { }
