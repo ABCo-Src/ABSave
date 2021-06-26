@@ -86,10 +86,18 @@ namespace ABCo.ABSave.Converters
         // TODO: When map guides come along, instead of manually calling the temporarily internal
         // "ABSaveSerializer.HandleVersionNumber" ourselves, we should be able to communicate with the base
         // ObjectConverter that serialize into our instance as opposed to making a new one.
-        public override void Serialize(in SerializeInfo info, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, ref BitTarget header) =>
+            Serialize(info.Instance, info.VersionInfo, ref header);
+
+        void Serialize(object instance, VersionInfo info, ref BitTarget header)
         {
-            object? instance = info.Instance;
-            ObjectMemberSharedInfo[]? members = ((ObjectVersionInfo)info.VersionInfo).Members;
+            if (ObjectBaseType != null)
+            {
+                header.Serializer.HandleVersionNumber(ObjectBaseType, out VersionInfo baseInfo, ref header);
+                ObjectBaseType.Serialize(instance, baseInfo, ref header);
+            }
+
+            ObjectMemberSharedInfo[]? members = ((ObjectVersionInfo)info).Members;
 
             for (int i = 0; i < members.Length; i++)
                 header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map, ref header);
@@ -97,13 +105,23 @@ namespace ABCo.ABSave.Converters
 
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
-            object? res = Activator.CreateInstance(info.ActualType);
-            ObjectMemberSharedInfo[]? members = ((ObjectVersionInfo)info.VersionInfo).Members;
+            object res = Activator.CreateInstance(info.ActualType);
+            DeserializeInto(res, info.VersionInfo, ref header);
+            return res;
+        }
+
+        void DeserializeInto(object obj, VersionInfo info, ref BitSource header)
+        {
+            if (ObjectBaseType != null)
+            {
+                header.Deserializer.HandleVersionNumber(ObjectBaseType, out VersionInfo baseInfo, ref header);
+                ObjectBaseType.DeserializeInto(obj, baseInfo, ref header);
+            }
+
+            ObjectMemberSharedInfo[]? members = ((ObjectVersionInfo)info).Members;
 
             for (int i = 0; i < members.Length; i++)
-                members[i].Accessor.Setter(res!, header.Deserializer.DeserializeItem(members[i].Map));
-
-            return res!;
+                members[i].Accessor.Setter(obj, header.Deserializer.DeserializeItem(members[i].Map));
         }
 
         internal class ObjectVersionInfo : VersionInfo

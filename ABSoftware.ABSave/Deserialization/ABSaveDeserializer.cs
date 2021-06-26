@@ -116,7 +116,7 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(converter);
 
             // Read or create the version info if needed
-            HandleVersionNumber(converter, out VersionInfo info);
+            HandleVersionNumber(converter, out VersionInfo info, ref _currentHeader);
 
             // Handle inheritance.
             if (info._inheritanceInfo != null && !sameType)
@@ -130,7 +130,7 @@ namespace ABCo.ABSave.Deserialization
         /// Handles the version info for a given converter. If the version hasn't been read yet, it's read now. If not, nothing is read.
         /// </summary>
         /// <returns>Whether the item already exists</returns>
-        internal void HandleVersionNumber(Converter item, out VersionInfo info)
+        internal void HandleVersionNumber(Converter item, out VersionInfo info, ref BitSource header)
         {
             // If the version has already been read, don't do anything.
             if (_versions.TryGetValue(item.ItemType, out VersionInfo? newInfo))
@@ -139,7 +139,7 @@ namespace ABCo.ABSave.Deserialization
                 return;
             }
 
-            uint version = ReadNewVersionInfo();
+            uint version = ReadNewVersionInfo(ref header);
             info = Map.GetVersionInfo(item, version);
             _versions.Add(item.ItemType, info);
         }
@@ -155,7 +155,7 @@ namespace ABCo.ABSave.Deserialization
             return _currentHeader.ReadBit();
         }
 
-        uint ReadNewVersionInfo() => ReadCompressedInt(ref _currentHeader);
+        uint ReadNewVersionInfo(ref BitSource header) => ReadCompressedInt(ref header);
 
         // Returns: Whether the sub-type was converted in here and we should return now.
         object DeserializeActualType(SaveInheritanceAttribute info, Type baseType)
