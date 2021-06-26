@@ -20,9 +20,6 @@ namespace ABCo.ABSave.Mapping.Generation
 
         public Info Details;
 
-        // Holds the attributes retrieved by the thread pool.
-        public MapAttr[]? Attributes;
-
         [StructLayout(LayoutKind.Explicit)]
         public struct Info
         {

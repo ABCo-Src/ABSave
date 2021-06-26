@@ -3,6 +3,7 @@ using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Object;
 using System;
 using System.Diagnostics;
+using System.Reflection;
 
 namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
 {
@@ -11,17 +12,21 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
     // intermediary form, that can then used to make the final maps for all the different version numbers.
     internal static class IntermediateMapper
     {
-        public static uint CreateIntermediateObjectInfo(Type type, SaveMembersMode mode, out ObjectIntermediateItem[] members)
+        public static uint CreateIntermediateObjectInfo(Type type, SaveMembersMode mode, out IntermediateObjectInfo intermediateInfo)
         {
             Debug.Assert(Attribute.IsDefined(type, typeof(SaveMembersAttribute)));
 
             var ctx = new IntermediateMappingContext(type, mode);
 
             // Coming soon: Settings-based mapping
-            members = IntermediateReflectionMapper.FillInfo(ref ctx);
+            intermediateInfo = new IntermediateObjectInfo
+            {
+                Members = IntermediateReflectionMapper.FillInfo(ref ctx),
+                BaseMemberAttributes = GetBaseMembersAttributes(type)
+            };
 
             if (ctx.TranslationCurrentOrderInfo == -1)
-                Array.Sort(members);
+                Array.Sort(intermediateInfo.Members);
 
             return ctx.HighestVersion;
         }
@@ -48,5 +53,8 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
 
             MappingHelpers.UpdateHighestVersionFromRange(ref ctx.HighestVersion, newItem.StartVer, newItem.EndVer);
         }
+
+        internal static SaveBaseMembersAttribute[] GetBaseMembersAttributes(Type type) =>
+            (SaveBaseMembersAttribute[])type.GetCustomAttributes<SaveBaseMembersAttribute>(false);
     }
 }
