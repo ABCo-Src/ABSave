@@ -48,7 +48,7 @@ namespace ABCo.ABSave.Deserialization
 
             // Allocate the destination with the correct size.
             int charSize = Encoding.UTF8.GetCharCount(buffer);
-            T? dest = createDest(byteSize);
+            T dest = createDest(byteSize);
             Memory<char> destMem = castDest(dest);
 
             // Encode

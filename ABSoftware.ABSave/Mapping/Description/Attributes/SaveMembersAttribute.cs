@@ -3,7 +3,7 @@
 namespace ABCo.ABSave.Mapping.Description.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class SaveMembersAttribute : MapAttr
+    public class SaveMembersAttribute : Attribute
     {
         public SaveMembersMode Mode;
 

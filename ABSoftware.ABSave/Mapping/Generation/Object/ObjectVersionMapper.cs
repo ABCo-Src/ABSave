@@ -9,7 +9,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
     {
         public static ObjectMemberSharedInfo[] GenerateNewVersion(ObjectConverter item, MapGenerator gen, uint targetVersion)
         {
-            ObjectIntermediateItem[]? rawMembers = item._intermediateInfo!;
+            ObjectIntermediateItem[] rawMembers = item._intermediateInfo.Members!;
             var lst = new List<ObjectMemberSharedInfo>();
 
             // Get the members
@@ -26,7 +26,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 
         public static ObjectMemberSharedInfo[] GenerateForOneVersion(ObjectConverter item, MapGenerator gen)
         {
-            ObjectIntermediateItem[]? rawMembers = item._intermediateInfo!;
+            ObjectIntermediateItem[] rawMembers = item._intermediateInfo.Members!;
 
             // No need to do any checks at all - just copy the items right across!
             var outputArr = new ObjectMemberSharedInfo[rawMembers.Length];

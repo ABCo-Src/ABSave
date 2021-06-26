@@ -11,7 +11,7 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
         public ObjectIntermediateItem[]? Members;
         public SaveBaseMembersAttribute[]? BaseMemberAttributes;
 
-        void Release()
+        public void Release()
         {
             Members = null;
             BaseMemberAttributes = null;
