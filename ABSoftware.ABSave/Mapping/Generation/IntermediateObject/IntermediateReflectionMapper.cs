@@ -41,7 +41,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
         internal static ObjectIntermediateItem? GetItemForMember(ref IntermediateMappingContext ctx, MemberInfo info)
         {
             // Get the attributes - skip this item if there are none
-            object[]? attributes = info.GetCustomAttributes(typeof(MapAttr), false);
+            object[]? attributes = info.GetCustomAttributes(typeof(SaveAttribute), false);
             if (attributes.Length == 0) return null;
 
             var newItem = new ObjectIntermediateItem();
@@ -61,6 +61,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             bool loadedSaveAttribute = false;
             for (int i = 0; i < attributes.Length; i++)
             {
+                // TODO: Add more attributes 
                 switch (attributes[i])
                 {
                     case SaveAttribute save:

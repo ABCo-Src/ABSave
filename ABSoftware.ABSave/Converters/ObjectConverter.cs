@@ -59,9 +59,8 @@ namespace ABCo.ABSave.Converters
             return (new ObjectVersionInfo(members, baseConv), true);
         }
 
-        ObjectConverter? GetBaseObjectConverter(InitializeInfo info, SaveBaseMembersAttribute attr)
+        ObjectConverter GetBaseObjectConverter(InitializeInfo info, SaveBaseMembersAttribute attr)
         {
-            // Firstly, ensure this type does actually inherit this class.
             if (!info.Type.IsSubclassOf(attr.BaseType))
                 throw new InvalidSaveBaseMembersException($"The type {info.Type.Name} has an attribute on it saying that ABSave should serialize the base members {attr.BaseType.Name}, but the type doesn't inherit from this type anywhere in its inheritance chain! The attribute must describe a base type of the class.");
 
@@ -74,12 +73,8 @@ namespace ABCo.ABSave.Converters
                 if (map.InnerItem is ObjectConverter converter)
                     return converter;
             }
-            catch (UnserializableTypeException)
-            {
-                goto ThrowInvalid;
-            }
+            catch (UnserializableTypeException) { }
 
-        ThrowInvalid:
             throw new InvalidSaveBaseMembersException($"The type {info.Type.Name} has an attribute on it saying that ABSave should serialize the base members {attr.BaseType.Name}, but this type doesn't have the 'SaveMembers' attribute on it, and it must for ABSave to serialize its members too.");
         }
 

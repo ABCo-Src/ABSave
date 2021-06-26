@@ -31,13 +31,11 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             return ctx.HighestVersion;
         }
 
-        internal static void FillMainInfo(ObjectIntermediateItem newItem, int order, int startVer, int endVer)
+        internal static void FillMainInfo(ObjectIntermediateItem newItem, int order, uint startVer, uint endVer)
         {
             newItem.Order = order;
-
-            // If the version given is -1, that means it doesn't have a set end, so we'll just fill that in with "uint.MaxValue".            
-            newItem.StartVer = checked((uint)startVer);
-            newItem.EndVer = endVer == -1 ? uint.MaxValue : checked((uint)endVer);
+            newItem.StartVer = startVer;
+            newItem.EndVer = endVer;
         }
 
         internal static void UpdateContextFromItem(ref IntermediateMappingContext ctx, ObjectIntermediateItem newItem)

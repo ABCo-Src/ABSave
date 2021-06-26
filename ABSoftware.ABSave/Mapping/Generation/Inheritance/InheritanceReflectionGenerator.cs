@@ -17,7 +17,7 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
                 for (int i = 0; i < inheritanceInfo.Length; i++)
                 {
                     SaveInheritanceAttribute? info = inheritanceInfo[i];
-                    MappingHelpers.UpdateHighestVersionFromRange(ref highestVersion, info.FromVer, info.ToVer);
+                    MappingHelpers.UpdateHighestVersionFromRange(ref highestVersion, (uint)info.FromVer, (uint)info.ToVer);
                 }
             }
 

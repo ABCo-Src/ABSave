@@ -157,8 +157,11 @@ namespace ABCo.ABSave.Serialization
         internal bool HandleVersionNumber(Converter item, out VersionInfo info, ref BitTarget header)
         {
             // If the version has already been written, do nothing
-            if (_versions.TryGetValue(item.ItemType, out info))
+            if (_versions.TryGetValue(item.ItemType, out VersionInfo? newInfo))
+            {
+                info = newInfo;
                 return true;
+            }
 
             uint version = WriteNewVersionInfo(item, ref header);
 

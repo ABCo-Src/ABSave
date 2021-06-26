@@ -133,8 +133,11 @@ namespace ABCo.ABSave.Deserialization
         internal void HandleVersionNumber(Converter item, out VersionInfo info)
         {
             // If the version has already been read, don't do anything.
-            if (_versions.TryGetValue(item.ItemType, out info))
+            if (_versions.TryGetValue(item.ItemType, out VersionInfo? newInfo))
+            {
+                info = newInfo;
                 return;
+            }
 
             uint version = ReadNewVersionInfo();
             info = Map.GetVersionInfo(item, version);
