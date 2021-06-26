@@ -204,12 +204,12 @@ namespace ABCo.ABSave.UnitTests.Mapping
                 isValueTypeParent ? typeof(FieldStruct) : typeof(FieldClass), SaveMembersMode.Fields, out var members);
 
             Assert.AreEqual(0u, highestVersion);
-            Assert.AreEqual(2, members.Length);
+            Assert.AreEqual(2, members.Members.Length);
 
-            for (int i = 0; i < members.Length; i++)
+            for (int i = 0; i < members.Members.Length; i++)
             {
-                Assert.IsFalse(members[i].IsProcessed);
-                Assert.IsInstanceOfType(members[i].Details.Unprocessed, typeof(FieldInfo));
+                Assert.IsFalse(members.Members[i].IsProcessed);
+                Assert.IsInstanceOfType(members.Members[i].Details.Unprocessed, typeof(FieldInfo));
 
                 Type expectedType = i switch
                 {
@@ -218,7 +218,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
                     _ => throw new Exception("Incorrect key")
                 };
 
-                Assert.AreEqual(expectedType, ((FieldInfo)members[i].Details.Unprocessed).FieldType);
+                Assert.AreEqual(expectedType, ((FieldInfo)members.Members[i].Details.Unprocessed).FieldType);
             }
         }
 
@@ -237,12 +237,12 @@ namespace ABCo.ABSave.UnitTests.Mapping
                isValueTypeParent ? typeof(AllPrimitiveStruct) : typeof(AllPrimitiveClass), SaveMembersMode.Properties, out var members);
 
             Assert.AreEqual(0u, highestVersion);
-            Assert.AreEqual(3, members.Length);
+            Assert.AreEqual(3, members.Members.Length);
 
-            for (int i = 0; i < members.Length; i++)
+            for (int i = 0; i < members.Members.Length; i++)
             {
-                Assert.IsFalse(members[i].IsProcessed);
-                Assert.IsInstanceOfType(members[i].Details.Unprocessed, typeof(PropertyInfo));
+                Assert.IsFalse(members.Members[i].IsProcessed);
+                Assert.IsInstanceOfType(members.Members[i].Details.Unprocessed, typeof(PropertyInfo));
 
                 Type expectedType = i switch
                 {
@@ -252,7 +252,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
                     _ => throw new Exception("Invalid key")
                 };
 
-                Assert.AreEqual(expectedType, ((PropertyInfo)members[i].Details.Unprocessed)!.PropertyType);
+                Assert.AreEqual(expectedType, ((PropertyInfo)members.Members[i].Details.Unprocessed)!.PropertyType);
             }
         }
 
@@ -292,10 +292,10 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             Assert.AreEqual(0u, highestVersion);
 
-            for (int i = 0; i < members.Length; i++)
+            for (int i = 0; i < members.Members.Length; i++)
             {
-                Assert.IsFalse(members[i].IsProcessed);
-                Assert.IsInstanceOfType(members[i].Details.Unprocessed, typeof(PropertyInfo));
+                Assert.IsFalse(members.Members[i].IsProcessed);
+                Assert.IsInstanceOfType(members.Members[i].Details.Unprocessed, typeof(PropertyInfo));
 
                 Type expectedType = i switch
                 {
@@ -304,7 +304,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
                     _ => throw new Exception("Invalid key")
                 };
 
-                Assert.AreEqual(expectedType, ((PropertyInfo)members[i].Details.Unprocessed).PropertyType);
+                Assert.AreEqual(expectedType, ((PropertyInfo)members.Members[i].Details.Unprocessed).PropertyType);
                 i++;
             }
         }

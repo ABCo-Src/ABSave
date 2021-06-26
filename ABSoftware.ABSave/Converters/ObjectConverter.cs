@@ -105,7 +105,7 @@ namespace ABCo.ABSave.Converters
 
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
-            object res = Activator.CreateInstance(info.ActualType);
+            object res = Activator.CreateInstance(info.ActualType)!;
             DeserializeInto(res, info.VersionInfo, ref header);
             return res;
         }
