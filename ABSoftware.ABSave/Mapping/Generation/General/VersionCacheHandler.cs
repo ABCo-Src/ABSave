@@ -88,7 +88,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
 
             SaveInheritanceAttribute? inheritanceInfo = null;
             if (converter._allInheritanceAttributes != null)
-                inheritanceInfo = InheritanceHandler.GetAttributeForVersion(converter._allInheritanceAttributes, version);
+                inheritanceInfo = MappingHelpers.FindAttributeForVersion(converter._allInheritanceAttributes, version);
 
             newVer ??= new VersionInfo(usesHeader);
             newVer.Assign(version, usesHeader, inheritanceInfo);
