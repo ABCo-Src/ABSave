@@ -97,7 +97,7 @@ namespace ABCo.ABSave.Deserialization
 
         object DeserializeItemNoSetup(MapItemInfo info, bool skipHeader)
         {
-            MapItem item = info._innerItem;
+            MapItem item = info.InnerItem;
             ABSaveUtils.WaitUntilNotGenerating(item);
 
             return item switch
@@ -116,12 +116,7 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(converter);
 
             // Read or create the version info if needed
-            if (!_versions.TryGetValue(converter.ItemType, out VersionInfo? info))
-            {
-                uint version = ReadNewVersionInfo();
-                info = Map.GetVersionInfo(converter, version);
-                _versions.Add(converter.ItemType, info);
-            }
+            HandleVersionNumber(converter, out VersionInfo info);
 
             // Handle inheritance.
             if (info._inheritanceInfo != null && !sameType)
@@ -131,6 +126,21 @@ namespace ABCo.ABSave.Deserialization
             return converter.Deserialize(in deserializeInfo, ref _currentHeader);
         }
 
+        /// <summary>
+        /// Handles the version info for a given converter. If the version hasn't been read yet, it's read now. If not, nothing is read.
+        /// </summary>
+        /// <returns>Whether the item already exists</returns>
+        internal void HandleVersionNumber(Converter item, out VersionInfo info)
+        {
+            // If the version has already been read, don't do anything.
+            if (_versions.TryGetValue(item.ItemType, out info))
+                return;
+
+            uint version = ReadNewVersionInfo();
+            info = Map.GetVersionInfo(item, version);
+            _versions.Add(item.ItemType, info);
+        }
+        
         // Returns: Whether the type has changed
         bool ReadHeader(MapItem item)
         {

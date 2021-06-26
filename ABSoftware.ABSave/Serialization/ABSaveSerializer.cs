@@ -8,6 +8,7 @@ using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 
 namespace ABCo.ABSave.Serialization
@@ -90,7 +91,7 @@ namespace ABCo.ABSave.Serialization
 
         void SerializeItemNoSetup(object obj, MapItemInfo info, ref BitTarget header, bool skipHeader)
         {
-            MapItem item = info._innerItem;
+            MapItem item = info.InnerItem;
             ABSaveUtils.WaitUntilNotGenerating(item);
 
             switch (item)
@@ -121,14 +122,8 @@ namespace ABCo.ABSave.Serialization
             }
 
             // Write and get the info for a version, if necessary
-            if (!_versions.TryGetValue(converter.ItemType, out VersionInfo? info))
-            {
-                uint version = WriteNewVersionInfo(converter, ref header);
+            if (!HandleVersionNumber(converter, out VersionInfo info, ref header))
                 appliedHeader = true;
-
-                info = Map.GetVersionInfo(converter, version);
-                _versions.Add(converter.ItemType, info);
-            }
 
             // Handle inheritance if needed.
             if (info._inheritanceInfo != null && !sameType)
@@ -155,7 +150,24 @@ namespace ABCo.ABSave.Serialization
             return sameType;
         }
 
-        uint WriteNewVersionInfo(MapItem item, ref BitTarget target)
+        /// <summary>
+        /// Handles the version info for a given converter. If the version hasn't been written yet, it's written now. If not, nothing is written.
+        /// </summary>
+        /// <returns>Whether the item already exists</returns>
+        internal bool HandleVersionNumber(Converter item, out VersionInfo info, ref BitTarget header)
+        {
+            // If the version has already been written, do nothing
+            if (_versions.TryGetValue(item.ItemType, out info))
+                return true;
+
+            uint version = WriteNewVersionInfo(item, ref header);
+
+            info = Map.GetVersionInfo(item, version);
+            _versions.Add(item.ItemType, info);
+            return false;
+        }
+
+        uint WriteNewVersionInfo(Converter item, ref BitTarget target)
         {
             uint targetVersion = 0;
 
