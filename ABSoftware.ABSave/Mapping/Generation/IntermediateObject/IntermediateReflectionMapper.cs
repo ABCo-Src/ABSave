@@ -15,8 +15,8 @@ namespace ABCo.ABSave.Mapping.Generation.Object
     {
         public static ObjectIntermediateItem[] FillInfo(ref IntermediateMappingContext ctx)
         {
-            var bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance;
-            var classType = ctx.ClassType;
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
+            Type? classType = ctx.ClassType;
 
             // Get the members
             FieldInfo[] currentFields = GetFields(bindingFlags, classType, ctx.Mode);
@@ -33,31 +33,22 @@ namespace ABCo.ABSave.Mapping.Generation.Object
         {
             for (int i = 0; i < members.Length; i++)
             {
-                var newItem = GetItemForMember(ref ctx, members[i]);
-                if (newItem != null)
-                {
-                    dest.Add(newItem);
-                }
+                ObjectIntermediateItem? newItem = GetItemForMember(ref ctx, members[i]);
+                if (newItem != null) dest.Add(newItem);
             }
         }
 
         internal static ObjectIntermediateItem? GetItemForMember(ref IntermediateMappingContext ctx, MemberInfo info)
         {
             // Get the attributes - skip this item if there are none
-            var attributes = info.GetCustomAttributes(typeof(MapAttr), false);
-            if (attributes.Length == 0)
-            {
-                return null;
-            }
+            object[]? attributes = info.GetCustomAttributes(typeof(SaveAttribute), false);
+            if (attributes.Length == 0) return null;
 
             var newItem = new ObjectIntermediateItem();
 
             // Create the item.
             bool successful = FillItemFromAttributes(newItem, info, attributes);
-            if (!successful)
-            {
-                throw new IncompleteDetailsException(info);
-            }
+            if (!successful) throw new IncompleteDetailsException(info);
 
             IntermediateMapper.UpdateContextFromItem(ref ctx, newItem);
             return newItem;
@@ -70,6 +61,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             bool loadedSaveAttribute = false;
             for (int i = 0; i < attributes.Length; i++)
             {
+                // TODO: Add more attributes 
                 switch (attributes[i])
                 {
                     case SaveAttribute save:
@@ -84,24 +76,20 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 
         static FieldInfo[] GetFields(BindingFlags bindingFlags, Type classType, SaveMembersMode mode)
         {
-            var fields = Array.Empty<FieldInfo>();
+            FieldInfo[]? fields = Array.Empty<FieldInfo>();
 
             if ((mode & SaveMembersMode.Fields) > 0)
-            {
                 fields = classType.GetFields(bindingFlags);
-            }
 
             return fields;
         }
 
         static PropertyInfo[] GetProperties(BindingFlags bindingFlags, Type classType, SaveMembersMode mode)
         {
-            var properties = Array.Empty<PropertyInfo>();
+            PropertyInfo[]? properties = Array.Empty<PropertyInfo>();
 
             if ((mode & SaveMembersMode.Properties) > 0)
-            {
                 properties = classType.GetProperties(bindingFlags);
-            }
 
             return properties;
         }

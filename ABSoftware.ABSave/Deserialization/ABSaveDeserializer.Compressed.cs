@@ -24,17 +24,14 @@
 
         public ulong ReadCompressed(bool canBeLong, ref BitSource source)
         {
-            if (source.FreeBits == 0)
-            {
-                source = new BitSource(this, 8);
-            }
+            if (source.FreeBits == 0) source = new BitSource(this, 8);
 
             // Process header
             byte preHeaderCapacity = source.FreeBits;
-            var (noContBytes, headerLen) = ReadNoContBytes(ref source);
+            (byte noContBytes, byte headerLen) = ReadNoContBytes(ref source);
 
             byte bitsToGo = (byte)(8 * noContBytes);
-            var res = ReadFirstByteData(ref source, headerLen, bitsToGo, preHeaderCapacity);
+            ulong res = ReadFirstByteData(ref source, headerLen, bitsToGo, preHeaderCapacity);
 
             while (bitsToGo > 0)
             {
@@ -54,16 +51,10 @@
             if (isExtended)
             {
                 // If there are still "y" bits left, get them.
-                if (headerLen < preHeaderCapacity)
-                {
-                    res = (ulong)source.ReadInteger(source.FreeBits) << noContBits << 8;
-                }
+                if (headerLen < preHeaderCapacity) res = (ulong)source.ReadInteger(source.FreeBits) << noContBits << 8;
 
                 // Make sure we're ready to read "x"s. There will always be "x"es as the header can not physically take them all up.
-                if (source.FreeBits == 0)
-                {
-                    source.MoveToNewByte();
-                }
+                if (source.FreeBits == 0) source.MoveToNewByte();
             }
 
             return res | ((ulong)source.ReadInteger(source.FreeBits) << noContBits);
@@ -73,10 +64,7 @@
         {
             for (byte i = 0; i < 8; i++)
             {
-                if (!source.ReadBit())
-                {
-                    return (i, (byte)(i + 1));
-                }
+                if (!source.ReadBit()) return (i, (byte)(i + 1));
             }
 
             return (8, 8);

@@ -20,7 +20,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var pos = Generator.GetMap(typeof(AllPrimitiveClass));
 
             // See if it picks up on the existing item.
-            Assert.AreEqual(pos._innerItem, Generator.GetMap(typeof(AllPrimitiveClass))._innerItem);
+            Assert.AreEqual(pos.InnerItem, Generator.GetMap(typeof(AllPrimitiveClass)).InnerItem);
         }
 
         [TestMethod]
@@ -50,7 +50,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var pos = Generator.GetMap(typeof(AllPrimitiveClass));
 
-            Assert.AreEqual(pos._innerItem, Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass)));
+            Assert.AreEqual(pos.InnerItem, Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass)));
         }
 
         class EmptyMapItem : MapItem { }
@@ -84,7 +84,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             await Task.Delay(1000);
 
             Assert.AreEqual(newMapItem, retrieved);
-            Map.ReleaseGenerator(secondGenerator);
+            ABSaveMap.ReleaseGenerator(secondGenerator);
         }
 
         [TestMethod]
@@ -128,7 +128,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             // Check that the item was created successfully.
             Assert.IsInstanceOfType(Map.AllTypes[typeof(int)], typeof(EmptyMapItem));
-            Map.ReleaseGenerator(secondGenerator);
+            ABSaveMap.ReleaseGenerator(secondGenerator);
         }
 
         [TestMethod]
@@ -153,7 +153,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var pos = Generator.GetRuntimeMap(typeof(AllPrimitiveClass));
             Assert.IsFalse(pos.IsNullable);
 
-            Assert.IsInstanceOfType(pos._innerItem, typeof(RuntimeMapItem));
+            Assert.IsInstanceOfType(pos.InnerItem, typeof(RuntimeMapItem));
         }
 
         [TestMethod]
@@ -164,7 +164,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var pos3Expected = Generator.GetMap(typeof(AllPrimitiveStruct));
             var pos3Actual = Generator.GetRuntimeMap(typeof(AllPrimitiveStruct));
 
-            Assert.AreEqual(pos3Expected._innerItem, ((RuntimeMapItem)pos3Actual._innerItem).InnerItem);
+            Assert.AreEqual(pos3Expected.InnerItem, ((RuntimeMapItem)pos3Actual.InnerItem).InnerItem);
         }
 
         [TestMethod]

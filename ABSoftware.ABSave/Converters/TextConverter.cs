@@ -21,21 +21,13 @@ namespace ABCo.ABSave.Converters
         public override bool CheckType(CheckTypeInfo info)
         {
             if (info.Type == typeof(string))
-            {
                 _type = StringType.String;
-            }
             else if (info.Type == typeof(StringBuilder))
-            {
                 _type = StringType.StringBuilder;
-            }
             else if (info.Type == typeof(char[]))
-            {
                 _type = StringType.CharArray;
-            }
             else
-            {
                 return false;
-            }
 
             return true;
         }
@@ -76,27 +68,22 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, ref BitSource header) => _type switch
         {
-            return _type switch
-            {
-                StringType.String => header.Deserializer.ReadString(ref header),
-                StringType.CharArray => DeserializeCharArray(ref header),
-                StringType.StringBuilder => DeserializeStringBuilder(ref header),
-                _ => throw new Exception("Invalid StringType in text converter context"),
-            };
-        }
+            StringType.String => header.Deserializer.ReadString(ref header),
+            StringType.CharArray => DeserializeCharArray(ref header),
+            StringType.StringBuilder => DeserializeStringBuilder(ref header),
+            _ => throw new Exception("Invalid StringType in text converter context"),
+        };
 
         public static char[] DeserializeCharArray(ref BitSource header)
         {
             if (header.Deserializer.Settings.UseUTF8)
-            {
                 return header.Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header);
-            }
             else
             {
                 int size = (int)header.Deserializer.ReadCompressedInt(ref header);
-                var chArr = new char[size];
+                char[]? chArr = new char[size];
 
                 header.Deserializer.FastReadShorts(MemoryMarshal.Cast<char, short>(chArr.AsSpan()));
 

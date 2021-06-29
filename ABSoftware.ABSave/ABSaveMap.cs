@@ -35,33 +35,30 @@ namespace ABCo.ABSave.Mapping
         public static ABSaveMap GetNonGeneric(Type type, ABSaveSettings settings)
         {
             var map = new ABSaveMap(settings);
-            var generator = map.GetGenerator();
+            MapGenerator? generator = map.GetGenerator();
 
             map.RootItem = generator.GetMap(type);
-            map.ReleaseGenerator(generator);
+            ReleaseGenerator(generator);
             return map;
         }
 
         internal VersionInfo GetVersionInfo(Converter converter, uint version)
         {
             // Try to get the version if it already exists.
-            var existing = VersionCacheHandler.GetVersionOrAddNull(converter, version);
-            if (existing != null)
-            {
-                return existing;
-            }
+            VersionInfo? existing = VersionCacheHandler.GetVersionOrAddNull(converter, version);
+            if (existing != null) return existing;
 
             // If it doesn't, generate it.
-            var gen = GetGenerator();
-            var res = VersionCacheHandler.AddNewVersion(converter, version, gen);
+            MapGenerator? gen = GetGenerator();
+            VersionInfo? res = VersionCacheHandler.AddNewVersion(converter, version, gen);
             ReleaseGenerator(gen);
             return res;
         }
 
         internal MapItemInfo GetRuntimeMapItem(Type type)
         {
-            var gen = GetGenerator();
-            var map = gen.GetRuntimeMap(type);
+            MapGenerator? gen = GetGenerator();
+            MapItemInfo map = gen.GetRuntimeMap(type);
             ReleaseGenerator(gen);
             return map;
         }
@@ -75,9 +72,6 @@ namespace ABCo.ABSave.Mapping
 
         // NOTE: It's generally not a good idea to call this from a "finally" just in case it pools
         // a generator that's been left in an invalid state.
-        internal void ReleaseGenerator(MapGenerator gen)
-        {
-            gen.FinishGeneration();
-        }
+        internal static void ReleaseGenerator(MapGenerator gen) => gen.FinishGeneration();
     }
 }

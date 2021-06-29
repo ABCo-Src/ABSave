@@ -17,17 +17,17 @@ namespace ABCo.ABSave.Mapping.Generation
             out IReadOnlyDictionary<Type, ConverterInfo> outExactConverters,
             out IReadOnlyList<ConverterInfo> outNonExactConverters)
         {
-            Dictionary<Type, ConverterInfo>? exactConverters = new Dictionary<Type, ConverterInfo>();
-            List<ConverterInfo> nonExactConverters = new List<ConverterInfo>();
+            var exactConverters = new Dictionary<Type, ConverterInfo>();
+            var nonExactConverters = new List<ConverterInfo>();
 
             for (int i = 0; i < converters.Count; i++)
             {
-                var currentConverter = converters[i];
-                var currentConverterType = currentConverter.ConverterType;
+                ConverterInfo? currentConverter = converters[i];
+                Type? currentConverterType = currentConverter.ConverterType;
 
                 var exactTypes =
                     (SelectAttribute[])currentConverterType.GetCustomAttributes<SelectAttribute>(false);
-                var alsoNeedsCheckType =
+                bool alsoNeedsCheckType =
                     Attribute.IsDefined(currentConverterType, typeof(SelectOtherWithCheckTypeAttribute));
 
                 if (exactTypes.Length > 0)
@@ -35,15 +35,11 @@ namespace ABCo.ABSave.Mapping.Generation
                     exactConverters.EnsureCapacity(exactConverters.Count + exactTypes.Length);
 
                     for (int j = 0; j < exactTypes.Length; j++)
-                    {
                         exactConverters.Add(exactTypes[j].Type, currentConverter);
-                    }
                 }
 
                 if (alsoNeedsCheckType)
-                {
                     nonExactConverters.Add(currentConverter);
-                }
             }
 
             outExactConverters = exactConverters;

@@ -6,26 +6,26 @@ namespace ABCo.ABSave.Mapping
     public struct MapItemInfo
     {
         public bool IsNullable { get; internal set; }
-        internal MapItem _innerItem;
+        public MapItem InnerItem;
 
         /// <summary>
         /// Gets the item type this info represents, including the nullability.
         /// </summary>
         public Type GetItemType() =>
-            IsNullable ? typeof(Nullable<>).MakeGenericType(_innerItem.ItemType) : _innerItem.ItemType;
+            IsNullable ? typeof(Nullable<>).MakeGenericType(InnerItem.ItemType) : InnerItem.ItemType;
 
-        public bool IsValueTypeItem => IsNullable || _innerItem.IsValueItemType;
+        public bool IsValueTypeItem => IsNullable || InnerItem.IsValueItemType;
 
         public override bool Equals(object? obj) => obj is MapItemInfo info && this == info;
         public static bool operator ==(MapItemInfo left, MapItemInfo right) =>
-            left.IsNullable == right.IsNullable && left._innerItem == right._innerItem;
+            left.IsNullable == right.IsNullable && left.InnerItem == right.InnerItem;
 
         public static bool operator !=(MapItemInfo left, MapItemInfo right) =>
-           left.IsNullable != right.IsNullable || left._innerItem != right._innerItem;
+           left.IsNullable != right.IsNullable || left.InnerItem != right.InnerItem;
 
         public override int GetHashCode() => base.GetHashCode();
 
-        internal MapItemInfo(MapItem item, bool isNullable) => (_innerItem, IsNullable) = (item, isNullable);
+        internal MapItemInfo(MapItem item, bool isNullable) => (InnerItem, IsNullable) = (item, isNullable);
     }
 
     public abstract class MapItem
@@ -33,8 +33,8 @@ namespace ABCo.ABSave.Mapping
         public Type ItemType = null!;
         public bool IsValueItemType;
 
-        internal volatile bool IsGenerating;
-        internal bool HasOneVersion;
+        internal volatile bool _isGenerating;
+        internal bool _hasOneVersion;
         public uint HighestVersion;
     }
 

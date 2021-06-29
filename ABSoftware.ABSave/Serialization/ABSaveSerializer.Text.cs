@@ -11,10 +11,7 @@ namespace ABCo.ABSave.Serialization
         {
             var header = new BitTarget(this);
 
-            if (str == null)
-            {
-                header.WriteBitOff();
-            }
+            if (str == null) header.WriteBitOff();
             else
             {
                 header.WriteBitOn();
@@ -33,9 +30,7 @@ namespace ABCo.ABSave.Serialization
         public void WriteText(ReadOnlySpan<char> chars, ref BitTarget header)
         {
             if (Settings.UseUTF8)
-            {
                 WriteUTF8(chars, ref header);
-            }
             else
             {
                 WriteCompressed((uint)chars.Length);
@@ -57,16 +52,14 @@ namespace ABCo.ABSave.Serialization
         byte[] GetStringBufferFor(int length)
         {
             if (_stringBuffer == null || _stringBuffer.Length < length)
-            {
                 return _stringBuffer = ABSaveUtils.CreateUninitializedArray<byte>(length);
-            }
 
             return _stringBuffer;
         }
 
         public unsafe void FastWriteShorts(ReadOnlySpan<short> shorts)
         {
-            var bytes = MemoryMarshal.Cast<short, byte>(shorts);
+            ReadOnlySpan<byte> bytes = MemoryMarshal.Cast<short, byte>(shorts);
 
             if (ShouldReverseEndian)
             {
@@ -83,10 +76,7 @@ namespace ABCo.ABSave.Serialization
                     Output.Write(bufferSpan);
                 }
             }
-            else
-            {
-                Output.Write(bytes);
-            }
+            else Output.Write(bytes);
         }
     }
 }

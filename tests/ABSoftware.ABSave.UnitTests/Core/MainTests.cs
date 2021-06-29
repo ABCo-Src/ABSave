@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 
 namespace ABCo.ABSave.UnitTests.Core
 {
@@ -13,7 +14,7 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        public void Converter_ValueType_WithoutHeader()
+        public void ValueType_WithoutHeader()
         {
             BaseTypeConverter.WritesToHeader = false;
             ResetStateWithMapFor<ConverterValueType>();
@@ -35,7 +36,7 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        public void Converter_ValueType_WithHeader()
+        public void ValueType_WithHeader()
         {
             BaseTypeConverter.WritesToHeader = true;
             ResetStateWithMapFor<ConverterValueType>();
@@ -57,7 +58,7 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        public void Converter_MatchingRef_WithoutHeader()
+        public void MatchingRef_WithoutHeader()
         {
             BaseTypeConverter.WritesToHeader = false;
             ResetStateWithMapFor<BaseIndex>();
@@ -79,7 +80,7 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        public void Converter_MatchingRef_WithHeader()
+        public void MatchingRef_WithHeader()
         {
             BaseTypeConverter.WritesToHeader = true;
             ResetStateWithMapFor<BaseIndex>();
@@ -101,7 +102,101 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        public void Converter_MatchingRef_Null()
+        public void MatchingRef_WithHeader_NonZeroVersion()
+        {
+            OtherTypeConverter.WritesToHeader = true;
+            ResetStateWithMapFor<ClassWithMinVersion>();
+            {
+                // With version
+                Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);
+                AssertAndGoToStart(193, 128, OtherTypeConverter.OUTPUT_BYTE);
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(ClassWithMinVersion));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);
+                AssertAndGoToStart(224, OtherTypeConverter.OUTPUT_BYTE);
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(ClassWithMinVersion));
+            }
+        }
+
+        [TestMethod]
+        public void MatchingRef_WithoutHeader_NonZeroVersion()
+        {
+            OtherTypeConverter.WritesToHeader = false;
+            ResetStateWithMapFor<ClassWithMinVersion>();
+            {
+                // With version
+                Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);
+                AssertAndGoToStart(193, OtherTypeConverter.OUTPUT_BYTE);
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(ClassWithMinVersion));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);
+                AssertAndGoToStart(192, OtherTypeConverter.OUTPUT_BYTE);
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(ClassWithMinVersion));
+            }
+        }
+
+        [TestMethod]
+        public void MatchingRef_WithHeader_CustomVersion()
+        {
+            OtherTypeConverter.WritesToHeader = true;
+            ResetStateWithMapFor<ClassWithMinVersion>();
+            {
+                Serializer.Initialize(Stream, CurrentMap, 
+                    new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
+
+                // With version
+                Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);
+                AssertAndGoToStart(192, 128, OtherTypeConverter.OUTPUT_BYTE);
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(ClassWithMinVersion));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);
+                AssertAndGoToStart(224, OtherTypeConverter.OUTPUT_BYTE);
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(ClassWithMinVersion));
+            }
+        }
+
+        [TestMethod]
+        public void MatchingRef_WithoutHeader_CustomVersion()
+        {
+            OtherTypeConverter.WritesToHeader = false;
+            ResetStateWithMapFor<ClassWithMinVersion>();
+            {
+                Serializer.Initialize(Stream, CurrentMap,
+                    new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
+
+                // With version
+                Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);
+                AssertAndGoToStart(192, OtherTypeConverter.OUTPUT_BYTE);
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(ClassWithMinVersion));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);
+                AssertAndGoToStart(192, OtherTypeConverter.OUTPUT_BYTE);
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(ClassWithMinVersion));
+            }
+        }
+
+        [TestMethod]
+        public void MatchingRef_Null()
         {
             BaseTypeConverter.WritesToHeader = true;
             ResetStateWithMapFor(typeof(BaseIndex));
@@ -114,9 +209,8 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        public void Item_Converter_DifferentRef_WithHeader()
+        public void IndexInheritance_WithHeader()
         {
-            BaseTypeConverter.WritesToHeader = true;
             ResetStateWithMapFor<BaseIndex>();
             {
                 // With version
@@ -136,9 +230,8 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        public void Item_Converter_DifferentRef_WithoutHeader()
+        public void IndexInheritance_WithoutHeader()
         {
-            BaseTypeConverter.WritesToHeader = false;
             ResetStateWithMapFor<BaseIndex>();
             {
                 // With version
@@ -158,7 +251,139 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        public void Object_Null()
+        public void KeyInheritance_WithHeader()
+        {
+            OtherTypeConverter.WritesToHeader = true;
+            ResetStateWithMapFor<KeyBase>();
+            {
+                // With version
+                Serializer.SerializeItem(new KeySubSecond(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { "Second" }, 128, 6, (short)GenType.String, 0, 128, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(KeySubSecond));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new KeySubSecond(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { "Second" }, 134, (short)GenType.String, 128, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(KeySubSecond));
+            }
+        }
+
+        [TestMethod]
+        public void KeyInheritance_WithoutHeader()
+        {
+            OtherTypeConverter.WritesToHeader = false;
+            ResetStateWithMapFor<KeyBase>();
+            {
+                // With version
+                Serializer.SerializeItem(new KeySubSecond(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { "Second" }, 128, 6, (short)GenType.String, 0, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(KeySubSecond));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new KeySubSecond(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { "Second" }, 134, (short)GenType.String, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(KeySubSecond));
+            }
+        }
+
+        [TestMethod]
+        public void KeyOrIndexInheritance_Index_WithHeader()
+        {
+            OtherTypeConverter.WritesToHeader = true;
+            ResetStateWithMapFor<IndexKeyBase>();
+            {
+                // With version
+                Serializer.SerializeItem(new IndexKeySubIndex(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(128, 128, 0, 128, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(IndexKeySubIndex));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new IndexKeySubIndex(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(160, 128, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(IndexKeySubIndex));
+            }
+        }
+
+        [TestMethod]
+        public void KeyOrIndexInheritance_Index_WithoutHeader()
+        {
+            OtherTypeConverter.WritesToHeader = false;
+            ResetStateWithMapFor<IndexKeyBase>();
+            {
+                // With version
+                Serializer.SerializeItem(new IndexKeySubIndex(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(128, 128, 0, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(IndexKeySubIndex));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new IndexKeySubIndex(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(160, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(IndexKeySubIndex));
+            }
+        }
+
+        [TestMethod]
+        public void KeyOrIndexInheritance_Key_WithHeader()
+        {
+            OtherTypeConverter.WritesToHeader = true;
+            ResetStateWithMapFor<IndexKeyBase>();
+            {
+                // With version
+                Serializer.SerializeItem(new IndexKeySubKey(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { "Key" }, 128, 3, (short)GenType.String, 0, 128, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(IndexKeySubKey));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new IndexKeySubKey(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { "Key" }, 131, (short)GenType.String, 128, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(IndexKeySubKey));
+            }
+        }
+
+        [TestMethod]
+        public void KeyOrIndexInheritance_Key_WithoutHeader()
+        {
+            OtherTypeConverter.WritesToHeader = false;
+            ResetStateWithMapFor<IndexKeyBase>();
+            {
+                // With version
+                Serializer.SerializeItem(new IndexKeySubKey(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { "Key" }, 128, 3, (short)GenType.String, 0, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(IndexKeySubKey));
+
+                ResetPosition();
+
+                // Without version
+                Serializer.SerializeItem(new IndexKeySubKey(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { "Key" }, 131, (short)GenType.String, OtherTypeConverter.OUTPUT_BYTE));
+
+                Assert.IsInstanceOfType(Deserializer.DeserializeItem(CurrentMapItem), typeof(IndexKeySubKey));
+            }
+        }
+
+        [TestMethod]
+        public void Null()
         {
             ResetStateWithMapFor(typeof(NestedClass));
             {

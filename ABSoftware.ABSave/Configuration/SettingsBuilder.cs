@@ -40,14 +40,14 @@ namespace ABCo.ABSave.Configuration
         internal ABSaveSettings CreateSettings(ABSaveSettings template)
         {
             // Handle basic settings
-            var lazyBitHandling = _lazyBitHandling ?? template.LazyBitHandling;
-            var useUTF8 = _useUTF8 ?? template.UseUTF8;
-            var useLittleEndian = _useLittleEndian ?? template.UseLittleEndian;
-            var bypassDangerousTypeChecking = _bypassDangerousTypeChecking ?? template.BypassDangerousTypeChecking;
+            bool lazyBitHandling = _lazyBitHandling ?? template.LazyBitHandling;
+            bool useUTF8 = _useUTF8 ?? template.UseUTF8;
+            bool useLittleEndian = _useLittleEndian ?? template.UseLittleEndian;
+            bool bypassDangerousTypeChecking = _bypassDangerousTypeChecking ?? template.BypassDangerousTypeChecking;
 
             // Process converters
             EnsureConvertersListInitialized();
-            SettingsConverterProcessor.Split(_converters!, out var exactConverters, out var nonExactConverter);
+            SettingsConverterProcessor.Split(_converters!, out IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, out IReadOnlyList<ConverterInfo>? nonExactConverter);
 
             // Create the new settings.
             return new ABSaveSettings(lazyBitHandling, useUTF8, bypassDangerousTypeChecking, useLittleEndian,

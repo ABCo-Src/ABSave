@@ -28,13 +28,11 @@ namespace ABCo.ABSave.Converters
 
         public override void Initialize(InitializeInfo info)
         {
-            var typeCode = Type.GetTypeCode(info.Type);
+            TypeCode typeCode = Type.GetTypeCode(info.Type);
 
             // IntPtr
             if (typeCode == TypeCode.Object)
-            {
                 throw new Exception("Unsupported primitive provided. Please note that ABSave does not currently support .NET 5 and above types.");
-            }
 
             _typeCode = (PrimitiveType)typeCode;
         }
@@ -43,20 +41,14 @@ namespace ABCo.ABSave.Converters
 
         public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
-            var serializer = header.Serializer;
+            ABSaveSerializer? serializer = header.Serializer;
 
             switch (_typeCode)
             {
                 case PrimitiveType.Boolean:
-                    var bl = (bool)info.Instance;
-                    if (bl)
-                    {
-                        serializer.WriteByte(1);
-                    }
-                    else
-                    {
-                        serializer.WriteByte(0);
-                    }
+                    bool bl = (bool)info.Instance;
+                    if (bl) serializer.WriteByte(1);
+                    else serializer.WriteByte(0);
 
                     break;
 
@@ -142,7 +134,7 @@ namespace ABCo.ABSave.Converters
 
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
-            var reader = header.Deserializer;
+            ABSaveDeserializer? reader = header.Deserializer;
 
             unchecked
             {

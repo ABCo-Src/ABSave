@@ -20,38 +20,32 @@ namespace ABCo.ABSave.Mapping
         public object Object1;
         public object? Object2;
 
-        public object? Getter(object parent)
+        public object? Getter(object parent) => Type switch
         {
-            return Type switch
-            {
-                MemberAccessorType.Field => ((FieldInfo)Object1).GetValue(parent),
-                MemberAccessorType.SlowProperty => ((PropertyInfo)Object1).GetValue(parent),
-                MemberAccessorType.AllRefProperty => Unsafe.As<Func<object, object?>>(Object1)(parent),
-                MemberAccessorType.PrimitiveProperty => PrimitivePropertyGetter(parent),
-                _ => throw new Exception("Unrecognized member accessor type"),
-            };
-        }
+            MemberAccessorType.Field => ((FieldInfo)Object1).GetValue(parent),
+            MemberAccessorType.SlowProperty => ((PropertyInfo)Object1).GetValue(parent),
+            MemberAccessorType.AllRefProperty => Unsafe.As<Func<object, object?>>(Object1)(parent),
+            MemberAccessorType.PrimitiveProperty => PrimitivePropertyGetter(parent),
+            _ => throw new Exception("Unrecognized member accessor type"),
+        };
 
-        public object PrimitivePropertyGetter(object parent)
+        public object PrimitivePropertyGetter(object parent) => PrimitiveTypeCode switch
         {
-            return PrimitiveTypeCode switch
-            {
-                TypeCode.Boolean => PrimitiveGetter<bool>(parent),
-                TypeCode.Byte => PrimitiveGetter<byte>(parent),
-                TypeCode.SByte => PrimitiveGetter<sbyte>(parent),
-                TypeCode.UInt16 => PrimitiveGetter<ushort>(parent),
-                TypeCode.Int16 => PrimitiveGetter<short>(parent),
-                TypeCode.Int32 => PrimitiveGetter<int>(parent),
-                TypeCode.UInt32 => PrimitiveGetter<uint>(parent),
-                TypeCode.Int64 => PrimitiveGetter<long>(parent),
-                TypeCode.UInt64 => PrimitiveGetter<ulong>(parent),
-                TypeCode.Single => PrimitiveGetter<float>(parent),
-                TypeCode.Double => PrimitiveGetter<double>(parent),
-                TypeCode.Decimal => PrimitiveGetter<decimal>(parent),
-                TypeCode.DateTime => PrimitiveGetter<DateTime>(parent),
-                _ => throw new Exception("Invalid type-code for primitive property getter.")
-            };
-        }
+            TypeCode.Boolean => PrimitiveGetter<bool>(parent),
+            TypeCode.Byte => PrimitiveGetter<byte>(parent),
+            TypeCode.SByte => PrimitiveGetter<sbyte>(parent),
+            TypeCode.UInt16 => PrimitiveGetter<ushort>(parent),
+            TypeCode.Int16 => PrimitiveGetter<short>(parent),
+            TypeCode.Int32 => PrimitiveGetter<int>(parent),
+            TypeCode.UInt32 => PrimitiveGetter<uint>(parent),
+            TypeCode.Int64 => PrimitiveGetter<long>(parent),
+            TypeCode.UInt64 => PrimitiveGetter<ulong>(parent),
+            TypeCode.Single => PrimitiveGetter<float>(parent),
+            TypeCode.Double => PrimitiveGetter<double>(parent),
+            TypeCode.Decimal => PrimitiveGetter<decimal>(parent),
+            TypeCode.DateTime => PrimitiveGetter<DateTime>(parent),
+            _ => throw new Exception("Invalid type-code for primitive property getter.")
+        };
 
         object PrimitiveGetter<T>(object parent) where T : struct
             => Unsafe.As<Func<object, T>>(Object1)!(parent);

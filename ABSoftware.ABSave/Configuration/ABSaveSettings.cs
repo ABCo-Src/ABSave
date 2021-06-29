@@ -14,7 +14,7 @@ namespace ABCo.ABSave.Configuration
 
         static ABSaveSettings()
         {
-            SettingsConverterProcessor.Split(BuiltInConverters.Infos, out var exactConverters, out var nonExactConverters);
+            SettingsConverterProcessor.Split(BuiltInConverters.Infos, out IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, out IReadOnlyList<ConverterInfo>? nonExactConverters);
 
             // (The converter info is filled in by the builder so keep it blank)
             ForSpeed = new ABSaveSettings(true, true, false, true, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);

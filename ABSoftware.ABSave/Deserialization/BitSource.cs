@@ -31,11 +31,7 @@ namespace ABCo.ABSave.Deserialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadBit()
         {
-            if (FreeBits == 0)
-            {
-                MoveToNewByte();
-            }
-
+            if (FreeBits == 0) MoveToNewByte();
             return (Source & (1 << --FreeBits)) > 0;
         }
 

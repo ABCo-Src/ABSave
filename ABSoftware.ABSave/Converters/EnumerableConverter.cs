@@ -29,10 +29,7 @@ namespace ABCo.ABSave.Converters
         public override void Initialize(InitializeInfo info)
         {
             // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
-            if (TryHandleDirectTypes(info, info.Type))
-            {
-                return;
-            }
+            if (TryHandleDirectTypes(info, info.Type)) return;
 
             // Work out what category this type falls under.
             CollectionCategory category = DetectCollectionType(info.Type.GetInterfaces(), out Type elementOrKeyType, out Type? valueType);
@@ -46,33 +43,26 @@ namespace ABCo.ABSave.Converters
         public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
             if (_info is CollectionInfo collectionInfo)
-            {
                 SerializeCollection(info.Instance, collectionInfo, ref header);
-            }
             else if (_info is DictionaryInfo dictionaryInfo)
-            {
                 SerializeDictionary(info.Instance, dictionaryInfo, ref header);
-            }
         }
 
         void SerializeCollection(object obj, CollectionInfo info, ref BitTarget header)
         {
-            var size = info.GetCount(obj);
+            int size = info.GetCount(obj);
             header.Serializer.WriteCompressed((uint)size, ref header);
 
-            var enumerator = info.GetEnumerator(obj);
-            while (enumerator.MoveNext())
-            {
-                header.Serializer.SerializeItem(enumerator.Current, _elementOrKeyMap);
-            }
+            IEnumerator? enumerator = info.GetEnumerator(obj);
+            while (enumerator.MoveNext()) header.Serializer.SerializeItem(enumerator.Current, _elementOrKeyMap);
         }
 
         void SerializeDictionary(object obj, DictionaryInfo info, ref BitTarget header)
         {
-            var size = info.GetCount(obj);
+            int size = info.GetCount(obj);
             header.Serializer.WriteCompressed((uint)size, ref header);
 
-            var enumerator = info.GetEnumerator(obj);
+            IDictionaryEnumerator? enumerator = info.GetEnumerator(obj);
             while (enumerator.MoveNext())
             {
                 header.Serializer.SerializeItem(enumerator.Key, _elementOrKeyMap);
@@ -87,28 +77,19 @@ namespace ABCo.ABSave.Converters
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
             if (_info is CollectionInfo collectionInfo)
-            {
                 return DeserializeCollection(collectionInfo, info.ActualType, ref header);
-            }
             else if (_info is DictionaryInfo dictionaryInfo)
-            {
                 return DeserializeDictionary(dictionaryInfo, info.ActualType, ref header);
-            }
-            else
-            {
-                throw new Exception("Unrecognized enumerable info.");
-            }
+            else throw new Exception("Unrecognized enumerable info.");
         }
 
         object DeserializeCollection(CollectionInfo info, Type type, ref BitSource header)
         {
             int size = (int)header.Deserializer.ReadCompressedInt(ref header);
-            var collection = info.CreateCollection(type, size);
+            object? collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
-            {
                 info.AddItem(collection, header.Deserializer.DeserializeItem(_elementOrKeyMap));
-            }
 
             return collection;
         }
@@ -116,17 +97,14 @@ namespace ABCo.ABSave.Converters
         object DeserializeDictionary(DictionaryInfo info, Type type, ref BitSource header)
         {
             int size = (int)header.Deserializer.ReadCompressedInt(ref header);
-            var collection = info.CreateCollection(type, size);
+            object? collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
             {
-                var key = header.Deserializer.DeserializeItem(_elementOrKeyMap);
-                if (key == null)
-                {
-                    throw new NullDictionaryKeyException();
-                }
+                object? key = header.Deserializer.DeserializeItem(_elementOrKeyMap);
+                if (key == null) throw new NullDictionaryKeyException();
 
-                var value = header.Deserializer.DeserializeItem(_valueMap);
+                object? value = header.Deserializer.DeserializeItem(_valueMap);
                 info.AddItem(collection, key, value);
             }
 
@@ -159,15 +137,12 @@ namespace ABCo.ABSave.Converters
 
             // Fill in the maps.
             _elementOrKeyMap = info.GetMap(elementOrKeyType);
-            if (valueType != null)
-            {
-                _valueMap = info.GetMap(valueType);
-            }
+            if (valueType != null) _valueMap = info.GetMap(valueType);
         }
 
         static CollectionCategory DetectCollectionType(Type[] interfaces, out Type elementOrKeyType, out Type? valueType)
         {
-            var category = CollectionCategory.None;
+            CollectionCategory category = CollectionCategory.None;
             bool needsToFindICollection = true;
             Type? genericICollectionType = null;
             elementOrKeyType = null!;
@@ -187,11 +162,7 @@ namespace ABCo.ABSave.Converters
                         needsToFindICollection = false;
                         genericICollectionType = interfaces[i];
 
-                        if (category == CollectionCategory.None)
-                        {
-                            category = CollectionCategory.GenericICollection;
-                        }
-
+                        if (category == CollectionCategory.None) category = CollectionCategory.GenericICollection;
                         continue;
                     }
                 }
@@ -204,7 +175,7 @@ namespace ABCo.ABSave.Converters
                         // Try to see if there's a generic variant to get the types from.
                         if (interfaces[i].IsGenericType && interfaces[i].GetGenericTypeDefinition() == typeof(IDictionary<,>))
                         {
-                            var args = interfaces[i].GetGenericArguments();
+                            Type[]? args = interfaces[i].GetGenericArguments();
                             elementOrKeyType = args[0];
                             valueType = args[1];
 
@@ -225,17 +196,11 @@ namespace ABCo.ABSave.Converters
 
                     case CollectionCategory.NonGenericIList:
 
-                        if (interfaces[i] == typeof(IDictionary))
-                        {
-                            goto SwitchToIDictionary;
-                        }
+                        if (interfaces[i] == typeof(IDictionary)) goto SwitchToIDictionary;
                         else if (interfaces[i].IsGenericType)
                         {
-                            var genericTypeDef = gtd ?? interfaces[i].GetGenericTypeDefinition(); // "gtd" may be null if we've found the element type.
-                            if (genericTypeDef == typeof(IDictionary<,>))
-                            {
-                                category = CollectionCategory.GenericIDictionary;
-                            }
+                            Type? genericTypeDef = gtd ?? interfaces[i].GetGenericTypeDefinition(); // "gtd" may be null if we've found the element type.
+                            if (genericTypeDef == typeof(IDictionary<,>)) category = CollectionCategory.GenericIDictionary;
                         }
 
                         break;
@@ -243,25 +208,19 @@ namespace ABCo.ABSave.Converters
                     case CollectionCategory.GenericICollection:
                     case CollectionCategory.None:
 
-                        if (interfaces[i] == typeof(IList))
-                        {
-                            category = CollectionCategory.NonGenericIList;
-                        }
-                        else if (interfaces[i] == typeof(IDictionary))
-                        {
-                            goto SwitchToIDictionary;
-                        }
+                        if (interfaces[i] == typeof(IList)) category = CollectionCategory.NonGenericIList;
+                        else if (interfaces[i] == typeof(IDictionary)) goto SwitchToIDictionary;
 
                         // Generic IDictionary
                         else if (interfaces[i].IsGenericType)
                         {
-                            var genericTypeDef = gtd ?? interfaces[i].GetGenericTypeDefinition(); // "gtd" may be null if we've found the element type.
+                            Type? genericTypeDef = gtd ?? interfaces[i].GetGenericTypeDefinition(); // "gtd" may be null if we've found the element type.
                             if (genericTypeDef == typeof(IDictionary<,>))
                             {
                                 category = CollectionCategory.GenericIDictionary;
 
                                 // Extract the key and value.
-                                var args = interfaces[i].GetGenericArguments();
+                                Type[]? args = interfaces[i].GetGenericArguments();
                                 elementOrKeyType = args[0];
                                 valueType = args[1];
                             }
@@ -281,14 +240,8 @@ namespace ABCo.ABSave.Converters
             // Try to extract the element type from the "ICollection<>" we found if we don't have one.
             if (elementOrKeyType == null)
             {
-                if (genericICollectionType == null)
-                {
-                    elementOrKeyType = typeof(object);
-                }
-                else
-                {
-                    elementOrKeyType = genericICollectionType.GetGenericArguments()[0];
-                }
+                if (genericICollectionType == null) elementOrKeyType = typeof(object);
+                else elementOrKeyType = genericICollectionType.GetGenericArguments()[0];
             }
 
             return category;
@@ -310,11 +263,11 @@ namespace ABCo.ABSave.Converters
         {
             if (type.IsGenericType)
             {
-                var gtd = type.GetGenericTypeDefinition();
+                Type? gtd = type.GetGenericTypeDefinition();
 
                 if (gtd == typeof(List<>))
                 {
-                    var argType = type.GetGenericArguments()[0];
+                    Type? argType = type.GetGenericArguments()[0];
 
                     SetState(info, CollectionInfo.List, argType, null);
                     return true;

@@ -1,33 +1,22 @@
 ﻿using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
+using System.Reflection;
 
 namespace ABCo.ABSave.Mapping.Generation.Inheritance
 {
     public static class InheritanceHandler
     {
-        internal static SaveInheritanceAttribute? GetAttributeForVersion(SaveInheritanceAttribute[]? attributes, uint version)
-        {
-            if (attributes == null)
-            {
-                return null;
-            }
-
-            for (int i = 0; i < attributes.Length; i++)
-            {
-                var currentAttribute = attributes[i];
-                if (currentAttribute.FromVer <= version && currentAttribute.ToVer >= version)
-                {
-                    return currentAttribute;
-                }
-            }
-
-            return null;
-        }
-
-        internal static SaveInheritanceAttribute[]? GetInheritanceAttributes(Type classType, ref uint highestVersion)
-        {
+        internal static SaveInheritanceAttribute[]? GetInheritanceAttributes(Type classType, ref uint highestVersion) =>
             // Coming soon: Setting-based mapping
-            return InheritanceReflectionGenerator.GetInheritanceAttributes(classType, ref highestVersion);
+            GetInheritanceAttributesByReflection(classType, ref highestVersion);
+
+        internal static SaveInheritanceAttribute[]? GetInheritanceAttributesByReflection(Type classType, ref uint highestVersion)
+        {
+            var inheritanceInfo = (SaveInheritanceAttribute[])classType.GetCustomAttributes<SaveInheritanceAttribute>(false);
+            if (inheritanceInfo == null) return null;
+
+            MappingHelpers.ProcessVersionedAttributes(ref highestVersion, inheritanceInfo);
+            return inheritanceInfo;
         }
     }
 }

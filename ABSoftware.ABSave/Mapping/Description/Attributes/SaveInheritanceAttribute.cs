@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace ABCo.ABSave.Mapping.Description.Attributes
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
-    public class SaveInheritanceAttribute : Attribute
+    public class SaveInheritanceAttribute : AttributeWithVersion
     {
         public SaveInheritanceMode Mode;
         internal bool HasGeneratedFullKeyCache;
@@ -20,9 +20,6 @@ namespace ABCo.ABSave.Mapping.Description.Attributes
         internal Dictionary<Type, string>? KeySerializeCache;
         internal Dictionary<string, Type>? KeyDeserializeCache;
 
-        public uint FromVer;
-        public uint ToVer = uint.MaxValue;
-
         public SaveInheritanceAttribute(SaveInheritanceMode mode, params Type[] list)
         {
             Mode = mode;
@@ -32,7 +29,7 @@ namespace ABCo.ABSave.Mapping.Description.Attributes
 
             for (uint i = 0; i < list.Length; i++)
             {
-                var currentItem = list[i];
+                Type? currentItem = list[i];
                 IndexSerializeCache.Add(currentItem, i);
                 IndexDeserializeCache.Add(i, currentItem);
             }

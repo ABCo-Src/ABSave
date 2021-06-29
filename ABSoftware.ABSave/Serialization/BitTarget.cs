@@ -22,36 +22,22 @@ namespace ABCo.ABSave.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteBitOn()
         {
-            if (FreeBits == 0)
-            {
-                Apply();
-            }
-
+            if (FreeBits == 0) Apply();
             Result |= 1 << --FreeBits;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteBitOff()
         {
-            if (FreeBits == 0)
-            {
-                Apply();
-            }
-
+            if (FreeBits == 0) Apply();
             FreeBits--;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteBitWith(bool value)
         {
-            if (value)
-            {
-                WriteBitOn();
-            }
-            else
-            {
-                WriteBitOff();
-            }
+            if (value) WriteBitOn();
+            else WriteBitOff();
         }
 
         public void WriteInteger(byte number, byte bitsRequired)

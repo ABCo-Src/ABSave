@@ -33,12 +33,9 @@ namespace ABCo.ABSave.Helpers
             int totalLen = (_blockCountBeforeCurrent * BLOCK_SIZE) + _currentBlockFilled;
 
             // If we've managed to somehow EXACTLY fill a single block, we'll just use the data from that.
-            if (totalLen == BLOCK_SIZE)
-            {
-                return _startBlock.Data;
-            }
+            if (totalLen == BLOCK_SIZE) return _startBlock.Data;
 
-            var res = ABSaveUtils.CreateUninitializedArray<T>(totalLen);
+            T[]? res = ABSaveUtils.CreateUninitializedArray<T>(totalLen);
 
             // Go through every block right up towards the last one and copy the data out of them into our final array.
             int currentPos = 0;

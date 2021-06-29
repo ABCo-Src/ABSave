@@ -7,8 +7,6 @@ namespace ABCo.ABSave.Mapping.Generation
 {
     internal sealed class ObjectIntermediateItem : IComparable<ObjectIntermediateItem>
     {
-        public static readonly ObjectIntermediateItem InvalidMember = new ObjectIntermediateItem();
-
         public int Order;
 
         // Whether this item has been processed into an "ObjectMemberSharedInfo" yet or not.
@@ -21,9 +19,6 @@ namespace ABCo.ABSave.Mapping.Generation
         public uint EndVer;
 
         public Info Details;
-
-        // Holds the attributes retrieved by the thread pool.
-        public MapAttr[]? Attributes;
 
         [StructLayout(LayoutKind.Explicit)]
         public struct Info

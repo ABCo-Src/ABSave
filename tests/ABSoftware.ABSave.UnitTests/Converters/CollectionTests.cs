@@ -39,7 +39,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestCleanup]
         public void Cleanup()
         {
-            CurrentMap.ReleaseGenerator(CurrentGenerator);
+            ABSaveMap.ReleaseGenerator(CurrentGenerator);
         }
 
         [TestMethod]

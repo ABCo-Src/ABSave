@@ -21,13 +21,10 @@ namespace ABCo.ABSave.Converters
         public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
             if (_isGeneric)
-            {
                 SerializeGeneric((dynamic)info.Instance, header.Serializer);
-            }
+
             else
-            {
                 SerializeNonGeneric((DictionaryEntry)info.Instance, header.Serializer);
-            }
         }
 
         void SerializeGeneric(dynamic obj, ABSaveSerializer serializer)
@@ -45,33 +42,25 @@ namespace ABCo.ABSave.Converters
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)
         {
             if (_isGeneric)
-            {
                 return DeserializeGeneric(info.ActualType, header.Deserializer);
-            }
             else
-            {
                 return DeserializeNonGeneric(header.Deserializer);
-            }
         }
 
         object DeserializeGeneric(Type actualType, ABSaveDeserializer deserializer)
         {
-            var key = deserializer.DeserializeItem(_keyMap);
-            var value = deserializer.DeserializeItem(_valueMap);
+            object? key = deserializer.DeserializeItem(_keyMap);
+            object? value = deserializer.DeserializeItem(_valueMap);
 
             return Activator.CreateInstance(actualType, key, value)!;
         }
 
         DictionaryEntry DeserializeNonGeneric(ABSaveDeserializer deserializer)
         {
-            var key = deserializer.DeserializeItem(_keyMap);
-            var value = deserializer.DeserializeItem(_valueMap);
+            object? key = deserializer.DeserializeItem(_keyMap);
+            object? value = deserializer.DeserializeItem(_valueMap);
 
-            if (key == null)
-            {
-                throw new NullDictionaryKeyException();
-            }
-
+            if (key == null) throw new NullDictionaryKeyException();
             return new DictionaryEntry(key, value);
         }
 
@@ -81,7 +70,7 @@ namespace ABCo.ABSave.Converters
             // KeyValuePair<,>
             if (_isGeneric)
             {
-                var genericArgs = info.Type.GetGenericArguments();
+                Type[]? genericArgs = info.Type.GetGenericArguments();
 
                 _keyMap = info.GetMap(genericArgs[0]);
                 _valueMap = info.GetMap(genericArgs[1]);

@@ -15,6 +15,10 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
     #region Index Inheritance
 
+    [SaveMembers]
+    [SaveInheritance(SaveInheritanceMode.Index, ToVer = 1)]
+    class ClassWithMinVersion { }
+
     [SaveInheritance(SaveInheritanceMode.Index, typeof(SubEmpty), typeof(SubNoConverter), typeof(SubWithHeader), typeof(SubWithoutHeader))]
     class BaseIndex { }
 
@@ -62,7 +66,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     #region General
 
     [SaveMembers]
-    class NestedClass : BaseIndex
+    class NestedClass
     {
         [Save(0)]
         public byte A { get; set; }
@@ -167,6 +171,36 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
+    [SaveMembers]
+    class SingleMemberClass
+    {
+        [Save(0)]
+        public byte A { get; set; }
+    }
+
+    [SaveMembers]
+    [SaveBaseMembers(typeof(SingleMemberClass), FromVer = 1)]
+    class MemberInheritingSingleClass : SingleMemberClass
+    {
+        [Save(0)]
+        public byte B { get; set; }
+    }
+
+    [SaveMembers]
+    [SaveBaseMembers(typeof(SingleMemberClass), FromVer = 0)]
+    [SaveBaseMembers(typeof(MemberInheritingSingleClass), FromVer = 1)]
+    class MemberInheritingDoubleClass : MemberInheritingSingleClass
+    {
+        [Save(0)]
+        public byte C { get; set; }
+
+        public MemberInheritingDoubleClass() { }
+        public MemberInheritingDoubleClass(byte a, byte b, byte c) => (A, B, C) = (a, b, c);
+
+        public override bool Equals(object obj) => obj is MemberInheritingDoubleClass cl && A == cl.A && B == cl.B && C == cl.C;
+        public override int GetHashCode() => B;
+    }
+
     #endregion
 
     #region Mapping Classes
@@ -264,11 +298,9 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     [SaveInheritance(SaveInheritanceMode.Key)]
     public class KeyBase { }
 
-    [SaveMembers]
     [SaveInheritanceKey("First")]
     public class KeySubFirst : KeyBase { }
 
-    [SaveMembers]
     [SaveInheritanceKey("Second")]
     public class KeySubSecond : KeyBase { }
 
@@ -276,10 +308,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     [SaveInheritance(SaveInheritanceMode.IndexOrKey, typeof(IndexKeySubIndex))]
     public class IndexKeyBase { }
 
-    [SaveMembers]
     public class IndexKeySubIndex : IndexKeyBase { }
 
-    [SaveMembers]
     [SaveInheritanceKey("Key")]
     public class IndexKeySubKey : IndexKeyBase { }
 

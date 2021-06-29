@@ -27,7 +27,7 @@ namespace ABCo.ABSave
             SerializeNonGeneric(obj, map, stream, targetVersions);
         public static void SerializeNonGeneric(object? obj, ABSaveMap map, Stream stream, Dictionary<Type, uint>? targetVersions = null)
         {
-            var serializer = SerializerPool.TryRent() ?? new ABSaveSerializer();
+            ABSaveSerializer? serializer = SerializerPool.TryRent() ?? new ABSaveSerializer();
             serializer.Initialize(stream, map, targetVersions);
             serializer.SerializeRoot(obj);
             SerializerPool.Release(serializer);
@@ -47,7 +47,7 @@ namespace ABCo.ABSave
 
         public static object? DeserializeNonGeneric(Stream stream, ABSaveMap map)
         {
-            var deserializer = DeserializerPool.TryRent() ?? new ABSaveDeserializer();
+            ABSaveDeserializer? deserializer = DeserializerPool.TryRent() ?? new ABSaveDeserializer();
             deserializer.Initialize(stream, map);
             return deserializer.DeserializeRoot();
         }

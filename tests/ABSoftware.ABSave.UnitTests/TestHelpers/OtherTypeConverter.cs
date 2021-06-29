@@ -5,24 +5,24 @@ using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Serialization;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ABCo.ABSave.UnitTests.TestHelpers
 {
-    // A type converter with customizable properties for easy testing.
-    [Select(typeof(BaseIndex))]
-    [Select(typeof(KeyBase))]
-    [Select(typeof(ConverterValueType))]
-    [SelectOtherWithCheckType]
-    class BaseTypeConverter : Converter
+    [Select(typeof(KeySubFirst))]
+    [Select(typeof(KeySubSecond))]
+    [Select(typeof(IndexKeySubIndex))]
+    [Select(typeof(IndexKeySubKey))]
+    [Select(typeof(ClassWithMinVersion))]
+    public class OtherTypeConverter : Converter
     {
-        public const int OUTPUT_BYTE = 55;
-
         public static bool WritesToHeader;
+        public const int OUTPUT_BYTE = 155;
 
         public override (VersionInfo, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, WritesToHeader);
-
-        public override bool CheckType(CheckTypeInfo info) =>
-            info.Type == typeof(BaseIndex) || info.Type.IsSubclassOf(typeof(BaseIndex));
 
         public override void Serialize(in SerializeInfo info, ref BitTarget header)
         {
@@ -40,7 +40,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             if (WritesToHeader && !header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
             if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
 
-            return OUTPUT_BYTE;
+            return Activator.CreateInstance(info.ActualType);
         }
     }
 }

@@ -19,13 +19,14 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public ABSaveSerializer Serializer;
         public ABSaveDeserializer Deserializer;
 
-        public void Initialize() => Initialize(ABSaveSettings.ForSpeed);
+        public void Initialize(Dictionary<Type, uint> targetVersions = null) => Initialize(ABSaveSettings.ForSpeed, targetVersions);
         public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null)
         {
             var settings = template.Customize(b => b
                 .SetBypassDangerousTypeChecking(true)
                 .AddConverter<BaseTypeConverter>()
                 .AddConverter<SubTypeConverter>()
+                .AddConverter<OtherTypeConverter>()
             );
 
             CurrentMap = ABSaveMap.Get<EmptyClass>(settings);
@@ -48,7 +49,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
             var gen = CurrentMap.GetGenerator();
             CurrentMapItem = gen.GetMap(type);
-            CurrentMap.ReleaseGenerator(gen);
+            ABSaveMap.ReleaseGenerator(gen);
         }
 
         public void ResetState()
@@ -82,7 +83,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                 var expectedStr = BitConverter.ToString(expected);
                 var actualStr = BitConverter.ToString(actual);
 
-                throw new Exception($"Non-matching assert!\nExpected: {expectedStr}\nActual: {actualStr}");
+                throw new Exception($"Non-matching assert!\nExpected: {expectedStr}\nActual:   {actualStr}");
             }
         }
 

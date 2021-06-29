@@ -10,34 +10,28 @@ namespace ABCo.ABSave.Mapping.Generation
     {
         internal MapItem? TryGenerateConverter(Type type)
         {
-            var settings = Map.Settings;
+            ABSaveSettings? settings = Map.Settings;
 
             if (type.IsGenericType)
             {
-                var genericType = type.GetGenericTypeDefinition();
-                if (settings.ExactConverters.TryGetValue(genericType, out var currentGenericConv))
-                {
+                Type? genericType = type.GetGenericTypeDefinition();
+                if (settings.ExactConverters.TryGetValue(genericType, out ConverterInfo? currentGenericConv))
                     return UseConverter(GetConverterInstance(currentGenericConv), currentGenericConv.ConverterId, type);
-                }
             }
 
-            if (settings.ExactConverters.TryGetValue(type, out var currentConv))
-            {
+            if (settings.ExactConverters.TryGetValue(type, out ConverterInfo? currentConv))
                 return UseConverter(GetConverterInstance(currentConv), currentConv.ConverterId, type);
-            }
 
             // Non-exact converter
             if (settings.NonExactConverters != null)
             {
                 for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
                 {
-                    var converterInfo = settings.NonExactConverters[i];
-                    var converter = GetConverterInstance(converterInfo);
+                    ConverterInfo? converterInfo = settings.NonExactConverters[i];
+                    Converter? converter = GetConverterInstance(converterInfo);
 
                     if (converter.CheckType(new CheckTypeInfo(type, settings)))
-                    {
                         return UseConverter(converter, converterInfo.ConverterId, type);
-                    }
                 }
             }
 
