@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 
@@ -8,6 +9,8 @@ namespace ABCo.ABSave.Mapping.Generation
     {
         public static void UpdateHighestVersionFromRange(ref uint highestVersion, uint startVer, uint endVer)
         {
+            if (endVer <= startVer) throw new InvalidAttributeToVerException();
+
             // If there is no upper we'll only update the highest version based on what the minimum is.
             if (endVer == uint.MaxValue)
             {
@@ -15,7 +18,7 @@ namespace ABCo.ABSave.Mapping.Generation
                     highestVersion = startVer;
             }
 
-            // If not update based on what their custom high is.
+            // If not, update based on what their custom high is.
             else
             {
                 if (endVer > highestVersion)
@@ -26,7 +29,7 @@ namespace ABCo.ABSave.Mapping.Generation
         public static void ProcessVersionedAttributes<T>(ref uint highestVersion, T[] attr) where T : AttributeWithVersion
         {
             // Sort them by their "FromVer".
-            Array.Sort<AttributeWithVersion>(attr, Comparer<AttributeWithVersion>.Default);
+            Array.Sort(attr, Comparer<AttributeWithVersion>.Default);
 
             for (int i = 0; i < attr.Length; i++)
             {
@@ -43,7 +46,7 @@ namespace ABCo.ABSave.Mapping.Generation
             for (int i = 0; i < attributes.Length; i++)
             {
                 T currentAttribute = attributes[i];
-                if (currentAttribute.FromVer <= version && currentAttribute.ToVer >= version)
+                if (currentAttribute.FromVer <= version && currentAttribute.ToVer > version)
                     return currentAttribute;
             }
 
