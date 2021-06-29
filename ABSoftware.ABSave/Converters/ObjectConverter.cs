@@ -20,9 +20,9 @@ namespace ABCo.ABSave.Converters
 
         SaveMembersMode _saveMode;
 
-        public override void Initialize(InitializeInfo info)
+        public override uint Initialize(InitializeInfo info)
         {
-            HighestVersion = IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _intermediateInfo);
+            return IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _intermediateInfo);
         }
 
         public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version)

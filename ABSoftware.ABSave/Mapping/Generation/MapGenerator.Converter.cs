@@ -47,7 +47,7 @@ namespace ABCo.ABSave.Mapping.Generation
             ApplyItem(converter, type);
 
             // Call the user initialization
-            converter.Initialize(new InitializeInfo(type, this));
+            converter.HighestVersion = converter.Initialize(new InitializeInfo(type, this));
 
             // Setup the backing information for the converter.
             converter._allInheritanceAttributes =

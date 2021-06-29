@@ -33,12 +33,13 @@ namespace ABCo.ABSave.Converters
             return false;
         }
 
-        public override void Initialize(InitializeInfo info)
+        public override uint Initialize(InitializeInfo info)
         {
-            if (_info.Type != ArrayType.Unknown) return;
+            if (_info.Type != ArrayType.Unknown) return 0;
 
             Type? elemType = info.Type.GetElementType();
             PopulateTypeInfo(ref _info, info.GetMap(elemType!), info.Type);
+            return 0;
         }
 
         static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, Type type)

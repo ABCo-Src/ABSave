@@ -26,7 +26,7 @@ namespace ABCo.ABSave.Converters
     {
         PrimitiveType _typeCode;
 
-        public override void Initialize(InitializeInfo info)
+        public override uint Initialize(InitializeInfo info)
         {
             TypeCode typeCode = Type.GetTypeCode(info.Type);
 
@@ -35,6 +35,7 @@ namespace ABCo.ABSave.Converters
                 throw new Exception("Unsupported primitive provided. Please note that ABSave does not currently support .NET 5 and above types.");
 
             _typeCode = (PrimitiveType)typeCode;
+            return 0;
         }
 
         public override bool CheckType(CheckTypeInfo info) => info.Type.IsPrimitive;

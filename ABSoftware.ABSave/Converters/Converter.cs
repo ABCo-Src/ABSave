@@ -28,7 +28,7 @@ namespace ABCo.ABSave.Converters
         /// <summary>
         /// Initializes a given converter for a given type.
         /// </summary>
-        public virtual void Initialize(InitializeInfo info) { }
+        public virtual uint Initialize(InitializeInfo info) => 0;
 
         /// <summary>
         /// Check whether the converter supports a given type, used for non-exact types.
