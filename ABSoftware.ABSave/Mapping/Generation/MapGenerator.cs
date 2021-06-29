@@ -1,6 +1,7 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Generation.Converters;
 using ABCo.ABSave.Mapping.Generation.General;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using ABCo.ABSave.Mapping.Generation.Object;

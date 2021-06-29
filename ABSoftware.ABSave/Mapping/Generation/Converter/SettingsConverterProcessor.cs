@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace ABCo.ABSave.Mapping.Generation
+namespace ABCo.ABSave.Mapping.Generation.Converters
 {
     /// <summary>
     /// Takes a list and organises them into non-exact and exact converters that can then

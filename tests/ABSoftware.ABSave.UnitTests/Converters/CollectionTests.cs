@@ -3,6 +3,7 @@ using ABCo.ABSave.Converters;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Converters;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections;

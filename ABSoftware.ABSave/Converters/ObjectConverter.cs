@@ -5,6 +5,7 @@ using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Converters;
 using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using ABCo.ABSave.Mapping.Generation.Object;
 using ABCo.ABSave.Serialization;

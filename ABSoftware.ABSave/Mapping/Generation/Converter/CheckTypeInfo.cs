@@ -1,7 +1,7 @@
 ﻿using ABCo.ABSave.Configuration;
 using System;
 
-namespace ABCo.ABSave.Mapping.Generation
+namespace ABCo.ABSave.Mapping.Generation.Converters
 {
     public struct CheckTypeInfo
     {

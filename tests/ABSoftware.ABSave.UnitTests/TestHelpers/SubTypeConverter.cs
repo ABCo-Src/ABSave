@@ -2,7 +2,7 @@
 using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description.Attributes.Converters;
-using ABCo.ABSave.Mapping.Generation;
+using ABCo.ABSave.Mapping.Generation.Converters;
 using ABCo.ABSave.Serialization;
 using System;
 
