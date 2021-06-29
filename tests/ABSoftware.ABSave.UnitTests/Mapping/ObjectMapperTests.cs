@@ -65,7 +65,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var item = Generator.GetMap(type);
             var parent = Generator.GetMap(parentType);
 
-            MemberAccessorGenerator.DoGeneratePropertyAccessor(ref dest, item, parent.InnerItem, info);
+            MemberAccessorGenerator.DoGeneratePropertyAccessor(ref dest, item, parent.Converter, info);
         }
 
         [TestMethod]
@@ -209,7 +209,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             Setup();
 
             // Prepare the class for mapping.
-            var item = (ObjectConverter)Generator.GetMap(typeof(VersionedClass)).InnerItem;
+            var item = (ObjectConverter)Generator.GetMap(typeof(VersionedClass)).Converter;
 
             // Create a new version - version 1.
             {
@@ -276,7 +276,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var pos = Generator.GetMap(typeof(VersionedClass));
 
-            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetVersionInfo((ObjectConverter)pos.InnerItem, 4));
+            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetVersionInfo((ObjectConverter)pos.Converter, 4));
         }
     }
 }

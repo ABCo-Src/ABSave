@@ -97,7 +97,7 @@ namespace ABCo.ABSave.Deserialization
 
         object DeserializeItemNoSetup(MapItemInfo info, bool skipHeader)
         {
-            MapItem item = info.InnerItem;
+            MapItem item = info.Converter;
             ABSaveUtils.WaitUntilNotGenerating(item);
 
             return item switch

@@ -91,7 +91,7 @@ namespace ABCo.ABSave.Serialization
 
         void SerializeItemNoSetup(object obj, MapItemInfo info, ref BitTarget header, bool skipHeader)
         {
-            MapItem item = info.InnerItem;
+            MapItem item = info.Converter;
             ABSaveUtils.WaitUntilNotGenerating(item);
 
             switch (item)

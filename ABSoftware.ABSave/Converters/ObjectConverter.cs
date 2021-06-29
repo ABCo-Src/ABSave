@@ -52,7 +52,7 @@ namespace ABCo.ABSave.Converters
             try
             {
                 var map = info.GetMap(attr.BaseType);
-                if (map.InnerItem is ObjectConverter converter)
+                if (map.Converter is ObjectConverter converter)
                     return converter;
             }
             catch (UnserializableTypeException) { }

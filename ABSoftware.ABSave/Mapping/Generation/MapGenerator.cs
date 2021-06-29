@@ -44,7 +44,7 @@ namespace ABCo.ABSave.Mapping.Generation
             MapItem? existing = GetExistingOrAddNull(type);
             if (existing is RuntimeMapItem) return new MapItemInfo(existing, isNullable);
 
-            MapItem newItem = existing ?? GenerateMap(type, isNullable).InnerItem;
+            MapItem newItem = existing ?? GenerateMap(type, isNullable).Converter;
 
             // Now wrap it in a runtime item.
             RuntimeMapItem newRuntime;

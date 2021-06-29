@@ -20,7 +20,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var pos = Generator.GetMap(typeof(AllPrimitiveClass));
 
             // See if it picks up on the existing item.
-            Assert.AreEqual(pos.InnerItem, Generator.GetMap(typeof(AllPrimitiveClass)).InnerItem);
+            Assert.AreEqual(pos.Converter, Generator.GetMap(typeof(AllPrimitiveClass)).Converter);
         }
 
         [TestMethod]
@@ -50,7 +50,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var pos = Generator.GetMap(typeof(AllPrimitiveClass));
 
-            Assert.AreEqual(pos.InnerItem, Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass)));
+            Assert.AreEqual(pos.Converter, Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass)));
         }
 
         class EmptyMapItem : MapItem { }
@@ -153,7 +153,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var pos = Generator.GetRuntimeMap(typeof(AllPrimitiveClass));
             Assert.IsFalse(pos.IsNullable);
 
-            Assert.IsInstanceOfType(pos.InnerItem, typeof(RuntimeMapItem));
+            Assert.IsInstanceOfType(pos.Converter, typeof(RuntimeMapItem));
         }
 
         [TestMethod]
@@ -164,7 +164,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var pos3Expected = Generator.GetMap(typeof(AllPrimitiveStruct));
             var pos3Actual = Generator.GetRuntimeMap(typeof(AllPrimitiveStruct));
 
-            Assert.AreEqual(pos3Expected.InnerItem, ((RuntimeMapItem)pos3Actual.InnerItem).InnerItem);
+            Assert.AreEqual(pos3Expected.Converter, ((RuntimeMapItem)pos3Actual.Converter).InnerItem);
         }
 
         [TestMethod]
