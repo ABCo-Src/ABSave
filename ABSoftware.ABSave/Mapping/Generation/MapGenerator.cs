@@ -1,5 +1,8 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Converters;
 using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Generation.General;
+using ABCo.ABSave.Mapping.Generation.Inheritance;
 using ABCo.ABSave.Mapping.Generation.Object;
 using System;
 using System.Collections.Generic;
@@ -34,32 +37,79 @@ namespace ABCo.ABSave.Mapping.Generation
             return new MapItemInfo(item, isNullable);
         }
 
+        internal Converter? TryGenerateConverter(Type type)
+        {
+            ABSaveSettings? settings = _map.Settings;
+
+            if (type.IsGenericType)
+            {
+                Type? genericType = type.GetGenericTypeDefinition();
+                if (settings.ExactConverters.TryGetValue(genericType, out ConverterInfo? currentGenericConv))
+                    return UseConverter(GetConverterInstance(currentGenericConv), currentGenericConv.ConverterId, type);
+            }
+
+            if (settings.ExactConverters.TryGetValue(type, out ConverterInfo? currentConv))
+                return UseConverter(GetConverterInstance(currentConv), currentConv.ConverterId, type);
+
+            // Non-exact converter
+            if (settings.NonExactConverters != null)
+            {
+                for (int i = settings.NonExactConverters.Count - 1; i >= 0; i--)
+                {
+                    ConverterInfo? converterInfo = settings.NonExactConverters[i];
+                    Converter? converter = GetConverterInstance(converterInfo);
+
+                    if (converter.CheckType(new CheckTypeInfo(type, settings)))
+                        return UseConverter(converter, converterInfo.ConverterId, type);
+                }
+            }
+
+            return null;
+        }
+
+        internal Converter UseConverter(Converter converter, int id, Type type)
+        {
+            // Remove it from the cache.
+            _converterCache[id] = null;
+
+            // Apply the converter
+            ApplyItem(converter, type);
+
+            // Call the user initialization
+            converter._highestVersion = converter.Initialize(new InitializeInfo(type, this));
+
+            // Setup the backing information for the converter.
+            converter._allInheritanceAttributes =
+                InheritanceHandler.GetInheritanceAttributes(type, ref converter._highestVersion);
+
+            VersionCacheHandler.SetupVersionCacheOnItem(converter, this);
+            return converter;
+        }
+
+        // CONVERTER CREATION:
+        // In order for us to use "CheckType" when we check whether a converter will convert a given type, we need
+        // to actually have an instance of that converter in the first place.
+        //
+        // The simple way to do that would be to simply make a new instance of a converter every single time
+        // we want to run "CheckType".
+        //
+        // However, that means we're creating potentially A LOT of converters that will never be used, just to run
+        // "CheckType". So, instead of doing that, we're going to cache instances in here. The first time we go to
+        // "CheckType" on a converter, we create an instance in here.
+        //
+        // And if the "CheckType" fails, we will keep that instance in the cache for the next time we want to check.
+        //
+        // And if the "CheckType" succeeds, that means we'll be using that instance in the final map, and we'll therefore
+        // remove it from the cache for a new one to be created the next time "CheckType" in executed.
+        //
+        // (The indicies in this array line up to the ID of a converter. So index 1 will be the cache for the converter
+        // with an ID of 1)
+        Converter?[] _converterCache = null!;
+
+        Converter GetConverterInstance(ConverterInfo info) =>
+            _converterCache[info.ConverterId] ??= (Converter)Activator.CreateInstance(info.ConverterType)!;
+
         internal MapItemInfo GetRuntimeMap(Type type) => GetMap(type);
-        //{
-        //    bool isNullable = TryExpandNullable(ref type);
-
-        //    Converter? existing = GetExistingOrAddNull(type);
-        //    if (existing is RuntimeMapItem) return new MapItemInfo(existing, isNullable);
-
-        //    Converter newItem = existing ?? GenerateMap(type, isNullable).Converter;
-
-        //     Now wrap it in a runtime item.
-        //    RuntimeMapItem newRuntime;
-        //    lock (Map.AllTypes)
-        //    {
-        //         Check one more time to make sure the runtime item wasn't generated since we last looked at it.
-        //        if (Map.AllTypes[type] is RuntimeMapItem itm)
-        //            return new MapItemInfo(itm, isNullable);
-
-        //         Generate the new item!
-        //        newRuntime = new RuntimeMapItem(newItem);
-        //        ApplyItemProperties(newRuntime, type);
-        //        Map.AllTypes[type] = newRuntime;
-        //    }
-
-        //    newRuntime._isGenerating = false;
-        //    return new MapItemInfo(newRuntime, isNullable);
-        //}
 
         // ABSave Concurrent Generation System:
         //
@@ -87,30 +137,6 @@ namespace ABCo.ABSave.Mapping.Generation
         //
         // This is represented by the item being null.
         internal Converter? GetExistingOrAddNull(Type type) => MappingHelpers.GetExistingOrAddNull(_map.AllTypes, type);
-
-        internal Converter? GetExistingRuntimeOrAddNull(Type type)
-        {
-            while (true)
-            {
-                // We must lock here to ensure two threads don't both try to generate the same thing twice.
-                lock (_map.AllTypes)
-                {
-                    if (_map.AllTypes.TryGetValue(type, out Converter? val))
-                    {
-                        // Allocating, try again
-                        if (val == null)
-                            goto Retry;
-                    }
-
-                    // Start generating this item.
-                    _map.AllTypes[type] = null;
-                    return null;
-                }
-
-            Retry:
-                Thread.Yield(); // Wait a little bit before retrying.
-            }
-        }
 
         // Adds the current item to the dictionary and fills in its details.
         internal void ApplyItem(Converter item, Type type)

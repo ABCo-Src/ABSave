@@ -24,8 +24,6 @@ namespace ABCo.ABSave.Converters
 
             if (info.Type == typeof(Array))
             {
-                if (!info.Settings.BypassDangerousTypeChecking) throw new DangerousTypeException("a general 'Array' type that could contain any type of element");
-
                 _info.Type = ArrayType.Unknown;
                 return true;
             }

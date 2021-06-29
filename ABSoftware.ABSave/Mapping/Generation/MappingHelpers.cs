@@ -55,6 +55,7 @@ namespace ABCo.ABSave.Mapping.Generation
         }
 
         public static TValue? GetExistingOrAddNull<TKey, TValue>(Dictionary<TKey, TValue?> dict, TKey key)
+            where TKey : notnull
             where TValue : class
         {
             while (true)

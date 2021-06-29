@@ -43,14 +43,13 @@ namespace ABCo.ABSave.Configuration
             bool lazyBitHandling = _lazyBitHandling ?? template.LazyBitHandling;
             bool useUTF8 = _useUTF8 ?? template.UseUTF8;
             bool useLittleEndian = _useLittleEndian ?? template.UseLittleEndian;
-            bool bypassDangerousTypeChecking = _bypassDangerousTypeChecking ?? template.BypassDangerousTypeChecking;
 
             // Process converters
             EnsureConvertersListInitialized();
             SettingsConverterProcessor.Split(_converters!, out IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, out IReadOnlyList<ConverterInfo>? nonExactConverter);
 
             // Create the new settings.
-            return new ABSaveSettings(lazyBitHandling, useUTF8, bypassDangerousTypeChecking, useLittleEndian,
+            return new ABSaveSettings(lazyBitHandling, useUTF8, useLittleEndian,
                 _converters!.Count, exactConverters, nonExactConverter);
         }
 
