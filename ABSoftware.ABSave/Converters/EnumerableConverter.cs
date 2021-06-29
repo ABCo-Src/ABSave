@@ -26,14 +26,15 @@ namespace ABCo.ABSave.Converters
         public Type? _valueType;
         public MapItemInfo _valueMap;
 
-        public override void Initialize(InitializeInfo info)
+        public override uint Initialize(InitializeInfo info)
         {
             // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
-            if (TryHandleDirectTypes(info, info.Type)) return;
+            if (TryHandleDirectTypes(info, info.Type)) return 0;
 
             // Work out what category this type falls under.
             CollectionCategory category = DetectCollectionType(info.Type.GetInterfaces(), out Type elementOrKeyType, out Type? valueType);
             SetStateFromCategory(info, category, elementOrKeyType, valueType);
+            return 0;
         }
 
         public override bool CheckType(CheckTypeInfo info) => typeof(IEnumerable).IsAssignableFrom(info.Type);

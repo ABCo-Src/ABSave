@@ -43,7 +43,10 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             return new SubWithoutHeader();
         }
 
-        public override void Initialize(InitializeInfo info) =>
+        public override uint Initialize(InitializeInfo info)
+        {
             _writesToHeader = info.Type == typeof(SubWithHeader);
+            return 0;
+        }
     }
 }

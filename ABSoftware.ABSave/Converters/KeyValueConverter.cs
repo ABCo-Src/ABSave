@@ -64,7 +64,7 @@ namespace ABCo.ABSave.Converters
             return new DictionaryEntry(key, value);
         }
 
-        public override void Initialize(InitializeInfo info)
+        public override uint Initialize(InitializeInfo info)
         {
             _isGeneric = info.Type.IsGenericType;
             // KeyValuePair<,>
@@ -81,6 +81,8 @@ namespace ABCo.ABSave.Converters
             {
                 _keyMap = _valueMap = info.GetMap(typeof(object));
             }
+
+            return 0;
         }
     }
 }

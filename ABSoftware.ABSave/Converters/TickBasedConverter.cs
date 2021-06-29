@@ -36,8 +36,11 @@ namespace ABCo.ABSave.Converters
 
         public static long DeserializeTicks(ABSaveDeserializer deserializer) => deserializer.ReadInt64();
 
-        public override void Initialize(InitializeInfo info) =>
+        public override uint Initialize(InitializeInfo info)
+        {
             _type = info.Type == typeof(DateTime) ? TicksType.DateTime : TicksType.TimeSpan;
+            return 0;
+        }
 
         enum TicksType
         {
