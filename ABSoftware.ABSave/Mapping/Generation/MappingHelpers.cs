@@ -26,7 +26,7 @@ namespace ABCo.ABSave.Mapping.Generation
         public static void ProcessVersionedAttributes<T>(ref uint highestVersion, T[] attr) where T : AttributeWithVersion
         {
             // Sort them by their "FromVer".
-            Array.Sort<AttributeWithVersion>(attr, Comparer<AttributeWithVersion>.Default);
+            Array.Sort(attr, Comparer<AttributeWithVersion>.Default);
 
             for (int i = 0; i < attr.Length; i++)
             {
@@ -43,7 +43,7 @@ namespace ABCo.ABSave.Mapping.Generation
             for (int i = 0; i < attributes.Length; i++)
             {
                 T currentAttribute = attributes[i];
-                if (currentAttribute.FromVer <= version && currentAttribute.ToVer >= version)
+                if (currentAttribute.FromVer <= version && currentAttribute.ToVer > version)
                     return currentAttribute;
             }
 
