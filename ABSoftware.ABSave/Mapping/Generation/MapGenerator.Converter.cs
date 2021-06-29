@@ -10,7 +10,7 @@ namespace ABCo.ABSave.Mapping.Generation
     {
         internal Converter? TryGenerateConverter(Type type)
         {
-            ABSaveSettings? settings = Map.Settings;
+            ABSaveSettings? settings = _map.Settings;
 
             if (type.IsGenericType)
             {

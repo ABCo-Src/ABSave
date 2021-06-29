@@ -6,7 +6,7 @@ namespace ABCo.ABSave.Mapping.Generation
     public struct InitializeInfo
     {
         public Type Type { get; }
-        public ABSaveSettings Settings => _gen.Map.Settings;
+        public ABSaveSettings Settings => _gen._map.Settings;
 
         internal MapGenerator _gen;
 

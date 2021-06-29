@@ -151,14 +151,5 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var pos2 = Generator.GetMap(typeof(AllPrimitiveStruct?));
             Assert.IsTrue(pos2.IsNullable);
         }
-
-        [TestMethod]
-        public void Generate_SafetyChecks()
-        {
-            Setup();
-
-            Assert.ThrowsException<DangerousTypeException>(() => Generator.GetMap(typeof(object)));
-            Assert.ThrowsException<DangerousTypeException>(() => Generator.GetMap(typeof(ValueType)));
-        }
     }
 }

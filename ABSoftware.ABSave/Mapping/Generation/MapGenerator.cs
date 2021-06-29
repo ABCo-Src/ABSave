@@ -9,8 +9,7 @@ namespace ABCo.ABSave.Mapping.Generation
 {
     public partial class MapGenerator
     {
-        internal ABSaveMap Map = null!;
-        internal MapItemInfo CurrentItem;
+        internal ABSaveMap _map = null!;
 
         // A list of all the property members to still have their accessor processed. These get
         // parallel processed at the very end of the generation process.
@@ -28,8 +27,6 @@ namespace ABCo.ABSave.Mapping.Generation
 
         MapItemInfo GenerateMap(Type type, bool isNullable)
         {
-            EnsureTypeSafety(type);
-
             Converter? item = TryGenerateConverter(type);
             if (item == null) throw new UnserializableTypeException(type);
 
@@ -89,16 +86,16 @@ namespace ABCo.ABSave.Mapping.Generation
         // we're going to wait (keep retrying again and again) until it's finally been allocated a place.
         //
         // This is represented by the item being null.
-        internal Converter? GetExistingOrAddNull(Type type) => MappingHelpers.GetExistingOrAddNull(Map.AllTypes, type);
+        internal Converter? GetExistingOrAddNull(Type type) => MappingHelpers.GetExistingOrAddNull(_map.AllTypes, type);
 
         internal Converter? GetExistingRuntimeOrAddNull(Type type)
         {
             while (true)
             {
                 // We must lock here to ensure two threads don't both try to generate the same thing twice.
-                lock (Map.AllTypes)
+                lock (_map.AllTypes)
                 {
-                    if (Map.AllTypes.TryGetValue(type, out Converter? val))
+                    if (_map.AllTypes.TryGetValue(type, out Converter? val))
                     {
                         // Allocating, try again
                         if (val == null)
@@ -106,7 +103,7 @@ namespace ABCo.ABSave.Mapping.Generation
                     }
 
                     // Start generating this item.
-                    Map.AllTypes[type] = null;
+                    _map.AllTypes[type] = null;
                     return null;
                 }
 
@@ -118,26 +115,12 @@ namespace ABCo.ABSave.Mapping.Generation
         // Adds the current item to the dictionary and fills in its details.
         internal void ApplyItem(Converter item, Type type)
         {
-            ApplyItemProperties(item, type);
-
-            lock (Map.AllTypes)
-                Map.AllTypes[type] = item;
-        }
-
-        internal static void ApplyItemProperties(Converter item, Type type)
-        {
             item.ItemType = type;
             item.IsValueItemType = type.IsValueType;
             item._isGenerating = true;
-        }
 
-        void EnsureTypeSafety(Type type)
-        {
-            if (!Map.Settings.BypassDangerousTypeChecking)
-            {
-                if (type == typeof(object)) throw new DangerousTypeException("an 'object' member");
-                if (type == typeof(ValueType)) throw new DangerousTypeException("a 'ValueType' member");
-            }
+            lock (_map.AllTypes)
+                _map.AllTypes[type] = item;
         }
 
         static bool TryExpandNullable(ref Type expanded)
@@ -153,7 +136,7 @@ namespace ABCo.ABSave.Mapping.Generation
 
         internal void Initialize(ABSaveMap map)
         {
-            Map = map;
+            _map = map;
             _converterCache = new Converter[map.Settings.ConverterCount];
         }
 
