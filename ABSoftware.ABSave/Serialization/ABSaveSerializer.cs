@@ -94,20 +94,10 @@ namespace ABCo.ABSave.Serialization
             MapItem item = info.Converter;
             ABSaveUtils.WaitUntilNotGenerating(item);
 
-            switch (item)
-            {
-                case Converter converter:
-                    SerializeConverterItem(obj, converter, ref header, skipHeader);
-                    break;
-                case RuntimeMapItem runtime:
-                    SerializeItemNoSetup(obj, new MapItemInfo(runtime.InnerItem, info.IsNullable), ref header, skipHeader);
-                    break;
-                default:
-                    throw new Exception("ABSAVE: Unrecognized map item.");
-            }
+            SerializeConverter(obj, info.Converter, ref header, skipHeader);
         }
 
-        void SerializeConverterItem(object obj, Converter converter, ref BitTarget header, bool skipHeader)
+        void SerializeConverter(object obj, Converter converter, ref BitTarget header, bool skipHeader)
         {
             Type? actualType = obj.GetType();
 

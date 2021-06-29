@@ -6,7 +6,7 @@ namespace ABCo.ABSave.Mapping
     public struct MapItemInfo
     {
         public bool IsNullable { get; internal set; }
-        public MapItem Converter;
+        public Converter Converter;
 
         /// <summary>
         /// Gets the item type this info represents, including the nullability.
@@ -26,16 +26,6 @@ namespace ABCo.ABSave.Mapping
         public override int GetHashCode() => base.GetHashCode();
 
         internal MapItemInfo(MapItem item, bool isNullable) => (Converter, IsNullable) = (item, isNullable);
-    }
-
-    public abstract class MapItem
-    {
-        public Type ItemType = null!;
-        public bool IsValueItemType;
-
-        internal volatile bool _isGenerating;
-        internal bool _hasOneVersion;
-        public uint HighestVersion;
     }
 
     public class VersionInfo
