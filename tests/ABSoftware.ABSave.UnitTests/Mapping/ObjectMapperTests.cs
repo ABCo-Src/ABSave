@@ -65,7 +65,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var item = Generator.GetMap(type);
             var parent = Generator.GetMap(parentType);
 
-            MemberAccessorGenerator.DoGeneratePropertyAccessor(ref dest, item, parent.InnerItem, info);
+            MemberAccessorGenerator.DoGeneratePropertyAccessor(ref dest, item, parent.Converter, info);
         }
 
         [TestMethod]
@@ -139,77 +139,13 @@ namespace ABCo.ABSave.UnitTests.Mapping
             VerifyRuns<ClassWithUnspportedForFastAccessorValueType, AllPrimitiveStruct>(ref item.Accessor);
         }
 
-        //[TestMethod]
-        //public void MapObject_Empty()
-        //{
-        //    Setup();
-
-        //    var properties = new IntermediateObjInfo()
-        //    {
-        //        UnmappedCount = 0,
-        //        ClassType = typeof(EmptyClass),
-        //        HighestVersion = 0,
-        //        SortedMembers = null,
-        //        RawMembers = Array.Empty<ObjectTranslatedItemInfo>()
-        //    };
-
-        //    // Prepare the class for mapping.
-        //    var pos = Generator.CreateItem(typeof(EmptyClass), Map.GenInfo.AllTypes);
-
-        //    // Run the test
-        //    ObjectMapper.GenerateNewObject(properties, Generator, pos);
-
-        //    // Assert the results
-        //    ref MapItem item = ref Generator.Map.GetItemAt(pos);
-        //    ref ObjectMapItem objItem = ref item.Main.Object;
-
-        //    Assert.AreEqual(1, objItem.Versions.Count);
-        //    Assert.AreEqual(0, objItem.Versions[0].Length);
-        //}
-
-        //[TestMethod]
-        //public void MapObject_OneVersion()
-        //{
-        //    Setup();
-
-        //    var properties = new IntermediateObjInfo()
-        //    {
-        //        UnmappedCount = 2,
-        //        ClassType = typeof(PropertyClass),
-        //        HighestVersion = 0,
-        //        SortedMembers = null,
-        //        RawMembers = new ObjectTranslatedItemInfo[]
-        //        {
-        //            new ObjectTranslatedItemInfo() { Order = 0, MemberType = typeof(string), Info = typeof(PropertyClass).GetProperty(nameof(PropertyClass.A)) },
-        //            new ObjectTranslatedItemInfo() { Order = 1, MemberType = typeof(bool), Info = typeof(PropertyClass).GetProperty(nameof(PropertyClass.B)) },
-        //        }
-        //    };
-
-        //    // Prepare the class for mapping.
-        //    var pos = Generator.CreateItem(typeof(PropertyClass), Map.GenInfo.AllTypes);
-
-        //    // Run the test
-        //    ObjectMapper.GenerateNewObject(properties, Generator, pos);
-
-        //    // Assert the results
-        //    ref MapItem item = ref Generator.Map.GetItemAt(pos);
-        //    ref ObjectMapItem objItem = ref item.Main.Object;
-
-        //    Assert.AreEqual(1, objItem.Versions.Count);
-
-        //    var thisVersion = objItem.Versions[0];
-
-        //    Assert.AreEqual(Generator.GetMap(typeof(string)), thisVersion[0].Map);
-        //    Assert.AreEqual(Generator.GetMap(typeof(bool)), thisVersion[1].Map);
-        //}
-
         [TestMethod]
         public void GetVersion_NewAndExisting()
         {
             Setup();
 
             // Prepare the class for mapping.
-            var item = (ObjectConverter)Generator.GetMap(typeof(VersionedClass)).InnerItem;
+            var item = (ObjectConverter)Generator.GetMap(typeof(VersionedClass)).Converter;
 
             // Create a new version - version 1.
             {
@@ -276,7 +212,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var pos = Generator.GetMap(typeof(VersionedClass));
 
-            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetVersionInfo((ObjectConverter)pos.InnerItem, 4));
+            Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetVersionInfo((ObjectConverter)pos.Converter, 4));
         }
     }
 }

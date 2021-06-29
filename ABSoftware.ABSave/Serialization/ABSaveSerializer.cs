@@ -91,23 +91,13 @@ namespace ABCo.ABSave.Serialization
 
         void SerializeItemNoSetup(object obj, MapItemInfo info, ref BitTarget header, bool skipHeader)
         {
-            MapItem item = info.InnerItem;
+            Converter item = info.Converter;
             ABSaveUtils.WaitUntilNotGenerating(item);
 
-            switch (item)
-            {
-                case Converter converter:
-                    SerializeConverterItem(obj, converter, ref header, skipHeader);
-                    break;
-                case RuntimeMapItem runtime:
-                    SerializeItemNoSetup(obj, new MapItemInfo(runtime.InnerItem, info.IsNullable), ref header, skipHeader);
-                    break;
-                default:
-                    throw new Exception("ABSAVE: Unrecognized map item.");
-            }
+            SerializeConverter(obj, info.Converter, ref header, skipHeader);
         }
 
-        void SerializeConverterItem(object obj, Converter converter, ref BitTarget header, bool skipHeader)
+        void SerializeConverter(object obj, Converter converter, ref BitTarget header, bool skipHeader)
         {
             Type? actualType = obj.GetType();
 
@@ -141,7 +131,7 @@ namespace ABCo.ABSave.Serialization
         }
 
         // Returns: Whether the type has changed.
-        bool WriteHeaderNullAndInheritance(Type actualType, MapItem item, ref BitTarget target)
+        bool WriteHeaderNullAndInheritance(Type actualType, Converter item, ref BitTarget target)
         {
             target.WriteBitOn(); // Null
 

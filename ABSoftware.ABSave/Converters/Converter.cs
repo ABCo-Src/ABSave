@@ -9,11 +9,20 @@ using System.Runtime.InteropServices;
 
 namespace ABCo.ABSave.Converters
 {
-    public abstract class Converter : MapItem
+    public abstract class Converter
     {
+        public Type ItemType { get; internal set; } = null!;
+        public bool IsValueItemType { get; internal set; }
+
+        internal volatile bool _isGenerating;
+        internal bool _hasOneVersion;
+        internal uint _highestVersion;
+
+        public uint HighestVersion => _highestVersion;
+
         internal SaveInheritanceAttribute[]? _allInheritanceAttributes = null;
 
-        internal ConverterVersionCache VersionCache;
+        internal ConverterVersionCache _versionCache;
 
         [StructLayout(LayoutKind.Explicit)]
         internal struct ConverterVersionCache

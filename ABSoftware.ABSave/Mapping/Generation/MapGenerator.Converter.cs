@@ -8,7 +8,7 @@ namespace ABCo.ABSave.Mapping.Generation
 {
     public partial class MapGenerator
     {
-        internal MapItem? TryGenerateConverter(Type type)
+        internal Converter? TryGenerateConverter(Type type)
         {
             ABSaveSettings? settings = Map.Settings;
 
@@ -38,7 +38,7 @@ namespace ABCo.ABSave.Mapping.Generation
             return null;
         }
 
-        internal MapItem UseConverter(Converter converter, int id, Type type)
+        internal Converter UseConverter(Converter converter, int id, Type type)
         {
             // Remove it from the cache.
             _converterCache[id] = null;
@@ -47,11 +47,11 @@ namespace ABCo.ABSave.Mapping.Generation
             ApplyItem(converter, type);
 
             // Call the user initialization
-            converter.HighestVersion = converter.Initialize(new InitializeInfo(type, this));
+            converter._highestVersion = converter.Initialize(new InitializeInfo(type, this));
 
             // Setup the backing information for the converter.
             converter._allInheritanceAttributes =
-                InheritanceHandler.GetInheritanceAttributes(type, ref converter.HighestVersion);
+                InheritanceHandler.GetInheritanceAttributes(type, ref converter._highestVersion);
 
             VersionCacheHandler.SetupVersionCacheOnItem(converter, this);
             return converter;

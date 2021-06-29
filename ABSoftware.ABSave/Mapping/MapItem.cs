@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 
 namespace ABCo.ABSave.Mapping
@@ -6,36 +7,26 @@ namespace ABCo.ABSave.Mapping
     public struct MapItemInfo
     {
         public bool IsNullable { get; internal set; }
-        public MapItem InnerItem;
+        public Converter Converter;
 
         /// <summary>
         /// Gets the item type this info represents, including the nullability.
         /// </summary>
         public Type GetItemType() =>
-            IsNullable ? typeof(Nullable<>).MakeGenericType(InnerItem.ItemType) : InnerItem.ItemType;
+            IsNullable ? typeof(Nullable<>).MakeGenericType(Converter.ItemType) : Converter.ItemType;
 
-        public bool IsValueTypeItem => IsNullable || InnerItem.IsValueItemType;
+        public bool IsValueTypeItem => IsNullable || Converter.IsValueItemType;
 
         public override bool Equals(object? obj) => obj is MapItemInfo info && this == info;
         public static bool operator ==(MapItemInfo left, MapItemInfo right) =>
-            left.IsNullable == right.IsNullable && left.InnerItem == right.InnerItem;
+            left.IsNullable == right.IsNullable && left.Converter == right.Converter;
 
         public static bool operator !=(MapItemInfo left, MapItemInfo right) =>
-           left.IsNullable != right.IsNullable || left.InnerItem != right.InnerItem;
+           left.IsNullable != right.IsNullable || left.Converter != right.Converter;
 
         public override int GetHashCode() => base.GetHashCode();
 
-        internal MapItemInfo(MapItem item, bool isNullable) => (InnerItem, IsNullable) = (item, isNullable);
-    }
-
-    public abstract class MapItem
-    {
-        public Type ItemType = null!;
-        public bool IsValueItemType;
-
-        internal volatile bool _isGenerating;
-        internal bool _hasOneVersion;
-        public uint HighestVersion;
+        internal MapItemInfo(Converter item, bool isNullable) => (Converter, IsNullable) = (item, isNullable);
     }
 
     public class VersionInfo
@@ -55,19 +46,6 @@ namespace ABCo.ABSave.Mapping
             UsesHeader = usesHeader;
             _inheritanceInfo = inheritanceInfo;
         }
-    }
-
-    /// <summary>
-    /// Represents a map item that was retrieved during serialization-time. It has extra code-gen information as map items
-    /// retrieved at serialization-time won't have been code-generated as a part of the main type.
-    /// </summary>
-    internal sealed class RuntimeMapItem : MapItem
-    {
-        internal MapItem InnerItem;
-
-        public RuntimeMapItem(MapItem innerItem) => InnerItem = innerItem;
-
-        // TODO: Add code-gen details here.
     }
 
     /// <summary>
