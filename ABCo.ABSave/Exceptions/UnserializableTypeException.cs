@@ -2,7 +2,7 @@
 
 namespace ABCo.ABSave.Exceptions
 {
-    public class UnserializableTypeException : Exception
+    public class UnserializableTypeException : ABSaveException
     {
         public UnserializableTypeException(Type type)
             : base($"Unable to create a map for the type, because the type '{type.Name}' does not have a converter, and is not marked with the 'SaveMembers' attribute. " +
