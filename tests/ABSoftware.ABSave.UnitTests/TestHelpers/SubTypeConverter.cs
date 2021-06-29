@@ -32,23 +32,13 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         {
             if (_writesToHeader)
             {
-                if (!header.ReadBit())
-                {
-                    throw new Exception("Sub deserialization failed.");
-                }
-
-                if (header.Deserializer.ReadByte() != OUTPUT_BYTE)
-                {
-                    throw new Exception("Sub deserialization failed.");
-                }
+                if (!header.ReadBit()) throw new Exception("Sub deserialization failed.");
+                if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
 
                 return new SubWithHeader();
             }
 
-            if (header.Deserializer.ReadByte() != OUTPUT_BYTE)
-            {
-                throw new Exception("Sub deserialization failed.");
-            }
+            if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
 
             return new SubWithoutHeader();
         }

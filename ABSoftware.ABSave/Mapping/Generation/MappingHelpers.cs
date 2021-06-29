@@ -1,4 +1,6 @@
 ﻿using ABCo.ABSave.Mapping.Description.Attributes;
+using System;
+using System.Collections.Generic;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -18,6 +20,18 @@ namespace ABCo.ABSave.Mapping.Generation
             {
                 if (endVer > highestVersion)
                     highestVersion = endVer;
+            }
+        }
+
+        public static void ProcessVersionedAttributes<T>(ref uint highestVersion, T[] attr) where T : AttributeWithVersion
+        {
+            // Sort them by their "FromVer".
+            Array.Sort<AttributeWithVersion>(attr, Comparer<AttributeWithVersion>.Default);
+
+            for (int i = 0; i < attr.Length; i++)
+            {
+                AttributeWithVersion info = attr[i];
+                UpdateHighestVersionFromRange(ref highestVersion, info.FromVer, info.ToVer);
             }
         }
 

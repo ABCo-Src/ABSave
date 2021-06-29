@@ -22,7 +22,7 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             intermediateInfo = new IntermediateObjectInfo
             {
                 Members = IntermediateReflectionMapper.FillInfo(ref ctx),
-                BaseMemberAttributes = GetBaseMembersAttributes(type)
+                BaseMemberAttributes = GetBaseMembersAttributes(ref ctx, type)
             };
 
             if (ctx.TranslationCurrentOrderInfo == -1)
@@ -52,7 +52,13 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             MappingHelpers.UpdateHighestVersionFromRange(ref ctx.HighestVersion, newItem.StartVer, newItem.EndVer);
         }
 
-        internal static SaveBaseMembersAttribute[] GetBaseMembersAttributes(Type type) =>
-            (SaveBaseMembersAttribute[])type.GetCustomAttributes<SaveBaseMembersAttribute>(false);
+        internal static SaveBaseMembersAttribute[]? GetBaseMembersAttributes(ref IntermediateMappingContext ctx, Type type)
+        {
+            SaveBaseMembersAttribute[] attr = (SaveBaseMembersAttribute[])type.GetCustomAttributes<SaveBaseMembersAttribute>(false);
+            if (attr.Length == 0) return null;
+
+            MappingHelpers.ProcessVersionedAttributes(ref ctx.HighestVersion, attr);
+            return attr;
+        }
     }
 }

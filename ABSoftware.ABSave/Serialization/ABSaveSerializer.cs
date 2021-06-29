@@ -188,7 +188,7 @@ namespace ABCo.ABSave.Serialization
             switch (info.Mode)
             {
                 case SaveInheritanceMode.Index:
-                    if (!TryWriteListInheritance(info, actualType, ref header))
+                    if (!TryWriteListInheritance(info, actualType, false, ref header))
                         throw new UnsupportedSubTypeException(baseType, actualType);
 
                     break;
@@ -197,9 +197,7 @@ namespace ABCo.ABSave.Serialization
 
                     break;
                 case SaveInheritanceMode.IndexOrKey:
-                    if (TryWriteListInheritance(info, actualType, ref header))
-                        header.WriteBitOn();
-                    else
+                    if (!TryWriteListInheritance(info, actualType, true, ref header))
                     {
                         header.WriteBitOff();
                         WriteKeyInheritance(info, baseType, actualType, ref header);
@@ -212,10 +210,11 @@ namespace ABCo.ABSave.Serialization
             SerializeItemNoSetup(obj, GetRuntimeMapItem(actualType), ref header, true);
         }
 
-        bool TryWriteListInheritance(SaveInheritanceAttribute info, Type actualType, ref BitTarget header)
+        bool TryWriteListInheritance(SaveInheritanceAttribute info, Type actualType, bool writeOnIfSuccessful, ref BitTarget header)
         {
             if (info.IndexSerializeCache!.TryGetValue(actualType, out uint pos))
             {
+                if (writeOnIfSuccessful) header.WriteBitOn();
                 WriteCompressed(pos, ref header);
                 return true;
             }

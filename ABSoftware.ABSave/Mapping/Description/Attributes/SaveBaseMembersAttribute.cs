@@ -8,7 +8,7 @@ namespace ABCo.ABSave.Mapping.Description.Attributes
     /// Tells ABSave that it should serialize all the members of the given base type.
     /// If the type given also has a "SaveBaseMembers" attribute its base members will be serialized too.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = true)]
     public class SaveBaseMembersAttribute : AttributeWithVersion
     {
         public Type BaseType;

@@ -18,29 +18,11 @@ namespace ABCo.ABSave.Converters
     {
         internal IntermediateObjectInfo _intermediateInfo;
 
-        // If the attribute "SaveBaseMembersAttribute" is present, we need to get the object converter
-        // for that base so we can serialize it.
-        public ObjectConverter? ObjectBaseType;
-
         SaveMembersMode _saveMode;
 
         public override void Initialize(InitializeInfo info)
         {
             HighestVersion = IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _intermediateInfo);
-
-            // Set the "ObjectBaseType" by going through all the base types and finding the first one
-            // that's object converted and using that.
-            Type? currentType = info.Type.BaseType;
-            while (currentType != null)
-            {
-                if (ObjectEligibilityChecker.IsEligible(info.Type))
-                {
-                    ObjectBaseType = (ObjectConverter)info.GetMap(info.Type).InnerItem;
-                    break;
-                }
-
-                currentType = currentType.BaseType;
-            }
         }
 
         public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version)
@@ -69,7 +51,7 @@ namespace ABCo.ABSave.Converters
             // then this object clearly ISN'T a "SaveMembers" type like it should be and as such we'll fail.
             try
             {
-                var map = info.GetMap(info.Type);
+                var map = info.GetMap(attr.BaseType);
                 if (map.InnerItem is ObjectConverter converter)
                     return converter;
             }
@@ -91,13 +73,21 @@ namespace ABCo.ABSave.Converters
 
         void Serialize(object instance, VersionInfo info, ref BitTarget header)
         {
-            if (ObjectBaseType != null)
+            ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
+            ObjectMemberSharedInfo[]? members = versionInfo.Members;
+            ObjectConverter? baseType = versionInfo.BaseObject;
+
+            if (members.Length == 0 && baseType == null)
             {
-                header.Serializer.HandleVersionNumber(ObjectBaseType, out VersionInfo baseInfo, ref header);
-                ObjectBaseType.Serialize(instance, baseInfo, ref header);
+                header.Apply();
+                return;
             }
 
-            ObjectMemberSharedInfo[]? members = ((ObjectVersionInfo)info).Members;
+            if (baseType != null)
+            {
+                header.Serializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
+                baseType.Serialize(instance, baseInfo, ref header);
+            }
 
             for (int i = 0; i < members.Length; i++)
                 header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map, ref header);
@@ -112,13 +102,15 @@ namespace ABCo.ABSave.Converters
 
         void DeserializeInto(object obj, VersionInfo info, ref BitSource header)
         {
-            if (ObjectBaseType != null)
-            {
-                header.Deserializer.HandleVersionNumber(ObjectBaseType, out VersionInfo baseInfo, ref header);
-                ObjectBaseType.DeserializeInto(obj, baseInfo, ref header);
-            }
+            ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
+            ObjectMemberSharedInfo[]? members = versionInfo.Members;
+            ObjectConverter? baseType = versionInfo.BaseObject;
 
-            ObjectMemberSharedInfo[]? members = ((ObjectVersionInfo)info).Members;
+            if (baseType != null)
+            {
+                header.Deserializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
+                baseType.DeserializeInto(obj, baseInfo, ref header);
+            }
 
             for (int i = 0; i < members.Length; i++)
                 members[i].Accessor.Setter(obj, header.Deserializer.DeserializeItem(members[i].Map));
@@ -130,7 +122,7 @@ namespace ABCo.ABSave.Converters
             public ObjectConverter? BaseObject;
 
             public ObjectVersionInfo(ObjectMemberSharedInfo[] members, ObjectConverter? baseObject) => 
-                Members = members;
+                (Members, BaseObject) = (members, baseObject);
         }
     }
 }
