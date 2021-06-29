@@ -84,7 +84,7 @@ ABSaveConvert.Serialize(obj, map, stream);
 // Deserializing from a byte array:
 MyClass obj = ABSaveConvert.Deserialize&lt;MyClass&gt;(byteArray, map);
 
-// Deserializing from a byte array:
+// Deserializing from a stream:
 MyClass obj = ABSaveConvert.Deserialize&lt;MyClass&gt;(stream, map);
     </code></pre>
 
