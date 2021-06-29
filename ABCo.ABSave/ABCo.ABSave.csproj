@@ -5,17 +5,17 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ABSaveStrongName.snk</AssemblyOriginatorKeyFile>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>1.0.2-alpha</Version>
+    <Version>1.0-beta</Version>
     <Authors>ABPerson</Authors>
-    <Company>ABSoftware</Company>
-    <Description>Fix invalid testing in mapping</Description>
+    <Company>ABCo</Company>
+    <Description>A blazing-fast binary serializer with very small output powered by live IL injection!</Description>
     <Copyright></Copyright>
     <PackageProjectUrl>https://abco.live</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ABCo-Src/ABSave</RepositoryUrl>
     <PackageTags>Serializer, Deserializer, Binary, Converter, Type converter, Fast, IL generation</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Icon.png</PackageIcon>
-    <PackageReleaseNotes>Fix minor bug in "ABSave" helpers</PackageReleaseNotes>
+    <PackageReleaseNotes>Standardise public API</PackageReleaseNotes>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
