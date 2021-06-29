@@ -97,18 +97,13 @@ namespace ABCo.ABSave.Deserialization
 
         object DeserializeItemNoSetup(MapItemInfo info, bool skipHeader)
         {
-            MapItem item = info.Converter;
+            Converter item = info.Converter;
             ABSaveUtils.WaitUntilNotGenerating(item);
 
-            return item switch
-            {
-                Converter converter => DeserializeConverterItem(converter, skipHeader),
-                RuntimeMapItem runtime => DeserializeItemNoSetup(new MapItemInfo(runtime.InnerItem, info.IsNullable), skipHeader),
-                _ => throw new Exception("Unrecognized map item"),
-            };
+            return DeserializeConverter(info.Converter, skipHeader);
         }
 
-        private object DeserializeConverterItem(Converter converter, bool skipHeader)
+        private object DeserializeConverter(Converter converter, bool skipHeader)
         {
             // Handle the inheritance bit.
             bool sameType = true;
@@ -145,7 +140,7 @@ namespace ABCo.ABSave.Deserialization
         }
         
         // Returns: Whether the type has changed
-        bool ReadHeader(MapItem item)
+        bool ReadHeader(Converter item)
         {
             if (item.IsValueItemType) return false;
 

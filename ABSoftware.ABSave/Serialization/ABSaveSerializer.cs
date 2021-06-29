@@ -91,7 +91,7 @@ namespace ABCo.ABSave.Serialization
 
         void SerializeItemNoSetup(object obj, MapItemInfo info, ref BitTarget header, bool skipHeader)
         {
-            MapItem item = info.Converter;
+            Converter item = info.Converter;
             ABSaveUtils.WaitUntilNotGenerating(item);
 
             SerializeConverter(obj, info.Converter, ref header, skipHeader);
@@ -131,7 +131,7 @@ namespace ABCo.ABSave.Serialization
         }
 
         // Returns: Whether the type has changed.
-        bool WriteHeaderNullAndInheritance(Type actualType, MapItem item, ref BitTarget target)
+        bool WriteHeaderNullAndInheritance(Type actualType, Converter item, ref BitTarget target)
         {
             target.WriteBitOn(); // Null
 

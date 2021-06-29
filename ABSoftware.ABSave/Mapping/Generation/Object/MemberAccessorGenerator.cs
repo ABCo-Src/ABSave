@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ABCo.ABSave.Converters;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -14,20 +15,20 @@ namespace ABCo.ABSave.Mapping.Generation.Object
         {
             public ObjectMemberSharedInfo Info;
             public PropertyInfo Property;
-            public MapItem Parent;
+            public Converter Parent;
 
-            public PropertyToProcess(ObjectMemberSharedInfo info, PropertyInfo property, MapItem parent) =>
+            public PropertyToProcess(ObjectMemberSharedInfo info, PropertyInfo property, Converter parent) =>
                 (Info, Parent, Property) = (info, parent, property);
         }
 
-        internal static void GeneratePropertyAccessor(MapGenerator gen, ObjectMemberSharedInfo info, PropertyInfo property, MapItem parent) =>
+        internal static void GeneratePropertyAccessor(MapGenerator gen, ObjectMemberSharedInfo info, PropertyInfo property, Converter parent) =>
             // Queue it up to be processed later, where "DoGeneratePropertyAccessor" will be running parallel.
             gen.QueuePropertyForProcessing(new PropertyToProcess(info, property, parent));
 
         /// <summary>
         /// Generate the fastest possible accessor for the given property. See more details on <see cref="MemberAccessor"/>
         /// </summary>
-        internal static void DoGeneratePropertyAccessor(ref MemberAccessor accessor, MapItemInfo item, MapItem parentItem, PropertyInfo property)
+        internal static void DoGeneratePropertyAccessor(ref MemberAccessor accessor, MapItemInfo item, Converter parentItem, PropertyInfo property)
         {
             // All property optimizations rely on the parent being a reference-type.
             if (!parentItem.IsValueItemType)

@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 
 namespace ABCo.ABSave.Mapping
@@ -25,7 +26,7 @@ namespace ABCo.ABSave.Mapping
 
         public override int GetHashCode() => base.GetHashCode();
 
-        internal MapItemInfo(MapItem item, bool isNullable) => (Converter, IsNullable) = (item, isNullable);
+        internal MapItemInfo(Converter item, bool isNullable) => (Converter, IsNullable) = (item, isNullable);
     }
 
     public class VersionInfo
@@ -45,19 +46,6 @@ namespace ABCo.ABSave.Mapping
             UsesHeader = usesHeader;
             _inheritanceInfo = inheritanceInfo;
         }
-    }
-
-    /// <summary>
-    /// Represents a map item that was retrieved during serialization-time. It has extra code-gen information as map items
-    /// retrieved at serialization-time won't have been code-generated as a part of the main type.
-    /// </summary>
-    internal sealed class RuntimeMapItem : MapItem
-    {
-        internal MapItem InnerItem;
-
-        public RuntimeMapItem(MapItem innerItem) => InnerItem = innerItem;
-
-        // TODO: Add code-gen details here.
     }
 
     /// <summary>

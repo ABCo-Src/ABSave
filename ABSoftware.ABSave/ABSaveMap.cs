@@ -16,7 +16,7 @@ namespace ABCo.ABSave.Mapping
         /// <summary>
         /// All the types present throughout the map, and their respective map item.
         /// </summary>
-        internal Dictionary<Type, MapItem?> AllTypes;
+        internal Dictionary<Type, Converter?> AllTypes;
 
         /// <summary>
         /// The configuration this map uses.
@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Mapping
         internal ABSaveMap(ABSaveSettings settings)
         {
             Settings = settings;
-            AllTypes = new Dictionary<Type, MapItem?>();
+            AllTypes = new Dictionary<Type, Converter?>();
         }
 
         public static ABSaveMap Get<T>(ABSaveSettings settings) => GetNonGeneric(typeof(T), settings);

@@ -20,7 +20,7 @@ namespace ABCo.ABSave.Mapping.Generation
         {
             bool isNullable = TryExpandNullable(ref type);
 
-            MapItem? existingItem = GetExistingOrAddNull(type);
+            Converter? existingItem = GetExistingOrAddNull(type);
             if (existingItem != null) return new MapItemInfo(existingItem, isNullable);
 
             return GenerateMap(type, isNullable);
@@ -30,39 +30,39 @@ namespace ABCo.ABSave.Mapping.Generation
         {
             EnsureTypeSafety(type);
 
-            MapItem? item = TryGenerateConverter(type);
+            Converter? item = TryGenerateConverter(type);
             if (item == null) throw new UnserializableTypeException(type);
 
             item._isGenerating = false;
             return new MapItemInfo(item, isNullable);
         }
 
-        internal MapItemInfo GetRuntimeMap(Type type)
-        {
-            bool isNullable = TryExpandNullable(ref type);
+        internal MapItemInfo GetRuntimeMap(Type type) => GetMap(type);
+        //{
+        //    bool isNullable = TryExpandNullable(ref type);
 
-            MapItem? existing = GetExistingOrAddNull(type);
-            if (existing is RuntimeMapItem) return new MapItemInfo(existing, isNullable);
+        //    Converter? existing = GetExistingOrAddNull(type);
+        //    if (existing is RuntimeMapItem) return new MapItemInfo(existing, isNullable);
 
-            MapItem newItem = existing ?? GenerateMap(type, isNullable).Converter;
+        //    Converter newItem = existing ?? GenerateMap(type, isNullable).Converter;
 
-            // Now wrap it in a runtime item.
-            RuntimeMapItem newRuntime;
-            lock (Map.AllTypes)
-            {
-                // Check one more time to make sure the runtime item wasn't generated since we last looked at it.
-                if (Map.AllTypes[type] is RuntimeMapItem itm)
-                    return new MapItemInfo(itm, isNullable);
+        //     Now wrap it in a runtime item.
+        //    RuntimeMapItem newRuntime;
+        //    lock (Map.AllTypes)
+        //    {
+        //         Check one more time to make sure the runtime item wasn't generated since we last looked at it.
+        //        if (Map.AllTypes[type] is RuntimeMapItem itm)
+        //            return new MapItemInfo(itm, isNullable);
 
-                // Generate the new item!
-                newRuntime = new RuntimeMapItem(newItem);
-                ApplyItemProperties(newRuntime, type);
-                Map.AllTypes[type] = newRuntime;
-            }
+        //         Generate the new item!
+        //        newRuntime = new RuntimeMapItem(newItem);
+        //        ApplyItemProperties(newRuntime, type);
+        //        Map.AllTypes[type] = newRuntime;
+        //    }
 
-            newRuntime._isGenerating = false;
-            return new MapItemInfo(newRuntime, isNullable);
-        }
+        //    newRuntime._isGenerating = false;
+        //    return new MapItemInfo(newRuntime, isNullable);
+        //}
 
         // ABSave Concurrent Generation System:
         //
@@ -89,14 +89,14 @@ namespace ABCo.ABSave.Mapping.Generation
         // we're going to wait (keep retrying again and again) until it's finally been allocated a place.
         //
         // This is represented by the item being null.
-        internal MapItem? GetExistingOrAddNull(Type type)
+        internal Converter? GetExistingOrAddNull(Type type)
         {
             while (true)
             {
                 // We must lock here to ensure two threads don't both try to generate the same thing twice.
                 lock (Map.AllTypes)
                 {
-                    if (Map.AllTypes.TryGetValue(type, out MapItem? val))
+                    if (Map.AllTypes.TryGetValue(type, out Converter? val))
                     {
                         // Allocating, try again
                         if (val == null)
@@ -115,14 +115,14 @@ namespace ABCo.ABSave.Mapping.Generation
             }
         }
 
-        internal MapItem? GetExistingRuntimeOrAddNull(Type type)
+        internal Converter? GetExistingRuntimeOrAddNull(Type type)
         {
             while (true)
             {
                 // We must lock here to ensure two threads don't both try to generate the same thing twice.
                 lock (Map.AllTypes)
                 {
-                    if (Map.AllTypes.TryGetValue(type, out MapItem? val))
+                    if (Map.AllTypes.TryGetValue(type, out Converter? val))
                     {
                         // Allocating, try again
                         if (val == null)
@@ -140,7 +140,7 @@ namespace ABCo.ABSave.Mapping.Generation
         }
 
         // Adds the current item to the dictionary and fills in its details.
-        internal void ApplyItem(MapItem item, Type type)
+        internal void ApplyItem(Converter item, Type type)
         {
             ApplyItemProperties(item, type);
 
@@ -148,7 +148,7 @@ namespace ABCo.ABSave.Mapping.Generation
                 Map.AllTypes[type] = item;
         }
 
-        internal static void ApplyItemProperties(MapItem item, Type type)
+        internal static void ApplyItemProperties(Converter item, Type type)
         {
             item.ItemType = type;
             item.IsValueItemType = type.IsValueType;

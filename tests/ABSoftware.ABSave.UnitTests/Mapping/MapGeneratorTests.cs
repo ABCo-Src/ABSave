@@ -1,5 +1,8 @@
-﻿using ABCo.ABSave.Exceptions;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Serialization;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -53,7 +56,11 @@ namespace ABCo.ABSave.UnitTests.Mapping
             Assert.AreEqual(pos.Converter, Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass)));
         }
 
-        class EmptyMapItem : MapItem { }
+        class EmptyConverter : Converter
+        {
+            public override void Serialize(in SerializeInfo info, ref BitTarget header) => throw new NotImplementedException();
+            public override object Deserialize(in DeserializeInfo info, ref BitSource header) => throw new NotImplementedException();
+        }
 
         [TestMethod]
         public async Task GetOrAddNull_WaitsOnNull()
@@ -62,7 +69,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             // This thread will make an "Allocating" item, the "waiter" should wait for that to change.
             var secondGenerator = Map.GetGenerator();
-            MapItem retrieved = null;
+            Converter retrieved = null;
 
             var waiter = new Task(() =>
             {
@@ -78,7 +85,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             await Task.Delay(1000);
 
             // Now, we will finish the item, and see if the thread finishes accordingly.
-            var newMapItem = new EmptyMapItem();
+            var newMapItem = new EmptyConverter();
             Generator.ApplyItem(newMapItem, typeof(int));
 
             await Task.Delay(1000);
@@ -94,8 +101,8 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var secondGenerator = Map.GetGenerator();
 
-            MapItem first = null;
-            MapItem second = null;
+            Converter first = null;
+            Converter second = null;
 
             // Trigger both threads at exactly the same time.
             Thread tsk = new Thread(() =>
@@ -103,7 +110,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
                 first = Generator.GetExistingOrAddNull(typeof(int));
                 if (first == null)
                 {
-                    Generator.ApplyItem(new EmptyMapItem(), typeof(int));
+                    Generator.ApplyItem(new EmptyConverter(), typeof(int));
                 }
             });
 
@@ -112,7 +119,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
                 second = Generator.GetExistingOrAddNull(typeof(int));
                 if (second == null)
                 {
-                    Generator.ApplyItem(new EmptyMapItem(), typeof(int));
+                    Generator.ApplyItem(new EmptyConverter(), typeof(int));
                 }
             });
 
@@ -127,7 +134,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             Assert.IsNotNull(first ?? second);
 
             // Check that the item was created successfully.
-            Assert.IsInstanceOfType(Map.AllTypes[typeof(int)], typeof(EmptyMapItem));
+            Assert.IsInstanceOfType(Map.AllTypes[typeof(int)], typeof(EmptyConverter));
             ABSaveMap.ReleaseGenerator(secondGenerator);
         }
 
@@ -143,42 +150,6 @@ namespace ABCo.ABSave.UnitTests.Mapping
             // Inner does exist
             var pos2 = Generator.GetMap(typeof(AllPrimitiveStruct?));
             Assert.IsTrue(pos2.IsNullable);
-        }
-
-        [TestMethod]
-        public void Generate_Runtime_NothingAlreadyExisting()
-        {
-            Setup();
-
-            var pos = Generator.GetRuntimeMap(typeof(AllPrimitiveClass));
-            Assert.IsFalse(pos.IsNullable);
-
-            Assert.IsInstanceOfType(pos.Converter, typeof(RuntimeMapItem));
-        }
-
-        [TestMethod]
-        public void Generate_Runtime_InnerAlreadyExists()
-        {
-            Setup();
-
-            var pos3Expected = Generator.GetMap(typeof(AllPrimitiveStruct));
-            var pos3Actual = Generator.GetRuntimeMap(typeof(AllPrimitiveStruct));
-
-            Assert.AreEqual(pos3Expected.Converter, ((RuntimeMapItem)pos3Actual.Converter).InnerItem);
-        }
-
-        [TestMethod]
-        public void Generate_Runtime_RuntimeAlreadyExists()
-        {
-            Setup();
-
-            // Create an item
-            var existing = Generator.GetRuntimeMap(typeof(AllPrimitiveClass));
-
-            // Should detect the already existing one.
-            var pos2 = Generator.GetRuntimeMap(typeof(AllPrimitiveClass));
-
-            Assert.AreEqual(existing, pos2);
         }
 
         [TestMethod]

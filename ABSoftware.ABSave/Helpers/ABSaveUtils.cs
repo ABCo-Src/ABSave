@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Mapping;
+﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -28,11 +29,7 @@ namespace ABCo.ABSave.Helpers
             0b11111111
         };
 
-        internal static bool ContainsZeroByteLong(ulong l) => ((l - 0x0101010101010101L) & ~l & 0x8080808080808080L) > 0;
-
-        internal static bool ContainsZeroByte(uint l) => ((l - 0x01010101L) & ~l & 0x80808080L) > 0;
-
-        internal static void WaitUntilNotGenerating(MapItem item)
+        internal static void WaitUntilNotGenerating(Converter item)
         {
             if (item._isGenerating)
             {
