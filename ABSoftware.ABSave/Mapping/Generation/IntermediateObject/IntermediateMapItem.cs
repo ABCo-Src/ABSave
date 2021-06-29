@@ -3,9 +3,9 @@ using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace ABCo.ABSave.Mapping.Generation
+namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
 {
-    internal sealed class ObjectIntermediateItem : IComparable<ObjectIntermediateItem>
+    internal sealed class IntermediateItem : IComparable<IntermediateItem>
     {
         public int Order;
 
@@ -32,6 +32,6 @@ namespace ABCo.ABSave.Mapping.Generation
         }
 
         // For sorting:
-        public int CompareTo(ObjectIntermediateItem? other) => Order.CompareTo(other!.Order);
+        public int CompareTo(IntermediateItem? other) => Order.CompareTo(other!.Order);
     }
 }

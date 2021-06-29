@@ -43,26 +43,7 @@ namespace ABCo.ABSave.Mapping.Generation.General
             if (item._hasOneVersion)
                 return version > 0 ? null : item._versionCache.OneVersion;
 
-            while (true)
-            {
-                lock (item._versionCache.MultipleVersions)
-                {
-                    // Does not exist - Has not and is not generating.
-                    // Exists but is null - Is currently generating.
-                    // Exists and is not null - Is ready to use.
-                    if (item._versionCache.MultipleVersions.TryGetValue(version, out VersionInfo? info))
-                    {
-                        if (info != null) return info;
-                    }
-                    else
-                    {
-                        item._versionCache.MultipleVersions.Add(version, null);
-                        return null;
-                    }
-                }
-
-                Thread.Yield();
-            }
+            return MappingHelpers.GetExistingOrAddNull(item._versionCache.MultipleVersions, version);
         }
 
         public static VersionInfo AddNewVersion(Converter converter, uint version, MapGenerator gen)

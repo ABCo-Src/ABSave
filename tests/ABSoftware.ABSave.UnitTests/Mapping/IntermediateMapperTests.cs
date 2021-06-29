@@ -1,6 +1,5 @@
 ﻿using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping.Description;
-using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using ABCo.ABSave.Mapping.Generation.Object;
 using ABCo.ABSave.UnitTests.TestHelpers;
@@ -20,7 +19,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         [TestMethod]
         public void FillMainInfo_CorrectValues()
         {
-            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateItem info = new IntermediateItem();
             IntermediateMapper.FillMainInfo(info, 3, 6, uint.MaxValue);
 
             Assert.AreEqual(3, info.Order);
@@ -33,7 +32,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             var ctx = new IntermediateMappingContext();
 
-            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateItem info = new IntermediateItem();
             IntermediateMapper.FillMainInfo(info, 3, 6, uint.MaxValue);
             IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
@@ -52,7 +51,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             var ctx = new IntermediateMappingContext();
 
-            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateItem info = new IntermediateItem();
             IntermediateMapper.FillMainInfo(info, 3, 6, 7);
             IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
@@ -73,7 +72,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var ctx = new IntermediateMappingContext();
 
-            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateItem info = new IntermediateItem();
             IntermediateMapper.FillMainInfo(info, 3, 0, uint.MaxValue);
             IntermediateMapper.UpdateContextFromItem(ref ctx, info);
 
@@ -94,7 +93,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var ctx = new IntermediateMappingContext();
 
-            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateItem info = new IntermediateItem();
 
             IntermediateMapper.FillMainInfo(info, 3, 0, uint.MaxValue);
             IntermediateMapper.UpdateContextFromItem(ref ctx, info);
@@ -115,7 +114,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var ctx = new IntermediateMappingContext();
 
-            ObjectIntermediateItem info = new ObjectIntermediateItem();
+            IntermediateItem info = new IntermediateItem();
 
             IntermediateMapper.FillMainInfo(info, 9, 0, uint.MaxValue);
             IntermediateMapper.UpdateContextFromItem(ref ctx, info);

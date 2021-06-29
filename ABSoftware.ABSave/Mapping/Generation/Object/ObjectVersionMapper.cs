@@ -1,4 +1,5 @@
 ﻿using ABCo.ABSave.Converters;
+using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -9,13 +10,13 @@ namespace ABCo.ABSave.Mapping.Generation.Object
     {
         public static ObjectMemberSharedInfo[] GenerateNewVersion(ObjectConverter item, MapGenerator gen, uint targetVersion)
         {
-            ObjectIntermediateItem[] rawMembers = item._intermediateInfo.Members!;
+            IntermediateItem[] rawMembers = item._intermediateInfo.Members!;
             var lst = new List<ObjectMemberSharedInfo>();
 
             // Get the members
             for (int i = 0; i < rawMembers.Length; i++)
             {
-                ObjectIntermediateItem? intermediateItm = rawMembers[i];
+                IntermediateItem? intermediateItm = rawMembers[i];
 
                 if (targetVersion >= intermediateItm.StartVer && targetVersion < intermediateItm.EndVer)
                     lst.Add(GetOrCreateItemFrom(item, intermediateItm, gen));
@@ -26,7 +27,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 
         public static ObjectMemberSharedInfo[] GenerateForOneVersion(ObjectConverter item, MapGenerator gen)
         {
-            ObjectIntermediateItem[] rawMembers = item._intermediateInfo.Members!;
+            IntermediateItem[] rawMembers = item._intermediateInfo.Members!;
 
             // No need to do any checks at all - just copy the items right across!
             var outputArr = new ObjectMemberSharedInfo[rawMembers.Length];
@@ -37,7 +38,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             return outputArr;
         }
 
-        static ObjectMemberSharedInfo CreateItem(ObjectConverter item, ObjectIntermediateItem intermediate, MapGenerator gen)
+        static ObjectMemberSharedInfo CreateItem(ObjectConverter item, IntermediateItem intermediate, MapGenerator gen)
         {
             var dest = new ObjectMemberSharedInfo();
             MemberInfo? memberInfo = intermediate.Details.Unprocessed;
@@ -60,7 +61,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             return dest;
         }
 
-        static ObjectMemberSharedInfo GetOrCreateItemFrom(ObjectConverter item, ObjectIntermediateItem intermediate, MapGenerator gen)
+        static ObjectMemberSharedInfo GetOrCreateItemFrom(ObjectConverter item, IntermediateItem intermediate, MapGenerator gen)
         {
             if (!intermediate.IsProcessed)
             {

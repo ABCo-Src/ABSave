@@ -8,7 +8,7 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
     internal struct IntermediateObjectInfo
     {
         // Null if intermediate info is released.
-        public ObjectIntermediateItem[]? Members;
+        public IntermediateItem[]? Members;
         public SaveBaseMembersAttribute[]? BaseMemberAttributes;
 
         public void Release()

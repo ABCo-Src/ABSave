@@ -31,14 +31,14 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             return ctx.HighestVersion;
         }
 
-        internal static void FillMainInfo(ObjectIntermediateItem newItem, int order, uint startVer, uint endVer)
+        internal static void FillMainInfo(IntermediateItem newItem, int order, uint startVer, uint endVer)
         {
             newItem.Order = order;
             newItem.StartVer = startVer;
             newItem.EndVer = endVer;
         }
 
-        internal static void UpdateContextFromItem(ref IntermediateMappingContext ctx, ObjectIntermediateItem newItem)
+        internal static void UpdateContextFromItem(ref IntermediateMappingContext ctx, IntermediateItem newItem)
         {
             // Check ordering
             if (ctx.TranslationCurrentOrderInfo != -1)

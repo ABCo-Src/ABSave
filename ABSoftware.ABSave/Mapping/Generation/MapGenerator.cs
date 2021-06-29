@@ -89,31 +89,7 @@ namespace ABCo.ABSave.Mapping.Generation
         // we're going to wait (keep retrying again and again) until it's finally been allocated a place.
         //
         // This is represented by the item being null.
-        internal Converter? GetExistingOrAddNull(Type type)
-        {
-            while (true)
-            {
-                // We must lock here to ensure two threads don't both try to generate the same thing twice.
-                lock (Map.AllTypes)
-                {
-                    if (Map.AllTypes.TryGetValue(type, out Converter? val))
-                    {
-                        // Allocating, try again
-                        if (val == null)
-                            goto Retry;
-                        else
-                            return val;
-                    }
-
-                    // Start generating this item.
-                    Map.AllTypes[type] = null;
-                    return null;
-                }
-
-            Retry:
-                Thread.Yield(); // Wait a little bit before retrying.
-            }
-        }
+        internal Converter? GetExistingOrAddNull(Type type) => MappingHelpers.GetExistingOrAddNull(Map.AllTypes, type);
 
         internal Converter? GetExistingRuntimeOrAddNull(Type type)
         {

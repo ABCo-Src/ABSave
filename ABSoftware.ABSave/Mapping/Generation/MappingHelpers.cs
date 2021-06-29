@@ -2,6 +2,7 @@
 using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace ABCo.ABSave.Mapping.Generation
 {
@@ -51,6 +52,33 @@ namespace ABCo.ABSave.Mapping.Generation
             }
 
             return null;
+        }
+
+        public static TValue? GetExistingOrAddNull<TKey, TValue>(Dictionary<TKey, TValue?> dict, TKey key)
+            where TValue : class
+        {
+            while (true)
+            {
+                lock (dict)
+                {
+                    // Does not exist - Has not and is not generating.
+                    // Exists but is null - Is currently allocating (if it's a converter)
+                    // or is currently generating (if it's a version info), just wait for it to not be null.
+                    // Exists and is not null - Is ready to use.
+                    if (dict.TryGetValue(key, out TValue? info))
+                    {
+                        if (info != null) return info;
+                    }
+                    else
+                    {
+                        dict.Add(key, null);
+                        return null;
+                    }
+                }
+
+                // Wait a little bit before retrying.
+                Thread.Yield();
+            }
         }
     }
 }

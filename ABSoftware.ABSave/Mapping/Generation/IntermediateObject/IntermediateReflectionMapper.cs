@@ -13,7 +13,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
     /// </summary>
     internal static class IntermediateReflectionMapper
     {
-        public static ObjectIntermediateItem[] FillInfo(ref IntermediateMappingContext ctx)
+        public static IntermediateItem[] FillInfo(ref IntermediateMappingContext ctx)
         {
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
             Type? classType = ctx.ClassType;
@@ -23,28 +23,28 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             PropertyInfo[] currentProperties = GetProperties(bindingFlags, classType, ctx.Mode);
 
             // Process the members
-            var dest = new List<ObjectIntermediateItem>(currentFields.Length + currentProperties.Length);
+            var dest = new List<IntermediateItem>(currentFields.Length + currentProperties.Length);
             AddMembers(ref ctx, currentFields, dest);
             AddMembers(ref ctx, currentProperties, dest);
             return dest.ToArray();
         }
 
-        static void AddMembers(ref IntermediateMappingContext ctx, MemberInfo[] members, List<ObjectIntermediateItem> dest)
+        static void AddMembers(ref IntermediateMappingContext ctx, MemberInfo[] members, List<IntermediateItem> dest)
         {
             for (int i = 0; i < members.Length; i++)
             {
-                ObjectIntermediateItem? newItem = GetItemForMember(ref ctx, members[i]);
+                IntermediateItem? newItem = GetItemForMember(ref ctx, members[i]);
                 if (newItem != null) dest.Add(newItem);
             }
         }
 
-        internal static ObjectIntermediateItem? GetItemForMember(ref IntermediateMappingContext ctx, MemberInfo info)
+        internal static IntermediateItem? GetItemForMember(ref IntermediateMappingContext ctx, MemberInfo info)
         {
             // Get the attributes - skip this item if there are none
             object[]? attributes = info.GetCustomAttributes(typeof(SaveAttribute), false);
             if (attributes.Length == 0) return null;
 
-            var newItem = new ObjectIntermediateItem();
+            var newItem = new IntermediateItem();
 
             // Create the item.
             bool successful = FillItemFromAttributes(newItem, info, attributes);
@@ -54,7 +54,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             return newItem;
         }
 
-        static bool FillItemFromAttributes(ObjectIntermediateItem dest, MemberInfo info, object[] attributes)
+        static bool FillItemFromAttributes(IntermediateItem dest, MemberInfo info, object[] attributes)
         {
             dest.Details.Unprocessed = info;
 
