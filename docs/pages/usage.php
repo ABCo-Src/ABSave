@@ -11,8 +11,16 @@
 
     <h1>Usage</h1>
     <hr>
-    <p>This part of the documentation will tell you how to use all the features of the official converter for ABSave. It does not tell you how the <a href="#" data-navigates="alongside" data-navigateTo="Binary Output">binary output is structured</a>, nor how ABSave internally works, but simply how to use it.<br><br>
-    <p>You'll find all the smaller parts within this section simply by expanding it in the menu.</p>
+    <p>So, it's time to learn how to use the library ABSave! The first place to go is the 'quick start' page, read this page and it will tell you everything you need to know within minutes:</p>
+
+    <div class="navBoxContainer">
+        <div data-navigates="child" data-navigateTo="Quick Start" class="navBox navBoxLight navBox-half">
+            <h1 class="noAnchor">Quick Start</h1>
+            <p>Get going within minutes.</p>
+        </div>
+    </div>
+
+    <p>From there, you can basically go wherever you'd like and just go to what you need as you need it, here are some of sub-topics you can jump to as you'd like:</p>
 
     <?php include('../../base/pageBodyEnd.html') ?>
 </body>

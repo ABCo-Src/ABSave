@@ -2,154 +2,172 @@
 <html>
 
 <head>
-    <title>Basic Conversion</title>
+    <title>Quick Start</title>
     <?php include('../../base/pageHeader.html') ?>
 </head>
 
 <body>
     <?php include('../../base/pageBodyStart.html') ?>
 
-    <h1 id="title">Basic Conversion</h1>
+    <h1 id="title">Quick Start</h1>
+    <h2 id="quick-start">Quick Start</h2>
     <hr>
-    <p>This page covers how to convert to and from ABSave documents, as well as how to use maps for a more precise output and faster performance.</p>
-    <p><b>Serialization</b> is converting data <i>to</i> ABSave and <b>deserialization</b> is converting data <i>from</i> ABSave.</p>
 
-    <h2 id="autoConversion">Auto Conversion</h2>
+    <p>ABSave is packed internally with so many features that allow it to achieve a very compact output and very fast serialization times, and all of that is available for just a few lines of code!</p>
+    <p>This section is designed to get you going within <i>minutes</i>, and the next part of this page, "versioning", will take a look at a very fundamental issue that almost every binary serializer suffers from, as well as the feature you can use in ABSave that's able to fix it!</p>
+    
+    <h3 id="class-marking">Preparing a class</h3>
     <hr>
-    <p>When auto converting, ABSave will do everything "automatically". Simply give ABSave an object, and it will convert it for you.</p>
-    <p><code>ABSaveDocumentConverter</code> is found under the namespace <code>ABSoftware.ABSave</code>, this can be used to easily convert ABSave documents.</p>
-    <p>A lot of the conversion methods provided take in <code>ABSaveSettings</code>. There are two presets available built into ABSave listed below, and you should choose which one is best for your usage. You can find out more TODO SOMEWHERE</p>
-
-    <ul>
-        <li>
-            <p><code>ABSaveSettings.PrioritizePerformance</code> - This means ABSave will focus on converting faster than making a small output.</p>
-        </li>
-        <li>
-            <p><code>ABSaveSettings.PrioritizeSize</code> - This means ABSave will focus on making a smaller output than converting faster.</p>
-        </li>
-    </ul>
-    <p></p>
-    <p>You can then use <code>ABSaveDocumentConverter</code> to convert using one of these presets. Below are examples to convert a class called <code>MyClass</code>:</p>
+    <p>As with every binary serializer in existence, the very first thing you need to do to use ABSave is add some very simple attributes to the classes you want to have serialized, every binary serializer needs these, it is physically impossible for them to function without.</p>
+    <p>To tell ABSave you want it to serialize the smaller properties of a class, simply add the <code>[SaveMembers]</code> attribute to the class and any sub-classes you want to also have serialized member-by-member, like so:</p>
 
     <pre><code class="language-csharp">
-// Serialize into a byte array.
-var bytes = ABSaveDocumentConverter.Serialize(obj, ABSaveSettings.PrioritizeSize);
-
-// Serialize into a stream.
-ABSaveDocumentConverter.Serialize(obj, stream, ABSaveSettings.PrioritizeSize);
-
-// Deserialize from a byte array.
-var result = ABSaveDocumentConverter.Deserialize&lt;MyClass&gt;(arr);
-
-// Deserialize to a stream.
-var result = ABSaveDocumentConverter.Deserialize&lt;MyClass&gt;(stream);
+[SaveMembers]
+class MyClass { }
     </code></pre>
 
-    <h2 id="mappedConversion">Mapped Conversion</h2>
-    <hr>
-    <p>Maps take more effort to setup. However, they are faster than auto serialization, can make smaller file sizes, and give more flexibility. A <b>map</b> tells ABSave exactly how something should be converted.</p>
+    <p>Just like that, ABSave now knows it needs to serialize the smaller properties in this class. Now all we need to do is add a <code>[Save]</code> attribute to each property, with an increasing number.</p>
 
-    <div class="infoBox msgBox">
-        <h4 class="noAnchor">INFO</h4>
-        <p>You can selectively use auto for certain things in a map.
+    <pre><code class="language-csharp">
+[SaveMembers]
+class MyClass
+{
+    [Save(0)]
+    public int A { get; set; }
+
+    [Save(1)]
+    public int B { get; set; }
+
+    [Save(2)]
+    public string C { get; set; }
+}
+    </code></pre>
+
+    <p>These numbers let ABSave know what order to write the properties' values in within the output - just make sure each property has a unique number and you'll be fine.</p>
+    <p>And that's it! This class is now ready for (de)serialization!</p>
+    <p>There is <i>so much</i> more you can do with these attributes, such as inheritance or serializing fields, and after you've read this page, you can go to the <a href="#" data-navigates="alongside" data-navigateTo="Mapping">mapping page</a> and take a look at everything these attributes have to offer!</p>
+
+    <!--<ul>
+        <li><p>Inheritance - If you want <b>inheritance</b> support on this object, take a look here for info about attributes needed to support inheritance.</p></li>
+        <li><p>Serialize fields - If you want to serialize fields instead of properties (although we don't recommend it) take a look here for info on how to do it.</p></li>
+        <li><p>Settings Mapping - If you can't add attributes to the class (i.e. it's in another assembly), then don't worry, take a look here to find out what you can do.</p></li>
+    </ul>-->
+
+    <h3 id="serialize-and-deserialize">Serializing & Deserializing</h3>
+    <hr>
+    <p>Now let's serialize it! In order to serialize a class, we need to get something called a <code>ABSaveMap</code>. And we can do that like so:</p>
+
+    <pre><code class="language-csharp">
+var map = ABSaveMap.Get&lt;MyClass&gt;(ABSaveSettings.ForSpeed);
+    </code></pre>
+
+    <p>You can replace that <code>ABSaveSettings.ForSpeed</code> with <code>ABSaveSettings.ForSize</code> if you'd rather ABSave went a little slower to give you a smaller output.</p>
+
+    <div class="msgBox warningBox">
+        <h4 class="noAnchor">Create this once</h4>
+        <p>You should only create the map for a class <b>once</b> and hold it in a static member of some kind. You can then continually re-use the same map each time you serialize.</p>
     </div>
 
-    <h3 id="mappedConversion-typeConverters">Type Converters</h3>
-    <hr>
-    <p>In order to use maps, you need to first understand type converters.</p>
-    <p>ABSave has a different type converter for all the built-in types it supports (and the user can make their own <a href="#" data-navigates="alongside" data-navigateTo="Custom Type Converters + Advanced Conversion">custom converters</a> too) - you'll find these under the namespace <code>ABSoftware.ABSave.Converters</code>.</p>
-    <p>To use one of these, access the static <code>Instance</code> field on them. For example, <code>BooleanTypeConverter.Instance</code>, which would be used for <code>bool</code> types of data.</p>
-    <p>You can see the full list of built-in type converters <a href="https://github.com/ABSoftwareOfficial/ABSoftware.ABSave/tree/master/ABSoftware.ABSave/Converters">here</a></p>
-
-    <h3 id="mappedConversion-basicMap">Basic Map</h3>
-    <hr>
-    <p>This section will demonstrate how to convert the following object using a map. <code>MyOtherClass</code> is a different class that will be introduced later, for now we will just auto serialize that:</p>
+    <p>Now that we have our map, we can simply <b>serialize</b> by passing our instance and our map into <code>ABSaveConvert.Serialize</code>, whether you want to output into a byte array or a stream is up to you:</p>
 
     <pre><code class="language-csharp">
-class MyClass 
+// Outputting into a byte array:
+byte[] arr = ABSaveConvert.Serialize(obj, map);
+
+// Outputting into a stream:
+ABSaveConvert.Serialize(obj, map, stream);
+    </code></pre>
+
+    <p>And <b>deserializing</b> is just as easy:</p>
+
+    <pre><code class="language-csharp">
+// Deserializing from a byte array:
+MyClass obj = ABSaveConvert.Deserialize&lt;MyClass&gt;(byteArray, map);
+
+// Deserializing from a byte array:
+MyClass obj = ABSaveConvert.Deserialize&lt;MyClass&gt;(stream, map);
+    </code></pre>
+
+    <p>And <i>that</i> is all there is to using ABSave at first, enjoy the very high performance and very compact output! However, <b>make sure to read the next section</b> for some important information that you need, especially if you ever change the classes used in ABSave.</p>
+
+    <h2 id="versioning">Versioning</h2>
+    <hr>
+    <p>Just like that, you know the basics of how to use ABSave. However, just before you can go using it in larger applications there's just one thing you should be aware of.</p>
+    <p>Almost <b>every</b> binary serializer in existence, including ABSave, has one major issue: If you ever change a class, it will fail to read anything that was serialized before that change. 
+    <p>You can find out more about why this happens in the FAQ section of these docs, but this is how almost all binary serializers go.</p>
+    <p>If you do any of these things, anything that had been serialized prior to the change will fail to read:</p>
+
+    <ul>
+        <li><p>Add a property</p></li>
+        <li><p>Remove a property</p></li>
+        <li><p>Change a property's type</p></li>
+        <li><p>Change something in one of ABSave's attributes (including the numbers in the <code>Save</code> attributes)</p></li>
+        <li><p>Reorder the properties</p></li>
+    </ul>
+
+    <p>These are the only things that will break a previous ABSave document from being read correctly, you're free to do absolutely anything else (so you <i>can</i> refactor the property names or move them up and down in the class as much as you'd like, so long as the numbers on the <code>Save</code> stays the same they'll be kept in the right place).</p>
+
+    <p>But still, this is quite an issue, and unfortunately <b>a lot</b> of binary serializers provide no solution to this problem! Meaning you must somehow <b>never</b> change the class for the output to continue to be readable, which just isn't practical for larger applications.</p>
+    <p>However, ABSave has a very easy-to-use and effortless system to <b>solve this problem</b>.</p>
+
+    <h3 id="versioning-absave-solution">ABSave's solution</h3>
+    <hr>
+
+    <p>So, ABSave's solution is quite simple: Use just a <i>few bits</i> in the output to give each class a <b>version number</b>. And each different 'version' of a class has a different set of members or attributes applied.</p>
+    <p>So whenever you make a change to a class or make a set of changes to a class as above, what you do is you essentially introduce a new version, a new variant of the class, with those changes.</p>
+    <p>Of course, this sounds really <b>hard</b> and <b>painful</b> to maintain - but, the great thing is it's completely seamless and works very well with the attributes.</p>
+
+    <h3 id="versioning-example">Example</h3>
+    <hr>
+
+    <p>Let's say we have the following class:</p>
+
+    <pre><code class="language-csharp">
+[SaveMembers]
+class MyClass
 {
-    public bool MyBl;
-    public int MyInt;
-    public MyOtherClass MyOC;
+    [Save(0)]
+    public int A { get; set; }
+
+    [Save(1)]
+    public int B { get; set; }
 }
     </code></pre>
 
-    <p>To make a map for an object, we can create an instance of <code>ObjectMapItem</code>.</p>
-    <p>In the constructor, we need to provide the following:</p>
-    
-    <ul>
-        <li><p><b>Can be null</b> - This specifies whether the object can be null. Most of the map items need this specified. Choosing <code>true</code> can sometimes use up an extra byte in the ABSave output, so only enable it if it will ever be null.</p></li>
-        <li><p><b>Constructor</b> - You must provide a way for ABSave to make an instance of your class, for deserialization. This is a <code>Func&lt;object&gt;</code>.</p></li>
-        <li><p><b>Number of items</b> - You must specify how many fields you want to convert. Our object has 3 fields in it, and we want to convert all of them, so this will be "3" in this case.</p></li>
-    </ul>
-
-    <p>Here is an example for the <code>MyClass</code> type.</p>
+    <p>And we need to <i>add</i> a new property to it. But, we've been serializing this class for some time and we don't want to break any existing serialized output.</p>
+    <p>All we need to do is when we add the new property, we give it the <code>Save</code> attribute as before, <b>but</b> with a <code>FromVer = 1</code> on it, like so:</p>
 
     <pre><code class="language-csharp">
-var map = new ObjectMapItem(false, () => new MyClass(), 3);
-    </code></pre>
-
-    <p>Then, to add items to the map, we can chain <code>AddItem</code> after it repeatedly. This method accepts the name of the member, and an <code>ABSaveMapItem</code>, which describes how the item should be converted.</p>
-    <p>There are multiple types of <code>ABSaveMapItem</code>. For now we'll only use two of them:</p>
-    <ul>
-        <li><p><code>TypeConverterMapItem</code> - Converts an item using the given type converter. This takes whether the item can be null as the first parameter, which is then followed by which type converter to use.</p></li>
-        <li><p><code>AutoMapItem</code> - Will automatically convert an item. We'll use this on the <code>MyOtherClass</code>.</p></li>
-    </ul>
-    
-    <p>Here is the completed map, using <b>nameof</b> for better refactoribility:</p>
-
-    <pre><code class="language-csharp">
-var map = new ObjectMapItem(false, () => new MyClass(), 3)
-    .AddItem(nameof(MyClass.MyInt), new TypeConverterMapItem(false, IntegerAndEnumTypeConverter.Instance))
-    .AddItem(nameof(MyClass.MyBl), new TypeConverterMapItem(false, BooleanTypeConverter.Instance))
-    .AddItem(nameof(MyClass.MyOC), new AutoMapItem());
-    </code></pre>
-
-    <p>Finally, we can pass this to <code>ABSaveDocumentConverter</code>, giving it the a map to use as a guide.</p>
-
-    <pre><code class="language-csharp">
-var bytes = ABSoftwareDocumentConverter.Serialize(obj, ABSaveSettings.PrioritizeSize, map);
-ABSoftwareDocumentConverter.Serialize(obj, map, stream);
-
-var result = ABSoftwareDocumentConverter.Deserialize&lt;MyClass&gt;(obj, map, bytes);
-var result = ABSoftwareDocumentConverter.Deserialize&lt;MyClass&gt;(obj, map, stream);
-    </code></pre>
-
-    <h3 id="mappedConversion-basicMap">Further Map</h3>
-    <hr>
-    <p>Instead of auto converting <code>MyOC</code>, we can declare another map for it, which specifies how to convert all the smaller parts of a <code>MyOtherClass</code>. To keep this simple, we'll imagine <code>MyOtherClass</code> only has one integer in it:</p>
-
-    <pre><code class="language-csharp">
-class MyOtherClass 
+[SaveMembers]
+class MyClass
 {
-    public int AnInt;
+    [Save(0)]
+    public int A { get; set; }
+
+    [Save(1)]
+    public int B { get; set; }
+
+    [Save(2, FromVer = 1)]
+    public int C { get; set; }
 }
     </code></pre>
 
-    <p>Then, instead of creating a <code>AutoMapItem</code>, we create an instance of <code>ObjectMapItem</code>, and add the items like we did for our <code>MyClass</code>:</p>
+    <p>What this is doing is it's telling ABSave is that our new property <code>C</code> is <b>only</b> present starting <i>from</i> version '1' and upwards on this class. So we essentially have <b>two</b> versions now: Version '0' has <code>A</code> and <code>B</code> while version '1' has <code>A</code>, <code>B</code> and <code>C</code>.</p>
+    <p>If we ever added another property or set of properties, we'd give them <code>FromVer = 2</code>, telling ABSave that they only occur from version '2' and upwards, and therefore giving the class three different versions.</p>
+    <p>And that's all it takes, problem solved! ABSave just makes it all seamlessly happen! You can find out more about how to correctly 'version' all the changes listed above in the <a href="#" data-navigates="alongside" data-navigateTo="Mapping">mapping</a> section.</p>
 
-    <pre><code class="language-csharp">
-var map = new ObjectMapItem(false, () => new MyClass(), 3)
-    .AddItem(nameof(MyClass.MyBl), new TypeConverterMapItem(false, BooleanTypeConverter.Instance))
-    .AddItem(nameof(MyClass.MyInt), new TypeConverterMapItem(false, IntegerAndEnumTypeConverter.Instance))
-    .AddItem(nameof(MyClass.MyOC), new ObjectMapItem(true, () => new MyOtherClass(), 1)
-        .AddItem(nameof(MyClass.AnInt), new TypeConverterMapItem(IntegerAndEnumTypeConverter.Instance)));
-    </code></pre>
-
-    <p>This map still technically requires reflection in order to get and set the values of each item, and therefore isn't as high-performance as it can be, however it is still faster and more precise than without.</p>
-    <p>It is possible to manually provide getters and setters too. Information about all the map items and how to do this is described in TODO WHERE</p>
-
-    <pre><code class="language-csharp">
-var map = new ObjectMapItem&lt;MyClass&gt;(3)
-    .AddItem&lt;MyClass, int&gt;(nameof(MyClass.MyBl), new TypeConverterMapItem(BooleanTypeConverter.Instance))
-    .AddItem&lt;MyClass, bool&gt;(nameof(MyClass.MyInt), new TypeConverterMapItem(IntegerAndEnumTypeConverter.Instance))
-    .AddItem&lt;MyClass, MyOtherClass&gt;(nameof(MyClass.MyOC), new ObjectMapItem(1)
-        .AddItem&lt;MyClass, int&gt;(nameof(MyClass.AnInt), new TypeConverterMapItem(IntegerAndEnumTypeConverter.Instance)));
-    </code></pre>
-
-    <div class="msgBox infoBox">
-        <h4 class="noAnchor">INFO</h4>
-        <p>The <code>TItem</code> you give should match the exact type the field is, not the type of data that you've put into the field. This means if the field is an <code>object</code>, and an integer is put into it, the type given in the map should still be <code>object</code>.</p>
+    <h2 id="going-from-here">Going from here</h2>
+    <hr>
+    <p>That's it! You can now go ahead and use ABSave as much as you'd like. If you want to learn even more about using ABSave now, here are some of the other pages you can go to:</p>
+    <div class="navBoxContainer">
+        <div data-navigates="alongside" data-navigateTo="Mapping" class="navBox navBoxLight navBox-half">
+            <h1 class="noAnchor">Mapping</h1>
+            <p>Find out about all the different attributes and their abilities!</p>
+        </div>
+        <div data-navigates="alongside" data-navigateTo="Settings" class="navBox navBoxLight navBox-half">
+            <h1 class="noAnchor">Settings</h1>
+            <p>Play about with the individual options within <code>ABSaveSettings</code> to tune ABSave to exactly your scenario!</p>
+        </div>
     </div>
 
     <?php include('../../base/pageBodyEnd.html') ?>
