@@ -256,7 +256,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     }
 
     [SaveMembers]
-    [SaveInheritance(SaveInheritanceMode.Key, FromVer = 0, ToVer = 1)]
+    [SaveInheritance(SaveInheritanceMode.Key, FromVer = 0, ToVer = 2)]
     [SaveInheritance(SaveInheritanceMode.IndexOrKey, FromVer = 3)]
     public class VersionedClass
     {
@@ -266,7 +266,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         [Save(0)]
         public DateTime A { get; set; } = new DateTime(3);
 
-        [Save(1, FromVer = 1, ToVer = 1)]
+        [Save(1, FromVer = 1, ToVer = 2)]
         public bool B { get; set; } = true;
 
         [Save(2, FromVer = 1)]
@@ -286,6 +286,12 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         }
 
         public override int GetHashCode() => base.GetHashCode();
+    }
+
+    class InvalidSaveAttributeClass
+    {
+        [Save(3, FromVer = 9, ToVer = 9)]
+        public int A { get; set; }
     }
 
     public class UnserializableClass { }
