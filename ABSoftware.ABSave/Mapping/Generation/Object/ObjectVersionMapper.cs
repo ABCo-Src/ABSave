@@ -17,7 +17,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             {
                 ObjectIntermediateItem? intermediateItm = rawMembers[i];
 
-                if (targetVersion >= intermediateItm.StartVer && targetVersion <= intermediateItm.EndVer)
+                if (targetVersion >= intermediateItm.StartVer && targetVersion < intermediateItm.EndVer)
                     lst.Add(GetOrCreateItemFrom(item, intermediateItm, gen));
             }
 

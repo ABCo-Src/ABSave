@@ -20,7 +20,7 @@ namespace ABCo.ABSave.Mapping.Description.Attributes
         // Allow sorting by lower version.
         public int CompareTo(AttributeWithVersion? other)
         {
-            if (FromVer < other.FromVer)
+            if (FromVer < other!.FromVer)
                 return 1;
             else if (FromVer > other.FromVer)
                 return -1;

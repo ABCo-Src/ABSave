@@ -141,7 +141,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         }
 
         [TestMethod]
-        public void ProcessItemAttributes_Valid()
+        public void ProcessItemAttributes()
         {
             Setup();
 
@@ -152,7 +152,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             Assert.AreEqual(1, item.Order);
             Assert.AreEqual(1u, item.StartVer);
-            Assert.AreEqual(1u, item.EndVer);
+            Assert.AreEqual(2u, item.EndVer);
         }
 
         //[TestMethod]
@@ -317,8 +317,6 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             Assert.ThrowsException<InvalidAttributeToVerException>(() =>
                 IntermediateMapper.CreateIntermediateObjectInfo(typeof(InvalidSaveAttributeClass), SaveMembersMode.Properties, out var members));
-
-
         }
     }
 }

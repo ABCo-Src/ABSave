@@ -9,7 +9,7 @@ namespace ABCo.ABSave.Mapping.Generation
     {
         public static void UpdateHighestVersionFromRange(ref uint highestVersion, uint startVer, uint endVer)
         {
-            if (startVer <= endVer) throw new InvalidAttributeToVerException();
+            if (endVer <= startVer) throw new InvalidAttributeToVerException();
 
             // If there is no upper we'll only update the highest version based on what the minimum is.
             if (endVer == uint.MaxValue)
@@ -18,7 +18,7 @@ namespace ABCo.ABSave.Mapping.Generation
                     highestVersion = startVer;
             }
 
-            // If not update based on what their custom high is.
+            // If not, update based on what their custom high is.
             else
             {
                 if (endVer > highestVersion)
