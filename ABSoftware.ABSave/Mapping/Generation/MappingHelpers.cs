@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Mapping.Description.Attributes;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using System;
 using System.Collections.Generic;
 
@@ -8,6 +9,8 @@ namespace ABCo.ABSave.Mapping.Generation
     {
         public static void UpdateHighestVersionFromRange(ref uint highestVersion, uint startVer, uint endVer)
         {
+            if (startVer <= endVer) throw new InvalidAttributeToVerException();
+
             // If there is no upper we'll only update the highest version based on what the minimum is.
             if (endVer == uint.MaxValue)
             {

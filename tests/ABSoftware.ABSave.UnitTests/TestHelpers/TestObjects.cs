@@ -288,6 +288,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
+    [SaveMembers]
     class InvalidSaveAttributeClass
     {
         [Save(3, FromVer = 9, ToVer = 9)]
