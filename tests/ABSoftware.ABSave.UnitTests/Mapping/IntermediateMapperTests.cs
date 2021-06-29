@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Mapping.Description;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using ABCo.ABSave.Mapping.Generation.Object;
@@ -307,6 +308,17 @@ namespace ABCo.ABSave.UnitTests.Mapping
                 Assert.AreEqual(expectedType, ((PropertyInfo)members.Members[i].Details.Unprocessed).PropertyType);
                 i++;
             }
+        }
+
+        [TestMethod]
+        public void InvalidSaveAttribute()
+        {
+            Setup();
+
+            Assert.ThrowsException<InvalidAttributeToVerException>(() =>
+                IntermediateMapper.CreateIntermediateObjectInfo(typeof(InvalidSaveAttributeClass), SaveMembersMode.Properties, out var members));
+
+
         }
     }
 }
