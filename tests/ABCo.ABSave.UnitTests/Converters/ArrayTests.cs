@@ -14,7 +14,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestInitialize]
         public void SetupSettings()
         {
-            Settings = ABSaveSettings.ForSpeed.Customize(b => b.SetBypassDangerousTypeChecking(true));
+            Settings = ABSaveSettings.ForSpeed;
         }
 
         [TestMethod]

@@ -32,15 +32,13 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void ReadInteger(bool lazy)
+        public void ReadInteger()
         {
-            Initialize(lazy ? ABSaveSettings.ForSpeed : ABSaveSettings.ForSize);
+            Initialize(ABSaveSettings.ForSpeed);
 
-            var source = new BitSource(lazy ? (byte)0b11000000 : (byte)0b11000110, Deserializer);
+            var source = new BitSource((byte)0b11000110, Deserializer);
             // Setup the next byte too
-            Stream.WriteByte(lazy ? (byte)0b01100100 : (byte)0b01000000);
+            Stream.WriteByte((byte)0b01000000);
             GoToStart();
 
             Assert.AreEqual(12, source.ReadInteger(4));

@@ -24,10 +24,10 @@ namespace ABCo.ABSave.Converters
             header.WriteBitWith(hasBuild);
             header.WriteBitWith(hasRevision);
 
-            if (hasMajor) header.Serializer.WriteCompressed((uint)version.Major, ref header);
-            if (hasMinor) header.Serializer.WriteCompressed((uint)version.Minor, ref header);
-            if (hasBuild) header.Serializer.WriteCompressed((uint)version.Build, ref header);
-            if (hasRevision) header.Serializer.WriteCompressed((uint)version.Revision, ref header);
+            if (hasMajor) header.Serializer.WriteCompressedInt((uint)version.Major, ref header);
+            if (hasMinor) header.Serializer.WriteCompressedInt((uint)version.Minor, ref header);
+            if (hasBuild) header.Serializer.WriteCompressedInt((uint)version.Build, ref header);
+            if (hasRevision) header.Serializer.WriteCompressedInt((uint)version.Revision, ref header);
 
             // If the header hasn't been applied yet, apply it now
             if (header.FreeBits < 8) header.Apply();

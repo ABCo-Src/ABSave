@@ -44,14 +44,6 @@ namespace ABCo.ABSave.Serialization
         {
             if (bitsRequired > FreeBits)
             {
-                // If we're being lazy, or there's literally 0 bits free, just go onto a new byte instead of spending a lot of effort spreading it between two bytes.
-                if (Serializer.Settings.LazyBitHandling || FreeBits == 0)
-                {
-                    Apply();
-                    WriteInteger(number, bitsRequired);
-                    return;
-                }
-
                 byte remainingFromFirst = (byte)(bitsRequired - FreeBits);
                 Result |= number >> remainingFromFirst;
 
@@ -65,6 +57,13 @@ namespace ABCo.ABSave.Serialization
                 FreeBits -= bitsRequired;
                 Result |= number << FreeBits;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void OrAndApply(byte orWith)
+        {
+            Result |= orWith;
+            Apply();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

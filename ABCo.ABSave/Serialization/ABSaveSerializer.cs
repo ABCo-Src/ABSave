@@ -175,7 +175,7 @@ namespace ABCo.ABSave.Serialization
             if (TargetVersions?.TryGetValue(item.ItemType, out targetVersion) != true)
                 targetVersion = item.HighestVersion;
 
-            WriteCompressed(targetVersion, ref target);
+            WriteCompressedInt(targetVersion, ref target);
             return targetVersion;
         }
 
@@ -212,7 +212,7 @@ namespace ABCo.ABSave.Serialization
             if (info.IndexSerializeCache!.TryGetValue(actualType, out uint pos))
             {
                 if (writeOnIfSuccessful) header.WriteBitOn();
-                WriteCompressed(pos, ref header);
+                WriteCompressedInt(pos, ref header);
                 return true;
             }
 
