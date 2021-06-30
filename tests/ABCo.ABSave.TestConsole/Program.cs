@@ -51,28 +51,28 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             ABSaveConvert.Serialize(TestObj, Map, ABSaveResult);
         }
 
-        [Benchmark]
-        public void UTF8Json()
-        {
-            Utf8JsonResult.Position = 0;
-            Utf8Json.JsonSerializer.Serialize(Utf8JsonResult, TestObj);
-        }
+        //[Benchmark]
+        //public void UTF8Json()
+        //{
+        //    Utf8JsonResult.Position = 0;
+        //    Utf8Json.JsonSerializer.Serialize(Utf8JsonResult, TestObj);
+        //}
 
-        [Benchmark]
-        public void TextJson()
-        {
-            TextJsonResult.Position = 0;
+        //[Benchmark]
+        //public void TextJson()
+        //{
+        //    TextJsonResult.Position = 0;
 
-            using var writer = new Utf8JsonWriter(TextJsonResult, new JsonWriterOptions());
-            JsonSerializer.Serialize(writer, TestObj);
-        }
+        //    using var writer = new Utf8JsonWriter(TextJsonResult, new JsonWriterOptions());
+        //    JsonSerializer.Serialize(writer, TestObj);
+        //}
 
-        [Benchmark]
-        public void MessagePack()
-        {
-            MessagePackResult.Position = 0;
-            MessagePackSerializer.Serialize(typeof(JsonResponseModel), MessagePackResult, TestObj);
-        }
+        //[Benchmark]
+        //public void MessagePack()
+        //{
+        //    MessagePackResult.Position = 0;
+        //    MessagePackSerializer.Serialize(typeof(JsonResponseModel), MessagePackResult, TestObj);
+        //}
 
         [Benchmark(Baseline = true)]
         public void BinaryPack()
@@ -146,8 +146,8 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             //Console.ReadLine();
 
             //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(null, new DebugInProcessConfig());
-            //BenchmarkRunner.Run<TestBenchmark>();
-            //Console.ReadLine();
+            BenchmarkRunner.Run<TestBenchmark>();
+            Console.ReadLine();
 
             var benchmarks = new TestBenchmark();
             benchmarks.Setup();

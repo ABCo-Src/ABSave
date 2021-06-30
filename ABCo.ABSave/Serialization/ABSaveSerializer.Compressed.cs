@@ -20,40 +20,51 @@ namespace ABCo.ABSave.Serialization
             WriteCompressed(data, ref target);
         }
 
+        struct CompressedDataInfo
+        {
+            public byte ContBytesNo;
+            public byte BitsToGo;
+            public byte Header;
+            public byte HeaderLen;
+
+            public CompressedDataInfo(byte contBytesNo, byte header, byte headerLen)
+            {
+                (ContBytesNo, Header, HeaderLen) = (contBytesNo, header, headerLen);
+                BitsToGo = (byte)(contBytesNo * 8);
+            }
+        }
+
         public void WriteCompressed(uint data, ref BitTarget target) => WriteCompressed((ulong)data, ref target);
         public void WriteCompressed(ulong data, ref BitTarget target)
         {
             if (target.FreeBits == 0) target.Apply();
 
-            byte contBytesNo = GetContBytesNo(data, target.FreeBits);
-            byte bitsToGo = (byte)(8 * contBytesNo);
+            var dataInfo = GetCompressedDataInfo(data, target.FreeBits);
 
             // Write the first byte
-            WriteFirstByte(ref target, data, bitsToGo, contBytesNo);
+            WriteFirstByte(ref target, data, dataInfo);
 
             // Write the data in the remaining bytes
-            while (bitsToGo > 0)
+            while (dataInfo.BitsToGo > 0)
             {
-                bitsToGo -= 8;
-                WriteByte((byte)(data >> bitsToGo));
+                dataInfo.BitsToGo -= 8;
+                WriteByte((byte)(data >> dataInfo.BitsToGo));
             }
         }
 
-        void WriteFirstByte(ref BitTarget target, ulong data, byte noOfContBits, byte noOfContBytes)
+        void WriteFirstByte(ref BitTarget target, ulong data, CompressedDataInfo dataInfo)
         {
-            (byte header, byte headerLen) = GetHeader(noOfContBytes);
-
             bool isExtendedByte = target.FreeBits < 4;
-            bool byteWillHaveFreeSpace = headerLen < target.FreeBits;
+            bool byteWillHaveFreeSpace = dataInfo.HeaderLen < target.FreeBits;
 
             // Write the header
-            target.WriteInteger(header, headerLen);
+            target.WriteInteger(dataInfo.Header, dataInfo.HeaderLen);
 
             // Handle extended starts (yyy-xxxxxxxx)
             if (isExtendedByte)
             {
                 // Write any free "y"s.
-                if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data >> noOfContBits >> 8), target.FreeBits);
+                if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data >> dataInfo.BitsToGo >> 8), target.FreeBits);
 
                 // The next byte will definitely have some free space, as we can not physically fill all of the remaining "xxxxxxxx"s with the header.
                 // Ensure we're definitely ready for the next byte.
@@ -62,41 +73,27 @@ namespace ABCo.ABSave.Serialization
                 byteWillHaveFreeSpace = true;
             }
 
-            if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data >> noOfContBits), target.FreeBits);
+            if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data >> dataInfo.BitsToGo), target.FreeBits);
 
             target.Apply();
         }
 
-        private static (byte header, byte headerLen) GetHeader(byte contBytesRequired) => contBytesRequired switch
-        {
-            0 => (0, 1),
-            1 => (0b10, 2),
-            2 => (0b110, 3),
-            3 => (0b1110, 4),
-            4 => (0b11110, 5),
-            5 => (0b111110, 6),
-            6 => (0b1111110, 7),
-            7 => (0b11111110, 8),
-            8 => (0b11111111, 8),
-            _ => throw new Exception("ABSAVE: Invalid 'contBytesRequired' given to 'WriteVariableData'")
-        };
-
-        byte GetContBytesNo(ulong num, byte bitsFree)
+        CompressedDataInfo GetCompressedDataInfo(ulong num, byte bitsFree)
         {
             ulong mask = (1UL << bitsFree) >> 1;
 
             // Extended byte
             if (bitsFree < 4) mask <<= 8;
 
-            if (num < mask) return 0;
-            else if (num < (mask << 7)) return 1;
-            else if (num < (mask << 14)) return 2;
-            else if (num < (mask << 21)) return 3;
-            else if (num < (mask << 28)) return 4;
-            else if (num < (mask << 35)) return 5;
-            else if (num < (mask << 42)) return 6;
-            else if (num < (mask << 49)) return 7;
-            else return 8;
+            if (num < mask) return new CompressedDataInfo(0, 0, 1);
+            else if (num < (mask << 7)) return new CompressedDataInfo(1, 0b10, 2);
+            else if (num < (mask << 14)) return new CompressedDataInfo(2, 0b110, 3);
+            else if (num < (mask << 21)) return new CompressedDataInfo(3, 0b1110, 4);
+            else if (num < (mask << 28)) return new CompressedDataInfo(4, 0b11110, 5);
+            else if (num < (mask << 35)) return new CompressedDataInfo(5, 0b111110, 6);
+            else if (num < (mask << 42)) return new CompressedDataInfo(6, 0b1111110, 7);
+            else if (num < (mask << 49)) return new CompressedDataInfo(7, 0b11111110, 8);
+            else return new CompressedDataInfo(8, 255, 8);
         }
     }
 }
