@@ -14,13 +14,12 @@ namespace ABCo.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer : IDisposable
     {
-        readonly Dictionary<Type, VersionInfo> _versions = new Dictionary<Type, VersionInfo>();
-
         public ABSaveMap Map { get; }
         public ABSaveSettings Settings { get; }
         public bool ShouldReverseEndian { get; }
         public Stream Source { get; private set; }
 
+        VersionInfo[] _currentVersionInfos = null!;
         byte[]? _stringBuffer;
 
         internal ABSaveDeserializer(ABSaveMap map)
@@ -29,6 +28,7 @@ namespace ABCo.ABSave.Deserialization
             Settings = map.Settings;
             ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
             Source = null!;
+            _currentVersionInfos = new VersionInfo[map._highestConverterInstanceId];
         }
 
         public void Initialize(Stream source)
@@ -37,7 +37,7 @@ namespace ABCo.ABSave.Deserialization
             Reset();
         }
 
-        public void Reset() => _versions.Clear();
+        public void Reset() => Array.Clear(_currentVersionInfos, 0, _currentVersionInfos.Length);
         public void Dispose() => Map.ReleaseDeserializer(this);
 
         BitSource _currentHeader;
@@ -134,16 +134,20 @@ namespace ABCo.ABSave.Deserialization
         /// <returns>Whether the item already exists</returns>
         internal void HandleVersionNumber(Converter item, out VersionInfo info, ref BitSource header)
         {
-            // If the version has already been read, don't do anything.
-            if (_versions.TryGetValue(item.ItemType, out VersionInfo? newInfo))
+            if (item._instanceId >= _currentVersionInfos.Length)
+                Array.Resize(ref _currentVersionInfos, (int)Map._highestConverterInstanceId);
+
+            // If the version has already been read, do nothing
+            VersionInfo? existingInfo = _currentVersionInfos[item._instanceId];
+            if (existingInfo != null)
             {
-                info = newInfo;
+                info = existingInfo;
                 return;
             }
 
             uint version = ReadNewVersionInfo(ref header);
             info = Map.GetVersionInfo(item, version);
-            _versions.Add(item.ItemType, info);
+            _currentVersionInfos[item._instanceId] = info;
         }
         
         // Returns: Whether the type has changed

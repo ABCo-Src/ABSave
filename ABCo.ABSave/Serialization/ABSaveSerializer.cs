@@ -24,7 +24,7 @@ namespace ABCo.ABSave.Serialization
         public Stream Output { get; private set; } = null!;
         public bool ShouldReverseEndian { get; private set; }
 
-        
+        VersionInfo?[] _currentVersionInfos;
         byte[]? _stringBuffer;
 
         internal ABSaveSerializer(ABSaveMap map)
@@ -32,7 +32,7 @@ namespace ABCo.ABSave.Serialization
             Map = map;
             Settings = map.Settings;
             ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
-            
+            _currentVersionInfos = new VersionInfo[map._highestConverterInstanceId];
         }
 
         public void Initialize(Stream output, Dictionary<Type, uint>? targetVersions)
@@ -149,17 +149,21 @@ namespace ABCo.ABSave.Serialization
         /// <returns>Whether the item already exists</returns>
         internal bool HandleVersionNumber(Converter item, out VersionInfo info, ref BitTarget header)
         {
+            if (item._instanceId >= _currentVersionInfos.Length)
+                Array.Resize(ref _currentVersionInfos, (int)Map._highestConverterInstanceId);
+
             // If the version has already been written, do nothing
-            if (_versions.TryGetValue(item.ItemType, out VersionInfo? newInfo))
+            VersionInfo? existingInfo = _currentVersionInfos[item._instanceId];
+            if (existingInfo != null)
             {
-                info = newInfo;
+                info = existingInfo;
                 return true;
             }
 
             uint version = WriteNewVersionInfo(item, ref header);
 
             info = Map.GetVersionInfo(item, version);
-            _versions.Add(item.ItemType, info);
+            _currentVersionInfos[item._instanceId] = info;
             return false;
         }
 
