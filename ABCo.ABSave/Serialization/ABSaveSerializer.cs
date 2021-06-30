@@ -16,39 +16,42 @@ namespace ABCo.ABSave.Serialization
     /// <summary>
     /// The central object that everything in ABSave writes to. Provides facilties to write primitive types, including strings.
     /// </summary>
-    public sealed partial class ABSaveSerializer
+    public sealed partial class ABSaveSerializer : IDisposable
     {
-        readonly Dictionary<Type, VersionInfo> _versions = new Dictionary<Type, VersionInfo>();
-
         public Dictionary<Type, uint>? TargetVersions { get; private set; }
-        public ABSaveMap Map { get; private set; } = null!;
-        public ABSaveSettings Settings { get; private set; } = null!;
+        public ABSaveMap Map { get; }
+        public ABSaveSettings Settings { get; }
         public Stream Output { get; private set; } = null!;
         public bool ShouldReverseEndian { get; private set; }
 
+        
         byte[]? _stringBuffer;
 
-        public void Initialize(Stream output, ABSaveMap map, Dictionary<Type, uint>? targetVersions)
+        internal ABSaveSerializer(ABSaveMap map)
+        {
+            Map = map;
+            Settings = map.Settings;
+            ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
+            
+        }
+
+        public void Initialize(Stream output, Dictionary<Type, uint>? targetVersions)
         {
             if (!output.CanWrite)
                 throw new Exception("Cannot use unwriteable stream.");
 
             Output = output;
-
-            Map = map;
-            Settings = map.Settings;
             TargetVersions = targetVersions;
-
-            ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
 
             Reset();
         }
 
-        public void Reset() => _versions.Clear();
+        public void Reset() => Array.Clear(_currentVersionInfos, 0, _currentVersionInfos.Length);
+        public void Dispose() => Map.ReleaseSerializer(this);
 
         public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
 
-        public void SerializeRoot(object? obj) => SerializeItem(obj, Map.RootItem);
+        public void SerializeRoot(object? obj) => SerializeItem(obj, Map._rootItem);
 
         public void SerializeItem(object? obj, MapItemInfo item)
         {

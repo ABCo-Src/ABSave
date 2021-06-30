@@ -16,6 +16,8 @@ namespace ABCo.ABSave.Converters
 
         internal volatile bool _isGenerating;
         internal bool _hasOneVersion;
+
+        internal uint _instanceId;
         internal uint _highestVersion;
 
         public uint HighestVersion => _highestVersion;

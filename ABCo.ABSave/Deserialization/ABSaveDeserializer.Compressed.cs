@@ -4,7 +4,7 @@
     // NOTE: Full details about the "compressed numerical" structure can be seen in the TXT file: CompressedPlan.txt in the project root
     // ===============================================
     // This is just an implementation of everything shown there.
-    public partial class ABSaveDeserializer
+    public sealed partial class ABSaveDeserializer
     {
         public uint ReadCompressedInt()
         {

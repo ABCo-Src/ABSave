@@ -12,33 +12,40 @@ using System.IO;
 
 namespace ABCo.ABSave.Deserialization
 {
-    public sealed partial class ABSaveDeserializer
+    public sealed partial class ABSaveDeserializer : IDisposable
     {
         readonly Dictionary<Type, VersionInfo> _versions = new Dictionary<Type, VersionInfo>();
 
-        public ABSaveMap Map { get; private set; } = null!;
-        public ABSaveSettings Settings { get; private set; } = null!;
-        public Stream Source { get; private set; } = null!;
-        public bool ShouldReverseEndian { get; private set; }
+        public ABSaveMap Map { get; }
+        public ABSaveSettings Settings { get; }
+        public bool ShouldReverseEndian { get; }
+        public Stream Source { get; private set; }
 
         byte[]? _stringBuffer;
 
-        public void Initialize(Stream source, ABSaveMap map)
+        internal ABSaveDeserializer(ABSaveMap map)
         {
             Map = map;
             Settings = map.Settings;
-            ShouldReverseEndian = Map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
+            ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
+            Source = null!;
+        }
+
+        public void Initialize(Stream source)
+        {
             Source = source;
+            Reset();
         }
 
         public void Reset() => _versions.Clear();
+        public void Dispose() => Map.ReleaseDeserializer(this);
 
         BitSource _currentHeader;
         bool _readHeader;
 
         public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
 
-        public object? DeserializeRoot() => DeserializeItem(Map.RootItem);
+        public object? DeserializeRoot() => DeserializeItem(Map._rootItem);
 
         public object? DeserializeItem(MapItemInfo info)
         {
