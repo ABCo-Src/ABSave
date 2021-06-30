@@ -20,10 +20,11 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public ABSaveDeserializer Deserializer;
 
         public void Initialize(Dictionary<Type, uint> targetVersions = null) => Initialize(ABSaveSettings.ForSpeed, targetVersions);
-        public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null)
+        public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null, bool lazyWriteCompressed = false)
         {
             var settings = template.Customize(b => b
                 .SetBypassDangerousTypeChecking(true)
+                .SetLazyWriteCompressed(lazyWriteCompressed)
                 .AddConverter<BaseTypeConverter>()
                 .AddConverter<SubTypeConverter>()
                 .AddConverter<OtherTypeConverter>()
@@ -130,7 +131,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                         case GenType.Size:
 
                             SetupSerializer();
-                            serializer.WriteCompressed((ulong)itms[currentItmsPos++]);
+                            serializer.WriteCompressedLong((ulong)itms[currentItmsPos++]);
 
                             bytes.AddRange(((MemoryStream)serializer.Output).ToArray());
                             break;
