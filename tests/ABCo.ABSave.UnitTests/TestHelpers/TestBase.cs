@@ -23,7 +23,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null, bool lazyWriteCompressed = false)
         {
             var settings = template.Customize(b => b
-                .SetBypassDangerousTypeChecking(true)
                 .SetLazyWriteCompressed(lazyWriteCompressed)
                 .AddConverter<BaseTypeConverter>()
                 .AddConverter<SubTypeConverter>()

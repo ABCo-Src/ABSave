@@ -88,21 +88,14 @@ namespace ABCo.ABSave.UnitTests.Core
         [DataRow(true)]
         public void WriteInteger_Overflow(bool lazy)
         {
-            Initialize(lazy ? ABSaveSettings.ForSpeed : ABSaveSettings.ForSize);
+            Initialize(ABSaveSettings.ForSpeed);
             var target = new BitTarget(Serializer);
 
             target.WriteInteger(0, 4);
             target.WriteInteger(42, 6);
             target.Apply();
 
-            if (lazy)
-            {
-                AssertAndGoToStart(0, 42 << 2);
-            }
-            else
-            {
-                AssertAndGoToStart(10, 128);
-            }
+            AssertAndGoToStart(10, 128);
         }
 
         [TestMethod]

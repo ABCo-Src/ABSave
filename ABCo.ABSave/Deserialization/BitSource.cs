@@ -39,12 +39,6 @@ namespace ABCo.ABSave.Deserialization
         {
             if (bitsRequired > FreeBits)
             {
-                if (Deserializer.Settings.LazyBitHandling)
-                {
-                    MoveToNewByte();
-                    return ReadInteger(bitsRequired);
-                }
-
                 int remainingFromFirst = bitsRequired - FreeBits;
                 int firstByteData = (Source & ABSaveUtils.IntFillMap[bitsRequired]) << remainingFromFirst;
 

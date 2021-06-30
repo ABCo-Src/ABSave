@@ -7,18 +7,10 @@ namespace ABCo.ABSave.Configuration
     public class SettingsBuilder
     {
         bool? _lazyWriteCompressed;
-        bool? _lazyBitHandling;
         bool? _useUTF8;
         bool? _useLittleEndian;
-        bool? _bypassDangerousTypeChecking;
 
         List<ConverterInfo>? _converters;
-
-        public SettingsBuilder SetLazyBitHandling(bool lazyBitHandling)
-        {
-            _lazyBitHandling = lazyBitHandling;
-            return this;
-        }
 
         public SettingsBuilder SetUseUTF8(bool useUTF8)
         {
@@ -32,12 +24,6 @@ namespace ABCo.ABSave.Configuration
             return this;
         }
 
-        public SettingsBuilder SetBypassDangerousTypeChecking(bool bypassDangerousTypeChecking)
-        {
-            _bypassDangerousTypeChecking = bypassDangerousTypeChecking;
-            return this;
-        }
-
         internal SettingsBuilder SetLazyWriteCompressed(bool lazyWriteCompressed)
         {
             _lazyWriteCompressed = lazyWriteCompressed;
@@ -48,7 +34,6 @@ namespace ABCo.ABSave.Configuration
         {
             // Handle basic settings
             bool lazyWriteCompressed = _lazyWriteCompressed ?? template.LazyCompressedWriting;
-            bool lazyBitHandling = _lazyBitHandling ?? template.LazyBitHandling;
             bool useUTF8 = _useUTF8 ?? template.UseUTF8;
             bool useLittleEndian = _useLittleEndian ?? template.UseLittleEndian;
 
@@ -57,7 +42,7 @@ namespace ABCo.ABSave.Configuration
             SettingsConverterProcessor.Split(_converters!, out IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, out IReadOnlyList<ConverterInfo>? nonExactConverter);
 
             // Create the new settings.
-            return new ABSaveSettings(lazyWriteCompressed, lazyBitHandling, useUTF8, useLittleEndian,
+            return new ABSaveSettings(lazyWriteCompressed, useUTF8, useLittleEndian,
                 _converters!.Count, exactConverters, nonExactConverter);
         }
 
