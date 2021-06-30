@@ -32,11 +32,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             CurrentMap = ABSaveMap.Get<EmptyClass>(settings);
 
             Stream = new MemoryStream();
-            Serializer = new ABSaveSerializer();
-            Serializer.Initialize(Stream, CurrentMap, targetVersions);
-
-            Deserializer = new ABSaveDeserializer();
-            Deserializer.Initialize(Stream, CurrentMap);
+            Serializer = CurrentMap.GetSerializer(Stream, targetVersions);
+            Deserializer = CurrentMap.GetDeserializer(Stream);
         }
 
         public void GoToStart() => Stream.Position = 0;
@@ -147,8 +144,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             {
                 if (serializer == null)
                 {
-                    serializer = new ABSaveSerializer();
-                    serializer.Initialize(new MemoryStream(), CurrentMap, null);
+                    serializer = CurrentMap.GetSerializer(new MemoryStream());
                 }
                 else
                 {

@@ -1,22 +1,30 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
+using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.General;
+using ABCo.ABSave.Serialization;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 
 namespace ABCo.ABSave.Mapping
 {
     public class ABSaveMap
     {
-        internal static ThreadLocal<MapGenerator> GeneratorPool = new ThreadLocal<MapGenerator>(() => new MapGenerator());
-        internal MapItemInfo RootItem;
+        internal static ThreadLocal<MapGenerator> _generatorPool = new ThreadLocal<MapGenerator>(() => new MapGenerator());
+        internal MapItemInfo _rootItem;
+        internal uint _highestConverterInstanceId;
+
+        readonly LightConcurrentPool<ABSaveSerializer> _serializerPool = new LightConcurrentPool<ABSaveSerializer>(2);
+        readonly LightConcurrentPool<ABSaveDeserializer> _deserializerPool = new LightConcurrentPool<ABSaveDeserializer>(2);
 
         /// <summary>
         /// All the types present throughout the map, and their respective map item.
         /// </summary>
-        internal Dictionary<Type, Converter?> AllTypes;
+        internal Dictionary<Type, Converter?> _allTypes;
 
         /// <summary>
         /// The configuration this map uses.
@@ -27,7 +35,7 @@ namespace ABCo.ABSave.Mapping
         internal ABSaveMap(ABSaveSettings settings)
         {
             Settings = settings;
-            AllTypes = new Dictionary<Type, Converter?>();
+            _allTypes = new Dictionary<Type, Converter?>();
         }
 
         public static ABSaveMap Get<T>(ABSaveSettings settings) => GetNonGeneric(typeof(T), settings);
@@ -37,7 +45,7 @@ namespace ABCo.ABSave.Mapping
             var map = new ABSaveMap(settings);
             MapGenerator? generator = map.GetGenerator();
 
-            map.RootItem = generator.GetMap(type);
+            map._rootItem = generator.GetMap(type);
             ReleaseGenerator(generator);
             return map;
         }
@@ -63,9 +71,11 @@ namespace ABCo.ABSave.Mapping
             return map;
         }
 
+        #region Generator Pooling
+
         internal MapGenerator GetGenerator()
         {
-            MapGenerator res = GeneratorPool.Value!;
+            MapGenerator res = _generatorPool.Value!;
             res.Initialize(this);
             return res;
         }
@@ -73,5 +83,33 @@ namespace ABCo.ABSave.Mapping
         // NOTE: It's generally not a good idea to call this from a "finally" just in case it pools
         // a generator that's been left in an invalid state.
         internal static void ReleaseGenerator(MapGenerator gen) => gen.FinishGeneration();
+
+        #endregion
+
+        #region Serializer Pooling
+
+        public ABSaveSerializer GetSerializer(Stream destStream, Dictionary<Type, uint>? targetVersions = null)
+        {
+            ABSaveSerializer serializer = _serializerPool.TryRent() ?? new ABSaveSerializer(this);
+            serializer.Initialize(destStream, targetVersions);
+            return serializer;
+        }
+
+        internal void ReleaseSerializer(ABSaveSerializer serializer) => _serializerPool.Release(serializer);
+
+        #endregion
+
+        #region Deserializer Pooling
+
+        public ABSaveDeserializer GetDeserializer(Stream destStream)
+        {
+            ABSaveDeserializer deserializer = _deserializerPool.TryRent() ?? new ABSaveDeserializer(this);
+            deserializer.Initialize(destStream);
+            return deserializer;
+        }
+
+        internal void ReleaseDeserializer(ABSaveDeserializer serializer) => _deserializerPool.Release(serializer);
+
+        #endregion
     }
 }
