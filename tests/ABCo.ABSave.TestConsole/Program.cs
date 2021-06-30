@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Serialization;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Running;
 using BinaryPack;
@@ -26,6 +27,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         public MemoryStream BinaryPackResult;
         public JsonResponseModel TestObj;
         public ABSaveMap Map;
+        public ABSaveSerializer Serializer;
 
         [GlobalSetup]
         public void Setup()
@@ -40,15 +42,18 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
-            TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\modelBig.txt"));
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSize);
+            Serializer = Map.GetSerializer(ABSaveResult);
+            //TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt"));
         }
 
         [Benchmark]
         public void ABSave()
         {
             ABSaveResult.Position = 0;
-            ABSaveConvert.Serialize(TestObj, Map, ABSaveResult);
+            Serializer.WriteCompressedInt(48);
+            Serializer.WriteCompressedInt(467);
+            //ABSaveConvert.Serialize(TestObj, Map, ABSaveResult);
         }
 
         //[Benchmark]
@@ -74,12 +79,12 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         //    MessagePackSerializer.Serialize(typeof(JsonResponseModel), MessagePackResult, TestObj);
         //}
 
-        [Benchmark(Baseline = true)]
-        public void BinaryPack()
-        {
-            BinaryPackResult.Position = 0;
-            BinaryConverter.Serialize(TestObj, BinaryPackResult);
-        }
+        //[Benchmark(Baseline = true)]
+        //public void BinaryPack()
+        //{
+        //    BinaryPackResult.Position = 0;
+        //    BinaryConverter.Serialize(TestObj, BinaryPackResult);
+        //}
 
         //[Benchmark]
         //public void NewtonsoftJson()
@@ -114,26 +119,25 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
 
 
-        //        [GlobalCleanup]
-        //        public void Finish()
-        //        {
-        //            Console.WriteLine("OUTPUT SIZES:");
+        [GlobalCleanup]
+        public void Finish()
+        {
+            Console.WriteLine("OUTPUT SIZES:");
 
-        //            Print(ABSaveNew, ABSaveNewResult);
-        //            Print(UTF8Json, Utf8JsonResult);
-        //            Print(TextJson, TextJsonResult);
-        //            Print(BinaryFormat, BinaryFormatterResult);
-        //            Print(MessagePack, MessagePackResult);
-        //            Print(BinaryPack, BinaryPackResult);
-        //            //Print(NewtonsoftJson, NewtonsoftJsonResult);
-        //            //Print(XML, XMLResult);
+            Print(ABSave, ABSaveResult);
+            //Print(UTF8Json, Utf8JsonResult);
+            //Print(TextJson, TextJsonResult);
+            //Print(MessagePack, MessagePackResult);
+            //Print(BinaryPack, BinaryPackResult);
+            //Print(NewtonsoftJson, NewtonsoftJsonResult);
+            //Print(XML, XMLResult);
 
-        //            void Print(Action a, Stream stream)
-        //            {
-        //                a();
-        //                Console.WriteLine(a.Method.Name + ": " + stream.Length);
-        //            }
-        //        }
+            void Print(Action a, Stream stream)
+            {
+                a();
+                Console.WriteLine(a.Method.Name + ": " + stream.Length);
+            }
+        }
     }
 
 
@@ -142,7 +146,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         static void Main()
         {
             //GenerateAndSaveNewModel();
-            //TestOutputSize();
+            TestOutputSize();
             //Console.ReadLine();
 
             //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(null, new DebugInProcessConfig());
@@ -161,7 +165,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
             Debugger.Break();
 
-            for (int i = 0; i < 10000; i++)
+            for (int i = 0; i < 10000000; i++)
             {
                 benchmarks.ABSave();
             }
@@ -171,9 +175,9 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
         public static void TestOutputSize()
         {
-            //var benchmarks = new TestBenchmark();
-            //benchmarks.Setup();
-            //benchmarks.Finish();
+            var benchmarks = new TestBenchmark();
+            benchmarks.Setup();
+            benchmarks.Finish();
         }
 
         public static void GenerateAndSaveNewModel()

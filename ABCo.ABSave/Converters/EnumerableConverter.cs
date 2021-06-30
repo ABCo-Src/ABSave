@@ -52,7 +52,7 @@ namespace ABCo.ABSave.Converters
         void SerializeCollection(object obj, CollectionInfo info, ref BitTarget header)
         {
             int size = info.GetCount(obj);
-            header.Serializer.WriteCompressed((uint)size, ref header);
+            header.Serializer.WriteCompressedInt((uint)size, ref header);
 
             IEnumerator? enumerator = info.GetEnumerator(obj);
             while (enumerator.MoveNext()) header.Serializer.SerializeItem(enumerator.Current, _elementOrKeyMap);
@@ -61,7 +61,7 @@ namespace ABCo.ABSave.Converters
         void SerializeDictionary(object obj, DictionaryInfo info, ref BitTarget header)
         {
             int size = info.GetCount(obj);
-            header.Serializer.WriteCompressed((uint)size, ref header);
+            header.Serializer.WriteCompressedInt((uint)size, ref header);
 
             IDictionaryEnumerator? enumerator = info.GetEnumerator(obj);
             while (enumerator.MoveNext())

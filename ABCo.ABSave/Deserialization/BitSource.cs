@@ -61,6 +61,12 @@ namespace ABCo.ABSave.Deserialization
             }
         }
 
+        public byte FinishByte()
+        {
+            FreeBits = 0;
+            return (byte)Source;
+        }
+
         public void MoveToNewByte()
         {
             Source = Deserializer.ReadByte();

@@ -68,6 +68,13 @@ namespace ABCo.ABSave.Serialization
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void OrAndApply(byte orWith)
+        {
+            Result |= orWith;
+            Apply();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Apply()
         {
             Serializer.WriteByte((byte)Result);

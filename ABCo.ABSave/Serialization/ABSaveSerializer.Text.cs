@@ -33,7 +33,7 @@ namespace ABCo.ABSave.Serialization
                 WriteUTF8(chars, ref header);
             else
             {
-                WriteCompressed((uint)chars.Length);
+                WriteCompressedInt((uint)chars.Length);
                 FastWriteShorts(MemoryMarshal.Cast<char, short>(chars));
             }
         }
@@ -45,7 +45,7 @@ namespace ABCo.ABSave.Serialization
 
             int actualSize = Encoding.UTF8.GetBytes(data, buffer);
 
-            WriteCompressed((uint)actualSize, ref header);
+            WriteCompressedInt((uint)actualSize, ref header);
             WriteBytes(buffer.Slice(0, actualSize));
         }
 

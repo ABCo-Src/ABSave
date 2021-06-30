@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ABCo.ABSave.Helpers.NumberContainer;
+using System;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -8,16 +9,16 @@ namespace ABCo.ABSave.Serialization
     // This is just an implementation of everything shown there.
     public sealed partial class ABSaveSerializer
     {
-        public void WriteCompressed(uint data)
+        public void WriteCompressedInt(uint data)
         {
             var target = new BitTarget(this);
-            WriteCompressed(data, ref target);
+            WriteCompressedInt(data, ref target);
         }
 
-        public void WriteCompressed(ulong data)
+        public void WriteCompressedLong(ulong data)
         {
             var target = new BitTarget(this);
-            WriteCompressed(data, ref target);
+            WriteCompressedLong(data, ref target);
         }
 
         struct CompressedDataInfo
@@ -33,12 +34,43 @@ namespace ABCo.ABSave.Serialization
                 BitsToGo = (byte)(contBytesNo * 8);
             }
         }
+        
+        // NOTE: All uses of "INumberContainer" virtual calls in here are elided by the JIT thanks to generics.
+        public void WriteCompressedInt(uint data, ref BitTarget target) => WriteCompressed(new Int32Container((int)data), ref target);
+        public void WriteCompressedLong(ulong data, ref BitTarget target) => WriteCompressed(new Int64Container((long)data), ref target);
 
-        public void WriteCompressed(uint data, ref BitTarget target) => WriteCompressed((ulong)data, ref target);
-        public void WriteCompressed(ulong data, ref BitTarget target)
+        void WriteCompressed<T>(T data, ref BitTarget target) where T : INumberContainer
         {
             if (target.FreeBits == 0) target.Apply();
 
+            if (Settings.LazyCompressedWriting)
+                WriteCompressedLazyFast(data, ref target);
+            else
+                WriteCompressedSlow(data, ref target);
+        }
+
+        void WriteCompressedLazyFast<T>(T data, ref BitTarget target) where T : INumberContainer
+        {    
+            // This should be blazing fast, we're literally just going to write whether the number takes up more than a byte, and that's it.
+            if (data.LessThan(255))
+            {
+                target.OrAndApply(1);
+                WriteByte(data.ToByte());
+            }
+            else
+            {
+                target.OrAndApply(0);
+
+                // This check is optimized away by the JIT.
+                if (typeof(T) == typeof(Int32Container))
+                    WriteInt32(data.ToInt32());
+                else if (typeof(T) == typeof(Int64Container))
+                    WriteInt64(data.ToInt64());
+            }
+        }
+
+        void WriteCompressedSlow<T>(T data, ref BitTarget target) where T : INumberContainer
+        {
             var dataInfo = GetCompressedDataInfo(data, target.FreeBits);
 
             // Write the first byte
@@ -48,11 +80,11 @@ namespace ABCo.ABSave.Serialization
             while (dataInfo.BitsToGo > 0)
             {
                 dataInfo.BitsToGo -= 8;
-                WriteByte((byte)(data >> dataInfo.BitsToGo));
+                WriteByte((byte)data.ShiftRight(dataInfo.BitsToGo));
             }
         }
 
-        void WriteFirstByte(ref BitTarget target, ulong data, CompressedDataInfo dataInfo)
+        void WriteFirstByte<T>(ref BitTarget target, T data, CompressedDataInfo dataInfo) where T : INumberContainer
         {
             bool isExtendedByte = target.FreeBits < 4;
             bool byteWillHaveFreeSpace = dataInfo.HeaderLen < target.FreeBits;
@@ -64,7 +96,7 @@ namespace ABCo.ABSave.Serialization
             if (isExtendedByte)
             {
                 // Write any free "y"s.
-                if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data >> dataInfo.BitsToGo >> 8), target.FreeBits);
+                if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data.ShiftRight(dataInfo.BitsToGo) >> 8), target.FreeBits);
 
                 // The next byte will definitely have some free space, as we can not physically fill all of the remaining "xxxxxxxx"s with the header.
                 // Ensure we're definitely ready for the next byte.
@@ -73,26 +105,26 @@ namespace ABCo.ABSave.Serialization
                 byteWillHaveFreeSpace = true;
             }
 
-            if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data >> dataInfo.BitsToGo), target.FreeBits);
+            if (byteWillHaveFreeSpace) target.WriteInteger((byte)data.ShiftRight(dataInfo.BitsToGo), target.FreeBits);
 
             target.Apply();
         }
 
-        CompressedDataInfo GetCompressedDataInfo(ulong num, byte bitsFree)
+        CompressedDataInfo GetCompressedDataInfo<T>(T num, byte bitsFree) where T : INumberContainer
         {
-            ulong mask = (1UL << bitsFree) >> 1;
+            long mask = (1L << bitsFree) >> 1;
 
             // Extended byte
             if (bitsFree < 4) mask <<= 8;
 
-            if (num < mask) return new CompressedDataInfo(0, 0, 1);
-            else if (num < (mask << 7)) return new CompressedDataInfo(1, 0b10, 2);
-            else if (num < (mask << 14)) return new CompressedDataInfo(2, 0b110, 3);
-            else if (num < (mask << 21)) return new CompressedDataInfo(3, 0b1110, 4);
-            else if (num < (mask << 28)) return new CompressedDataInfo(4, 0b11110, 5);
-            else if (num < (mask << 35)) return new CompressedDataInfo(5, 0b111110, 6);
-            else if (num < (mask << 42)) return new CompressedDataInfo(6, 0b1111110, 7);
-            else if (num < (mask << 49)) return new CompressedDataInfo(7, 0b11111110, 8);
+            if (num.LessThanLong(mask)) return new CompressedDataInfo(0, 0, 1);
+            else if (num.LessThanLong(mask << 7)) return new CompressedDataInfo(1, 0b10, 2);
+            else if (num.LessThanLong(mask << 14)) return new CompressedDataInfo(2, 0b110, 3);
+            else if (num.LessThanLong(mask << 21)) return new CompressedDataInfo(3, 0b1110, 4);
+            else if (num.LessThanLong(mask << 28)) return new CompressedDataInfo(4, 0b11110, 5);
+            else if (num.LessThanLong(mask << 35)) return new CompressedDataInfo(5, 0b111110, 6);
+            else if (num.LessThanLong(mask << 42)) return new CompressedDataInfo(6, 0b1111110, 7);
+            else if (num.LessThanLong(mask << 49)) return new CompressedDataInfo(7, 0b11111110, 8);
             else return new CompressedDataInfo(8, 255, 8);
         }
     }
