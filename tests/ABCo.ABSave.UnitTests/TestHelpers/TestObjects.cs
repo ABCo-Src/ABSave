@@ -50,14 +50,24 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     class SubWithHeader : BaseIndex
     {
         public override bool Equals(object obj) => obj is SubWithHeader;
+        public override int GetHashCode() => base.GetHashCode();
+    }
 
+    class SubWithHeader2 : BaseIndex
+    {
+        public override bool Equals(object obj) => obj is SubWithHeader2;
         public override int GetHashCode() => base.GetHashCode();
     }
 
     class SubWithoutHeader : BaseIndex
     {
         public override bool Equals(object obj) => obj is SubWithoutHeader;
+        public override int GetHashCode() => base.GetHashCode();
+    }
 
+    class SubWithoutHeader2 : BaseIndex
+    {
+        public override bool Equals(object obj) => obj is SubWithoutHeader2;
         public override int GetHashCode() => base.GetHashCode();
     }
 
@@ -187,7 +197,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     }
 
     [SaveMembers]
-    [SaveBaseMembers(typeof(SingleMemberClass), FromVer = 0)]
+    [SaveBaseMembers(typeof(SingleMemberClass), ToVer = 1)]
     [SaveBaseMembers(typeof(MemberInheritingSingleClass), FromVer = 1)]
     class MemberInheritingDoubleClass : MemberInheritingSingleClass
     {
