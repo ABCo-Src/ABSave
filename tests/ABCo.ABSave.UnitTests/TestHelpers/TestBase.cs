@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace ABCo.ABSave.UnitTests.TestHelpers
@@ -20,10 +21,10 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public ABSaveDeserializer Deserializer;
 
         public void Initialize(Dictionary<Type, uint> targetVersions = null) => Initialize(ABSaveSettings.ForSpeed, targetVersions);
-        public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null)
+        public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null, bool lazyWriteCompressed = false)
         {
             var settings = template.Customize(b => b
-                .SetBypassDangerousTypeChecking(true)
+                .SetLazyWriteCompressed(lazyWriteCompressed)
                 .AddConverter<BaseTypeConverter>()
                 .AddConverter<SubTypeConverter>()
                 .AddConverter<OtherTypeConverter>()
@@ -32,11 +33,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             CurrentMap = ABSaveMap.Get<EmptyClass>(settings);
 
             Stream = new MemoryStream();
-            Serializer = new ABSaveSerializer();
-            Serializer.Initialize(Stream, CurrentMap, targetVersions);
-
-            Deserializer = new ABSaveDeserializer();
-            Deserializer.Initialize(Stream, CurrentMap);
+            Serializer = CurrentMap.GetSerializer(Stream, targetVersions);
+            Deserializer = CurrentMap.GetDeserializer(Stream);
         }
 
         public void GoToStart() => Stream.Position = 0;
@@ -133,7 +131,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                         case GenType.Size:
 
                             SetupSerializer();
-                            serializer.WriteCompressed((ulong)itms[currentItmsPos++]);
+                            serializer.WriteCompressedLong((ulong)itms[currentItmsPos++]);
 
                             bytes.AddRange(((MemoryStream)serializer.Output).ToArray());
                             break;
@@ -147,8 +145,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             {
                 if (serializer == null)
                 {
-                    serializer = new ABSaveSerializer();
-                    serializer.Initialize(new MemoryStream(), CurrentMap, null);
+                    serializer = CurrentMap.GetSerializer(new MemoryStream());
                 }
                 else
                 {
@@ -164,6 +161,36 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             res[1] = first;
             second.CopyTo(res, 1);
             return res;
+        }
+
+        public static void ReflectiveAssert(object expected, object actual)
+        {
+            if (actual == null) throw new Exception("Objects are not equal! The actual is null.");
+
+            var expectedType = expected.GetType();
+            var actualType = actual.GetType();
+
+            if (expectedType != actualType)
+                throw new Exception($"Objects not equal! Types do not match! Expected type: {expectedType}, Actual type: {actualType}");
+
+            var props = expectedType.GetProperties();
+
+            for (int i = 0; i < props.Length; i++)
+            {
+                var expectedPropValue = props[i].GetValue(expected);
+                var actualPropValue = props[i].GetValue(actual);
+
+                if (expectedPropValue == null)
+                {
+                    if (actualPropValue != null)
+                        throw new Exception($"The property {props[i].Name} does not match! Expected it to be null but was {actualPropValue}");
+
+                    continue;
+                }
+
+                if (!expectedPropValue.Equals(actualPropValue))
+                    throw new Exception($"The property {props[i].Name} does not match! Expected: {expectedPropValue} \n Actual: {actualPropValue}");
+            }
         }
     }
 

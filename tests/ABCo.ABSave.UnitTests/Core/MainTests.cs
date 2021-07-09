@@ -151,8 +151,7 @@ namespace ABCo.ABSave.UnitTests.Core
             OtherTypeConverter.WritesToHeader = true;
             ResetStateWithMapFor<ClassWithMinVersion>();
             {
-                Serializer.Initialize(Stream, CurrentMap, 
-                    new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
+                Serializer = CurrentMap.GetSerializer(Stream, new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
 
                 // With version
                 Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);
@@ -176,8 +175,7 @@ namespace ABCo.ABSave.UnitTests.Core
             OtherTypeConverter.WritesToHeader = false;
             ResetStateWithMapFor<ClassWithMinVersion>();
             {
-                Serializer.Initialize(Stream, CurrentMap,
-                    new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
+                Serializer = CurrentMap.GetSerializer(Stream, new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
 
                 // With version
                 Serializer.SerializeItem(new ClassWithMinVersion(), CurrentMapItem);

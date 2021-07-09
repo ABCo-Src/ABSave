@@ -4,7 +4,7 @@
     // NOTE: Full details about the "compressed numerical" structure can be seen in the TXT file: CompressedPlan.txt in the project root
     // ===============================================
     // This is just an implementation of everything shown there.
-    public partial class ABSaveDeserializer
+    public sealed partial class ABSaveDeserializer
     {
         public uint ReadCompressedInt()
         {
@@ -24,8 +24,26 @@
 
         public ulong ReadCompressed(bool canBeLong, ref BitSource source)
         {
-            if (source.FreeBits == 0) source = new BitSource(this, 8);
+            if (source.FreeBits == 0) source.MoveToNewByte();
 
+            if (Settings.LazyCompressedWriting)
+                return ReadCompressedLazyFast(canBeLong, ref source);
+            else
+                return ReadCompressedSlow(ref source);
+        }
+
+        public ulong ReadCompressedLazyFast(bool canBeLong, ref BitSource source)
+        {
+            if ((source.FinishByte() & 1) > 0)
+                return ReadByte();
+            else if (canBeLong)
+                return (ulong)ReadInt64();
+            else
+                return (ulong)ReadInt32();
+        }
+
+        public ulong ReadCompressedSlow(ref BitSource source)
+        {
             // Process header
             byte preHeaderCapacity = source.FreeBits;
             (byte noContBytes, byte headerLen) = ReadNoContBytes(ref source);
@@ -42,7 +60,7 @@
             return res;
         }
 
-        ulong ReadFirstByteData(ref BitSource source, byte headerLen, byte noContBits, byte preHeaderCapacity)
+        static ulong ReadFirstByteData(ref BitSource source, byte headerLen, byte noContBits, byte preHeaderCapacity)
         {
             bool isExtended = preHeaderCapacity < 4;
             ulong res = 0;

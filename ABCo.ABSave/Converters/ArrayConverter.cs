@@ -84,7 +84,7 @@ namespace ABCo.ABSave.Converters
                 //    }
                 case ArrayType.SZArrayManual:
                     {
-                        header.Serializer.WriteCompressed((uint)len, ref header);
+                        header.Serializer.WriteCompressedInt((uint)len, ref header);
                         for (int i = 0; i < len; i++) header.Serializer.SerializeItem(arr.GetValue(i), _info.PerItem);
 
                         break;
@@ -93,10 +93,10 @@ namespace ABCo.ABSave.Converters
                 // Extremely rare to not be in an "Array" (unknown), but may as well support it.
                 case ArrayType.SNZArray:
                     {
-                        header.Serializer.WriteCompressed((uint)len, ref header);
+                        header.Serializer.WriteCompressedInt((uint)len, ref header);
 
                         int i = arr.GetLowerBound(0);
-                        header.Serializer.WriteCompressed((uint)i);
+                        header.Serializer.WriteCompressedInt((uint)i);
 
                         int end = i + len;
                         for (; i < end; i++) header.Serializer.SerializeItem(arr.GetValue(i), _info.PerItem);
@@ -110,7 +110,7 @@ namespace ABCo.ABSave.Converters
                         int firstLength = arr.GetLength(0);
 
                         header.WriteBitWith(mdContext.CustomLowerBounds);
-                        header.Serializer.WriteCompressed((uint)firstLength, ref header);
+                        header.Serializer.WriteCompressedInt((uint)firstLength, ref header);
 
                         SerializeMultiDimensionalArrayData(arr, ref _info, ref mdContext, firstLength, lowerBounds, header.Serializer);
 
@@ -148,7 +148,7 @@ namespace ABCo.ABSave.Converters
 
                     header.WriteBitOff();
                     header.WriteBitOff();
-                    header.Serializer.WriteCompressed((uint)arr.Length, ref header);
+                    header.Serializer.WriteCompressedInt((uint)arr.Length, ref header);
 
                     for (int i = 0; i < arr.Length; i++) header.Serializer.SerializeItem(arr.GetValue(i), context.PerItem);
 
@@ -158,10 +158,10 @@ namespace ABCo.ABSave.Converters
                     // Write the header
                     header.WriteBitOff();
                     header.WriteBitOn();
-                    header.Serializer.WriteCompressed((uint)arr.Length, ref header);
+                    header.Serializer.WriteCompressedInt((uint)arr.Length, ref header);
 
                     int j = arr.GetLowerBound(0);
-                    header.Serializer.WriteCompressed((ulong)j);
+                    header.Serializer.WriteCompressedLong((ulong)j);
 
                     int endIndex = j + arr.Length;
                     for (; j < endIndex; j++) header.Serializer.SerializeItem(arr.GetValue(j), context.PerItem);
@@ -178,7 +178,7 @@ namespace ABCo.ABSave.Converters
                     header.WriteInteger(context.Rank, 5);
                     header.Apply();
 
-                    header.Serializer.WriteCompressed((uint)firstLength);
+                    header.Serializer.WriteCompressedInt((uint)firstLength);
 
                     SerializeMultiDimensionalArrayData(arr, ref context, ref mdContext, firstLength, lowerBounds, header.Serializer);
 
@@ -198,13 +198,13 @@ namespace ABCo.ABSave.Converters
             for (int i = 1; i < lengths.Length; i++)
             {
                 lengths[i] = arr.GetLength(i);
-                serializer.WriteCompressed((ulong)lengths[i]);
+                serializer.WriteCompressedLong((ulong)lengths[i]);
             }
 
             // Write the lower bounds
             if (mdContext.CustomLowerBounds)
                 for (int i = 0; i < lengths.Length; i++)
-                    serializer.WriteCompressed((ulong)lowerBounds[i]);
+                    serializer.WriteCompressedLong((ulong)lowerBounds[i]);
 
             SerializeDimension(0, lengths, lowerBounds, ref mdContext, ref context);
         }

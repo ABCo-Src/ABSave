@@ -16,12 +16,11 @@ namespace ABCo.ABSave.Configuration
         {
             SettingsConverterProcessor.Split(BuiltInConverters.Infos, out IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, out IReadOnlyList<ConverterInfo>? nonExactConverters);
 
-            // (The converter info is filled in by the builder so keep it blank)
             ForSpeed = new ABSaveSettings(true, true, true, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
             ForSize = new ABSaveSettings(false, true, true, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
         }
 
-        public bool LazyBitHandling { get; }
+        public bool LazyCompressedWriting { get; }
         public bool UseUTF8 { get; }
         public bool UseLittleEndian { get; }
 
@@ -37,10 +36,10 @@ namespace ABCo.ABSave.Configuration
             return builder.CreateSettings(this);
         }
 
-        internal ABSaveSettings(bool lazyBitHandling, bool useUTF8, bool useLittleEndian, int converterCount,
+        internal ABSaveSettings(bool lazyCompressedWriting, bool useUTF8, bool useLittleEndian, int converterCount,
             IReadOnlyDictionary<Type, ConverterInfo> exactConverters, IReadOnlyList<ConverterInfo> nonExactConverters)
         =>
-            (LazyBitHandling, UseUTF8, UseLittleEndian, ConverterCount, ExactConverters, NonExactConverters) =
-            (lazyBitHandling, useUTF8, useLittleEndian, converterCount, exactConverters, nonExactConverters);
+            (LazyCompressedWriting, UseUTF8, UseLittleEndian, ConverterCount, ExactConverters, NonExactConverters) =
+            (lazyCompressedWriting, useUTF8, useLittleEndian, converterCount, exactConverters, nonExactConverters);
     }
 }

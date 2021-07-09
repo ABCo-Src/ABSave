@@ -137,7 +137,7 @@ namespace ABCo.ABSave.Mapping.Generation
         // we're going to wait (keep retrying again and again) until it's finally been allocated a place.
         //
         // This is represented by the item being null.
-        internal Converter? GetExistingOrAddNull(Type type) => MappingHelpers.GetExistingOrAddNull(_map.AllTypes, type);
+        internal Converter? GetExistingOrAddNull(Type type) => MappingHelpers.GetExistingOrAddNull(_map._allTypes, type);
 
         // Adds the current item to the dictionary and fills in its details.
         internal void ApplyItem(Converter item, Type type)
@@ -146,8 +146,11 @@ namespace ABCo.ABSave.Mapping.Generation
             item.IsValueItemType = type.IsValueType;
             item._isGenerating = true;
 
-            lock (_map.AllTypes)
-                _map.AllTypes[type] = item;
+            lock (_map._allTypes)
+            {
+                _map._allTypes[type] = item;
+                item._instanceId = _map._highestConverterInstanceId++;
+            }
         }
 
         static bool TryExpandNullable(ref Type expanded)

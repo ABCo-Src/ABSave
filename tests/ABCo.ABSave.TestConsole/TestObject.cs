@@ -22,30 +22,39 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         }
 
         [Save(0)]
+        [Key(0)]
         public string Id { get; set; }
 
         [Save(1)]
+        [Key(1)]
         public string Type { get; set; }
 
         [Save(2)]
+        [Key(2)]
         public int Count { get; set; }
 
         [Save(3)]
+        [Key(3)]
         public DateTime CreationTime { get; set; }
 
         [Save(4)]
+        [Key(4)]
         public DateTime UpdateTime { get; set; }
 
         [Save(5)]
+        [Key(5)]
         public DateTime ExpirationTime { get; set; }
 
         [Save(6)]
+        [Key(6)]
         public string PreviousPageId { get; set; }
 
         [Save(7)]
+        [Key(7)]
         public string FollowingPageId { get; set; }
 
         [Save(8)]
+        [Key(8)]
         public List<ApiModelContainer> ModelContainers { get; set; }
 
         /// <inheritdoc/>
@@ -108,12 +117,15 @@ namespace ABCo.ABSave.Testing.ConsoleApp
     public sealed class ApiModelContainer : IEquatable<ApiModelContainer>
     {
         [Save(0)]
+        [Key(0)]
         public string Id { get; set; }
 
         [Save(1)]
+        [Key(1)]
         public string Type { get; set; }
 
         [Save(2)]
+        [Key(2)]
         public RestApiModel Model { get; set; }
 
         /// <inheritdoc/>
@@ -158,84 +170,111 @@ namespace ABCo.ABSave.Testing.ConsoleApp
     public sealed class RestApiModel : IEquatable<RestApiModel>
     {
         [Save(0)]
+        [Key(0)]
         public string Id { get; set; }
 
         [Save(1)]
+        [Key(1)]
         public string Type { get; set; }
 
         [Save(2)]
+        [Key(2)]
         public string Parent { get; set; }
 
         [Save(3)]
+        [Key(3)]
         public string Author { get; set; }
 
         [Save(4)]
+        [Key(4)]
         public string Title { get; set; }
 
         [Save(5)]
+        [Key(5)]
         public string Text { get; set; }
 
         [Save(6)]
+        [Key(6)]
         public string Url { get; set; }
 
         [Save(7)]
+        [Key(7)]
         public string HtmlContent { get; set; }
 
         [Save(8)]
+        [Key(8)]
         public int Upvotes { get; set; }
 
         [Save(9)]
+        [Key(9)]
         public int Downvotes { get; set; }
 
         [Save(10)]
+        [Key(10)]
         public float VotesRatio { get; set; }
 
         [Save(11)]
+        [Key(11)]
         public int Views { get; set; }
 
         [Save(12)]
+        [Key(12)]
         public int Clicks { get; set; }
 
         [Save(13)]
+        [Key(13)]
         public float ClicksRatio { get; set; }
 
         [Save(14)]
+        [Key(14)]
         public int NumberOfComments { get; set; }
 
         [Save(15)]
+        [Key(15)]
         public DateTime CreationTime { get; set; }
 
         [Save(16)]
+        [Key(16)]
         public DateTime UpdateTime { get; set; }
 
         [Save(17)]
+        [Key(17)]
         public DateTime ExpirationTime { get; set; }
 
         [Save(18)]
+        [Key(18)]
         public bool Flag1 { get; set; }
 
         [Save(19)]
+        [Key(19)]
         public bool Flag2 { get; set; }
 
         [Save(20)]
+        [Key(20)]
         public bool Flag3 { get; set; }
 
         [Save(21)]
+        [Key(21)]
         public bool Flag4 { get; set; }
 
         [Save(22)]
+        [Key(22)]
         public bool Flag5 { get; set; }
 
         [Save(23)]
+        [Key(23)]
         public string Optional1 { get; set; }
 
         [Save(24)]
+        [Key(24)]
         public string Optional2 { get; set; }
 
         [Save(25)]
+        [Key(25)]
         public string Optional3 { get; set; }
 
         [Save(26)]
+        [Key(26)]
         public MediaInfoModel Info { get; set; }
 
         /// <inheritdoc/>
@@ -354,15 +393,19 @@ namespace ABCo.ABSave.Testing.ConsoleApp
     public sealed class MediaInfoModel : IEquatable<MediaInfoModel>
     {
         [Save(0)]
+        [Key(0)]
         public string Id { get; set; }
 
         [Save(1)]
+        [Key(1)]
         public string AlbumUrl { get; set; }
 
         [Save(2)]
+        [Key(2)]
         public bool Property { get; set; }
 
         [Save(3)]
+        [Key(3)]
         public List<ImageModel> Images { get; set; }
 
         /// <inheritdoc/>
@@ -415,17 +458,31 @@ namespace ABCo.ABSave.Testing.ConsoleApp
     [SaveMembers]
     public sealed class ImageModel : IEquatable<ImageModel>
     {
+        private float _aspectRatio;
+
         [Save(0)]
+        [Key(0)]
         public string Url { get; set; }
 
         [Save(1)]
+        [Key(1)]
         public int Width { get; set; }
 
         [Save(2)]
+        [Key(2)]
         public int Height { get; set; }
 
         [Save(3)]
-        public float AspectRatio { get; set; }
+        [Key(3)]
+        public float AspectRatio
+        {
+            get => _aspectRatio;
+            set
+            {
+                _aspectRatio = value;
+                //if ()
+            }
+        }
 
         /// <inheritdoc/>
         public void Initialize()

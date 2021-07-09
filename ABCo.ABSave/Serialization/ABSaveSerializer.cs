@@ -16,39 +16,42 @@ namespace ABCo.ABSave.Serialization
     /// <summary>
     /// The central object that everything in ABSave writes to. Provides facilties to write primitive types, including strings.
     /// </summary>
-    public sealed partial class ABSaveSerializer
+    public sealed partial class ABSaveSerializer : IDisposable
     {
-        readonly Dictionary<Type, VersionInfo> _versions = new Dictionary<Type, VersionInfo>();
-
         public Dictionary<Type, uint>? TargetVersions { get; private set; }
-        public ABSaveMap Map { get; private set; } = null!;
-        public ABSaveSettings Settings { get; private set; } = null!;
+        public ABSaveMap Map { get; }
+        public ABSaveSettings Settings { get; }
         public Stream Output { get; private set; } = null!;
         public bool ShouldReverseEndian { get; private set; }
 
+        VersionInfo?[] _currentVersionInfos;
         byte[]? _stringBuffer;
 
-        public void Initialize(Stream output, ABSaveMap map, Dictionary<Type, uint>? targetVersions)
+        internal ABSaveSerializer(ABSaveMap map)
+        {
+            Map = map;
+            Settings = map.Settings;
+            ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
+            _currentVersionInfos = new VersionInfo[map._highestConverterInstanceId];
+        }
+
+        public void Initialize(Stream output, Dictionary<Type, uint>? targetVersions)
         {
             if (!output.CanWrite)
                 throw new Exception("Cannot use unwriteable stream.");
 
             Output = output;
-
-            Map = map;
-            Settings = map.Settings;
             TargetVersions = targetVersions;
-
-            ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
 
             Reset();
         }
 
-        public void Reset() => _versions.Clear();
+        public void Reset() => Array.Clear(_currentVersionInfos, 0, _currentVersionInfos.Length);
+        public void Dispose() => Map.ReleaseSerializer(this);
 
         public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
 
-        public void SerializeRoot(object? obj) => SerializeItem(obj, Map.RootItem);
+        public void SerializeRoot(object? obj) => SerializeItem(obj, Map._rootItem);
 
         public void SerializeItem(object? obj, MapItemInfo item)
         {
@@ -146,17 +149,21 @@ namespace ABCo.ABSave.Serialization
         /// <returns>Whether the item already exists</returns>
         internal bool HandleVersionNumber(Converter item, out VersionInfo info, ref BitTarget header)
         {
+            if (item._instanceId >= _currentVersionInfos.Length)
+                Array.Resize(ref _currentVersionInfos, (int)Map._highestConverterInstanceId);
+
             // If the version has already been written, do nothing
-            if (_versions.TryGetValue(item.ItemType, out VersionInfo? newInfo))
+            VersionInfo? existingInfo = _currentVersionInfos[item._instanceId];
+            if (existingInfo != null)
             {
-                info = newInfo;
+                info = existingInfo;
                 return true;
             }
 
             uint version = WriteNewVersionInfo(item, ref header);
 
             info = Map.GetVersionInfo(item, version);
-            _versions.Add(item.ItemType, info);
+            _currentVersionInfos[item._instanceId] = info;
             return false;
         }
 
@@ -168,7 +175,7 @@ namespace ABCo.ABSave.Serialization
             if (TargetVersions?.TryGetValue(item.ItemType, out targetVersion) != true)
                 targetVersion = item.HighestVersion;
 
-            WriteCompressed(targetVersion, ref target);
+            WriteCompressedInt(targetVersion, ref target);
             return targetVersion;
         }
 
@@ -205,7 +212,7 @@ namespace ABCo.ABSave.Serialization
             if (info.IndexSerializeCache!.TryGetValue(actualType, out uint pos))
             {
                 if (writeOnIfSuccessful) header.WriteBitOn();
-                WriteCompressed(pos, ref header);
+                WriteCompressedInt(pos, ref header);
                 return true;
             }
 

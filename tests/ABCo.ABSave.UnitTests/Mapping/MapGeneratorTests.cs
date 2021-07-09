@@ -43,7 +43,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
         {
             Setup();
             Assert.IsNull(Generator.GetExistingOrAddNull(typeof(AllPrimitiveClass)));
-            Assert.IsNull(Map.AllTypes[typeof(AllPrimitiveClass)]);
+            Assert.IsNull(Map._allTypes[typeof(AllPrimitiveClass)]);
         }
 
         [TestMethod]
@@ -134,7 +134,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             Assert.IsNotNull(first ?? second);
 
             // Check that the item was created successfully.
-            Assert.IsInstanceOfType(Map.AllTypes[typeof(int)], typeof(EmptyConverter));
+            Assert.IsInstanceOfType(Map._allTypes[typeof(int)], typeof(EmptyConverter));
             ABSaveMap.ReleaseGenerator(secondGenerator);
         }
 

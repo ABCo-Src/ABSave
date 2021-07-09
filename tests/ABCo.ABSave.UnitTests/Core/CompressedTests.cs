@@ -112,21 +112,29 @@ namespace ABCo.ABSave.UnitTests.Core
 
         void Test(ulong data, byte bitsFree)
         {
-            Initialize(ABSaveSettings.ForSize);
+            TestWithSettings(data, bitsFree, false);
+            TestWithSettings(data, bitsFree, true);
+        }
+
+        void TestWithSettings(ulong data, byte bitsFree, bool lazy)
+        {
+            Initialize(ABSaveSettings.ForSpeed, null, lazy);
 
             // Serialization
             {
                 var header = new BitTarget(Serializer, bitsFree);
 
-                if (data < uint.MaxValue)
+                if (data < uint.MaxValue) 
                 {
-                    Serializer.WriteCompressed((uint)data, ref header);
+                    Serializer.WriteCompressedInt((uint)data, ref header);
                 }
                 else
                 {
-                    Serializer.WriteCompressed(data, ref header);
+                    Serializer.WriteCompressedLong(data, ref header);
                 }
             }
+
+            Serializer.WriteByte(127);
 
             GoToStart();
 
@@ -142,6 +150,9 @@ namespace ABCo.ABSave.UnitTests.Core
                     Assert.AreEqual(data, Deserializer.ReadCompressedLong(ref header));
                 }
             }
+
+            // Make sure we can still successfully read the byte after.
+            Assert.AreEqual(127, Deserializer.ReadByte());
         }
 
         //[TestMethod]
