@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace ABCo.ABSave.UnitTests.TestHelpers
@@ -160,6 +161,28 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             res[1] = first;
             second.CopyTo(res, 1);
             return res;
+        }
+
+        public static void ReflectiveAssert(object expected, object actual)
+        {
+            if (actual == null) throw new Exception("Objects are not equal! The actual is null.");
+
+            var expectedType = expected.GetType();
+            var actualType = actual.GetType();
+
+            if (expectedType != actualType)
+                throw new Exception($"Objects not equal! Types do not match! Expected type: {expectedType}, Actual type: {actualType}");
+
+            var props = expectedType.GetProperties();
+
+            for (int i = 0; i < props.Length; i++)
+            {
+                var expectedPropValue = props[i].GetValue(expected);
+                var actualPropValue = props[i].GetValue(actual);
+
+                if (!expectedPropValue.Equals(actualPropValue))
+                    throw new Exception($"The property {props[i].Name} does not match! Expected: {expected} \n Actual: {actual}");
+            }
         }
     }
 
