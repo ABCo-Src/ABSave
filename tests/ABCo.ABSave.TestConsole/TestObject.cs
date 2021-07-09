@@ -458,6 +458,8 @@ namespace ABCo.ABSave.Testing.ConsoleApp
     [SaveMembers]
     public sealed class ImageModel : IEquatable<ImageModel>
     {
+        private float _aspectRatio;
+
         [Save(0)]
         [Key(0)]
         public string Url { get; set; }
@@ -472,7 +474,15 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
         [Save(3)]
         [Key(3)]
-        public float AspectRatio { get; set; }
+        public float AspectRatio
+        {
+            get => _aspectRatio;
+            set
+            {
+                _aspectRatio = value;
+                //if ()
+            }
+        }
 
         /// <inheritdoc/>
         public void Initialize()

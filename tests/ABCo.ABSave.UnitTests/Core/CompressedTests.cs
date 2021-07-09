@@ -150,6 +150,9 @@ namespace ABCo.ABSave.UnitTests.Core
                     Assert.AreEqual(data, Deserializer.ReadCompressedLong(ref header));
                 }
             }
+
+            // Make sure we can still successfully read the byte after.
+            Assert.AreEqual(127, Deserializer.ReadByte());
         }
 
         //[TestMethod]

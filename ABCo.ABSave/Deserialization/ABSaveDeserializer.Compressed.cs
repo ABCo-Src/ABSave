@@ -60,7 +60,7 @@
             return res;
         }
 
-        ulong ReadFirstByteData(ref BitSource source, byte headerLen, byte noContBits, byte preHeaderCapacity)
+        static ulong ReadFirstByteData(ref BitSource source, byte headerLen, byte noContBits, byte preHeaderCapacity)
         {
             bool isExtended = preHeaderCapacity < 4;
             ulong res = 0;

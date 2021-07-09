@@ -90,8 +90,12 @@ namespace ABCo.ABSave.Converters
                 baseType.Serialize(instance, baseInfo, ref header);
             }
 
-            for (int i = 0; i < members.Length; i++)
-                header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map, ref header);
+            // Serialize the first member.
+            header.Serializer.SerializeItem(members[0].Accessor.Getter(instance), members[0].Map, ref header);
+
+            // Serialize the rest.
+            for (int i = 1; i < members.Length; i++)
+                header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map);
         }
 
         public override object Deserialize(in DeserializeInfo info, ref BitSource header)
@@ -107,13 +111,29 @@ namespace ABCo.ABSave.Converters
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
             ObjectConverter? baseType = versionInfo.BaseObject;
 
-            if (baseType != null)
+            int deserializeWithoutHeaderStart;
+
+            // If there's a base type to be serialized, the header goes to that,
+            // and we'll deserialize the first member without the header.
+            if (baseType == null)
             {
+                deserializeWithoutHeaderStart = 1;
+
+                // Deserialize the first member using the header
+                members[0].Accessor.Setter(obj, header.Deserializer.DeserializeItem(members[0].Map, ref header));
+            }
+            else
+            {
+
                 header.Deserializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
                 baseType.DeserializeInto(obj, baseInfo, ref header);
+
+                // The header goes to the base type so we'll deserialize the first member in the loop of members that don't get the header.
+                deserializeWithoutHeaderStart = 0;
             }
 
-            for (int i = 0; i < members.Length; i++)
+            // Deserialize all the members that don't get the header.
+            for (int i = deserializeWithoutHeaderStart; i < members.Length; i++)
                 members[i].Accessor.Setter(obj, header.Deserializer.DeserializeItem(members[i].Map));
         }
 

@@ -180,8 +180,16 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                 var expectedPropValue = props[i].GetValue(expected);
                 var actualPropValue = props[i].GetValue(actual);
 
+                if (expectedPropValue == null)
+                {
+                    if (actualPropValue != null)
+                        throw new Exception($"The property {props[i].Name} does not match! Expected it to be null but was {actualPropValue}");
+
+                    continue;
+                }
+
                 if (!expectedPropValue.Equals(actualPropValue))
-                    throw new Exception($"The property {props[i].Name} does not match! Expected: {expected} \n Actual: {actual}");
+                    throw new Exception($"The property {props[i].Name} does not match! Expected: {expectedPropValue} \n Actual: {actualPropValue}");
             }
         }
     }

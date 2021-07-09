@@ -2,12 +2,14 @@
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Serialization;
 using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
 using BinaryPack;
 using MessagePack;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Text;
 using System.Text.Json;
 
 namespace ABCo.ABSave.Testing.ConsoleApp
@@ -25,7 +27,9 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         public MemoryStream XMLResult;
         public MemoryStream MessagePackResult;
         public MemoryStream BinaryPackResult;
+        public byte[] JsonBytes;
         public JsonResponseModel TestObj;
+        public JsonResponseModel ABSaveRes;
         public ABSaveMap Map;
         public ABSaveSerializer Serializer;
 
@@ -42,49 +46,97 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSize);
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
             Serializer = Map.GetSerializer(ABSaveResult);
-            //TestObj = JsonSerializer.Deserialize<JsonResponseModel>(File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt"));
+
+            var str = File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt");
+
+            JsonBytes = Encoding.UTF8.GetBytes(str);
+            TestObj = JsonSerializer.Deserialize<JsonResponseModel>(str);
+
+            // Serialize everyone
+            ABSave();
+            UTF8Json();
+            TextJson();
+            MessagePack();
+            BinaryPack();
         }
 
-        [Benchmark]
+        //[Benchmark]
         public void ABSave()
         {
             ABSaveResult.Position = 0;
-            Serializer.WriteCompressedInt(48);
-            Serializer.WriteCompressedInt(467);
-            //ABSaveConvert.Serialize(TestObj, Map, ABSaveResult);
+            ABSaveConvert.Serialize(TestObj, Map, ABSaveResult);
         }
 
         //[Benchmark]
-        //public void UTF8Json()
-        //{
-        //    Utf8JsonResult.Position = 0;
-        //    Utf8Json.JsonSerializer.Serialize(Utf8JsonResult, TestObj);
-        //}
+        public void UTF8Json()
+        {
+            Utf8JsonResult.Position = 0;
+            Utf8Json.JsonSerializer.Serialize(Utf8JsonResult, TestObj);
+        }
 
         //[Benchmark]
-        //public void TextJson()
-        //{
-        //    TextJsonResult.Position = 0;
+        public void TextJson()
+        {
+            TextJsonResult.Position = 0;
 
-        //    using var writer = new Utf8JsonWriter(TextJsonResult, new JsonWriterOptions());
-        //    JsonSerializer.Serialize(writer, TestObj);
-        //}
+            using var writer = new Utf8JsonWriter(TextJsonResult, new JsonWriterOptions());
+            JsonSerializer.Serialize(writer, TestObj);
+        }
 
         //[Benchmark]
-        //public void MessagePack()
-        //{
-        //    MessagePackResult.Position = 0;
-        //    MessagePackSerializer.Serialize(typeof(JsonResponseModel), MessagePackResult, TestObj);
-        //}
+        public void MessagePack()
+        {
+            MessagePackResult.Position = 0;
+            MessagePackSerializer.Serialize(typeof(JsonResponseModel), MessagePackResult, TestObj);
+        }
 
         //[Benchmark(Baseline = true)]
-        //public void BinaryPack()
-        //{
-        //    BinaryPackResult.Position = 0;
-        //    BinaryConverter.Serialize(TestObj, BinaryPackResult);
-        //}
+        public void BinaryPack()
+        {
+            BinaryPackResult.Position = 0;
+            BinaryConverter.Serialize(TestObj, BinaryPackResult);
+        }
+
+        [Benchmark]
+        public JsonResponseModel ABSave_Deserialize()
+        {
+            ABSaveResult.Position = 0;
+            ABSaveRes = ABSaveConvert.Deserialize<JsonResponseModel>(ABSaveResult, Map);
+            return null;
+            //return null;
+        }
+
+        [Benchmark]
+        public JsonResponseModel UTF8Json_Deserialize()
+        {
+            Utf8JsonResult.Position = 0;
+            return Utf8Json.JsonSerializer.Deserialize<JsonResponseModel>(Utf8JsonResult);
+        }
+
+        [Benchmark]
+        public JsonResponseModel TextJson_Deserialize()
+        {
+            TextJsonResult.Position = 0;
+
+            var reader = new Utf8JsonReader(JsonBytes);
+            return JsonSerializer.Deserialize<JsonResponseModel>(ref reader);
+        }
+
+        [Benchmark]
+        public JsonResponseModel MessagePack_Deserialize()
+        {
+            MessagePackResult.Position = 0;
+            return MessagePackSerializer.Deserialize<JsonResponseModel>(MessagePackResult);
+        }
+
+        [Benchmark(Baseline = true)]
+        public JsonResponseModel BinaryPack_Deserialize()
+        {
+            BinaryPackResult.Position = 0;
+            return BinaryConverter.Deserialize<JsonResponseModel>(BinaryPackResult);
+        }
 
         //[Benchmark]
         //public void NewtonsoftJson()
@@ -150,7 +202,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             //Console.ReadLine();
 
             //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(null, new DebugInProcessConfig());
-            BenchmarkRunner.Run<TestBenchmark>();
+            //BenchmarkRunner.Run<TestBenchmark>();
             Console.ReadLine();
 
             var benchmarks = new TestBenchmark();
@@ -177,6 +229,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         {
             var benchmarks = new TestBenchmark();
             benchmarks.Setup();
+            benchmarks.ABSave_Deserialize();
             benchmarks.Finish();
         }
 

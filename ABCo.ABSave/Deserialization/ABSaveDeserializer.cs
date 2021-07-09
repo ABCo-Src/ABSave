@@ -128,10 +128,6 @@ namespace ABCo.ABSave.Deserialization
             return converter.Deserialize(in deserializeInfo, ref _currentHeader);
         }
 
-        /// <summary>
-        /// Handles the version info for a given converter. If the version hasn't been read yet, it's read now. If not, nothing is read.
-        /// </summary>
-        /// <returns>Whether the item already exists</returns>
         internal void HandleVersionNumber(Converter item, out VersionInfo info, ref BitSource header)
         {
             if (item._instanceId >= _currentVersionInfos.Length)
@@ -150,7 +146,6 @@ namespace ABCo.ABSave.Deserialization
             _currentVersionInfos[item._instanceId] = info;
         }
         
-        // Returns: Whether the type has changed
         bool ReadHeader(Converter item)
         {
             if (item.IsValueItemType) return false;

@@ -50,14 +50,24 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     class SubWithHeader : BaseIndex
     {
         public override bool Equals(object obj) => obj is SubWithHeader;
+        public override int GetHashCode() => base.GetHashCode();
+    }
 
+    class SubWithHeader2 : BaseIndex
+    {
+        public override bool Equals(object obj) => obj is SubWithHeader2;
         public override int GetHashCode() => base.GetHashCode();
     }
 
     class SubWithoutHeader : BaseIndex
     {
         public override bool Equals(object obj) => obj is SubWithoutHeader;
+        public override int GetHashCode() => base.GetHashCode();
+    }
 
+    class SubWithoutHeader2 : BaseIndex
+    {
+        public override bool Equals(object obj) => obj is SubWithoutHeader2;
         public override int GetHashCode() => base.GetHashCode();
     }
 
@@ -187,7 +197,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     }
 
     [SaveMembers]
-    [SaveBaseMembers(typeof(SingleMemberClass), FromVer = 0)]
+    [SaveBaseMembers(typeof(SingleMemberClass), ToVer = 1)]
     [SaveBaseMembers(typeof(MemberInheritingSingleClass), FromVer = 1)]
     class MemberInheritingDoubleClass : MemberInheritingSingleClass
     {
@@ -199,6 +209,92 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public override bool Equals(object obj) => obj is MemberInheritingDoubleClass cl && A == cl.A && B == cl.B && C == cl.C;
         public override int GetHashCode() => B;
+    }
+
+    [SaveMembers]
+    class BaseWithHeader
+    {
+        [Save(0)]
+        public SubWithHeader2 BaseA { get; set; }
+    }
+
+    [SaveMembers]
+    abstract class BaseWithoutHeader : BaseWithHeader
+    {
+        [Save(0)]
+        public SubWithoutHeader2 BaseB { get; set; }
+
+        public void Init(int ver)
+        {
+            if (ver == 0)
+                BaseA = new SubWithHeader2();
+            else if (ver == 2)
+                BaseB = new SubWithoutHeader2();
+
+            SubInit();
+        }
+
+        protected abstract void SubInit();
+    }
+
+    [SaveMembers]
+    [SaveBaseMembers(typeof(BaseWithHeader), ToVer = 1)]
+    [SaveBaseMembers(typeof(BaseWithoutHeader), FromVer = 2)]
+    class NoHeaderNoHeader : BaseWithoutHeader
+    {
+        [Save(0)]
+        public SubWithoutHeader A { get; set; }
+
+        [Save(1)]
+        public SubWithoutHeader B { get; set; }
+
+        public NoHeaderNoHeader() { }
+        protected override void SubInit() => (A, B) = (new SubWithoutHeader(), new SubWithoutHeader());
+    }
+
+    [SaveMembers]
+    [SaveBaseMembers(typeof(BaseWithHeader), ToVer = 1)]
+    [SaveBaseMembers(typeof(BaseWithoutHeader), FromVer = 2)]
+    class HeaderNoHeader : BaseWithoutHeader
+    {
+        [Save(0)]
+        public SubWithHeader A { get; set; }
+
+        [Save(1)]
+        public SubWithoutHeader B { get; set; }
+
+        public HeaderNoHeader() { }
+        protected override void SubInit() => (A, B) = (new SubWithHeader(), new SubWithoutHeader());
+    }
+
+    [SaveMembers]
+    [SaveBaseMembers(typeof(BaseWithHeader), ToVer = 1)]
+    [SaveBaseMembers(typeof(BaseWithoutHeader), FromVer = 2)]
+    class NoHeaderHeader : BaseWithoutHeader
+    {
+        [Save(0)]
+        public SubWithoutHeader A { get; set; }
+
+        [Save(1)]
+        public SubWithHeader B { get; set; }
+
+        public NoHeaderHeader() { }
+        protected override void SubInit() => (A, B) = (new SubWithoutHeader(), new SubWithHeader());
+    }
+
+    [SaveMembers]
+    [SaveBaseMembers(typeof(BaseWithHeader), ToVer = 1)]
+    [SaveBaseMembers(typeof(BaseWithoutHeader), FromVer = 2)]
+    class HeaderHeader : BaseWithoutHeader
+    {
+        [Save(0)]
+        public SubWithHeader A { get; set; }
+
+        [Save(1)]
+        public SubWithHeader B { get; set; }
+
+        public HeaderHeader() { }
+        protected override void SubInit() => (A, B) = (new SubWithHeader(), new SubWithHeader());
     }
 
     #endregion
