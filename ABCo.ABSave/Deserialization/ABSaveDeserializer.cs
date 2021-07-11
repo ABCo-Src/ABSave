@@ -28,6 +28,7 @@ namespace ABCo.ABSave.Deserialization
             Settings = map.Settings;
             ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
             Source = null!;
+
             _currentVersionInfos = new VersionInfo[map._highestConverterInstanceId];
         }
 
@@ -118,7 +119,7 @@ namespace ABCo.ABSave.Deserialization
                 sameType = ReadHeader(converter);
 
             // Read or create the version info if needed
-            HandleVersionNumber(converter, out VersionInfo info, ref _currentHeader);
+            VersionInfo info = HandleVersionNumber(converter, ref _currentHeader);
 
             // Handle inheritance.
             if (info._inheritanceInfo != null && !sameType)
@@ -128,22 +129,25 @@ namespace ABCo.ABSave.Deserialization
             return converter.Deserialize(in deserializeInfo, ref _currentHeader);
         }
 
-        internal void HandleVersionNumber(Converter item, out VersionInfo info, ref BitSource header)
+        internal VersionInfo HandleVersionNumber(Converter item, ref BitSource header)
         {
             if (item._instanceId >= _currentVersionInfos.Length)
                 Array.Resize(ref _currentVersionInfos, (int)Map._highestConverterInstanceId);
 
             // If the version has already been read, do nothing
             VersionInfo? existingInfo = _currentVersionInfos[item._instanceId];
-            if (existingInfo != null)
-            {
-                info = existingInfo;
-                return;
-            }
+            if (existingInfo != null) return existingInfo;
 
-            uint version = ReadNewVersionInfo(ref header);
-            info = Map.GetVersionInfo(item, version);
-            _currentVersionInfos[item._instanceId] = info;
+            return Settings.IncludeVersioning ? 
+                Map.GetVersionInfo(item, item.HighestVersion) :
+                GetNewVersionInfo(item, ReadNewVersionInfo(ref header));
+        }
+
+        internal VersionInfo GetNewVersionInfo(Converter item, uint version)
+        {
+            VersionInfo newInfo = Map.GetVersionInfo(item, version);
+            _currentVersionInfos[item._instanceId] = newInfo;
+            return newInfo;
         }
         
         bool ReadHeader(Converter item)
