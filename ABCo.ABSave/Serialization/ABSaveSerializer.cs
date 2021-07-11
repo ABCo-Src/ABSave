@@ -160,11 +160,18 @@ namespace ABCo.ABSave.Serialization
                 return true;
             }
 
-            uint version = WriteNewVersionInfo(item, ref header);
+            uint version = Settings.IncludeVersioning ? WriteNewVersionInfo(item, ref header) : item.HighestVersion;
 
             info = Map.GetVersionInfo(item, version);
             _currentVersionInfos[item._instanceId] = info;
             return false;
+        }
+
+        internal VersionInfo GetNewVersionInfo(Converter item, uint version)
+        {
+            VersionInfo newInfo = ;
+            
+            return newInfo;
         }
 
         uint WriteNewVersionInfo(Converter item, ref BitTarget target)
