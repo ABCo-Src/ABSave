@@ -49,7 +49,9 @@ namespace ABCo.ABSave.Converters
             if (type.IsSZArray)
             {
                 info.FastConversion = GetFastType(info.ElementType);
-                info.Type = info.FastConversion == FastConversionType.None ? ArrayType.SZArrayManual : ArrayType.SZArrayFast;
+                info.Type = ArrayType.SZArrayManual;
+
+                //info.Type = info.FastConversion == FastConversionType.None ? ArrayType.SZArrayManual : ArrayType.SZArrayFast;
             }
             else if (rank == 1)
             {
