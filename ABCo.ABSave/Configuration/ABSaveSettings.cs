@@ -10,14 +10,19 @@ namespace ABCo.ABSave.Configuration
     public class ABSaveSettings
     {
         public static ABSaveSettings ForSpeed { get; }
+        public static ABSaveSettings ForSpeedVersioned { get; }
         public static ABSaveSettings ForSize { get; }
+        public static ABSaveSettings ForSizeVersioned { get; }
 
         static ABSaveSettings()
         {
             SettingsConverterProcessor.Split(BuiltInConverters.Infos, out IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, out IReadOnlyList<ConverterInfo>? nonExactConverters);
 
-            ForSpeed = new ABSaveSettings(true, true, true, true, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
-            ForSize = new ABSaveSettings(false, true, true, true, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
+            ForSpeed = new ABSaveSettings(true, true, true, false, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
+            ForSize = new ABSaveSettings(false, true, true, false, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
+
+            ForSpeedVersioned = ForSpeed.Customize(b => b.SetIncludeVersioning(true));
+            ForSizeVersioned = ForSize.Customize(b => b.SetIncludeVersioning(true));
         }
 
         public bool LazyCompressedWriting { get; }
