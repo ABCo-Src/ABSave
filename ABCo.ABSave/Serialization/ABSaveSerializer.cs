@@ -115,7 +115,7 @@ namespace ABCo.ABSave.Serialization
             }
 
             // Write and get the info for a version, if necessary
-            if (!HandleVersionNumber(converter, out VersionInfo info, ref header))
+            if (HandleVersionNumber(converter, out VersionInfo info, ref header))
                 appliedHeader = true;
 
             // Handle inheritance if needed.
@@ -146,7 +146,7 @@ namespace ABCo.ABSave.Serialization
         /// <summary>
         /// Handles the version info for a given converter. If the version hasn't been written yet, it's written now. If not, nothing is written.
         /// </summary>
-        /// <returns>Whether the item already exists</returns>
+        /// <returns>Whether we applied the header</returns>
         internal bool HandleVersionNumber(Converter item, out VersionInfo info, ref BitTarget header)
         {
             if (item._instanceId >= _currentVersionInfos.Length)
@@ -157,14 +157,14 @@ namespace ABCo.ABSave.Serialization
             if (existingInfo != null)
             {
                 info = existingInfo;
-                return true;
+                return false;
             }
 
-            uint version = WriteNewVersionInfo(item, ref header);
+            uint version = Settings.IncludeVersioning ? WriteNewVersionInfo(item, ref header) : 0;
 
             info = Map.GetVersionInfo(item, version);
             _currentVersionInfos[item._instanceId] = info;
-            return false;
+            return Settings.IncludeVersioning;
         }
 
         uint WriteNewVersionInfo(Converter item, ref BitTarget target)

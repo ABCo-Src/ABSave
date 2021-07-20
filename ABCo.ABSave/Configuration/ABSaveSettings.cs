@@ -10,17 +10,23 @@ namespace ABCo.ABSave.Configuration
     public class ABSaveSettings
     {
         public static ABSaveSettings ForSpeed { get; }
+        public static ABSaveSettings ForSpeedVersioned { get; }
         public static ABSaveSettings ForSize { get; }
+        public static ABSaveSettings ForSizeVersioned { get; }
 
         static ABSaveSettings()
         {
             SettingsConverterProcessor.Split(BuiltInConverters.Infos, out IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, out IReadOnlyList<ConverterInfo>? nonExactConverters);
 
-            ForSpeed = new ABSaveSettings(true, true, true, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
-            ForSize = new ABSaveSettings(false, true, true, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
+            ForSpeed = new ABSaveSettings(true, true, true, false, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
+            ForSize = new ABSaveSettings(false, true, true, false, BuiltInConverters.Infos.Length, exactConverters, nonExactConverters);
+
+            ForSpeedVersioned = ForSpeed.Customize(b => b.SetIncludeVersioning(true));
+            ForSizeVersioned = ForSize.Customize(b => b.SetIncludeVersioning(true));
         }
 
         public bool LazyCompressedWriting { get; }
+        public bool IncludeVersioning { get; }
         public bool UseUTF8 { get; }
         public bool UseLittleEndian { get; }
 
@@ -36,10 +42,10 @@ namespace ABCo.ABSave.Configuration
             return builder.CreateSettings(this);
         }
 
-        internal ABSaveSettings(bool lazyCompressedWriting, bool useUTF8, bool useLittleEndian, int converterCount,
+        internal ABSaveSettings(bool lazyCompressedWriting, bool useUTF8, bool useLittleEndian, bool includeVersioning, int converterCount,
             IReadOnlyDictionary<Type, ConverterInfo> exactConverters, IReadOnlyList<ConverterInfo> nonExactConverters)
         =>
-            (LazyCompressedWriting, UseUTF8, UseLittleEndian, ConverterCount, ExactConverters, NonExactConverters) =
-            (lazyCompressedWriting, useUTF8, useLittleEndian, converterCount, exactConverters, nonExactConverters);
+            (LazyCompressedWriting, UseUTF8, UseLittleEndian, IncludeVersioning, ConverterCount, ExactConverters, NonExactConverters) =
+            (lazyCompressedWriting, useUTF8, useLittleEndian, includeVersioning, converterCount, exactConverters, nonExactConverters);
     }
 }

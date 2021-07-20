@@ -21,7 +21,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestInitialize]
         public void Setup()
         {
-            Settings = ABSaveSettings.ForSize;
+            Settings = ABSaveSettings.ForSizeVersioned;
             CurrentMap = new ABSaveMap(Settings);
             CurrentGenerator = new MapGenerator();
             CurrentGenerator.Initialize(CurrentMap);

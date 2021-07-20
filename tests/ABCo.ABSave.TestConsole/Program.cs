@@ -49,7 +49,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
             Serializer = Map.GetSerializer(ABSaveResult);
 
-            var str = File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt");
+            var str = File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\modelBig.txt");
 
             JsonBytes = Encoding.UTF8.GetBytes(str);
             TestObj = JsonSerializer.Deserialize<JsonResponseModel>(str);
@@ -63,6 +63,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         }
 
         //[Benchmark]
+        [Benchmark]
         public void ABSave()
         {
             ABSaveResult.Position = 0;
@@ -70,6 +71,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         }
 
         //[Benchmark]
+        [Benchmark]
         public void UTF8Json()
         {
             Utf8JsonResult.Position = 0;
@@ -77,6 +79,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         }
 
         //[Benchmark]
+        [Benchmark]
         public void TextJson()
         {
             TextJsonResult.Position = 0;
@@ -86,6 +89,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         }
 
         //[Benchmark]
+        [Benchmark]
         public void MessagePack()
         {
             MessagePackResult.Position = 0;
@@ -93,6 +97,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         }
 
         //[Benchmark(Baseline = true)]
+        [Benchmark]
         public void BinaryPack()
         {
             BinaryPackResult.Position = 0;
@@ -119,9 +124,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         public JsonResponseModel TextJson_Deserialize()
         {
             TextJsonResult.Position = 0;
-
-            var reader = new Utf8JsonReader(JsonBytes);
-            return JsonSerializer.Deserialize<JsonResponseModel>(ref reader);
+            return JsonSerializer.Deserialize<JsonResponseModel>(JsonBytes);
         }
 
         [Benchmark]
@@ -210,16 +213,16 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
             for (int i = 0; i < 16; i++)
             {
-                benchmarks.ABSave();
+                benchmarks.ABSave_Deserialize();
             }
 
             GC.Collect();
 
             Debugger.Break();
 
-            for (int i = 0; i < 10000000; i++)
+            for (int i = 0; i < 1000; i++)
             {
-                benchmarks.ABSave();
+                benchmarks.ABSave_Deserialize();
             }
 
             Debugger.Break();
