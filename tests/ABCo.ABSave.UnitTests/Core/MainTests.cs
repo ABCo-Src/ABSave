@@ -220,7 +220,7 @@ namespace ABCo.ABSave.UnitTests.Core
         [TestMethod]
         public void MatchingRef_WithoutHeader_DoNotWriteVersion()
         {
-            Initialize(ABSaveSettings.ForSpeed.Customize(b => b.SetIncludeVersioning(false)));
+            Initialize(ABSaveSettings.ForSpeed);
 
             OtherTypeConverter.WritesToHeader = false;
             ResetStateWithMapFor<ClassWithMinVersion>();
