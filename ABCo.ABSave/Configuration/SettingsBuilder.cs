@@ -31,7 +31,7 @@ namespace ABCo.ABSave.Configuration
             return this;
         }
 
-        internal SettingsBuilder IncludeVersioning(bool includeVersioning)
+        internal SettingsBuilder SetIncludeVersioning(bool includeVersioning)
         {
             _includeVersioning = includeVersioning;
             return this;

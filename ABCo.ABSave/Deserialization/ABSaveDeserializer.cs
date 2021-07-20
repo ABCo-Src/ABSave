@@ -139,8 +139,8 @@ namespace ABCo.ABSave.Deserialization
             if (existingInfo != null) return existingInfo;
 
             return Settings.IncludeVersioning ? 
-                Map.GetVersionInfo(item, 0) :
-                GetNewVersionInfo(item, ReadNewVersionInfo(ref header));
+                GetNewVersionInfo(item, ReadNewVersionInfo(ref header)) :
+                Map.GetVersionInfo(item, 0);
         }
 
         internal VersionInfo GetNewVersionInfo(Converter item, uint version)
