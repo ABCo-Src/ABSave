@@ -39,7 +39,8 @@ namespace ABCo.ABSave.Converters
             if (attr != null)
                 baseConv = GetBaseObjectConverter(info, attr);
 
-            return (new ObjectVersionInfo(members, baseConv), true);
+            bool usesHeader = members.Length > 0 || baseConv != null;
+            return (new ObjectVersionInfo(members, baseConv), usesHeader);
         }
 
         ObjectConverter GetBaseObjectConverter(InitializeInfo info, SaveBaseMembersAttribute attr)
@@ -78,17 +79,13 @@ namespace ABCo.ABSave.Converters
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
             ObjectConverter? baseType = versionInfo.BaseObject;
 
-            if (members.Length == 0 && baseType == null)
-            {
-                header.Apply();
-                return;
-            }
-
             if (baseType != null)
             {
                 header.Serializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
                 baseType.Serialize(instance, baseInfo, ref header);
             }
+
+            if (members.Length == 0) return;
 
             // Serialize the first member.
             header.Serializer.SerializeItem(members[0].Accessor.Getter(instance), members[0].Map, ref header);
@@ -118,6 +115,8 @@ namespace ABCo.ABSave.Converters
             if (baseType == null)
             {
                 deserializeWithoutHeaderStart = 1;
+
+                if (members.Length == 0) return;
 
                 // Deserialize the first member using the header
                 members[0].Accessor.Setter(obj, header.Deserializer.DeserializeItem(members[0].Map, ref header));
