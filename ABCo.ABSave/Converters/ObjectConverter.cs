@@ -124,7 +124,7 @@ namespace ABCo.ABSave.Converters
             else
             {
 
-                header.Deserializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
+                VersionInfo baseInfo = header.Deserializer.HandleVersionNumber(baseType, ref header);
                 baseType.DeserializeInto(obj, baseInfo, ref header);
 
                 // The header goes to the base type so we'll deserialize the first member in the loop of members that don't get the header.

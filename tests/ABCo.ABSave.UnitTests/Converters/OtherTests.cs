@@ -11,7 +11,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Guid()
         {
-            Setup<Guid>(ABSaveSettings.ForSpeed);
+            Setup<Guid>(ABSaveSettings.ForSpeedVersioned);
             var guid = new Guid("01234567-89ab-0123-4567-89abcdef0123");
 
             DoSerialize(guid);
@@ -23,7 +23,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void DateTime()
         {
-            Setup<DateTime>(ABSaveSettings.ForSpeed);
+            Setup<DateTime>(ABSaveSettings.ForSpeedVersioned);
             var dateTime = new DateTime(1989, 6, 3, 7, 3, 8);
 
             DoSerialize(dateTime);
@@ -35,7 +35,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void TimeSpan()
         {
-            Setup<TimeSpan>(ABSaveSettings.ForSpeed);
+            Setup<TimeSpan>(ABSaveSettings.ForSpeedVersioned);
             var timeSpan = new TimeSpan(19, 7, 3, 8);
 
             DoSerialize(timeSpan);
@@ -47,7 +47,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void KeyValue()
         {
-            Setup<KeyValuePair<byte, bool>>(ABSaveSettings.ForSpeed);
+            Setup<KeyValuePair<byte, bool>>(ABSaveSettings.ForSpeedVersioned);
             var obj = new KeyValuePair<byte, bool>(234, true);
 
             DoSerialize(obj);
@@ -71,7 +71,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Version()
         {
-            Setup<Version>(ABSaveSettings.ForSpeed);
+            Setup<Version>(ABSaveSettings.ForSpeedVersioned);
 
             Version[] versions = new Version[]
             {

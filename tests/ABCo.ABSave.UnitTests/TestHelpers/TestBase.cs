@@ -20,7 +20,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public ABSaveSerializer Serializer;
         public ABSaveDeserializer Deserializer;
 
-        public void Initialize(Dictionary<Type, uint> targetVersions = null) => Initialize(ABSaveSettings.ForSpeed, targetVersions);
+        public void Initialize(Dictionary<Type, uint> targetVersions = null) => Initialize(ABSaveSettings.ForSpeedVersioned, targetVersions);
         public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null, bool lazyWriteCompressed = false)
         {
             var settings = template.Customize(b => b

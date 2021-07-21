@@ -14,7 +14,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestInitialize]
         public void SetupSettings()
         {
-            Settings = ABSaveSettings.ForSpeed;
+            Settings = ABSaveSettings.ForSpeedVersioned;
         }
 
         [TestMethod]
@@ -96,7 +96,7 @@ namespace ABCo.ABSave.UnitTests.Converters
                 // Setup<Int32[*]>
                 var method = GetType().GetMethod(nameof(Setup), BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 var toCall = method.MakeGenericMethod(typeof(string).Assembly.GetType("System.Byte[*]"));
-                toCall.Invoke(this, new object[] { ABSaveSettings.ForSize, null });
+                toCall.Invoke(this, new object[] { ABSaveSettings.ForSizeVersioned, null });
 
                 DoSerialize(arr);
                 AssertAndGoToStart(0, 5, 2, 0, 2, 7, 167, 43, 32);
