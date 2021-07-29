@@ -129,7 +129,7 @@ namespace ABCo.ABSave.Serialization
             if (!info.UsesHeader && !appliedHeader)
                 header.Apply();
 
-            var serializeInfo = new Converter.SerializeInfo(obj, actualType, info);
+            var serializeInfo = new Converter.SerializeInfo(obj, actualType, info, this);
             converter.Serialize(in serializeInfo, ref header);
         }
 
@@ -205,6 +205,14 @@ namespace ABCo.ABSave.Serialization
 
             // Serialize the actual type now.
             SerializeItemNoSetup(obj, GetRuntimeMapItem(actualType), ref header, true);
+        }
+
+        BitTarget _currentHeader;
+
+        public ref BitTarget CreateHeader()
+        {
+            _currentHeader = new BitTarget(this);
+            return ref _currentHeader;
         }
 
         bool TryWriteListInheritance(SaveInheritanceAttribute info, Type actualType, bool writeOnIfSuccessful, ref BitTarget header)

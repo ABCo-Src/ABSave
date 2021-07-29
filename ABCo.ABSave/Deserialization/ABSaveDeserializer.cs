@@ -125,7 +125,7 @@ namespace ABCo.ABSave.Deserialization
             if (info._inheritanceInfo != null && !sameType)
                 return DeserializeActualType(info._inheritanceInfo, converter.ItemType);
 
-            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info);
+            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info, this);
             return converter.Deserialize(in deserializeInfo, ref _currentHeader);
         }
 
