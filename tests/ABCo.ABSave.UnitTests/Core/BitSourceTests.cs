@@ -13,10 +13,10 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize();
 
-            var source = new BitSource(0b11000100, Deserializer);
-            // Setup the next byte too
+            var source = new BitSource(Deserializer);
+            Stream.WriteByte(0b11000100);
             Stream.WriteByte(0b10000000);
-            ResetState();
+            Stream.Position = 0;
 
             Assert.IsTrue(source.ReadBit());
             Assert.IsTrue(source.ReadBit());
@@ -36,13 +36,26 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize(ABSaveSettings.ForSpeed);
 
-            var source = new BitSource((byte)0b11000110, Deserializer);
-            // Setup the next byte too
-            Stream.WriteByte((byte)0b01000000);
-            GoToStart();
+            var source = new BitSource(Deserializer);
+            Stream.WriteByte(0b11000110);
+            Stream.WriteByte(0b01000000);
+            Stream.Position = 0;
 
             Assert.AreEqual(12, source.ReadInteger(4));
             Assert.AreEqual(25, source.ReadInteger(6));
+        }
+
+        [TestMethod]
+        public void ReadInteger_OnEdge()
+        {
+            Initialize(ABSaveSettings.ForSpeed);
+
+            var source = new BitSource(Deserializer);
+            Stream.WriteByte(0b10000110);
+            Stream.Position = 0;
+
+            source.ReadBit();
+            Assert.AreEqual(6, source.ReadInteger(7));
         }
     }
 }

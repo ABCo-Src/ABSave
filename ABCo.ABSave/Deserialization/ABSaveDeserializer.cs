@@ -201,7 +201,7 @@ namespace ABCo.ABSave.Deserialization
         {
             if (!_readHeader)
             {
-                _currentHeader = new BitSource(this, 8);
+                _currentHeader = new BitSource(this);
                 _readHeader = true;
             }
         }

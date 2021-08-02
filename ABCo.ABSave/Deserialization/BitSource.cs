@@ -14,17 +14,10 @@ namespace ABCo.ABSave.Deserialization
         public int Source;
         public byte FreeBits;
 
-        public BitSource(ABSaveDeserializer deserializer, byte freeBits = 8)
+        public BitSource(ABSaveDeserializer deserializer)
         {
-            FreeBits = freeBits;
-            Source = deserializer.ReadByte();
-            Deserializer = deserializer;
-        }
-
-        public BitSource(byte source, ABSaveDeserializer deserializer, byte freeBits = 8)
-        {
-            FreeBits = freeBits;
-            Source = source;
+            FreeBits = 0;
+            Source = 0;
             Deserializer = deserializer;
         }
 
