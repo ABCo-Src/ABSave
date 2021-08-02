@@ -42,7 +42,6 @@ namespace ABCo.ABSave.Deserialization
         public void Dispose() => Map.ReleaseDeserializer(this);
 
         BitSource _currentHeader;
-        bool _readHeader;
 
         public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
 
@@ -50,27 +49,17 @@ namespace ABCo.ABSave.Deserialization
 
         public object? DeserializeItem(MapItemInfo info)
         {
-            // Do null checks
-            if (info.IsValueTypeItem)
-            {
-                _currentHeader = new BitSource() { Deserializer = this };
-                _readHeader = false;
-            }
-            else
-            {
-                _currentHeader = new BitSource(this);
-                if (!_currentHeader.ReadBit()) return null;
+            _currentHeader = new BitSource(this);
 
-                _readHeader = true;
-            }
+            // Null check
+            if (!info.IsValueTypeItem && !_currentHeader.ReadBit()) return null;
 
             return DeserializeNullableItem(info, false);
         }
 
         public object DeserializeExactNonNullItem(MapItemInfo info)
         {
-            _currentHeader = new BitSource() { Deserializer = this };
-            _readHeader = false;
+            _currentHeader = new BitSource(this);
             return DeserializeItemNoSetup(info, true);
         }
 
@@ -80,14 +69,12 @@ namespace ABCo.ABSave.Deserialization
             if (!info.IsValueTypeItem && !header.ReadBit()) return null;
 
             _currentHeader = header;
-            _readHeader = true;
             return DeserializeNullableItem(info, false);
         }
 
         public object DeserializeExactNonNullItem(MapItemInfo info, ref BitSource header)
         {
             _currentHeader = header;
-            _readHeader = true;
             return DeserializeItemNoSetup(info, true);
         }
 
@@ -95,7 +82,6 @@ namespace ABCo.ABSave.Deserialization
         {
             if (info.IsNullable)
             {
-                EnsureReadHeader();
                 if (!_currentHeader.ReadBit()) return null;
                 skipHeader = true;
             }
@@ -154,8 +140,6 @@ namespace ABCo.ABSave.Deserialization
         {
             if (item.IsValueItemType) return false;
 
-            EnsureReadHeader();
-
             // Type
             return _currentHeader.ReadBit();
         }
@@ -195,15 +179,6 @@ namespace ABCo.ABSave.Deserialization
 
             // See if there's an item with that key.
             return info.KeyDeserializeCache!.GetValueOrDefault(key);
-        }
-
-        void EnsureReadHeader()
-        {
-            if (!_readHeader)
-            {
-                _currentHeader = new BitSource(this);
-                _readHeader = true;
-            }
         }
     }
 }
