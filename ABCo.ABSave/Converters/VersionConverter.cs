@@ -33,7 +33,7 @@ namespace ABCo.ABSave.Converters
             if (header.FreeBits < 8) header.Apply();
         }
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header) => DeserializeVersion(header);
+        public override object Deserialize(in DeserializeInfo info) => DeserializeVersion(info.Header);
 
         public static Version DeserializeVersion(BitReader header)
         {

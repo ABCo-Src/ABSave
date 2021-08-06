@@ -31,20 +31,20 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             header.Serializer.WriteByte(OUTPUT_BYTE);
         }
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header)
+        public override object Deserialize(in DeserializeInfo info)
         {
             if (_writesToHeader)
             {
-                if (!header.ReadBit()) throw new Exception("Sub deserialization failed.");
+                if (!info.Header.ReadBit()) throw new Exception("Sub deserialization failed.");
 
-                var deserializer = header.Finish();
+                var deserializer = info.Header.Finish();
                 if (deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
 
                 return _isNo2 ? new SubWithHeader2() : new SubWithHeader();
             }
 
             {
-                var deserializer = header.Finish();
+                var deserializer = info.Header.Finish();
                 if (deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
             }
 

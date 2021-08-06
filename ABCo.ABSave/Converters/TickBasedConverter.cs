@@ -27,10 +27,10 @@ namespace ABCo.ABSave.Converters
 
         public static void SerializeTicks(long ticks, ABSaveSerializer serializer) => serializer.WriteInt64(ticks);
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header) => _type switch
+        public override object Deserialize(in DeserializeInfo info) => _type switch
         {
-            TicksType.DateTime => new DateTime(DeserializeTicks(header)),
-            TicksType.TimeSpan => new TimeSpan(DeserializeTicks(header)),
+            TicksType.DateTime => new DateTime(DeserializeTicks(info.Header)),
+            TicksType.TimeSpan => new TimeSpan(DeserializeTicks(info.Header)),
             _ => throw new Exception("Invalid tick-based type"),
         };
 

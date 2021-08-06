@@ -133,9 +133,9 @@ namespace ABCo.ABSave.Converters
             }
         }
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header)
+        public override object Deserialize(in DeserializeInfo info)
         {
-            var deserializer = header.Finish();
+            var deserializer = info.Header.Finish();
 
             unchecked
             {

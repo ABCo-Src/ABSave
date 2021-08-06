@@ -50,7 +50,7 @@ namespace ABCo.ABSave.Deserialization
                 return DeserializeActualType(info._inheritanceInfo, converter.ItemType, header);
 
             var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info, header);
-            return converter.Deserialize(in deserializeInfo, header);
+            return converter.Deserialize(in deserializeInfo);
         }
 
         internal static VersionInfo HandleVersionNumber(Converter item, BitReader header)

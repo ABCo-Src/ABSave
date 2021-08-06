@@ -17,11 +17,11 @@ namespace ABCo.ABSave.Converters
             header.Serializer.WriteBytes(bytes);
         }
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header)
+        public override object Deserialize(in DeserializeInfo info)
         {
             Span<byte> data = stackalloc byte[16];
 
-            var deserializer = header.Finish();
+            var deserializer = info.Header.Finish();
             deserializer.ReadBytes(data);
             return new Guid(data);
         }

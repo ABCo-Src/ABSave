@@ -39,12 +39,12 @@ namespace ABCo.ABSave.Converters
             serializer.SerializeItem(obj.Value, _valueMap);
         }
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header)
+        public override object Deserialize(in DeserializeInfo info)
         {
             if (_isGeneric)
-                return DeserializeGeneric(info.ActualType, header);
+                return DeserializeGeneric(info.ActualType, info.Header);
             else
-                return DeserializeNonGeneric(header);
+                return DeserializeNonGeneric(info.Header);
         }
 
         object DeserializeGeneric(Type actualType, BitReader header)

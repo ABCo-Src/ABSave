@@ -68,11 +68,11 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header) => _type switch
+        public override object Deserialize(in DeserializeInfo info) => _type switch
         {
-            StringType.String => header.ReadString(),
-            StringType.CharArray => DeserializeCharArray(header),
-            StringType.StringBuilder => DeserializeStringBuilder(header),
+            StringType.String => info.Header.ReadString(),
+            StringType.CharArray => DeserializeCharArray(info.Header),
+            StringType.StringBuilder => DeserializeStringBuilder(info.Header),
             _ => throw new Exception("Invalid StringType in text converter context"),
         };
 

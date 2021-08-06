@@ -254,7 +254,7 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header) => Deserialize(header);
+        public override object Deserialize(in DeserializeInfo info) => Deserialize(info.Header);
 
         object Deserialize(BitReader header)
         {

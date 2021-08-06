@@ -93,10 +93,10 @@ namespace ABCo.ABSave.Converters
                 header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map);
         }
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header)
+        public override object Deserialize(in DeserializeInfo info)
         {
             object res = Activator.CreateInstance(info.ActualType)!;
-            DeserializeInto(res, info.VersionInfo, header);
+            DeserializeInto(res, info.VersionInfo, info.Header);
             return res;
         }
 

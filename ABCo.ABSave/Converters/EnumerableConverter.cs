@@ -75,12 +75,12 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header)
+        public override object Deserialize(in DeserializeInfo info)
         {
             if (_info is CollectionInfo collectionInfo)
-                return DeserializeCollection(collectionInfo, info.ActualType, header);
+                return DeserializeCollection(collectionInfo, info.ActualType, info.Header);
             else if (_info is DictionaryInfo dictionaryInfo)
-                return DeserializeDictionary(dictionaryInfo, info.ActualType, header);
+                return DeserializeDictionary(dictionaryInfo, info.ActualType, info.Header);
             else throw new Exception("Unrecognized enumerable info.");
         }
 

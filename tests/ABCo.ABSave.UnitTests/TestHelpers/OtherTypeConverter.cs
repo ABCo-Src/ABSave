@@ -35,11 +35,11 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             header.Serializer.WriteByte(OUTPUT_BYTE);
         }
 
-        public override object Deserialize(in DeserializeInfo info, BitReader header)
+        public override object Deserialize(in DeserializeInfo info)
         {
-            if (WritesToHeader && !header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
+            if (WritesToHeader && !info.Header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
 
-            var deserializer = header.Finish();
+            var deserializer = info.Header.Finish();
             if (deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
 
             return Activator.CreateInstance(info.ActualType);

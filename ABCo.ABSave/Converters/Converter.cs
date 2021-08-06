@@ -92,6 +92,6 @@ namespace ABCo.ABSave.Converters
                 (ActualType, VersionInfo, Header) = (actualType, versionInfo, header);
         }
 
-        public abstract object Deserialize(in DeserializeInfo info, BitReader header);
+        public abstract object Deserialize(in DeserializeInfo info);
     }
 }
