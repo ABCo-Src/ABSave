@@ -19,20 +19,14 @@ namespace ABCo.ABSave.Serialization
     public sealed partial class ABSaveSerializer : IDisposable
     {
         public Dictionary<Type, uint>? TargetVersions { get; private set; }
-        public ABSaveMap Map { get; }
-        public ABSaveSettings Settings { get; }
         public Stream Output { get; private set; } = null!;
-        public bool ShouldReverseEndian { get; private set; }
 
-        VersionInfo?[] _currentVersionInfos;
-        byte[]? _stringBuffer;
+        public CurrentState State { get; }
 
         internal ABSaveSerializer(ABSaveMap map)
         {
-            Map = map;
-            Settings = map.Settings;
-            ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
-            _currentVersionInfos = new VersionInfo[map._highestConverterInstanceId];
+            Output = null!;
+            State = new CurrentState(map);
         }
 
         public void Initialize(Stream output, Dictionary<Type, uint>? targetVersions)
@@ -46,12 +40,10 @@ namespace ABCo.ABSave.Serialization
             Reset();
         }
 
-        public void Reset() => Array.Clear(_currentVersionInfos, 0, _currentVersionInfos.Length);
-        public void Dispose() => Map.ReleaseSerializer(this);
+        public void Reset() => State.Reset();
+        public void Dispose() => State.Map.ReleaseSerializer(this);
 
-        public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
-
-        public void SerializeRoot(object? obj) => SerializeItem(obj, Map._rootItem);
+        public void SerializeRoot(object? obj) => SerializeItem(obj, State.Map._rootItem);
 
         public void SerializeItem(object? obj, MapItemInfo item)
         {
@@ -149,22 +141,18 @@ namespace ABCo.ABSave.Serialization
         /// <returns>Whether we applied the header</returns>
         internal bool HandleVersionNumber(Converter item, out VersionInfo info, ref BitTarget header)
         {
-            if (item._instanceId >= _currentVersionInfos.Length)
-                Array.Resize(ref _currentVersionInfos, (int)Map._highestConverterInstanceId);
-
             // If the version has already been written, do nothing
-            VersionInfo? existingInfo = _currentVersionInfos[item._instanceId];
+            VersionInfo? existingInfo = State.GetExistingVersionInfo(item);
             if (existingInfo != null)
             {
                 info = existingInfo;
                 return false;
             }
 
-            uint version = Settings.IncludeVersioning ? WriteNewVersionInfo(item, ref header) : 0;
+            uint version = State.Settings.IncludeVersioning ? WriteNewVersionInfo(item, ref header) : 0;
+            info = State.GetNewVersionInfo(item, version);
 
-            info = Map.GetVersionInfo(item, version);
-            _currentVersionInfos[item._instanceId] = info;
-            return Settings.IncludeVersioning;
+            return State.Settings.IncludeVersioning;
         }
 
         uint WriteNewVersionInfo(Converter item, ref BitTarget target)
@@ -204,7 +192,7 @@ namespace ABCo.ABSave.Serialization
             }
 
             // Serialize the actual type now.
-            SerializeItemNoSetup(obj, GetRuntimeMapItem(actualType), ref header, true);
+            SerializeItemNoSetup(obj, State.GetRuntimeMapItem(actualType), ref header, true);
         }
 
         BitTarget _currentHeader;
@@ -235,7 +223,7 @@ namespace ABCo.ABSave.Serialization
 
         void SerializeActualType(object obj, Type type)
         {
-            MapItemInfo info = GetRuntimeMapItem(type);
+            MapItemInfo info = State.GetRuntimeMapItem(type);
 
             var newTarget = new BitTarget(this);
             SerializeItemNoSetup(obj, info, ref newTarget, true);

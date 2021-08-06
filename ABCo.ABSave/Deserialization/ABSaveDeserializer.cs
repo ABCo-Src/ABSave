@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Deserialization
         public void Initialize(Stream source)
         {
             Source = source;
-            State.Reset();
+            Reset();
         }
 
         public void Reset() => State.Reset();
