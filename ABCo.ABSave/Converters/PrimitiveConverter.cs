@@ -133,29 +133,29 @@ namespace ABCo.ABSave.Converters
             }
         }
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, BitReader header)
         {
-            ABSaveDeserializer? reader = header.Deserializer;
+            var deserializer = header.Finish();
 
             unchecked
             {
                 return _typeCode switch
                 {
-                    PrimitiveType.Boolean => reader.ReadByte() > 0,
+                    PrimitiveType.Boolean => deserializer.ReadByte() > 0,
                     //PrimitiveType.IntPtr => IntPtr.Size == 8 ? (IntPtr)reader.ReadInt64() : (IntPtr)reader.ReadInt32(),
                     //PrimitiveType.UIntPtr => UIntPtr.Size == 8 ? (UIntPtr)reader.ReadInt64() : (UIntPtr)reader.ReadInt32(),
-                    PrimitiveType.Byte => reader.ReadByte(),
-                    PrimitiveType.SByte => (sbyte)reader.ReadByte(),
-                    PrimitiveType.UInt16 => reader.ReadInt16(),
-                    PrimitiveType.Int16 => reader.ReadInt16(),
-                    PrimitiveType.Char => (char)reader.ReadInt16(),
-                    PrimitiveType.UInt32 => reader.ReadInt32(),
-                    PrimitiveType.Int32 => reader.ReadInt32(),
-                    PrimitiveType.UInt64 => reader.ReadInt64(),
-                    PrimitiveType.Int64 => reader.ReadInt64(),
-                    PrimitiveType.Single => reader.ReadSingle(),
-                    PrimitiveType.Double => reader.ReadDouble(),
-                    PrimitiveType.Decimal => reader.ReadDecimal(),
+                    PrimitiveType.Byte => deserializer.ReadByte(),
+                    PrimitiveType.SByte => (sbyte)deserializer.ReadByte(),
+                    PrimitiveType.UInt16 => deserializer.ReadInt16(),
+                    PrimitiveType.Int16 => deserializer.ReadInt16(),
+                    PrimitiveType.Char => (char)deserializer.ReadInt16(),
+                    PrimitiveType.UInt32 => deserializer.ReadInt32(),
+                    PrimitiveType.Int32 => deserializer.ReadInt32(),
+                    PrimitiveType.UInt64 => deserializer.ReadInt64(),
+                    PrimitiveType.Int64 => deserializer.ReadInt64(),
+                    PrimitiveType.Single => deserializer.ReadSingle(),
+                    PrimitiveType.Double => deserializer.ReadDouble(),
+                    PrimitiveType.Decimal => deserializer.ReadDecimal(),
                     _ => throw new Exception("Invalid numerical type."),
                 };
             }

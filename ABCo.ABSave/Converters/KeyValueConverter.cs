@@ -39,26 +39,26 @@ namespace ABCo.ABSave.Converters
             serializer.SerializeItem(obj.Value, _valueMap);
         }
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, BitReader header)
         {
             if (_isGeneric)
-                return DeserializeGeneric(info.ActualType, header.Deserializer);
+                return DeserializeGeneric(info.ActualType, header);
             else
-                return DeserializeNonGeneric(header.Deserializer);
+                return DeserializeNonGeneric(header);
         }
 
-        object DeserializeGeneric(Type actualType, ABSaveDeserializer deserializer)
+        object DeserializeGeneric(Type actualType, BitReader header)
         {
-            object? key = deserializer.DeserializeItem(_keyMap);
-            object? value = deserializer.DeserializeItem(_valueMap);
+            object? key = header.ReadItem(_keyMap);
+            object? value = header.ReadItem(_valueMap);
 
             return Activator.CreateInstance(actualType, key, value)!;
         }
 
-        DictionaryEntry DeserializeNonGeneric(ABSaveDeserializer deserializer)
+        DictionaryEntry DeserializeNonGeneric(BitReader header)
         {
-            object? key = deserializer.DeserializeItem(_keyMap);
-            object? value = deserializer.DeserializeItem(_valueMap);
+            object? key = header.ReadItem(_keyMap);
+            object? value = header.ReadItem(_valueMap);
 
             if (key == null) throw new NullDictionaryKeyException();
             return new DictionaryEntry(key, value);

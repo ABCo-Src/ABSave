@@ -1,20 +1,23 @@
-﻿using System;
+﻿using ABCo.ABSave.Helpers;
+using System;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace ABCo.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer
     {
+        #region Bit Reading
+
+        readonly BitReader _currentBitReader;
+
+        #endregion
+
         #region Byte Reading
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte ReadByte() => (byte)Source.ReadByte();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadBytes(Span<byte> dest) => Source.Read(dest);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ReadBytes(byte[] dest) => Source.Read(dest, 0, dest.Length);
 
         #endregion
@@ -25,26 +28,26 @@ namespace ABCo.ABSave.Deserialization
         {
             short res = 0;
             ReadBytes(new Span<byte>((byte*)&res, 2));
-            return ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
+            return State.ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
         }
 
         public unsafe int ReadInt32()
         {
             int res = 0;
             ReadBytes(new Span<byte>((byte*)&res, 4));
-            return ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
+            return State.ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
         }
 
         public unsafe long ReadInt64()
         {
             long res = 0;
             ReadBytes(new Span<byte>((byte*)&res, 8));
-            return ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
+            return State.ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
         }
 
         public unsafe float ReadSingle()
         {
-            if (ShouldReverseEndian)
+            if (State.ShouldReverseEndian)
             {
                 int res = 0;
                 ReadBytes(new Span<byte>((byte*)&res, 4));
@@ -60,7 +63,7 @@ namespace ABCo.ABSave.Deserialization
 
         public unsafe double ReadDouble()
         {
-            if (ShouldReverseEndian)
+            if (State.ShouldReverseEndian)
             {
                 long res = 0;
                 ReadBytes(new Span<byte>((byte*)&res, 8));

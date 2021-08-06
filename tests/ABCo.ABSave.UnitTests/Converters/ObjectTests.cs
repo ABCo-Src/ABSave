@@ -94,7 +94,7 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             Serializer.SerializeItem(instance, CurrentMapItem);
             AssertAndGoToStart(baseExpectedWithVersion.Concat(versionExpected).ToArray());
-            ReflectiveAssert(instance, (T)Deserializer.DeserializeItem(CurrentMapItem));
+            ReflectiveAssert(instance, (T)Deserializer.ReadItem(CurrentMapItem));
 
             ResetPosition();
 
@@ -110,7 +110,7 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             Serializer.SerializeItem(instance, CurrentMapItem);
             AssertAndGoToStart(baseExpectedWithoutVersion.Concat(nonVersionExpected).ToArray());
-            ReflectiveAssert(instance, (T)Deserializer.DeserializeItem(CurrentMapItem));
+            ReflectiveAssert(instance, (T)Deserializer.ReadItem(CurrentMapItem));
         }
     }
 

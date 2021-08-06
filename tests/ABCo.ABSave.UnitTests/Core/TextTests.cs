@@ -34,8 +34,8 @@ namespace ABCo.ABSave.UnitTests.Core
             }
 
             {
-                var header = new BitSource(Deserializer);
-                "ABC".AsSpan().SequenceEqual(Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header));
+                var header = Deserializer.GetHeader();
+                "ABC".AsSpan().SequenceEqual(header.ReadUTF8(s => new char[s], c => c.AsMemory()));
             }
 
             ResetState();
@@ -57,8 +57,8 @@ namespace ABCo.ABSave.UnitTests.Core
                 }
 
                 {
-                    var header = new BitSource(Deserializer);
-                    chArr.AsSpan().SequenceEqual(Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header));
+                    var header = Deserializer.GetHeader();
+                    chArr.AsSpan().SequenceEqual(header.ReadUTF8(s => new char[s], c => c.AsMemory()));
                 }
             }
         }

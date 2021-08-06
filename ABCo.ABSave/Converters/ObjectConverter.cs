@@ -67,9 +67,6 @@ namespace ABCo.ABSave.Converters
 
         protected override void DoHandleAllVersionsGenerated() => _intermediateInfo.Release();
 
-        // TODO: When map guides come along, instead of manually calling the temporarily internal
-        // "ABSaveSerializer.HandleVersionNumber" ourselves, we should be able to communicate with the base
-        // ObjectConverter that serialize into our instance as opposed to making a new one.
         public override void Serialize(in SerializeInfo info, ref BitTarget header) =>
             Serialize(info.Instance, info.VersionInfo, ref header);
 
@@ -81,6 +78,7 @@ namespace ABCo.ABSave.Converters
 
             if (baseType != null)
             {
+                // TODO: Don't directly call this with map guides.
                 header.Serializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
                 baseType.Serialize(instance, baseInfo, ref header);
             }
@@ -95,45 +93,29 @@ namespace ABCo.ABSave.Converters
                 header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map);
         }
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, BitReader header)
         {
             object res = Activator.CreateInstance(info.ActualType)!;
-            DeserializeInto(res, info.VersionInfo, ref header);
+            DeserializeInto(res, info.VersionInfo, header);
             return res;
         }
 
-        void DeserializeInto(object obj, VersionInfo info, ref BitSource header)
+        void DeserializeInto(object obj, VersionInfo info, BitReader header)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
             ObjectConverter? baseType = versionInfo.BaseObject;
 
-            int deserializeWithoutHeaderStart;
-
-            // If there's a base type to be serialized, the header goes to that,
-            // and we'll deserialize the first member without the header.
-            if (baseType == null)
+            if (baseType != null)
             {
-                deserializeWithoutHeaderStart = 1;
-
-                if (members.Length == 0) return;
-
-                // Deserialize the first member using the header
-                members[0].Accessor.Setter(obj, header.Deserializer.DeserializeItem(members[0].Map, ref header));
-            }
-            else
-            {
-
-                VersionInfo baseInfo = header.Deserializer.HandleVersionNumber(baseType, ref header);
-                baseType.DeserializeInto(obj, baseInfo, ref header);
-
-                // The header goes to the base type so we'll deserialize the first member in the loop of members that don't get the header.
-                deserializeWithoutHeaderStart = 0;
+                // TODO: Don't directly call this with map guides.
+                VersionInfo baseInfo = header.ReadAndStoreVersionNumber(baseType);
+                baseType.DeserializeInto(obj, baseInfo, header);
             }
 
             // Deserialize all the members that don't get the header.
-            for (int i = deserializeWithoutHeaderStart; i < members.Length; i++)
-                members[i].Accessor.Setter(obj, header.Deserializer.DeserializeItem(members[i].Map));
+            for (int i = 0; i < members.Length; i++)
+                members[i].Accessor.Setter(obj, header.ReadItem(members[i].Map));
         }
 
         internal class ObjectVersionInfo : VersionInfo

@@ -23,7 +23,7 @@ namespace ABCo.ABSave.UnitTests.Converters
 
         public T DoDeserialize<T>()
         {
-            return (T)Deserializer.DeserializeExactNonNullItem(CurrentMapItem);
+            return (T)Deserializer.ReadExactNonNullItem(CurrentMapItem);
         }
     }
 }

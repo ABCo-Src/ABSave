@@ -33,19 +33,19 @@ namespace ABCo.ABSave.Converters
             if (header.FreeBits < 8) header.Apply();
         }
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header) => DeserializeVersion(ref header);
+        public override object Deserialize(in DeserializeInfo info, BitReader header) => DeserializeVersion(header);
 
-        public static Version DeserializeVersion(ref BitSource header)
+        public static Version DeserializeVersion(BitReader header)
         {
             bool hasMajor = header.ReadBit();
             bool hasMinor = header.ReadBit();
             bool hasBuild = header.ReadBit();
             bool hasRevision = header.ReadBit();
 
-            int major = hasMajor ? (int)header.Deserializer.ReadCompressedInt(ref header) : 1;
-            int minor = hasMinor ? (int)header.Deserializer.ReadCompressedInt(ref header) : 0;
-            int build = hasBuild ? (int)header.Deserializer.ReadCompressedInt(ref header) : 0;
-            int revision = hasRevision ? (int)header.Deserializer.ReadCompressedInt(ref header) : 0;
+            int major = hasMajor ? (int)header.ReadCompressedInt() : 1;
+            int minor = hasMinor ? (int)header.ReadCompressedInt() : 0;
+            int build = hasBuild ? (int)header.ReadCompressedInt() : 0;
+            int revision = hasRevision ? (int)header.ReadCompressedInt() : 0;
 
             return new Version(major, minor, build, revision);
         }

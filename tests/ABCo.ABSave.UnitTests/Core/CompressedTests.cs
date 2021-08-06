@@ -140,18 +140,18 @@ namespace ABCo.ABSave.UnitTests.Core
 
             // Deserialization
             {
-                var header = new BitSource(Deserializer);
+                var header = new BitReader(Deserializer);
 
                 // Read up the number of bits we want free.
                 header.ReadInteger((byte)(8 - bitsFree));
 
                 if (data < uint.MaxValue)
                 {
-                    Assert.AreEqual((uint)data, Deserializer.ReadCompressedInt(ref header));
+                    Assert.AreEqual((uint)data, header.ReadCompressedInt());
                 }
                 else
                 {
-                    Assert.AreEqual(data, Deserializer.ReadCompressedLong(ref header));
+                    Assert.AreEqual(data, header.ReadCompressedLong());
                 }
             }
 

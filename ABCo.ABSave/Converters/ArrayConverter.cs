@@ -254,9 +254,9 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header) => Deserialize(ref header);
+        public override object Deserialize(in DeserializeInfo info, BitReader header) => Deserialize(header);
 
-        object Deserialize(ref BitSource header)
+        object Deserialize(BitReader header)
         {
             switch (_info.Type)
             {
@@ -265,45 +265,44 @@ namespace ABCo.ABSave.Converters
                 //    return DeserializeFast(context.FastConversion, ref header);
                 case ArrayType.SZArrayManual:
                     {
-                        int arrSize = (int)header.Deserializer.ReadCompressedInt(ref header);
+                        int arrSize = (int)header.ReadCompressedInt();
                         var arr = Array.CreateInstance(_info.ElementType, arrSize);
 
-                        for (int i = 0; i < arrSize; i++) arr.SetValue(header.Deserializer.DeserializeItem(_info.PerItem), i);
+                        for (int i = 0; i < arrSize; i++) arr.SetValue(header.ReadItem(_info.PerItem), i);
                         return arr;
                     }
                 case ArrayType.SNZArray:
                     {
-                        int arrSize = (int)header.Deserializer.ReadCompressedInt(ref header);
-                        int i = (int)header.Deserializer.ReadCompressedInt(ref header);
+                        int arrSize = (int)header.ReadCompressedInt();
+                        int i = (int)header.ReadCompressedInt();
 
                         var arr = Array.CreateInstance(_info.ElementType, new int[] { arrSize }, new int[] { i });
 
                         int end = i + arrSize;
-                        for (; i < end; i++) arr.SetValue(header.Deserializer.DeserializeItem(_info.PerItem), i);
+                        for (; i < end; i++) arr.SetValue(header.ReadItem(_info.PerItem), i);
                         return arr;
                     }
                 case ArrayType.MultiDimensional:
                     {
                         bool hasCustomLowerBounds = header.ReadBit();
-                        int arrSize = (int)header.Deserializer.ReadCompressedInt(ref header);
+                        int arrSize = (int)header.ReadCompressedInt();
 
-                        return DeserializeMultiDimensionalArray(in _info, hasCustomLowerBounds, arrSize, header.Deserializer);
+                        return DeserializeMultiDimensionalArray(in _info, hasCustomLowerBounds, arrSize, header);
                     }
 
                 // Unknown
                 default:
-                    return DeserializeUnknown(ref header);
+                    return DeserializeUnknown(header);
             }
         }
 
-        private object DeserializeUnknown(ref BitSource typeHeader)
+        private object DeserializeUnknown(BitReader header)
         {
             // Get type information.
             Type elementType = null!; // TODO: Get element type
-            MapItemInfo perItem = typeHeader.Deserializer.GetRuntimeMapItem(elementType);
+            MapItemInfo perItem = header.State.GetRuntimeMapItem(elementType);
 
             // Read the header information
-            var header = new BitSource(typeHeader.Deserializer);
             bool isMultiDimensional = header.ReadBit();
             bool hasCustomLowerBounds = header.ReadBit();
 
@@ -312,9 +311,9 @@ namespace ABCo.ABSave.Converters
             {
                 int rank = header.ReadInteger(5);
 
-                int size = (int)header.Deserializer.ReadCompressedInt();
+                int size = (int)header.ReadCompressedInt();
                 var context = new ArrayTypeInfo((byte)rank, elementType, perItem);
-                return DeserializeMultiDimensionalArray(in context, hasCustomLowerBounds, size, header.Deserializer);
+                return DeserializeMultiDimensionalArray(in context, hasCustomLowerBounds, size, header);
             }
 
             // Single-dimensional
@@ -323,13 +322,13 @@ namespace ABCo.ABSave.Converters
                 // SNZArray
                 if (hasCustomLowerBounds)
                 {
-                    int size = (int)header.Deserializer.ReadCompressedInt(ref header);
+                    int size = (int)header.ReadCompressedInt();
 
-                    int i = (int)header.Deserializer.ReadCompressedInt();
+                    int i = (int)header.ReadCompressedInt();
                     var arr = Array.CreateInstance(elementType, new int[] { size }, new int[] { i });
 
                     int end = i + size;
-                    for (; i < end; i++) arr.SetValue(header.Deserializer.DeserializeItem(perItem), i);
+                    for (; i < end; i++) arr.SetValue(header.ReadItem(perItem), i);
                     return arr;
                 }
 
@@ -341,36 +340,36 @@ namespace ABCo.ABSave.Converters
                     //var fastType = GetFastType(elementType);
                     //if (fastType != FastConversionType.None) return DeserializeFast(fastType, ref header);
 
-                    int size = (int)header.Deserializer.ReadCompressedInt(ref header);
+                    int size = (int)header.ReadCompressedInt();
                     var arr = Array.CreateInstance(elementType, size);
 
-                    for (int i = 0; i < size; i++) arr.SetValue(header.Deserializer.DeserializeItem(perItem), i);
+                    for (int i = 0; i < size; i++) arr.SetValue(header.ReadItem(perItem), i);
                     return arr;
                 }
             }
         }
 
-        unsafe object DeserializeMultiDimensionalArray(in ArrayTypeInfo context, bool hasCustomLowerBounds, int firstLength, ABSaveDeserializer deserializer)
+        unsafe object DeserializeMultiDimensionalArray(in ArrayTypeInfo context, bool hasCustomLowerBounds, int firstLength, BitReader header)
         {
             // Read the lengths.
             int[] lengths = new int[context.Rank];
             lengths[0] = firstLength;
 
             for (int i = 1; i < context.Rank; i++)
-                lengths[i] = (int)deserializer.ReadCompressedInt();
+                lengths[i] = (int)header.ReadCompressedInt();
 
             // Read the lower bounds.
             int[] lowerBounds = new int[context.Rank];
             if (hasCustomLowerBounds)
             {
                 for (int i = 0; i < context.Rank; i++)
-                    lowerBounds[i] = (int)deserializer.ReadCompressedInt();
+                    lowerBounds[i] = (int)header.ReadCompressedInt();
             }
 
             // Create the array, and deserialize.
             Array res = hasCustomLowerBounds ? Array.CreateInstance(context.ElementType, lengths, lowerBounds) : Array.CreateInstance(context.ElementType, lengths);
 
-            var mdContext = new MDDeserializeArrayInfo(res, deserializer);
+            var mdContext = new MDDeserializeArrayInfo(res, header.Finish());
             DeserializeDimension(0, lengths, lowerBounds, in context, in mdContext);
 
             return res;
@@ -387,7 +386,7 @@ namespace ABCo.ABSave.Converters
             // Deepest dimension
             if (nextDimension == mdContext.Result.Rank)
                 for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
-                    mdContext.Result.SetValue(mdContext.Deserializer.DeserializeItem(context.PerItem), currentPos);
+                    mdContext.Result.SetValue(mdContext.Deserializer.ReadItem(context.PerItem), currentPos);
 
             // Outer dimension
             else
@@ -440,7 +439,7 @@ namespace ABCo.ABSave.Converters
         //    }
         //}
 
-        //unsafe static Array DeserializeFast(FastConversionType type, ref BitSource header)
+        //unsafe static Array DeserializeFast(FastConversionType type, BitReader header)
         //{
         //    // TODO: Remove tight coupling with TextConverter.
         //    if (type == FastConversionType.Char) return TextConverter.DeserializeCharArray(ref header);

@@ -68,30 +68,31 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header) => _type switch
+        public override object Deserialize(in DeserializeInfo info, BitReader header) => _type switch
         {
-            StringType.String => header.Deserializer.ReadString(ref header),
-            StringType.CharArray => DeserializeCharArray(ref header),
-            StringType.StringBuilder => DeserializeStringBuilder(ref header),
+            StringType.String => header.ReadString(),
+            StringType.CharArray => DeserializeCharArray(header),
+            StringType.StringBuilder => DeserializeStringBuilder(header),
             _ => throw new Exception("Invalid StringType in text converter context"),
         };
 
-        public static char[] DeserializeCharArray(ref BitSource header)
+        public static char[] DeserializeCharArray(BitReader header)
         {
-            if (header.Deserializer.Settings.UseUTF8)
-                return header.Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header);
+            if (header.State.Settings.UseUTF8)
+                return header.ReadUTF8(s => new char[s], c => c.AsMemory());
             else
             {
-                int size = (int)header.Deserializer.ReadCompressedInt(ref header);
+                int size = (int)header.ReadCompressedInt();
                 char[]? chArr = new char[size];
 
-                header.Deserializer.FastReadShorts(MemoryMarshal.Cast<char, short>(chArr.AsSpan()));
+                var deserializer = header.Finish();
+                deserializer.FastReadShorts(MemoryMarshal.Cast<char, short>(chArr.AsSpan()));
 
                 return chArr;
             }
         }
 
-        public static StringBuilder DeserializeStringBuilder(ref BitSource header) => new StringBuilder(header.Deserializer.ReadString(ref header));
+        public static StringBuilder DeserializeStringBuilder(BitReader header) => new StringBuilder(header.ReadString());
 
         #endregion
 

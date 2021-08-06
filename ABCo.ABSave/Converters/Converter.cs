@@ -1,4 +1,5 @@
 ﻿using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Converters;
@@ -82,14 +83,15 @@ namespace ABCo.ABSave.Converters
         public struct DeserializeInfo
         {
             public Type ActualType { get; }
+            public BitReader Header { get; }
             internal VersionInfo VersionInfo { get; }
 
-            readonly ABSaveDeserializer _deserializer;
+            public CurrentState State => Header.State;
 
-            internal DeserializeInfo(Type actualType, VersionInfo versionInfo, ABSaveDeserializer deserializer) =>
-                (ActualType, VersionInfo, _deserializer) = (actualType, versionInfo, deserializer);
+            internal DeserializeInfo(Type actualType, VersionInfo versionInfo, BitReader header) =>
+                (ActualType, VersionInfo, Header) = (actualType, versionInfo, header);
         }
 
-        public abstract object Deserialize(in DeserializeInfo info, ref BitSource header);
+        public abstract object Deserialize(in DeserializeInfo info, BitReader header);
     }
 }

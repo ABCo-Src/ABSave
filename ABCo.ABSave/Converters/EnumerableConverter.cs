@@ -75,37 +75,37 @@ namespace ABCo.ABSave.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info, BitReader header)
         {
             if (_info is CollectionInfo collectionInfo)
-                return DeserializeCollection(collectionInfo, info.ActualType, ref header);
+                return DeserializeCollection(collectionInfo, info.ActualType, header);
             else if (_info is DictionaryInfo dictionaryInfo)
-                return DeserializeDictionary(dictionaryInfo, info.ActualType, ref header);
+                return DeserializeDictionary(dictionaryInfo, info.ActualType, header);
             else throw new Exception("Unrecognized enumerable info.");
         }
 
-        object DeserializeCollection(CollectionInfo info, Type type, ref BitSource header)
+        object DeserializeCollection(CollectionInfo info, Type type, BitReader header)
         {
-            int size = (int)header.Deserializer.ReadCompressedInt(ref header);
+            int size = (int)header.ReadCompressedInt();
             object? collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
-                info.AddItem(collection, header.Deserializer.DeserializeItem(_elementOrKeyMap));
+                info.AddItem(collection, header.ReadItem(_elementOrKeyMap));
 
             return collection;
         }
 
-        object DeserializeDictionary(DictionaryInfo info, Type type, ref BitSource header)
+        object DeserializeDictionary(DictionaryInfo info, Type type, BitReader header)
         {
-            int size = (int)header.Deserializer.ReadCompressedInt(ref header);
+            int size = (int)header.ReadCompressedInt();
             object? collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
             {
-                object? key = header.Deserializer.DeserializeItem(_elementOrKeyMap);
+                object? key = header.ReadItem(_elementOrKeyMap);
                 if (key == null) throw new NullDictionaryKeyException();
 
-                object? value = header.Deserializer.DeserializeItem(_valueMap);
+                object? value = header.ReadItem(_valueMap);
                 info.AddItem(collection, key, value);
             }
 
