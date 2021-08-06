@@ -43,7 +43,7 @@ namespace ABCo.ABSave.Serialization
         {
             if (target.FreeBits == 0) target.Apply();
 
-            if (Settings.LazyCompressedWriting)
+            if (State.Settings.LazyCompressedWriting)
                 WriteCompressedLazyFast(data, ref target);
             else
                 WriteCompressedSlow(data, ref target);

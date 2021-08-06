@@ -79,7 +79,7 @@ namespace ABCo.ABSave.Converters
             if (baseType != null)
             {
                 // TODO: Don't directly call this with map guides.
-                header.Serializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
+                ItemSerializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
                 baseType.Serialize(instance, baseInfo, ref header);
             }
 

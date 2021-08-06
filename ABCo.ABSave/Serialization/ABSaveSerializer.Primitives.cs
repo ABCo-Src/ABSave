@@ -23,25 +23,25 @@ namespace ABCo.ABSave.Serialization
 
         public unsafe void WriteInt16(short num)
         {
-            if (ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
+            if (State.ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
             WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 2));
         }
 
         public unsafe void WriteInt32(int num)
         {
-            if (ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
+            if (State.ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
             WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 4));
         }
 
         public unsafe void WriteInt64(long num)
         {
-            if (ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
+            if (State.ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
             WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 8));
         }
 
         public unsafe void WriteSingle(float num)
         {
-            if (ShouldReverseEndian)
+            if (State.ShouldReverseEndian)
             {
                 int asInt = BitConverter.SingleToInt32Bits(num);
                 asInt = BinaryPrimitives.ReverseEndianness(asInt);
@@ -52,7 +52,7 @@ namespace ABCo.ABSave.Serialization
 
         public unsafe void WriteDouble(double num)
         {
-            if (ShouldReverseEndian)
+            if (State.ShouldReverseEndian)
             {
                 long asInt = BitConverter.DoubleToInt64Bits(num);
                 asInt = BinaryPrimitives.ReverseEndianness(asInt);

@@ -129,7 +129,7 @@ namespace ABCo.ABSave.Converters
         private void SerializeUnknown(Array arr, Type actualType, ref BitTarget typeHeader)
         {
             var context = new ArrayTypeInfo();
-            PopulateTypeInfo(ref context, typeHeader.Serializer.GetRuntimeMapItem(actualType.GetElementType()!), actualType);
+            PopulateTypeInfo(ref context, typeHeader.State.GetRuntimeMapItem(actualType.GetElementType()!), actualType);
 
             // TODO: Write the element type.
 

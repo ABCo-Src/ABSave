@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using ABCo.ABSave.Helpers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace ABCo.ABSave.Serialization
@@ -10,6 +11,8 @@ namespace ABCo.ABSave.Serialization
         public ABSaveSerializer Serializer;
         public int Result;
         public byte FreeBits;
+
+        public CurrentState State => Serializer.State;
 
         public BitTarget(ABSaveSerializer serializer, byte freeBits = 8)
         {
