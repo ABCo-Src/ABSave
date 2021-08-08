@@ -9,7 +9,7 @@ namespace ABCo.ABSave.Deserialization
     {
         #region Text Reading
 
-        public string ReadNullableString() => TextDeserializer.ReadNullableString(_currentBitReader);
+        public string? ReadNullableString() => TextDeserializer.ReadNullableString(_currentBitReader);
 
         public string ReadNonNullString() => TextDeserializer.ReadNonNullString(_currentBitReader);
 
