@@ -39,7 +39,7 @@ namespace ABCo.ABSave.Converters
             switch (_type)
             {
                 case StringType.String:
-                    header.Serializer.WriteString((string)info.Instance, ref header);
+                    header.Serializer.WriteNonNullString((string)info.Instance, ref header);
                     break;
                 case StringType.CharArray:
                     SerializeCharArray((char[])info.Instance, ref header);

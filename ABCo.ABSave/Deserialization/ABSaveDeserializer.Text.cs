@@ -9,7 +9,9 @@ namespace ABCo.ABSave.Deserialization
     {
         #region Text Reading
 
-        public string ReadString() => TextDeserializer.ReadString(_currentBitReader);
+        public string ReadNullableString() => TextDeserializer.ReadNullableString(_currentBitReader);
+
+        public string ReadNonNullString() => TextDeserializer.ReadNonNullString(_currentBitReader);
 
         public unsafe void FastReadShorts(Span<short> dest)
         {

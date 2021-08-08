@@ -15,10 +15,10 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize();
 
-            Serializer.WriteString("ABC");
+            Serializer.WriteNonNullString("ABC");
             AssertAndGoToStart(3, 65, 66, 67);
 
-            Assert.AreEqual("ABC", Deserializer.ReadString());
+            Assert.AreEqual("ABC", Deserializer.ReadNonNullString());
         }
 
         [TestMethod]

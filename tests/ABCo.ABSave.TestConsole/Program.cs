@@ -9,6 +9,7 @@ using MessagePack;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -200,6 +201,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
     {
         static void Main()
         {
+            var ptr = Marshal.AllocHGlobal(1000 * 1000 * 800);
             //GenerateAndSaveNewModel();
             TestOutputSize();
             //Console.ReadLine();

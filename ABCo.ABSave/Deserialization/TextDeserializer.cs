@@ -8,7 +8,14 @@ namespace ABCo.ABSave.Deserialization
 {
     internal unsafe static class TextDeserializer
     {
-        public static string ReadString(BitReader header)
+        public static string? ReadNullableString(BitReader header)
+        {
+            if (!header.ReadBit()) return null;
+
+            return ReadNonNullString(header);
+        }
+
+        public static string ReadNonNullString(BitReader header)
         {
             if (header.State.Settings.UseUTF8)
             {

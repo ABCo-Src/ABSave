@@ -11,7 +11,7 @@ using System.Text;
 
 namespace ABCo.ABSave.Serialization
 {
-    public static class ItemSerializer
+    internal static class ItemSerializer
     {
         public static void SerializeItem(object obj, MapItemInfo info, ref BitTarget header)
         {
@@ -149,7 +149,7 @@ namespace ABCo.ABSave.Serialization
         static void WriteKeyInheritance(SaveInheritanceAttribute info, Type baseType, Type actualType, ref BitTarget header)
         {
             string key = KeyInheritanceHandler.GetOrAddTypeKeyFromCache(baseType, actualType, info);
-            header.Serializer.WriteString(key, ref header);
+            header.Serializer.WriteNonNullString(key, ref header);
         }
     }
 }

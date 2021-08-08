@@ -56,7 +56,7 @@ namespace ABCo.ABSave.Deserialization
         public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed(false, this);
         public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed(true, this);
 
-        public string ReadString() => TextDeserializer.ReadString(this);
+        public string ReadString() => TextDeserializer.ReadNonNullString(this);
         public T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest) => TextDeserializer.ReadUTF8<T>(createDest, castDest, this);
 
         public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
