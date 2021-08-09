@@ -18,13 +18,13 @@ namespace ABCo.ABSave.Converters
         MapItemInfo _keyMap;
         MapItemInfo _valueMap;
 
-        public override void Serialize(in SerializeInfo info, BitWriter header)
+        public override void Serialize(in SerializeInfo info)
         {
             if (_isGeneric)
-                SerializeGeneric((dynamic)info.Instance, header);
+                SerializeGeneric((dynamic)info.Instance, info.Header);
 
             else
-                SerializeNonGeneric((DictionaryEntry)info.Instance, header);
+                SerializeNonGeneric((DictionaryEntry)info.Instance, info.Header);
         }
 
         void SerializeGeneric(dynamic obj, BitWriter writer)

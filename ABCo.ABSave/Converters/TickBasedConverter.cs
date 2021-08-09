@@ -12,15 +12,15 @@ namespace ABCo.ABSave.Converters
     {
         TicksType _type;
 
-        public override void Serialize(in SerializeInfo info, BitWriter header)
+        public override void Serialize(in SerializeInfo info)
         {
             switch (_type)
             {
                 case TicksType.DateTime:
-                    SerializeTicks(((DateTime)info.Instance).Ticks, header);
+                    SerializeTicks(((DateTime)info.Instance).Ticks, info.Header);
                     break;
                 case TicksType.TimeSpan:
-                    SerializeTicks(((TimeSpan)info.Instance).Ticks, header);
+                    SerializeTicks(((TimeSpan)info.Instance).Ticks, info.Header);
                     break;
             }
         }

@@ -34,19 +34,19 @@ namespace ABCo.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(in SerializeInfo info, BitWriter header)
+        public override void Serialize(in SerializeInfo info)
         {
             switch (_type)
             {
                 case StringType.String:
-                    header.WriteNonNullString((string)info.Instance);
+                    info.Header.WriteNonNullString((string)info.Instance);
                     break;
                 case StringType.CharArray:
-                    SerializeCharArray((char[])info.Instance, header);
+                    SerializeCharArray((char[])info.Instance, info.Header);
                     break;
                 case StringType.StringBuilder:
 
-                    SerializeStringBuilder((StringBuilder)info.Instance, header);
+                    SerializeStringBuilder((StringBuilder)info.Instance, info.Header);
                     break;
             }
         }

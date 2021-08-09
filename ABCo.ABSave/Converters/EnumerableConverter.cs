@@ -41,12 +41,12 @@ namespace ABCo.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(in SerializeInfo info, BitWriter header)
+        public override void Serialize(in SerializeInfo info)
         {
             if (_info is CollectionInfo collectionInfo)
-                SerializeCollection(info.Instance, collectionInfo, header);
+                SerializeCollection(info.Instance, collectionInfo, info.Header);
             else if (_info is DictionaryInfo dictionaryInfo)
-                SerializeDictionary(info.Instance, dictionaryInfo, header);
+                SerializeDictionary(info.Instance, dictionaryInfo, info.Header);
         }
 
         void SerializeCollection(object obj, CollectionInfo info, BitWriter header)

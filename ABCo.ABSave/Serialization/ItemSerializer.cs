@@ -65,8 +65,8 @@ namespace ABCo.ABSave.Serialization
             if (!info.UsesHeader && !appliedHeader)
                 header.MoveToNextByte();
 
-            var serializeInfo = new Converter.SerializeInfo(obj, actualType, info);
-            converter.Serialize(in serializeInfo, header);
+            var serializeInfo = new Converter.SerializeInfo(obj, actualType, info, header);
+            converter.Serialize(in serializeInfo);
         }
 
         // Returns: Whether the type has changed.

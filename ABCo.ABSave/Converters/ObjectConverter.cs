@@ -67,8 +67,8 @@ namespace ABCo.ABSave.Converters
 
         protected override void DoHandleAllVersionsGenerated() => _intermediateInfo.Release();
 
-        public override void Serialize(in SerializeInfo info, BitWriter header) =>
-            Serialize(info.Instance, info.VersionInfo, header);
+        public override void Serialize(in SerializeInfo info) =>
+            Serialize(info.Instance, info.VersionInfo, info.Header);
 
         void Serialize(object instance, VersionInfo info, BitWriter header)
         {

@@ -40,9 +40,9 @@ namespace ABCo.ABSave.Converters
 
         public override bool CheckType(CheckTypeInfo info) => info.Type.IsPrimitive;
 
-        public override void Serialize(in SerializeInfo info, BitWriter header)
+        public override void Serialize(in SerializeInfo info)
         {
-            ABSaveSerializer serializer = header.Finish();
+            ABSaveSerializer serializer = info.Header.Finish();
 
             switch (_typeCode)
             {

@@ -68,8 +68,8 @@ namespace ABCo.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(in SerializeInfo info, BitWriter header) =>
-            Serialize((Array)info.Instance, info.ActualType, header);
+        public override void Serialize(in SerializeInfo info) =>
+            Serialize((Array)info.Instance, info.ActualType, info.Header);
 
         void Serialize(Array arr, Type actualType, BitWriter header)
         {

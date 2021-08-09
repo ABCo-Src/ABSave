@@ -8,9 +8,9 @@ namespace ABCo.ABSave.Converters
     [Select(typeof(Guid))]
     public class GuidConverter : Converter
     {
-        public override void Serialize(in SerializeInfo info, BitWriter header)
+        public override void Serialize(in SerializeInfo info)
         {
-            var serializer = header.Finish();
+            var serializer = info.Header.Finish();
 
             var guid = (Guid)info.Instance;
 
