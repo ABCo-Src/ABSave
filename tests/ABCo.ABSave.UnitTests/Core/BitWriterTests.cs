@@ -1,5 +1,5 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 

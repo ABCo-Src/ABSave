@@ -1,10 +1,10 @@
-﻿using ABCo.ABSave.Deserialization;
+﻿using ABCo.ABSave.Serialization.Writing.Reading;
 using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation.Converters;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using System;
 
-namespace ABCo.ABSave.Converters
+namespace ABCo.ABSave.Serialization.Converters
 {
     [Select(typeof(DateTime))]
     [Select(typeof(TimeSpan))]

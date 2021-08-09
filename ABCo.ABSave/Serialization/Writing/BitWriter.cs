@@ -1,11 +1,11 @@
 ﻿using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
-using ABCo.ABSave.Serialization.Core;
+using ABCo.ABSave.Serialization.Writing.Core;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ABCo.ABSave.Serialization
+namespace ABCo.ABSave.Serialization.Writing
 {
     [StructLayout(LayoutKind.Auto)]
     public class BitWriter : IDisposable

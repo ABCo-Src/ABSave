@@ -1,16 +1,17 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Converters;
-using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Serialization.Converters;
+using ABCo.ABSave.Serialization.Writing.Reading;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.General;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using ABCo.ABSave.Mapping;
 
-namespace ABCo.ABSave.Mapping
+namespace ABCo.ABSave
 {
     public class ABSaveMap
     {

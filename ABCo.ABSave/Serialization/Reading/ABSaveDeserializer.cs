@@ -1,5 +1,5 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Converters;
+using ABCo.ABSave.Serialization.Converters;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
@@ -12,7 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace ABCo.ABSave.Deserialization
+namespace ABCo.ABSave.Serialization.Writing.Reading
 {
     public sealed partial class ABSaveDeserializer : IDisposable
     {
