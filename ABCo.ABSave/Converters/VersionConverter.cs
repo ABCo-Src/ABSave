@@ -10,9 +10,9 @@ namespace ABCo.ABSave.Converters
     [Select(typeof(Version))]
     public class VersionConverter : Converter
     {
-        public override void Serialize(in SerializeInfo info, ref BitTarget header) => SerializeVersion((Version)info.Instance, ref header);
+        public override void Serialize(in SerializeInfo info, BitWriter header) => SerializeVersion((Version)info.Instance, header);
 
-        public static void SerializeVersion(Version version, ref BitTarget header)
+        public static void SerializeVersion(Version version, BitWriter header)
         {
             bool hasMajor = version.Major != 1;
             bool hasMinor = version.Minor > 0;
@@ -24,13 +24,13 @@ namespace ABCo.ABSave.Converters
             header.WriteBitWith(hasBuild);
             header.WriteBitWith(hasRevision);
 
-            if (hasMajor) header.Serializer.WriteCompressedInt((uint)version.Major, ref header);
-            if (hasMinor) header.Serializer.WriteCompressedInt((uint)version.Minor, ref header);
-            if (hasBuild) header.Serializer.WriteCompressedInt((uint)version.Build, ref header);
-            if (hasRevision) header.Serializer.WriteCompressedInt((uint)version.Revision, ref header);
+            if (hasMajor) header.WriteCompressedInt((uint)version.Major);
+            if (hasMinor) header.WriteCompressedInt((uint)version.Minor);
+            if (hasBuild) header.WriteCompressedInt((uint)version.Build);
+            if (hasRevision) header.WriteCompressedInt((uint)version.Revision);
 
             // If the header hasn't been applied yet, apply it now
-            if (header.FreeBits < 8) header.Apply();
+            if (header.FreeBits < 8) header.MoveToNextByte();
         }
 
         public override object Deserialize(in DeserializeInfo info) => DeserializeVersion(info.Header);

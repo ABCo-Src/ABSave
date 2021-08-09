@@ -72,13 +72,11 @@ namespace ABCo.ABSave.Converters
             public Type ActualType { get; }
             public VersionInfo VersionInfo { get; }
 
-            readonly ABSaveSerializer _serializer;
-
-            internal SerializeInfo(object instance, Type actualType, VersionInfo versionInfo, ABSaveSerializer serializer) =>
-                (Instance, ActualType, VersionInfo, _serializer) = (instance, actualType, versionInfo, serializer);
+            internal SerializeInfo(object instance, Type actualType, VersionInfo versionInfo) =>
+                (Instance, ActualType, VersionInfo) = (instance, actualType, versionInfo);
         }
 
-        public abstract void Serialize(in SerializeInfo info, ref BitTarget header);
+        public abstract void Serialize(in SerializeInfo info, BitWriter header);
 
         public struct DeserializeInfo
         {

@@ -92,7 +92,7 @@ namespace ABCo.ABSave.UnitTests.Converters
                 _ => throw new Exception()
             };
 
-            Serializer.SerializeItem(instance, CurrentMapItem);
+            Serializer.WriteItem(instance, CurrentMapItem);
             AssertAndGoToStart(baseExpectedWithVersion.Concat(versionExpected).ToArray());
             ReflectiveAssert(instance, (T)Deserializer.ReadItem(CurrentMapItem));
 
@@ -108,7 +108,7 @@ namespace ABCo.ABSave.UnitTests.Converters
                 _ => throw new Exception()
             };
 
-            Serializer.SerializeItem(instance, CurrentMapItem);
+            Serializer.WriteItem(instance, CurrentMapItem);
             AssertAndGoToStart(baseExpectedWithoutVersion.Concat(nonVersionExpected).ToArray());
             ReflectiveAssert(instance, (T)Deserializer.ReadItem(CurrentMapItem));
         }

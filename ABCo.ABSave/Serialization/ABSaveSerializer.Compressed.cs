@@ -11,18 +11,14 @@ namespace ABCo.ABSave.Serialization
     {
         public void WriteCompressedInt(uint data)
         {
-            var target = new BitTarget(this);
-            CompressedSerializer.WriteCompressedInt(data, ref target);
+            using var writer = GetHeader();
+            writer.WriteCompressedInt(data);
         }
 
-        public void WriteCompressedInt(uint data, ref BitTarget target) => CompressedSerializer.WriteCompressedInt(data, ref target);
-
-        public void WriteCompressedLong(ulong data)
+        public void WriteCompressedLong(ulong data) 
         {
-            var target = new BitTarget(this);
-            CompressedSerializer.WriteCompressedLong(data, ref target);
+            using var writer = GetHeader();
+            writer.WriteCompressedLong(data);
         }
-
-        public void WriteCompressedLong(ulong data, ref BitTarget target) => CompressedSerializer.WriteCompressedLong(data, ref target);
     }
 }

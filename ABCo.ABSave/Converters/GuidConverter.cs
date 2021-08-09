@@ -8,13 +8,16 @@ namespace ABCo.ABSave.Converters
     [Select(typeof(Guid))]
     public class GuidConverter : Converter
     {
-        public override void Serialize(in SerializeInfo info, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, BitWriter header)
         {
-            var guid = (Guid)info.Instance;
-            Span<byte> bytes = stackalloc byte[16];
+            var serializer = header.Finish();
 
+            var guid = (Guid)info.Instance;
+
+            Span<byte> bytes = stackalloc byte[16];
             guid.TryWriteBytes(bytes);
-            header.Serializer.WriteBytes(bytes);
+
+            serializer.WriteBytes(bytes);
         }
 
         public override object Deserialize(in DeserializeInfo info)

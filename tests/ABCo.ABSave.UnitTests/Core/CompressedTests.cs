@@ -121,26 +121,27 @@ namespace ABCo.ABSave.UnitTests.Core
             Initialize(ABSaveSettings.ForSpeed, null, lazy);
 
             // Serialization
+            using (var header = Serializer.GetHeader())
             {
-                var header = new BitTarget(Serializer, bitsFree);
+                // Write up the number of bits we want free.
+                header.WriteInteger(0, (byte)(8 - bitsFree));
 
                 if (data < uint.MaxValue) 
                 {
-                    Serializer.WriteCompressedInt((uint)data, ref header);
+                    header.WriteCompressedInt((uint)data);
                 }
                 else
                 {
-                    Serializer.WriteCompressedLong(data, ref header);
+                    header.WriteCompressedLong(data);
                 }
             }
 
             Serializer.WriteByte(127);
-
             GoToStart();
 
             // Deserialization
             {
-                var header = new BitReader(Deserializer);
+                var header = Deserializer.GetHeader();
 
                 // Read up the number of bits we want free.
                 header.ReadInteger((byte)(8 - bitsFree));

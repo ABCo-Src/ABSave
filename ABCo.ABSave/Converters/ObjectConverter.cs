@@ -67,10 +67,10 @@ namespace ABCo.ABSave.Converters
 
         protected override void DoHandleAllVersionsGenerated() => _intermediateInfo.Release();
 
-        public override void Serialize(in SerializeInfo info, ref BitTarget header) =>
-            Serialize(info.Instance, info.VersionInfo, ref header);
+        public override void Serialize(in SerializeInfo info, BitWriter header) =>
+            Serialize(info.Instance, info.VersionInfo, header);
 
-        void Serialize(object instance, VersionInfo info, ref BitTarget header)
+        void Serialize(object instance, VersionInfo info, BitWriter header)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
@@ -79,18 +79,15 @@ namespace ABCo.ABSave.Converters
             if (baseType != null)
             {
                 // TODO: Don't directly call this with map guides.
-                ItemSerializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
-                baseType.Serialize(instance, baseInfo, ref header);
+                ItemSerializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, header);
+                baseType.Serialize(instance, baseInfo, header);
             }
 
             if (members.Length == 0) return;
 
-            // Serialize the first member.
-            header.Serializer.SerializeItem(members[0].Accessor.Getter(instance), members[0].Map, ref header);
-
             // Serialize the rest.
-            for (int i = 1; i < members.Length; i++)
-                header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map);
+            for (int i = 0; i < members.Length; i++)
+                header.WriteItem(members[i].Accessor.Getter(instance), members[i].Map);
         }
 
         public override object Deserialize(in DeserializeInfo info)

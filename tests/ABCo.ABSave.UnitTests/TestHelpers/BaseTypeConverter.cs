@@ -24,15 +24,16 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public override bool CheckType(CheckTypeInfo info) =>
             info.Type == typeof(BaseIndex) || info.Type.IsSubclassOf(typeof(BaseIndex));
 
-        public override void Serialize(in SerializeInfo info, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, BitWriter header)
         {
             if (WritesToHeader)
             {
                 header.WriteBitOn();
-                header.Apply();
+                header.MoveToNextByte();
             }
 
-            header.Serializer.WriteByte(OUTPUT_BYTE);
+            var serializer = header.Finish();
+            serializer.WriteByte(OUTPUT_BYTE);
         }
 
         public override object Deserialize(in DeserializeInfo info)

@@ -9,22 +9,13 @@ namespace ABCo.ABSave.Serialization
     {
         public void WriteNullableString(string? str)
         {
-            var header = new BitTarget(this);
-            TextSerializer.WriteString(str, ref header);
+            using var writer = GetHeader();
+            writer.WriteNullableString(str);
         }
-
-        public void WriteNullableString(string? str, ref BitTarget header) => TextSerializer.WriteString(str, ref header);
-
         public void WriteNonNullString(string str)
         {
-            var header = new BitTarget(this);
-            TextSerializer.WriteNonNullString(str, ref header);
+            using var writer = GetHeader();
+            writer.WriteNonNullString(str);
         }
-
-        public void WriteNonNullString(string str, ref BitTarget header) => TextSerializer.WriteNonNullString(str, ref header);
-
-        public void WriteText(ReadOnlySpan<char> bytes, ref BitTarget header) => TextSerializer.WriteText(bytes, ref header);
-
-        public void WriteUTF8(ReadOnlySpan<char> bytes, ref BitTarget header) => TextSerializer.WriteUTF8(bytes, ref header);
     }
 }

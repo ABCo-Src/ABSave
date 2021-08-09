@@ -6,7 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace ABCo.ABSave.UnitTests.Core
 {
     [TestClass]
-    public class BitTargetTests : TestBase
+    public class BitWriterTests : TestBase
     {
         [TestMethod]
         [DataRow(false)]
@@ -15,7 +15,7 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize();
 
-            var target = new BitTarget(Serializer);
+            var target = Serializer.GetHeader();
 
             target.WriteBitOn();
 
@@ -27,7 +27,7 @@ namespace ABCo.ABSave.UnitTests.Core
                 }
             }
 
-            target.Apply();
+            target.Finish();
 
             if (overflow)
             {
@@ -46,7 +46,7 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize();
 
-            var target = new BitTarget(Serializer);
+            var target = Serializer.GetHeader();
 
             target.WriteBitOff();
 
@@ -58,7 +58,7 @@ namespace ABCo.ABSave.UnitTests.Core
                 }
             }
 
-            target.Apply();
+            target.Finish();
 
             if (overflow)
             {
@@ -74,26 +74,24 @@ namespace ABCo.ABSave.UnitTests.Core
         public void WriteInteger_NoOverflow()
         {
             Initialize();
-            var target = new BitTarget(Serializer);
 
+            var target = Serializer.GetHeader();
             target.WriteInteger(48, 6);
             target.WriteInteger(2, 2);
-            target.Apply();
+            target.Finish();
 
             AssertAndGoToStart(194);
         }
 
         [TestMethod]
-        [DataRow(false)]
-        [DataRow(true)]
-        public void WriteInteger_Overflow(bool lazy)
+        public void WriteInteger_Overflow()
         {
             Initialize(ABSaveSettings.ForSpeed);
-            var target = new BitTarget(Serializer);
 
+            var target = Serializer.GetHeader();
             target.WriteInteger(0, 4);
             target.WriteInteger(42, 6);
-            target.Apply();
+            target.Finish();
 
             AssertAndGoToStart(10, 128);
         }
@@ -102,7 +100,7 @@ namespace ABCo.ABSave.UnitTests.Core
         public void FreeBits()
         {
             Initialize(ABSaveSettings.ForSize);
-            var target = new BitTarget(Serializer);
+            var target = Serializer.GetHeader();
 
             target.WriteInteger(0, 4);
             Assert.AreEqual(target.FreeBits, 4);
@@ -111,7 +109,7 @@ namespace ABCo.ABSave.UnitTests.Core
             Assert.AreEqual(target.FreeBits, 2);
             target.WriteInteger(42, 6);
             Assert.AreEqual(target.FreeBits, 4);
-            target.Apply();
+            target.Finish();
         }
     }
 }

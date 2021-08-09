@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
+using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
@@ -18,15 +19,17 @@ namespace ABCo.ABSave.Serialization
     /// </summary>
     public sealed partial class ABSaveSerializer : IDisposable
     {
-        public Dictionary<Type, uint>? TargetVersions { get; private set; }
         public Stream Output { get; private set; } = null!;
 
-        public CurrentState State { get; }
+        public SerializeCurrentState State { get; }
+
+        readonly BitWriter _currentBitWriter;
 
         internal ABSaveSerializer(ABSaveMap map)
         {
             Output = null!;
-            State = new CurrentState(map);
+            State = new SerializeCurrentState(map);
+            _currentBitWriter = new BitWriter(this);
         }
 
         public void Initialize(Stream output, Dictionary<Type, uint>? targetVersions)
@@ -35,7 +38,7 @@ namespace ABCo.ABSave.Serialization
                 throw new Exception("Cannot use unwriteable stream.");
 
             Output = output;
-            TargetVersions = targetVersions;
+            State.TargetVersions = targetVersions;
 
             Reset();
         }
@@ -43,35 +46,24 @@ namespace ABCo.ABSave.Serialization
         public void Reset() => State.Reset();
         public void Dispose() => State.Map.ReleaseSerializer(this);
 
-        public void SerializeRoot(object? obj) => SerializeItem(obj, State.Map._rootItem);
+        public void SerializeRoot(object? obj) => WriteItem(obj, State.Map._rootItem);
 
-        public void SerializeItem(object? obj, MapItemInfo item)
+        public void WriteItem(object? obj, MapItemInfo item)
         {
-            if (obj == null)
-                WriteByte(0);
-
-            else
-            {
-                var currentHeader = new BitTarget(this);
-                ItemSerializer.SerializeItem(obj, item, ref currentHeader);
-            }
+            using var writer = GetHeader();
+            writer.WriteItem(obj, item);
         }
 
-        public void SerializeItem(object? obj, MapItemInfo item, ref BitTarget header)
+        public void WriteExactNonNullItem(object? obj, MapItemInfo item)
         {
-            if (obj == null)
-            {
-                header.WriteBitOff();
-                header.Apply();
-            }
-
-            else ItemSerializer.SerializeItem(obj, item, ref header);
+            using var writer = GetHeader();
+            writer.WriteExactNonNullItem(obj!, item);
         }
 
-        public void SerializeExactNonNullItem(object obj, MapItemInfo item)
+        public BitWriter GetHeader()
         {
-            var currentHeader = new BitTarget(this);
-            ItemSerializer.SerializeExactNonNullItem(obj, item, ref currentHeader);
+            _currentBitWriter.SetupHeader();
+            return _currentBitWriter;
         }
     }
 }

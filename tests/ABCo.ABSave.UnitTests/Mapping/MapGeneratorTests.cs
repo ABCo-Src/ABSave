@@ -58,7 +58,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
         class EmptyConverter : Converter
         {
-            public override void Serialize(in SerializeInfo info, ref BitTarget header) => throw new NotImplementedException();
+            public override void Serialize(in SerializeInfo info, BitWriter header) => throw new NotImplementedException();
             public override object Deserialize(in DeserializeInfo info) => throw new NotImplementedException();
         }
 

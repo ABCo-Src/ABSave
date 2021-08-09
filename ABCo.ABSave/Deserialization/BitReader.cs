@@ -12,7 +12,6 @@ namespace ABCo.ABSave.Deserialization
     /// </summary>
     public class BitReader
     {
-
         ABSaveDeserializer _deserializer;
         public byte FreeBits;
         int _source;

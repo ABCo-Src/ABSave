@@ -28,8 +28,8 @@ namespace ABCo.ABSave.UnitTests.Core
 
             // Stack buffer
             {
-                var header = new BitTarget(Serializer);
-                Serializer.WriteUTF8("ABC".AsSpan(), ref header);
+                var header = Serializer.GetHeader();
+                header.WriteUTF8("ABC".AsSpan());
                 AssertAndGoToStart(3, 65, 66, 67);
             }
 
@@ -51,8 +51,8 @@ namespace ABCo.ABSave.UnitTests.Core
                 var expected = GenerateBlankExpected();
 
                 {
-                    var header = new BitTarget(Serializer);
-                    Serializer.WriteUTF8(chArr.AsSpan(), ref header);
+                    var header = Serializer.GetHeader();
+                    header.WriteUTF8(chArr.AsSpan());
                     AssertAndGoToStart(expected);
                 }
 

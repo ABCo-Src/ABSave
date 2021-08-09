@@ -41,33 +41,33 @@ namespace ABCo.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(in SerializeInfo info, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, BitWriter header)
         {
             if (_info is CollectionInfo collectionInfo)
-                SerializeCollection(info.Instance, collectionInfo, ref header);
+                SerializeCollection(info.Instance, collectionInfo, header);
             else if (_info is DictionaryInfo dictionaryInfo)
-                SerializeDictionary(info.Instance, dictionaryInfo, ref header);
+                SerializeDictionary(info.Instance, dictionaryInfo, header);
         }
 
-        void SerializeCollection(object obj, CollectionInfo info, ref BitTarget header)
+        void SerializeCollection(object obj, CollectionInfo info, BitWriter header)
         {
             int size = info.GetCount(obj);
-            header.Serializer.WriteCompressedInt((uint)size, ref header);
+            header.WriteCompressedInt((uint)size);
 
             IEnumerator? enumerator = info.GetEnumerator(obj);
-            while (enumerator.MoveNext()) header.Serializer.SerializeItem(enumerator.Current, _elementOrKeyMap);
+            while (enumerator.MoveNext()) header.WriteItem(enumerator.Current, _elementOrKeyMap);
         }
 
-        void SerializeDictionary(object obj, DictionaryInfo info, ref BitTarget header)
+        void SerializeDictionary(object obj, DictionaryInfo info, BitWriter header)
         {
             int size = info.GetCount(obj);
-            header.Serializer.WriteCompressedInt((uint)size, ref header);
+            header.WriteCompressedInt((uint)size);
 
             IDictionaryEnumerator? enumerator = info.GetEnumerator(obj);
             while (enumerator.MoveNext())
             {
-                header.Serializer.SerializeItem(enumerator.Key, _elementOrKeyMap);
-                header.Serializer.SerializeItem(enumerator.Value, _valueMap);
+                header.WriteItem(enumerator.Key, _elementOrKeyMap);
+                header.WriteItem(enumerator.Value, _valueMap);
             }
         }
 

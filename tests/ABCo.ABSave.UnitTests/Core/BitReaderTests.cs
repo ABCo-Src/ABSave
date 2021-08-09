@@ -6,14 +6,14 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 namespace ABCo.ABSave.UnitTests.Core
 {
     [TestClass]
-    public class BitSourceTests : TestBase
+    public class BitReaderTests : TestBase
     {
         [TestMethod]
         public void ReadBit()
         {
             Initialize();
 
-            var source = new BitReader(Deserializer);
+            var source = Deserializer.GetHeader();
             Stream.WriteByte(0b11000100);
             Stream.WriteByte(0b10000000);
             Stream.Position = 0;
@@ -36,7 +36,7 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize(ABSaveSettings.ForSpeed);
 
-            var source = new BitReader(Deserializer);
+            var source = Deserializer.GetHeader();
             Stream.WriteByte(0b11000110);
             Stream.WriteByte(0b01000000);
             Stream.Position = 0;
@@ -50,7 +50,7 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize(ABSaveSettings.ForSpeed);
 
-            var source = new BitReader(Deserializer);
+            var source = Deserializer.GetHeader();
             Stream.WriteByte(0b10000110);
             Stream.Position = 0;
 

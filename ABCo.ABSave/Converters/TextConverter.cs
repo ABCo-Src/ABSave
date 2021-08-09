@@ -34,33 +34,33 @@ namespace ABCo.ABSave.Converters
 
         #region Serialization
 
-        public override void Serialize(in SerializeInfo info, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, BitWriter header)
         {
             switch (_type)
             {
                 case StringType.String:
-                    header.Serializer.WriteNonNullString((string)info.Instance, ref header);
+                    header.WriteNonNullString((string)info.Instance);
                     break;
                 case StringType.CharArray:
-                    SerializeCharArray((char[])info.Instance, ref header);
+                    SerializeCharArray((char[])info.Instance, header);
                     break;
                 case StringType.StringBuilder:
 
-                    SerializeStringBuilder((StringBuilder)info.Instance, ref header);
+                    SerializeStringBuilder((StringBuilder)info.Instance, header);
                     break;
             }
         }
 
-        public static void SerializeCharArray(char[] obj, ref BitTarget header) =>
-            header.Serializer.WriteText(obj.AsSpan(), ref header);
+        public static void SerializeCharArray(char[] obj, BitWriter header) =>
+            header.WriteText(obj.AsSpan());
 
-        public static void SerializeStringBuilder(StringBuilder obj, ref BitTarget header)
+        public static void SerializeStringBuilder(StringBuilder obj, BitWriter header)
         {
             // TODO: Use "GetChunks" with .NET 5!
             char[] tmp = obj.Length < ABSaveUtils.MAX_STACK_SIZE ? new char[obj.Length] : ArrayPool<char>.Shared.Rent(obj.Length);
             obj.CopyTo(0, tmp, 0, obj.Length);
 
-            header.Serializer.WriteText(new ReadOnlySpan<char>(tmp), ref header);
+            header.WriteText(new ReadOnlySpan<char>(tmp));
             ArrayPool<char>.Shared.Return(tmp);
         }
 

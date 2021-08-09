@@ -8,45 +8,47 @@ namespace ABCo.ABSave.Serialization
 {
     internal static class TextSerializer
     {
-        public static void WriteString(string? str, ref BitTarget header)
+        public static void WriteString(string? str, BitWriter header)
         {
             if (str == null) header.WriteBitOff();
             else
             {
                 header.WriteBitOn();
-                WriteNonNullString(str, ref header);
+                WriteNonNullString(str, header);
             }
         }
 
-        public static void WriteNonNullString(string str, ref BitTarget header) => WriteText(str.AsSpan(), ref header);
+        public static void WriteNonNullString(string str, BitWriter header) => WriteText(str.AsSpan(), header);
 
-        public static void WriteText(ReadOnlySpan<char> chars, ref BitTarget header)
+        public static void WriteText(ReadOnlySpan<char> chars, BitWriter header)
         {
             if (header.State.Settings.UseUTF8)
-                WriteUTF8(chars, ref header);
+                WriteUTF8(chars, header);
             else
             {
-                header.Serializer.WriteCompressedInt((uint)chars.Length, ref header);
-                FastWriteShorts(MemoryMarshal.Cast<char, short>(chars), ref header);
+                header.WriteCompressedInt((uint)chars.Length);
+                FastWriteShorts(MemoryMarshal.Cast<char, short>(chars), header.Finish());
             }
         }
 
-        public static void WriteUTF8(ReadOnlySpan<char> data, ref BitTarget header)
+        public static void WriteUTF8(ReadOnlySpan<char> data, BitWriter header)
         {
             int maxSize = Encoding.UTF8.GetMaxByteCount(data.Length);
             Span<byte> buffer = maxSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[maxSize] : header.State.GetStringBuffer(maxSize);
 
             int actualSize = Encoding.UTF8.GetBytes(data, buffer);
 
-            header.Serializer.WriteCompressedInt((uint)actualSize, ref header);
-            header.Serializer.WriteBytes(buffer.Slice(0, actualSize));
+            header.WriteCompressedInt((uint)actualSize);
+
+            var serializer = header.Finish();
+            serializer.WriteBytes(buffer.Slice(0, actualSize));
         }
 
-        static unsafe void FastWriteShorts(ReadOnlySpan<short> shorts, ref BitTarget header)
+        static unsafe void FastWriteShorts(ReadOnlySpan<short> shorts, ABSaveSerializer serializer)
         {
             ReadOnlySpan<byte> bytes = MemoryMarshal.Cast<short, byte>(shorts);
 
-            if (header.Serializer.State.ShouldReverseEndian)
+            if (serializer.State.ShouldReverseEndian)
             {
                 // TODO: Optimize?
                 byte* buffer = stackalloc byte[2];
@@ -58,10 +60,10 @@ namespace ABCo.ABSave.Serialization
                     buffer[1] = bytes[i++];
                     buffer[0] = bytes[i++];
 
-                    header.Serializer.WriteBytes(bufferSpan);
+                    serializer.WriteBytes(bufferSpan);
                 }
             }
-            else header.Serializer.WriteBytes(bytes);
+            else serializer.WriteBytes(bytes);
         }
     }
 }

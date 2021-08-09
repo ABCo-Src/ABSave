@@ -20,15 +20,16 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public const int OUTPUT_BYTE = 110;
         public override (VersionInfo, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, _writesToHeader);
 
-        public override void Serialize(in SerializeInfo info, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info, BitWriter header)
         {
             if (_writesToHeader)
             {
                 header.WriteBitOn();
-                header.Apply();
+                header.MoveToNextByte();
             }
 
-            header.Serializer.WriteByte(OUTPUT_BYTE);
+            var serializer = header.Finish();
+            serializer.WriteByte(OUTPUT_BYTE);
         }
 
         public override object Deserialize(in DeserializeInfo info)

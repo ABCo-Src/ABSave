@@ -124,7 +124,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                             SetupSerializer();
 
                             var genMap = (GenMap)itms[currentItmsPos++];
-                            serializer.SerializeExactNonNullItem(genMap.Obj, genMap.Item);
+                            serializer.WriteExactNonNullItem(genMap.Obj, genMap.Item);
                             bytes.AddRange(((MemoryStream)serializer.Output).ToArray());
 
                             break;
