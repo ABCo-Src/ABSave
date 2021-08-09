@@ -5,8 +5,9 @@ using ABCo.ABSave.Mapping;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ABCo.ABSave.Helpers;
 
-namespace ABCo.ABSave.Helpers
+namespace ABCo.ABSave.Serialization
 {
     /// <summary>
     /// Stores the current state while serializing/deserializing.
@@ -17,7 +18,7 @@ namespace ABCo.ABSave.Helpers
         public ABSaveSettings Settings { get; }
         public bool ShouldReverseEndian { get; }
 
-        VersionInfo[] _currentVersionInfos = null!;
+        CachedConverterDetails[] _cachedConverterDetails = null!;
         byte[]? _stringBuffer;
 
         internal CurrentState(ABSaveMap map)
@@ -26,30 +27,33 @@ namespace ABCo.ABSave.Helpers
             Settings = map.Settings;
             ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
 
-            _currentVersionInfos = new VersionInfo[map._highestConverterInstanceId];            
+            _cachedConverterDetails = new CachedConverterDetails[map._highestConverterInstanceId];            
         }
 
-        internal void Reset() => Array.Clear(_currentVersionInfos, 0, _currentVersionInfos.Length);
+        internal void Reset() => Array.Clear(_cachedConverterDetails, 0, _cachedConverterDetails.Length);
 
-        internal VersionInfo GetExistingVersionInfo(Converter item)
+        internal CachedConverterDetails GetCachedDetails(Converter item)
         {
-            if (item._instanceId >= _currentVersionInfos.Length)
-                Array.Resize(ref _currentVersionInfos, (int)Map._highestConverterInstanceId);
+            if (item._instanceId >= _cachedConverterDetails.Length)
+                Array.Resize(ref _cachedConverterDetails, (int)Map._highestConverterInstanceId);
 
-            return _currentVersionInfos[item._instanceId];
+            return _cachedConverterDetails[item._instanceId];
         }
 
-        internal VersionInfo GetNewVersionInfo(Converter item, uint version)
+        internal VersionInfo CreateNewCache(Converter item, uint version)
         {
             VersionInfo newInfo = Map.GetVersionInfo(item, version);
-            _currentVersionInfos[item._instanceId] = newInfo;
+            _cachedConverterDetails[item._instanceId].CurrentInfo = newInfo;
             return newInfo;
         }
+
+        internal VersionInfo AddKeyIdToCache(Converter item, int id) => _cachedConverterDetails[item._instanceId].CurrentInfo = newInfo;
 
         internal byte[] GetStringBuffer(int length)
         {
             if (_stringBuffer == null || _stringBuffer.Length < length)
                 return _stringBuffer = ABSaveUtils.CreateUninitializedArray<byte>(length);
+
             else return _stringBuffer;
         }
 
