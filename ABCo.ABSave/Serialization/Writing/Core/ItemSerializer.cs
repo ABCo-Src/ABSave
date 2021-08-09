@@ -40,6 +40,16 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         {
             Type? actualType = obj.GetType();
 
+            var currentInfo = SerializeConverterHeader(obj, converter, actualType, skipHeader, header);
+            if (currentInfo == null) return;
+
+            var serializeInfo = new Converter.SerializeInfo(obj, actualType, currentInfo, header);
+            converter.Serialize(in serializeInfo);
+        }
+
+        internal static VersionInfo? SerializeConverterHeader(object obj, Converter converter, Type actualType, bool skipHeader, BitWriter header)
+        {
+            CachedConverterDetails cache = header.State.GetCachedDetails(converter);
             bool appliedHeader = true;
 
             // Write the null and inheritance bits.
@@ -51,22 +61,21 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             }
 
             // Write and get the info for a version, if necessary
-            if (HandleVersionNumber(converter, out VersionInfo info, header))
+            if (HandleVersionNumber(converter, ref cache.CurrentInfo, header))
                 appliedHeader = true;
 
             // Handle inheritance if needed.
-            if (info._inheritanceInfo != null && !sameType)
+            if (cache.CurrentInfo._inheritanceInfo != null && !sameType)
             {
-                SerializeActualType(obj, info._inheritanceInfo, converter.ItemType, actualType, header);
-                return;
+                SerializeActualType(obj, cache.CurrentInfo._inheritanceInfo, converter.ItemType, actualType, header);
+                return null;
             }
 
             // Apply the header if it's not being used and hasn't already been applied.
-            if (!info.UsesHeader && !appliedHeader)
+            if (!cache.CurrentInfo.UsesHeader && !appliedHeader)
                 header.MoveToNextByte();
 
-            var serializeInfo = new Converter.SerializeInfo(obj, actualType, info, header);
-            converter.Serialize(in serializeInfo);
+            return cache.CurrentInfo;
         }
 
         // Returns: Whether the type has changed.
@@ -83,18 +92,14 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         /// Handles the version info for a given converter. If the version hasn't been written yet, it's written now. If not, nothing is written.
         /// </summary>
         /// <returns>Whether we applied the header</returns>
-        internal static bool HandleVersionNumber(Converter item, out VersionInfo info, BitWriter header)
+        static bool HandleVersionNumber(Converter item, ref VersionInfo info, BitWriter header)
         {
-            // If the version has already been written, do nothing
-            VersionInfo? existingInfo = header.State.GetExistingVersionInfo(item);
-            if (existingInfo != null)
-            {
-                info = existingInfo;
-                return false;
-            }
+            // If the version has already been written (there's info in the cache), do nothing
+            if (info != null) return false;
 
+            // If not, write the version and add the converter to the cache.
             uint version = header.State.Settings.IncludeVersioning ? WriteNewVersionInfo(item, header) : 0;
-            info = header.State.GetNewVersionInfo(item, version);
+            info = header.State.CreateNewCache(item, version);
 
             return header.State.Settings.IncludeVersioning;
         }

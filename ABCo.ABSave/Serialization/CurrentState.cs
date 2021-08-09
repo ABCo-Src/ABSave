@@ -47,7 +47,7 @@ namespace ABCo.ABSave.Serialization
             return newInfo;
         }
 
-        internal VersionInfo AddKeyIdToCache(Converter item, int id) => _cachedConverterDetails[item._instanceId].CurrentInfo = newInfo;
+        internal void AddKeyIdToCache(Converter item, int id) => _cachedConverterDetails[item._instanceId].KeyInheritanceCachedValue = id;
 
         internal byte[] GetStringBuffer(int length)
         {

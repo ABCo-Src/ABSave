@@ -63,7 +63,11 @@ namespace ABCo.ABSave.Serialization.Writing.Reading
         public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
         public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
 
-        public VersionInfo ReadAndStoreVersionNumber(Converter converter) => ItemDeserializer.HandleVersionNumber(converter, this);
+        public VersionInfo ReadExactNonNullHeader(Converter converter)
+        {
+            ItemDeserializer.DeserializeConverterHeader(converter, this, true, out var info);
+            return info;
+        }
 
         public void MoveToNewByte()
         {

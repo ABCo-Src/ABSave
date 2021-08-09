@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Serialization.Converters;
 using ABCo.ABSave.Serialization.Writing.Core;
 using System;
 using System.Runtime.CompilerServices;
@@ -70,6 +71,9 @@ namespace ABCo.ABSave.Serialization.Writing
 
         public void WriteText(ReadOnlySpan<char> bytes) => TextSerializer.WriteText(bytes, this);
         public void WriteUTF8(ReadOnlySpan<char> bytes) => TextSerializer.WriteUTF8(bytes, this);
+
+        public VersionInfo WriteExactNonNullHeader(object obj, Type actualType, Converter converter) =>
+            ItemSerializer.SerializeConverterHeader(obj, converter, actualType, true, this)!;
 
         public void MoveToNextByte()
         {
