@@ -18,12 +18,12 @@ namespace ABCo.ABSave.UnitTests.Converters
 
         public void DoSerialize(object obj)
         {
-            Serializer.SerializeExactNonNullItem(obj, CurrentMapItem);
+            Serializer.WriteExactNonNullItem(obj, CurrentMapItem);
         }
 
         public T DoDeserialize<T>()
         {
-            return (T)Deserializer.DeserializeExactNonNullItem(CurrentMapItem);
+            return (T)Deserializer.ReadExactNonNullItem(CurrentMapItem);
         }
     }
 }

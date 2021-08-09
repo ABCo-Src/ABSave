@@ -7,29 +7,25 @@ using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace ABCo.ABSave.Deserialization
 {
     public sealed partial class ABSaveDeserializer : IDisposable
     {
-        public ABSaveMap Map { get; }
-        public ABSaveSettings Settings { get; }
-        public bool ShouldReverseEndian { get; }
         public Stream Source { get; private set; }
+        public CurrentState State { get; private set; }
 
-        VersionInfo[] _currentVersionInfos = null!;
-        byte[]? _stringBuffer;
+        readonly BitReader _currentBitReader;
 
         internal ABSaveDeserializer(ABSaveMap map)
         {
-            Map = map;
-            Settings = map.Settings;
-            ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
             Source = null!;
-
-            _currentVersionInfos = new VersionInfo[map._highestConverterInstanceId];
+            State = new CurrentState(map);
+            _currentBitReader = new BitReader(this);
         }
 
         public void Initialize(Stream source)
@@ -38,172 +34,122 @@ namespace ABCo.ABSave.Deserialization
             Reset();
         }
 
-        public void Reset() => Array.Clear(_currentVersionInfos, 0, _currentVersionInfos.Length);
-        public void Dispose() => Map.ReleaseDeserializer(this);
+        public void Reset() => State.Reset();
 
-        BitSource _currentHeader;
-        bool _readHeader;
+        public void Dispose() => State.Map.ReleaseDeserializer(this);
+        public object? DeserializeRoot() => GetHeader().ReadItem(State.Map._rootItem);
 
-        public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
+        public object? ReadItem(MapItemInfo info) => GetHeader().ReadItem(info);
+        public object? ReadExactNonNullItem(MapItemInfo info) => GetHeader().ReadExactNonNullItem(info);
 
-        public object? DeserializeRoot() => DeserializeItem(Map._rootItem);
+        public string? ReadNullableString() => GetHeader().ReadNullableString();
+        public string ReadNonNullString() => GetHeader().ReadNonNullString();
 
-        public object? DeserializeItem(MapItemInfo info)
+        public uint ReadCompressedInt() => GetHeader().ReadCompressedInt();
+        public ulong ReadCompressedLong() => GetHeader().ReadCompressedLong();
+
+        #region Byte Reading
+
+        public byte ReadByte() => (byte)Source.ReadByte();
+        public void ReadBytes(Span<byte> dest) => Source.Read(dest);
+        public void ReadBytes(byte[] dest) => Source.Read(dest, 0, dest.Length);
+
+        #endregion
+
+        #region Numerical Reading
+
+        public unsafe short ReadInt16()
         {
-            // Do null checks
-            if (info.IsValueTypeItem)
+            short res = 0;
+            ReadBytes(new Span<byte>((byte*)&res, 2));
+            return State.ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
+        }
+
+        public unsafe int ReadInt32()
+        {
+            int res = 0;
+            ReadBytes(new Span<byte>((byte*)&res, 4));
+            return State.ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
+        }
+
+        public unsafe long ReadInt64()
+        {
+            long res = 0;
+            ReadBytes(new Span<byte>((byte*)&res, 8));
+            return State.ShouldReverseEndian ? BinaryPrimitives.ReverseEndianness(res) : res;
+        }
+
+        public unsafe float ReadSingle()
+        {
+            if (State.ShouldReverseEndian)
             {
-                _currentHeader = new BitSource() { Deserializer = this };
-                _readHeader = false;
+                int res = 0;
+                ReadBytes(new Span<byte>((byte*)&res, 4));
+                return BitConverter.Int32BitsToSingle(BinaryPrimitives.ReverseEndianness(res));
             }
             else
             {
-                _currentHeader = new BitSource(this);
-                if (!_currentHeader.ReadBit()) return null;
-
-                _readHeader = true;
+                float res = 0;
+                ReadBytes(new Span<byte>((byte*)&res, 4));
+                return res;
             }
-
-            return DeserializeNullableItem(info, false);
         }
 
-        public object DeserializeExactNonNullItem(MapItemInfo info)
+        public unsafe double ReadDouble()
         {
-            _currentHeader = new BitSource() { Deserializer = this };
-            _readHeader = false;
-            return DeserializeItemNoSetup(info, true);
-        }
-
-        public object? DeserializeItem(MapItemInfo info, ref BitSource header)
-        {
-            // Do null checks
-            if (!info.IsValueTypeItem && !header.ReadBit()) return null;
-
-            _currentHeader = header;
-            _readHeader = true;
-            return DeserializeNullableItem(info, false);
-        }
-
-        public object DeserializeExactNonNullItem(MapItemInfo info, ref BitSource header)
-        {
-            _currentHeader = header;
-            _readHeader = true;
-            return DeserializeItemNoSetup(info, true);
-        }
-
-        object? DeserializeNullableItem(MapItemInfo info, bool skipHeader)
-        {
-            if (info.IsNullable)
+            if (State.ShouldReverseEndian)
             {
-                EnsureReadHeader();
-                if (!_currentHeader.ReadBit()) return null;
-                skipHeader = true;
+                long res = 0;
+                ReadBytes(new Span<byte>((byte*)&res, 8));
+                return BitConverter.Int64BitsToDouble(BinaryPrimitives.ReverseEndianness(res));
             }
-
-            return DeserializeItemNoSetup(info, skipHeader);
-        }
-
-        object DeserializeItemNoSetup(MapItemInfo info, bool skipHeader)
-        {
-            Converter item = info.Converter;
-            ABSaveUtils.WaitUntilNotGenerating(item);
-
-            return DeserializeConverter(info.Converter, skipHeader);
-        }
-
-        private object DeserializeConverter(Converter converter, bool skipHeader)
-        {
-            // Handle the inheritance bit.
-            bool sameType = true;
-            if (!skipHeader)
-                sameType = ReadHeader(converter);
-
-            // Read or create the version info if needed
-            VersionInfo info = HandleVersionNumber(converter, ref _currentHeader);
-
-            // Handle inheritance.
-            if (info._inheritanceInfo != null && !sameType)
-                return DeserializeActualType(info._inheritanceInfo, converter.ItemType);
-
-            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info);
-            return converter.Deserialize(in deserializeInfo, ref _currentHeader);
-        }
-
-        internal VersionInfo HandleVersionNumber(Converter item, ref BitSource header)
-        {
-            if (item._instanceId >= _currentVersionInfos.Length)
-                Array.Resize(ref _currentVersionInfos, (int)Map._highestConverterInstanceId);
-
-            // If the version has already been read, do nothing
-            VersionInfo? existingInfo = _currentVersionInfos[item._instanceId];
-            if (existingInfo != null) return existingInfo;
-
-            return Settings.IncludeVersioning ? 
-                GetNewVersionInfo(item, ReadNewVersionInfo(ref header)) :
-                Map.GetVersionInfo(item, 0);
-        }
-
-        internal VersionInfo GetNewVersionInfo(Converter item, uint version)
-        {
-            VersionInfo newInfo = Map.GetVersionInfo(item, version);
-            _currentVersionInfos[item._instanceId] = newInfo;
-            return newInfo;
-        }
-        
-        bool ReadHeader(Converter item)
-        {
-            if (item.IsValueItemType) return false;
-
-            EnsureReadHeader();
-
-            // Type
-            return _currentHeader.ReadBit();
-        }
-
-        uint ReadNewVersionInfo(ref BitSource header) => ReadCompressedInt(ref header);
-
-        // Returns: Whether the sub-type was converted in here and we should return now.
-        object DeserializeActualType(SaveInheritanceAttribute info, Type baseType)
-        {
-            Type? actualType = info.Mode switch
+            else
             {
-                SaveInheritanceMode.Index => TryReadListInheritance(info, baseType),
-                SaveInheritanceMode.Key => TryReadKeyInheritance(info, baseType),
-                SaveInheritanceMode.IndexOrKey => _currentHeader.ReadBit() ? TryReadListInheritance(info, baseType) : TryReadKeyInheritance(info, baseType),
-                _ => throw new Exception("Invalid save inheritance mode")
-            };
-
-            if (actualType == null) throw new InvalidSubTypeInfoException(baseType);
-
-            // Deserialize the actual type.
-            return DeserializeItemNoSetup(GetRuntimeMapItem(actualType), true);
-        }
-
-        Type? TryReadListInheritance(SaveInheritanceAttribute info, Type baseType)
-        {
-            uint key = ReadCompressedInt(ref _currentHeader);
-            return info.IndexDeserializeCache.GetValueOrDefault(key);
-        }
-
-        Type? TryReadKeyInheritance(SaveInheritanceAttribute info, Type baseType)
-        {
-            // Make sure the info is initialized for deserialization.
-            KeyInheritanceHandler.EnsureHasAllTypeCache(baseType, info);
-
-            // Read in the key from the source.
-            string key = ReadString(ref _currentHeader);
-
-            // See if there's an item with that key.
-            return info.KeyDeserializeCache!.GetValueOrDefault(key);
-        }
-
-        void EnsureReadHeader()
-        {
-            if (!_readHeader)
-            {
-                _currentHeader = new BitSource(this, 8);
-                _readHeader = true;
+                double res = 0;
+                ReadBytes(new Span<byte>((byte*)&res, 8));
+                return res;
             }
+        }
+
+        public decimal ReadDecimal()
+        {
+            // TODO: Optimize this.
+            int[]? bits = new int[4];
+
+            for (int i = 0; i < 4; i++)
+                bits[i] = ReadInt32();
+
+            return new decimal(bits);
+        }
+
+        public unsafe void FastReadShorts(Span<short> dest)
+        {
+            Span<byte> destBytes = MemoryMarshal.Cast<short, byte>(dest);
+
+            if (State.ShouldReverseEndian)
+            {
+                // TODO: Optimize?
+                byte* buffer = stackalloc byte[2];
+                var bufferSpan = new Span<byte>(buffer, 2);
+
+                int i = 0;
+                while (i < destBytes.Length)
+                {
+                    ReadBytes(bufferSpan);
+
+                    destBytes[i++] = buffer[1];
+                    destBytes[i++] = buffer[0];
+                }
+            }
+            else ReadBytes(destBytes);
+        }
+
+        #endregion
+
+        public BitReader GetHeader()
+        {
+            _currentBitReader.SetupHeader();
+            return _currentBitReader;
         }
     }
 }

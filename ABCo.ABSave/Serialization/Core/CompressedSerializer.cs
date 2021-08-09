@@ -1,26 +1,12 @@
 ﻿using ABCo.ABSave.Helpers.NumberContainer;
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace ABCo.ABSave.Serialization
+namespace ABCo.ABSave.Serialization.Core
 {
-    // ===============================================
-    // NOTE: Full details about the "compressed numerical" structure can be seen in the TXT file: CompressedPlan.txt in the project root
-    // ===============================================
-    // This is just an implementation of everything shown there.
-    public sealed partial class ABSaveSerializer
+    internal static class CompressedSerializer
     {
-        public void WriteCompressedInt(uint data)
-        {
-            var target = new BitTarget(this);
-            WriteCompressedInt(data, ref target);
-        }
-
-        public void WriteCompressedLong(ulong data)
-        {
-            var target = new BitTarget(this);
-            WriteCompressedLong(data, ref target);
-        }
-
         struct CompressedDataInfo
         {
             public byte ContBytesNo;
@@ -34,57 +20,60 @@ namespace ABCo.ABSave.Serialization
                 BitsToGo = (byte)(contBytesNo * 8);
             }
         }
-        
+
         // NOTE: All uses of "INumberContainer" virtual calls in here are elided by the JIT thanks to generics.
-        public void WriteCompressedInt(uint data, ref BitTarget target) => WriteCompressed(new Int32Container((int)data), ref target);
-        public void WriteCompressedLong(ulong data, ref BitTarget target) => WriteCompressed(new Int64Container((long)data), ref target);
+        public static void WriteCompressedInt(uint data, BitWriter target) => WriteCompressed(new Int32Container((int)data), target);
+        public static void WriteCompressedLong(ulong data, BitWriter target) => WriteCompressed(new Int64Container((long)data), target);
 
-        void WriteCompressed<T>(T data, ref BitTarget target) where T : INumberContainer
+        static void WriteCompressed<T>(T data, BitWriter target) where T : INumberContainer
         {
-            if (target.FreeBits == 0) target.Apply();
+            if (target.FreeBits == 0) target.MoveToNextByte();
 
-            if (Settings.LazyCompressedWriting)
-                WriteCompressedLazyFast(data, ref target);
+            if (target.State.Settings.LazyCompressedWriting)
+                WriteCompressedLazyFast(data, target);
             else
-                WriteCompressedSlow(data, ref target);
+                WriteCompressedSlow(data, target);
         }
 
-        void WriteCompressedLazyFast<T>(T data, ref BitTarget target) where T : INumberContainer
-        {    
+        static void WriteCompressedLazyFast<T>(T data, BitWriter target) where T : INumberContainer
+        {
             // This should be blazing fast, we're literally just going to write whether the number takes up more than a byte, and that's it.
             if (data.LessThan(255))
             {
-                target.OrAndApply(1);
-                WriteByte(data.ToByte());
+                target.FillRemainingWith(1);
+                target.Finish().WriteByte(data.ToByte());
             }
             else
             {
-                target.OrAndApply(0);
+                target.FillRemainingWith(0);
+                var serializer = target.Finish();
 
                 // This check is optimized away by the JIT.
                 if (typeof(T) == typeof(Int32Container))
-                    WriteInt32(data.ToInt32());
+                    serializer.WriteInt32(data.ToInt32());
                 else if (typeof(T) == typeof(Int64Container))
-                    WriteInt64(data.ToInt64());
+                    serializer.WriteInt64(data.ToInt64());
             }
         }
 
-        void WriteCompressedSlow<T>(T data, ref BitTarget target) where T : INumberContainer
+        static void WriteCompressedSlow<T>(T data, BitWriter target) where T : INumberContainer
         {
             var dataInfo = GetCompressedDataInfo(data, target.FreeBits);
 
             // Write the first byte
-            WriteFirstByte(ref target, data, dataInfo);
+            WriteFirstByte(target, data, dataInfo);
+
+            var serializer = target.Finish();
 
             // Write the data in the remaining bytes
             while (dataInfo.BitsToGo > 0)
             {
                 dataInfo.BitsToGo -= 8;
-                WriteByte((byte)data.ShiftRight(dataInfo.BitsToGo));
+                serializer.WriteByte((byte)data.ShiftRight(dataInfo.BitsToGo));
             }
         }
 
-        void WriteFirstByte<T>(ref BitTarget target, T data, CompressedDataInfo dataInfo) where T : INumberContainer
+        static void WriteFirstByte<T>(BitWriter target, T data, CompressedDataInfo dataInfo) where T : INumberContainer
         {
             bool isExtendedByte = target.FreeBits < 4;
             bool byteWillHaveFreeSpace = dataInfo.HeaderLen < target.FreeBits;
@@ -100,17 +89,15 @@ namespace ABCo.ABSave.Serialization
 
                 // The next byte will definitely have some free space, as we can not physically fill all of the remaining "xxxxxxxx"s with the header.
                 // Ensure we're definitely ready for the next byte.
-                if (target.FreeBits == 0) target.Apply();
+                if (target.FreeBits == 0) target.MoveToNextByte();
 
                 byteWillHaveFreeSpace = true;
             }
 
             if (byteWillHaveFreeSpace) target.WriteInteger((byte)data.ShiftRight(dataInfo.BitsToGo), target.FreeBits);
-
-            target.Apply();
         }
 
-        CompressedDataInfo GetCompressedDataInfo<T>(T num, byte bitsFree) where T : INumberContainer
+        static CompressedDataInfo GetCompressedDataInfo<T>(T num, byte bitsFree) where T : INumberContainer
         {
             long mask = (1L << bitsFree) >> 1;
 

@@ -12,29 +12,29 @@ namespace ABCo.ABSave.Converters
     {
         TicksType _type;
 
-        public override void Serialize(in SerializeInfo info, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info)
         {
             switch (_type)
             {
                 case TicksType.DateTime:
-                    SerializeTicks(((DateTime)info.Instance).Ticks, header.Serializer);
+                    SerializeTicks(((DateTime)info.Instance).Ticks, info.Header);
                     break;
                 case TicksType.TimeSpan:
-                    SerializeTicks(((TimeSpan)info.Instance).Ticks, header.Serializer);
+                    SerializeTicks(((TimeSpan)info.Instance).Ticks, info.Header);
                     break;
             }
         }
 
-        public static void SerializeTicks(long ticks, ABSaveSerializer serializer) => serializer.WriteInt64(ticks);
+        public static void SerializeTicks(long ticks, BitWriter writer) => writer.Finish().WriteInt64(ticks);
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header) => _type switch
+        public override object Deserialize(in DeserializeInfo info) => _type switch
         {
-            TicksType.DateTime => new DateTime(DeserializeTicks(header.Deserializer)),
-            TicksType.TimeSpan => new TimeSpan(DeserializeTicks(header.Deserializer)),
+            TicksType.DateTime => new DateTime(DeserializeTicks(info.Header)),
+            TicksType.TimeSpan => new TimeSpan(DeserializeTicks(info.Header)),
             _ => throw new Exception("Invalid tick-based type"),
         };
 
-        public static long DeserializeTicks(ABSaveDeserializer deserializer) => deserializer.ReadInt64();
+        public static long DeserializeTicks(BitReader header) => header.Finish().ReadInt64();
 
         public override uint Initialize(InitializeInfo info)
         {

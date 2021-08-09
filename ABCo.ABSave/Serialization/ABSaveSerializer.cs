@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Converters;
+using ABCo.ABSave.Deserialization;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
@@ -7,9 +8,11 @@ using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.InteropServices;
 
 namespace ABCo.ABSave.Serialization
 {
@@ -18,21 +21,17 @@ namespace ABCo.ABSave.Serialization
     /// </summary>
     public sealed partial class ABSaveSerializer : IDisposable
     {
-        public Dictionary<Type, uint>? TargetVersions { get; private set; }
-        public ABSaveMap Map { get; }
-        public ABSaveSettings Settings { get; }
         public Stream Output { get; private set; } = null!;
-        public bool ShouldReverseEndian { get; private set; }
 
-        VersionInfo?[] _currentVersionInfos;
-        byte[]? _stringBuffer;
+        public SerializeCurrentState State { get; }
+
+        readonly BitWriter _currentBitWriter;
 
         internal ABSaveSerializer(ABSaveMap map)
         {
-            Map = map;
-            Settings = map.Settings;
-            ShouldReverseEndian = map.Settings.UseLittleEndian != BitConverter.IsLittleEndian;
-            _currentVersionInfos = new VersionInfo[map._highestConverterInstanceId];
+            Output = null!;
+            State = new SerializeCurrentState(map);
+            _currentBitWriter = new BitWriter(this);
         }
 
         public void Initialize(Stream output, Dictionary<Type, uint>? targetVersions)
@@ -41,196 +40,137 @@ namespace ABCo.ABSave.Serialization
                 throw new Exception("Cannot use unwriteable stream.");
 
             Output = output;
-            TargetVersions = targetVersions;
+            State.TargetVersions = targetVersions;
 
             Reset();
         }
 
-        public void Reset() => Array.Clear(_currentVersionInfos, 0, _currentVersionInfos.Length);
-        public void Dispose() => Map.ReleaseSerializer(this);
+        public void Reset() => State.Reset();
+        public void Dispose() => State.Map.ReleaseSerializer(this);
 
-        public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
+        public void SerializeRoot(object? obj) => WriteItem(obj, State.Map._rootItem);
 
-        public void SerializeRoot(object? obj) => SerializeItem(obj, Map._rootItem);
-
-        public void SerializeItem(object? obj, MapItemInfo item)
+        public void WriteItem(object? obj, MapItemInfo item)
         {
-            if (obj == null)
-                WriteByte(0);
+            using var writer = GetHeader();
+            writer.WriteItem(obj, item);
+        }
 
-            else
+        public void WriteExactNonNullItem(object? obj, MapItemInfo item)
+        {
+            using var writer = GetHeader();
+            writer.WriteExactNonNullItem(obj!, item);
+        }
+
+        #region Byte Writing
+
+        public void WriteByte(byte byt) => Output.WriteByte(byt);
+        public void WriteByteArray(byte[] arr) => Output.Write(arr, 0, arr.Length);
+        public void WriteBytes(ReadOnlySpan<byte> data) => Output.Write(data);
+
+        #endregion
+
+        #region Numerical Writing
+
+        public unsafe void WriteInt16(short num)
+        {
+            if (State.ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
+            WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 2));
+        }
+
+        public unsafe void WriteInt32(int num)
+        {
+            if (State.ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
+            WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 4));
+        }
+
+        public unsafe void WriteInt64(long num)
+        {
+            if (State.ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
+            WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 8));
+        }
+
+        public unsafe void WriteSingle(float num)
+        {
+            if (State.ShouldReverseEndian)
             {
-                var currentHeader = new BitTarget(this);
-                SerializePossibleNullableItem(obj, item, ref currentHeader);
+                int asInt = BitConverter.SingleToInt32Bits(num);
+                asInt = BinaryPrimitives.ReverseEndianness(asInt);
+                WriteBytes(new ReadOnlySpan<byte>((byte*)&asInt, 4));
             }
+            else WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 4));
         }
 
-        public void SerializeItem(object? obj, MapItemInfo item, ref BitTarget header)
+        public unsafe void WriteDouble(double num)
         {
-            if (obj == null)
+            if (State.ShouldReverseEndian)
             {
-                header.WriteBitOff();
-                header.Apply();
+                long asInt = BitConverter.DoubleToInt64Bits(num);
+                asInt = BinaryPrimitives.ReverseEndianness(asInt);
+                WriteBytes(new ReadOnlySpan<byte>((byte*)&asInt, 8));
             }
-
-            else SerializePossibleNullableItem(obj, item, ref header);
+            else WriteBytes(new ReadOnlySpan<byte>((byte*)&num, 8));
         }
 
-        public void SerializeExactNonNullItem(object obj, MapItemInfo item)
+        public void WriteDecimal(decimal num)
         {
-            var currentHeader = new BitTarget(this);
-            SerializeItemNoSetup(obj, item, ref currentHeader, true);
+            int[]? bits = decimal.GetBits(num);
+            for (int i = 0; i < 4; i++)
+                WriteInt32(bits[i]);
         }
 
-        public void SerializeExactNonNullItem(object obj, MapItemInfo item, ref BitTarget header) =>
-            SerializeItemNoSetup(obj, item, ref header, true);
-
-        public void SerializePossibleNullableItem(object obj, MapItemInfo info, ref BitTarget header)
+        public unsafe void FastWriteShorts(ReadOnlySpan<short> shorts)
         {
-            // Say it's "not null" if it is nullable.
-            if (info.IsNullable) header.WriteBitOn();
-            SerializeItemNoSetup(obj, info, ref header, info.IsNullable);
-        }
+            ReadOnlySpan<byte> bytes = MemoryMarshal.Cast<short, byte>(shorts);
 
-        void SerializeItemNoSetup(object obj, MapItemInfo info, ref BitTarget header, bool skipHeader)
-        {
-            Converter item = info.Converter;
-            ABSaveUtils.WaitUntilNotGenerating(item);
-
-            SerializeConverter(obj, info.Converter, ref header, skipHeader);
-        }
-
-        void SerializeConverter(object obj, Converter converter, ref BitTarget header, bool skipHeader)
-        {
-            Type? actualType = obj.GetType();
-
-            bool appliedHeader = true;
-
-            // Write the null and inheritance bits.
-            bool sameType = true;
-            if (!converter.IsValueItemType && !skipHeader)
+            if (State.ShouldReverseEndian)
             {
-                sameType = WriteHeaderNullAndInheritance(actualType, converter, ref header);
-                appliedHeader = false;
+                // TODO: Optimize?
+                byte* buffer = stackalloc byte[2];
+                var bufferSpan = new ReadOnlySpan<byte>(buffer, 2);
+
+                int i = 0;
+                while (i < bytes.Length)
+                {
+                    buffer[1] = bytes[i++];
+                    buffer[0] = bytes[i++];
+
+                    WriteBytes(bufferSpan);
+                }
             }
-
-            // Write and get the info for a version, if necessary
-            if (HandleVersionNumber(converter, out VersionInfo info, ref header))
-                appliedHeader = true;
-
-            // Handle inheritance if needed.
-            if (info._inheritanceInfo != null && !sameType)
-            {
-                SerializeActualType(obj, info._inheritanceInfo, converter.ItemType, actualType, ref header);
-                return;
-            }
-
-            // Apply the header if it's not being used and hasn't already been applied.
-            if (!info.UsesHeader && !appliedHeader)
-                header.Apply();
-
-            var serializeInfo = new Converter.SerializeInfo(obj, actualType, info);
-            converter.Serialize(in serializeInfo, ref header);
+            else WriteBytes(bytes);
         }
 
-        // Returns: Whether the type has changed.
-        bool WriteHeaderNullAndInheritance(Type actualType, Converter item, ref BitTarget target)
-        {
-            target.WriteBitOn(); // Null
+        #endregion
 
-            bool sameType = item.ItemType == actualType;
-            target.WriteBitWith(sameType);
-            return sameType;
+        public void WriteNullableString(string? str)
+        {
+            using var writer = GetHeader();
+            writer.WriteNullableString(str);
         }
 
-        /// <summary>
-        /// Handles the version info for a given converter. If the version hasn't been written yet, it's written now. If not, nothing is written.
-        /// </summary>
-        /// <returns>Whether we applied the header</returns>
-        internal bool HandleVersionNumber(Converter item, out VersionInfo info, ref BitTarget header)
+        public void WriteNonNullString(string str)
         {
-            if (item._instanceId >= _currentVersionInfos.Length)
-                Array.Resize(ref _currentVersionInfos, (int)Map._highestConverterInstanceId);
-
-            // If the version has already been written, do nothing
-            VersionInfo? existingInfo = _currentVersionInfos[item._instanceId];
-            if (existingInfo != null)
-            {
-                info = existingInfo;
-                return false;
-            }
-
-            uint version = Settings.IncludeVersioning ? WriteNewVersionInfo(item, ref header) : 0;
-
-            info = Map.GetVersionInfo(item, version);
-            _currentVersionInfos[item._instanceId] = info;
-            return Settings.IncludeVersioning;
+            using var writer = GetHeader();
+            writer.WriteNonNullString(str);
         }
 
-        uint WriteNewVersionInfo(Converter item, ref BitTarget target)
+        public void WriteCompressedInt(uint data)
         {
-            uint targetVersion = 0;
-
-            // Try to get the custom target version and if there is none use the latest.
-            if (TargetVersions?.TryGetValue(item.ItemType, out targetVersion) != true)
-                targetVersion = item.HighestVersion;
-
-            WriteCompressedInt(targetVersion, ref target);
-            return targetVersion;
+            using var writer = GetHeader();
+            writer.WriteCompressedInt(data);
         }
 
-        // Returns: Whether the sub-type was converted in here and we should return now.
-        void SerializeActualType(object obj, SaveInheritanceAttribute info, Type baseType, Type actualType, ref BitTarget header)
+        public void WriteCompressedLong(ulong data)
         {
-            switch (info.Mode)
-            {
-                case SaveInheritanceMode.Index:
-                    if (!TryWriteListInheritance(info, actualType, false, ref header))
-                        throw new UnsupportedSubTypeException(baseType, actualType);
-
-                    break;
-                case SaveInheritanceMode.Key:
-                    WriteKeyInheritance(info, baseType, actualType, ref header);
-
-                    break;
-                case SaveInheritanceMode.IndexOrKey:
-                    if (!TryWriteListInheritance(info, actualType, true, ref header))
-                    {
-                        header.WriteBitOff();
-                        WriteKeyInheritance(info, baseType, actualType, ref header);
-                    }
-
-                    break;
-            }
-
-            // Serialize the actual type now.
-            SerializeItemNoSetup(obj, GetRuntimeMapItem(actualType), ref header, true);
+            using var writer = GetHeader();
+            writer.WriteCompressedLong(data);
         }
 
-        bool TryWriteListInheritance(SaveInheritanceAttribute info, Type actualType, bool writeOnIfSuccessful, ref BitTarget header)
+        public BitWriter GetHeader()
         {
-            if (info.IndexSerializeCache!.TryGetValue(actualType, out uint pos))
-            {
-                if (writeOnIfSuccessful) header.WriteBitOn();
-                WriteCompressedInt(pos, ref header);
-                return true;
-            }
-
-            return false;
-        }
-
-        void WriteKeyInheritance(SaveInheritanceAttribute info, Type baseType, Type actualType, ref BitTarget header)
-        {
-            string key = KeyInheritanceHandler.GetOrAddTypeKeyFromCache(baseType, actualType, info);
-            WriteString(key, ref header);
-        }
-
-        void SerializeActualType(object obj, Type type)
-        {
-            MapItemInfo info = GetRuntimeMapItem(type);
-
-            var newTarget = new BitTarget(this);
-            SerializeItemNoSetup(obj, info, ref newTarget, true);
+            _currentBitWriter.SetupHeader();
+            return _currentBitWriter;
         }
     }
 }

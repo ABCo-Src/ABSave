@@ -36,9 +36,10 @@ namespace ABCo.ABSave.Mapping.Generation.Inheritance
 
         public static void EnsureHasAllTypeCache(Type type, SaveInheritanceAttribute info)
         {
+            if (info.HasGeneratedFullKeyCache) return;
+
             lock (info)
             {
-                // Just use one of them to see if the cache is valid or not.
                 if (info.HasGeneratedFullKeyCache) return;
 
                 KeyedSubTypeInfo[]? keyedInfo = GetKeyedSubTypesFor(type);
