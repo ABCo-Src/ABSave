@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Serialization.Core;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;

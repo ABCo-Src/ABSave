@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABCo.ABSave.Serialization
+namespace ABCo.ABSave.Serialization.Core
 {
     internal static class ItemSerializer
     {

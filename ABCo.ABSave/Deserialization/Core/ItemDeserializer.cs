@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABCo.ABSave.Deserialization
+namespace ABCo.ABSave.Deserialization.Core
 {
     internal static class ItemDeserializer
     {
@@ -104,7 +104,7 @@ namespace ABCo.ABSave.Deserialization
             KeyInheritanceHandler.EnsureHasAllTypeCache(baseType, info);
 
             // Read in the key from the source.
-            string key = header.ReadString();
+            string key = header.ReadNonNullString();
 
             // See if there's an item with that key.
             return info.KeyDeserializeCache!.GetValueOrDefault(key);

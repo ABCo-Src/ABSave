@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABCo.ABSave.Serialization
+namespace ABCo.ABSave.Serialization.Core
 {
     internal static class TextSerializer
     {
@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Serialization
             else
             {
                 header.WriteCompressedInt((uint)chars.Length);
-                FastWriteShorts(MemoryMarshal.Cast<char, short>(chars), header.Finish());
+                header.Finish().FastWriteShorts(MemoryMarshal.Cast<char, short>(chars));
             }
         }
 
@@ -42,28 +42,6 @@ namespace ABCo.ABSave.Serialization
 
             var serializer = header.Finish();
             serializer.WriteBytes(buffer.Slice(0, actualSize));
-        }
-
-        static unsafe void FastWriteShorts(ReadOnlySpan<short> shorts, ABSaveSerializer serializer)
-        {
-            ReadOnlySpan<byte> bytes = MemoryMarshal.Cast<short, byte>(shorts);
-
-            if (serializer.State.ShouldReverseEndian)
-            {
-                // TODO: Optimize?
-                byte* buffer = stackalloc byte[2];
-                var bufferSpan = new ReadOnlySpan<byte>(buffer, 2);
-
-                int i = 0;
-                while (i < bytes.Length)
-                {
-                    buffer[1] = bytes[i++];
-                    buffer[0] = bytes[i++];
-
-                    serializer.WriteBytes(bufferSpan);
-                }
-            }
-            else serializer.WriteBytes(bytes);
         }
     }
 }

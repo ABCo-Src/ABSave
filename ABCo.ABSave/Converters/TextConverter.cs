@@ -70,7 +70,7 @@ namespace ABCo.ABSave.Converters
 
         public override object Deserialize(in DeserializeInfo info) => _type switch
         {
-            StringType.String => info.Header.ReadString(),
+            StringType.String => info.Header.ReadNonNullString(),
             StringType.CharArray => DeserializeCharArray(info.Header),
             StringType.StringBuilder => DeserializeStringBuilder(info.Header),
             _ => throw new Exception("Invalid StringType in text converter context"),
@@ -92,7 +92,7 @@ namespace ABCo.ABSave.Converters
             }
         }
 
-        public static StringBuilder DeserializeStringBuilder(BitReader header) => new StringBuilder(header.ReadString());
+        public static StringBuilder DeserializeStringBuilder(BitReader header) => new StringBuilder(header.ReadNonNullString());
 
         #endregion
 

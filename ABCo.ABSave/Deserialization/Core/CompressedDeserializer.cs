@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABCo.ABSave.Deserialization
+namespace ABCo.ABSave.Deserialization.Core
 {
     internal static class CompressedDeserializer
     {
