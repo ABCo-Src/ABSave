@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABCo.ABSave.Serialization
+namespace ABCo.ABSave.Serialization.Writing
 {
     public class SerializeCurrentState : CurrentState
     {

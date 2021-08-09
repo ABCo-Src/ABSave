@@ -1,6 +1,6 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Converters;
-using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Serialization.Converters;
+using ABCo.ABSave.Serialization.Writing.Reading;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
@@ -14,7 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace ABCo.ABSave.Serialization
+namespace ABCo.ABSave.Serialization.Writing
 {
     /// <summary>
     /// The central object that everything in ABSave writes to. Provides facilties to write primitive types, including strings.
@@ -22,7 +22,6 @@ namespace ABCo.ABSave.Serialization
     public sealed partial class ABSaveSerializer : IDisposable
     {
         public Stream Output { get; private set; } = null!;
-
         public SerializeCurrentState State { get; }
 
         readonly BitWriter _currentBitWriter;

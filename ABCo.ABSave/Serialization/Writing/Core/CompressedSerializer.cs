@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABCo.ABSave.Serialization.Core
+namespace ABCo.ABSave.Serialization.Writing.Core
 {
     internal static class CompressedSerializer
     {

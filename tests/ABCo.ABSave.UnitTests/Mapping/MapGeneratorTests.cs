@@ -1,8 +1,8 @@
-﻿using ABCo.ABSave.Converters;
-using ABCo.ABSave.Deserialization;
+﻿using ABCo.ABSave.Serialization.Converters;
+using ABCo.ABSave.Serialization.Writing.Reading;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;

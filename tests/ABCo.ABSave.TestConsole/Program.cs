@@ -1,6 +1,6 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Mapping;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;

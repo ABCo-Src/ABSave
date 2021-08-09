@@ -1,4 +1,4 @@
-﻿using ABCo.ABSave.Deserialization;
+﻿using ABCo.ABSave.Serialization.Writing.Reading;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
@@ -8,12 +8,12 @@ using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.Converters;
 using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using ABCo.ABSave.Mapping.Generation.Object;
-using ABCo.ABSave.Serialization;
-using ABCo.ABSave.Serialization.Core;
+using ABCo.ABSave.Serialization.Writing;
+using ABCo.ABSave.Serialization.Writing.Core;
 using System;
 using System.Reflection;
 
-namespace ABCo.ABSave.Converters
+namespace ABCo.ABSave.Serialization.Converters
 {
     [SelectOtherWithCheckType]
     public class ObjectConverter : Converter

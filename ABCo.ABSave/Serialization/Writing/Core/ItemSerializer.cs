@@ -1,4 +1,4 @@
-﻿using ABCo.ABSave.Converters;
+﻿using ABCo.ABSave.Serialization.Converters;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace ABCo.ABSave.Serialization.Core
+namespace ABCo.ABSave.Serialization.Writing.Core
 {
     internal static class ItemSerializer
     {

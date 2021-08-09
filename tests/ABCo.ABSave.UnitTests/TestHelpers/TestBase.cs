@@ -1,7 +1,7 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Serialization.Writing.Reading;
 using ABCo.ABSave.Mapping;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using System;
 using System.Collections.Generic;
 using System.IO;

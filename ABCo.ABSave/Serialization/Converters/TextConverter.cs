@@ -1,15 +1,15 @@
-﻿using ABCo.ABSave.Deserialization;
+﻿using ABCo.ABSave.Serialization.Writing.Reading;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation.Converters;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using System;
 using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABCo.ABSave.Converters
+namespace ABCo.ABSave.Serialization.Converters
 {
     [Select(typeof(string))]
     [Select(typeof(StringBuilder))]
