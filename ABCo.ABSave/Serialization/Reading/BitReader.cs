@@ -14,7 +14,7 @@ namespace ABCo.ABSave.Serialization.Reading
     public class BitReader
     {
         ABSaveDeserializer _deserializer;
-        public byte FreeBits;
+        public byte FreeBits { get; private set; }
         int _source;
 
         public DeserializeCurrentState State => _deserializer.State;

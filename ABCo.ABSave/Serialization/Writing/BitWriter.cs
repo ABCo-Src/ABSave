@@ -12,7 +12,7 @@ namespace ABCo.ABSave.Serialization.Writing
     public class BitWriter : IDisposable
     {
         ABSaveSerializer _serializer;
-        public byte FreeBits;
+        public byte FreeBits { get; private set; }
         int _target;
 
         public SerializeCurrentState State => _serializer.State;
