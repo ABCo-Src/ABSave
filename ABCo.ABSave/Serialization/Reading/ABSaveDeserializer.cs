@@ -24,7 +24,7 @@ namespace ABCo.ABSave.Serialization.Reading
         internal ABSaveDeserializer(ABSaveMap map)
         {
             Source = null!;
-            State = new CurrentState(map);
+            State = new DeserializeCurrentState(map);
             _currentBitReader = new BitReader(this);
         }
 
@@ -34,7 +34,11 @@ namespace ABCo.ABSave.Serialization.Reading
             Reset();
         }
 
-        public void Reset() => State.Reset();
+        public void Reset()
+        {
+            State.Reset();
+            State.CachedKeys.Clear();
+        }
 
         public void Dispose() => State.Map.ReleaseDeserializer(this);
         public object? DeserializeRoot() => GetHeader().ReadItem(State.Map._rootItem);

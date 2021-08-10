@@ -1,6 +1,6 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Serialization.Converters;
-using ABCo.ABSave.Serialization.Writing.Reading;
+using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Mapping;
 using System;
 using System.Collections.Generic;
@@ -20,6 +20,7 @@ namespace ABCo.ABSave.Serialization
 
         CachedConverterDetails[] _cachedConverterDetails = null!;
         byte[]? _stringBuffer;
+        int _currentSubTypeCacheCount;
 
         internal CurrentState(ABSaveMap map)
         {
@@ -30,7 +31,11 @@ namespace ABCo.ABSave.Serialization
             _cachedConverterDetails = new CachedConverterDetails[map._highestConverterInstanceId];            
         }
 
-        internal void Reset() => Array.Clear(_cachedConverterDetails, 0, _cachedConverterDetails.Length);
+        internal void Reset()
+        {
+            Array.Clear(_cachedConverterDetails, 0, _cachedConverterDetails.Length);
+            _currentSubTypeCacheCount = 0;
+        }
 
         internal CachedConverterDetails GetCachedDetails(Converter item)
         {
@@ -47,7 +52,8 @@ namespace ABCo.ABSave.Serialization
             return newInfo;
         }
 
-        internal void AddKeyIdToCache(Converter item, int id) => _cachedConverterDetails[item._instanceId].KeyInheritanceCachedValue = id;
+        internal void AddNewKeyCacheNumber(Converter item) => 
+            _cachedConverterDetails[item._instanceId].KeyInheritanceCachedValue = _currentSubTypeCacheCount++;
 
         internal byte[] GetStringBuffer(int length)
         {

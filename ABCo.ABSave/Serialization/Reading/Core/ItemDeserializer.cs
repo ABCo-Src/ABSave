@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics.CodeAnalysis;
 
-namespace ABCo.ABSave.Serialization.Writing.Reading.Core
+namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal static class ItemDeserializer
     {
@@ -68,7 +68,7 @@ namespace ABCo.ABSave.Serialization.Writing.Reading.Core
             return null;
         }
 
-        internal static void HandleVersionNumber(Converter converter, ref VersionInfo item, BitReader header)
+        static void HandleVersionNumber(Converter converter, ref VersionInfo item, BitReader header)
         {
             // If the version has already been read, do nothing
             if (item != null) return;
@@ -77,7 +77,6 @@ namespace ABCo.ABSave.Serialization.Writing.Reading.Core
                 header.State.CreateNewCache(converter, ReadNewVersionInfo(header)) :
                 header.State.Map.GetVersionInfo(converter, 0);
         }
-
 
         static bool ReadHeader(Converter item, BitReader header)
         {
@@ -114,14 +113,23 @@ namespace ABCo.ABSave.Serialization.Writing.Reading.Core
 
         static Type? TryReadKeyInheritance(SaveInheritanceAttribute info, Type baseType, BitReader header)
         {
-            // Make sure the info is initialized for deserialization.
-            KeyInheritanceHandler.EnsureHasAllTypeCache(baseType, info);
+            // If it's cached, use the cache.
+            if (header.ReadBit())
+            {
+                int key = (int)header.ReadCompressedInt();
+                return header.State.CachedKeys[key];
+            }
+            else
+            {
+                // Make sure the info is initialized for deserialization.
+                KeyInheritanceHandler.EnsureHasAllTypeCache(baseType, info);
 
-            // Read in the key from the source.
-            string key = header.ReadNonNullString();
+                // Read in the key from the source.
+                string key = header.ReadNonNullString();
 
-            // See if there's an item with that key.
-            return info.KeyDeserializeCache!.GetValueOrDefault(key);
+                // See if there's an item with that key.
+                return info.KeyDeserializeCache!.GetValueOrDefault(key);
+            }
         }
     }
 }
