@@ -1,6 +1,6 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Serialization.Converters;
-using ABCo.ABSave.Serialization.Writing.Reading;
+using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;

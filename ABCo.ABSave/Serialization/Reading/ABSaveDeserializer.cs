@@ -12,12 +12,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace ABCo.ABSave.Serialization.Writing.Reading
+namespace ABCo.ABSave.Serialization.Reading
 {
     public sealed partial class ABSaveDeserializer : IDisposable
     {
         public Stream Source { get; private set; }
-        public CurrentState State { get; private set; }
+        public DeserializeCurrentState State { get; private set; }
 
         readonly BitReader _currentBitReader;
 

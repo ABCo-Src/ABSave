@@ -1,5 +1,5 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Serialization.Writing.Reading;
+using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Serialization.Writing;
 using System;

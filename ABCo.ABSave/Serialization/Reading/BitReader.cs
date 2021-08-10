@@ -1,12 +1,12 @@
 ﻿using ABCo.ABSave.Serialization.Converters;
-using ABCo.ABSave.Serialization.Writing.Reading.Core;
+using ABCo.ABSave.Serialization.Reading.Core;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ABCo.ABSave.Serialization.Writing.Reading
+namespace ABCo.ABSave.Serialization.Reading
 {
     /// <summary>
     /// Reads data bit-by-bit. Typically used to read from the header for an item, but can be created by a converter to allow more manual bit reading/writing.
