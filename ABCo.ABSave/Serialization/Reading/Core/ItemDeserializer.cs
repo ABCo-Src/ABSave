@@ -8,8 +8,9 @@ using ABCo.ABSave.Mapping.Generation.Inheritance;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Diagnostics.CodeAnalysis;
 
-namespace ABCo.ABSave.Serialization.Writing.Reading.Core
+namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal static class ItemDeserializer
     {
@@ -37,33 +38,45 @@ namespace ABCo.ABSave.Serialization.Writing.Reading.Core
 
         static object DeserializeConverter(Converter converter, BitReader header, bool skipHeader)
         {
+            object? inheritanceHandled = DeserializeConverterHeader(converter, header, skipHeader, out var info);
+            if (inheritanceHandled != null) return inheritanceHandled;
+
+            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info, header);
+            return converter.Deserialize(in deserializeInfo);
+        }
+
+        internal static object? DeserializeConverterHeader(Converter converter, BitReader header, bool skipHeader, out VersionInfo info)
+        {
+            var details = header.State.GetCachedInfo(converter);
+
             // Handle the inheritance bit.
             bool sameType = true;
             if (!skipHeader)
                 sameType = ReadHeader(converter, header);
 
             // Read or create the version info if needed
-            VersionInfo info = HandleVersionNumber(converter, header);
+            HandleVersionNumber(converter, ref details, header);
 
             // Handle inheritance.
-            if (info._inheritanceInfo != null && !sameType)
-                return DeserializeActualType(info._inheritanceInfo, converter.ItemType, header);
+            if (details._inheritanceInfo != null && !sameType)
+            {
+                info = null!;
+                return DeserializeActualType(details._inheritanceInfo, converter.ItemType, header);
+            }
 
-            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info, header);
-            return converter.Deserialize(in deserializeInfo);
+            info = details;
+            return null;
         }
 
-        internal static VersionInfo HandleVersionNumber(Converter item, BitReader header)
+        static void HandleVersionNumber(Converter converter, ref VersionInfo item, BitReader header)
         {
             // If the version has already been read, do nothing
-            VersionInfo? existingInfo = header.State.GetExistingVersionInfo(item);
-            if (existingInfo != null) return existingInfo;
+            if (item != null) return;
 
-            return header.State.Settings.IncludeVersioning ?
-                header.State.GetNewVersionInfo(item, ReadNewVersionInfo(header)) :
-                header.State.Map.GetVersionInfo(item, 0);
+            item = header.State.Settings.IncludeVersioning ?
+                header.State.CreateNewCache(converter, ReadNewVersionInfo(header)) :
+                header.State.Map.GetVersionInfo(converter, 0);
         }
-
 
         static bool ReadHeader(Converter item, BitReader header)
         {
@@ -100,14 +113,27 @@ namespace ABCo.ABSave.Serialization.Writing.Reading.Core
 
         static Type? TryReadKeyInheritance(SaveInheritanceAttribute info, Type baseType, BitReader header)
         {
-            // Make sure the info is initialized for deserialization.
-            KeyInheritanceHandler.EnsureHasAllTypeCache(baseType, info);
+            // If it's cached, use the cache.
+            if (header.ReadBit())
+            {
+                int key = (int)header.ReadCompressedInt();
+                return header.State.CachedKeys[key];
+            }
+            else
+            {
+                // Make sure the info is initialized for deserialization.
+                KeyInheritanceHandler.EnsureHasAllTypeCache(baseType, info);
 
-            // Read in the key from the source.
-            string key = header.ReadNonNullString();
+                // Read in the key from the source.
+                string key = header.ReadNonNullString();
 
-            // See if there's an item with that key.
-            return info.KeyDeserializeCache!.GetValueOrDefault(key);
+                // See if there's an item with that key.
+                Type? ret = info.KeyDeserializeCache!.GetValueOrDefault(key);
+
+                // Add the item to the cache, if there is one.
+                if (ret != null) header.State.CachedKeys.Add(ret);
+                return ret;
+            }
         }
     }
 }

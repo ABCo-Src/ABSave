@@ -1,4 +1,4 @@
-﻿using ABCo.ABSave.Serialization.Writing.Reading;
+﻿using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
@@ -69,9 +69,9 @@ namespace ABCo.ABSave.Serialization.Converters
         protected override void DoHandleAllVersionsGenerated() => _intermediateInfo.Release();
 
         public override void Serialize(in SerializeInfo info) =>
-            Serialize(info.Instance, info.VersionInfo, info.Header);
+            Serialize(info.Instance, info.ActualType, info.VersionInfo, info.Header);
 
-        void Serialize(object instance, VersionInfo info, BitWriter header)
+        void Serialize(object instance, Type actualType, VersionInfo info, BitWriter header)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
@@ -79,9 +79,8 @@ namespace ABCo.ABSave.Serialization.Converters
 
             if (baseType != null)
             {
-                // TODO: Don't directly call this with map guides.
-                ItemSerializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, header);
-                baseType.Serialize(instance, baseInfo, header);
+                var baseInfo = header.WriteExactNonNullHeader(instance, actualType, baseType);
+                baseType.Serialize(instance, actualType, baseInfo!, header);
             }
 
             if (members.Length == 0) return;
@@ -107,7 +106,7 @@ namespace ABCo.ABSave.Serialization.Converters
             if (baseType != null)
             {
                 // TODO: Don't directly call this with map guides.
-                VersionInfo baseInfo = header.ReadAndStoreVersionNumber(baseType);
+                VersionInfo baseInfo = header.ReadExactNonNullHeader(baseType);
                 baseType.DeserializeInto(obj, baseInfo, header);
             }
 

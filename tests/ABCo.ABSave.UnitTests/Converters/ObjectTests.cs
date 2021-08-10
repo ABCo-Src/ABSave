@@ -96,7 +96,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             AssertAndGoToStart(baseExpectedWithVersion.Concat(versionExpected).ToArray());
             ReflectiveAssert(instance, (T)Deserializer.ReadItem(CurrentMapItem));
 
-            ResetPosition();
+            ClearStream();
 
             // Without version
             byte[] baseExpectedWithoutVersion = version switch

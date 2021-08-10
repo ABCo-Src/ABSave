@@ -40,6 +40,16 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         {
             Type? actualType = obj.GetType();
 
+            var currentInfo = SerializeConverterHeader(obj, converter, actualType, skipHeader, header);
+            if (currentInfo == null) return;
+
+            var serializeInfo = new Converter.SerializeInfo(obj, actualType, currentInfo, header);
+            converter.Serialize(in serializeInfo);
+        }
+
+        internal static VersionInfo? SerializeConverterHeader(object obj, Converter converter, Type actualType, bool skipHeader, BitWriter header)
+        {
+            var cache = header.State.GetCachedInfo(converter);
             bool appliedHeader = true;
 
             // Write the null and inheritance bits.
@@ -51,22 +61,21 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             }
 
             // Write and get the info for a version, if necessary
-            if (HandleVersionNumber(converter, out VersionInfo info, header))
+            if (HandleVersionNumber(converter, ref cache, header))
                 appliedHeader = true;
 
             // Handle inheritance if needed.
-            if (info._inheritanceInfo != null && !sameType)
+            if (cache._inheritanceInfo != null && !sameType)
             {
-                SerializeActualType(obj, info._inheritanceInfo, converter.ItemType, actualType, header);
-                return;
+                SerializeActualType(cache._inheritanceInfo, obj, actualType, converter, header);
+                return null;
             }
 
             // Apply the header if it's not being used and hasn't already been applied.
-            if (!info.UsesHeader && !appliedHeader)
+            if (!cache.UsesHeader && !appliedHeader)
                 header.MoveToNextByte();
 
-            var serializeInfo = new Converter.SerializeInfo(obj, actualType, info, header);
-            converter.Serialize(in serializeInfo);
+            return cache;
         }
 
         // Returns: Whether the type has changed.
@@ -83,18 +92,14 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         /// Handles the version info for a given converter. If the version hasn't been written yet, it's written now. If not, nothing is written.
         /// </summary>
         /// <returns>Whether we applied the header</returns>
-        internal static bool HandleVersionNumber(Converter item, out VersionInfo info, BitWriter header)
+        static bool HandleVersionNumber(Converter item, ref VersionInfo info, BitWriter header)
         {
-            // If the version has already been written, do nothing
-            VersionInfo? existingInfo = header.State.GetExistingVersionInfo(item);
-            if (existingInfo != null)
-            {
-                info = existingInfo;
-                return false;
-            }
+            // If the version has already been written (there's info in the cache), do nothing
+            if (info != null) return false;
 
+            // If not, write the version and add the converter to the cache.
             uint version = header.State.Settings.IncludeVersioning ? WriteNewVersionInfo(item, header) : 0;
-            info = header.State.GetNewVersionInfo(item, version);
+            info = header.State.CreateNewCache(item, version);
 
             return header.State.Settings.IncludeVersioning;
         }
@@ -112,31 +117,34 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         }
 
         // Returns: Whether the sub-type was converted in here and we should return now.
-        static void SerializeActualType(object obj, SaveInheritanceAttribute info, Type baseType, Type actualType, BitWriter header)
+        static void SerializeActualType(SaveInheritanceAttribute info, object obj, Type actualType, Converter converter, BitWriter header)
         {
+            var actual = header.State.GetRuntimeMapItem(actualType);
+            int? cacheNum = header.State.GetCachedKeyInfo(actual.Converter);
+
             switch (info.Mode)
             {
                 case SaveInheritanceMode.Index:
                     if (!TryWriteListInheritance(info, actualType, false, header))
-                        throw new UnsupportedSubTypeException(baseType, actualType);
+                        throw new UnsupportedSubTypeException(converter.ItemType, actualType);
 
                     break;
                 case SaveInheritanceMode.Key:
-                    WriteKeyInheritance(info, baseType, actualType, header);
+                    WriteKeyInheritance(info, cacheNum, converter, actual.Converter, header);
 
                     break;
                 case SaveInheritanceMode.IndexOrKey:
                     if (!TryWriteListInheritance(info, actualType, true, header))
                     {
                         header.WriteBitOff();
-                        WriteKeyInheritance(info, baseType, actualType, header);
+                        WriteKeyInheritance(info, cacheNum, converter, actual.Converter, header);
                     }
 
                     break;
             }
 
             // Serialize the actual type now.
-            SerializeItemNoSetup(obj, header.State.GetRuntimeMapItem(actualType), header, true);
+            SerializeItemNoSetup(obj, actual, header, true);
         }
 
         static bool TryWriteListInheritance(SaveInheritanceAttribute info, Type actualType, bool writeOnIfSuccessful, BitWriter header)
@@ -151,10 +159,24 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             return false;
         }
 
-        static void WriteKeyInheritance(SaveInheritanceAttribute info, Type baseType, Type actualType, BitWriter header)
+        static void WriteKeyInheritance(SaveInheritanceAttribute info, int? cacheNum, Converter converter, Converter actualConverter, BitWriter header)
         {
-            string key = KeyInheritanceHandler.GetOrAddTypeKeyFromCache(baseType, actualType, info);
-            header.WriteNonNullString(key);
+            // If the sub-type has been given a cache number already, write that cache number.
+            if (cacheNum != null)
+            {
+                header.WriteBitOn();
+                header.WriteCompressedInt((uint)cacheNum);
+            }
+            else
+            {
+                header.WriteBitOff();
+
+                string key = KeyInheritanceHandler.GetOrAddTypeKeyFromCache(converter.ItemType, actualConverter.ItemType, info);
+                header.WriteNonNullString(key);
+
+                // Cache this sub-type from now on.
+                header.State.AddNewKeyCacheNumber(actualConverter);
+            }
         }
     }
 }

@@ -12,19 +12,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace ABCo.ABSave.Serialization.Writing.Reading
+namespace ABCo.ABSave.Serialization.Reading
 {
     public sealed partial class ABSaveDeserializer : IDisposable
     {
         public Stream Source { get; private set; }
-        public CurrentState State { get; private set; }
+        public DeserializeCurrentState State { get; private set; }
 
         readonly BitReader _currentBitReader;
 
         internal ABSaveDeserializer(ABSaveMap map)
         {
             Source = null!;
-            State = new CurrentState(map);
+            State = new DeserializeCurrentState(map);
             _currentBitReader = new BitReader(this);
         }
 
@@ -34,7 +34,11 @@ namespace ABCo.ABSave.Serialization.Writing.Reading
             Reset();
         }
 
-        public void Reset() => State.Reset();
+        public void Reset()
+        {
+            State.Reset();
+            State.CachedKeys.Clear();
+        }
 
         public void Dispose() => State.Map.ReleaseDeserializer(this);
         public object? DeserializeRoot() => GetHeader().ReadItem(State.Map._rootItem);

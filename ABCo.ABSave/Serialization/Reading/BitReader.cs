@@ -1,12 +1,12 @@
 ﻿using ABCo.ABSave.Serialization.Converters;
-using ABCo.ABSave.Serialization.Writing.Reading.Core;
+using ABCo.ABSave.Serialization.Reading.Core;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace ABCo.ABSave.Serialization.Writing.Reading
+namespace ABCo.ABSave.Serialization.Reading
 {
     /// <summary>
     /// Reads data bit-by-bit. Typically used to read from the header for an item, but can be created by a converter to allow more manual bit reading/writing.
@@ -17,7 +17,7 @@ namespace ABCo.ABSave.Serialization.Writing.Reading
         public byte FreeBits;
         int _source;
 
-        public CurrentState State => _deserializer.State;
+        public DeserializeCurrentState State => _deserializer.State;
         public byte CurrentByte => (byte)_source;
 
         public BitReader(ABSaveDeserializer deserializer) => _deserializer = deserializer;
@@ -63,7 +63,11 @@ namespace ABCo.ABSave.Serialization.Writing.Reading
         public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
         public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
 
-        public VersionInfo ReadAndStoreVersionNumber(Converter converter) => ItemDeserializer.HandleVersionNumber(converter, this);
+        public VersionInfo ReadExactNonNullHeader(Converter converter)
+        {
+            ItemDeserializer.DeserializeConverterHeader(converter, this, true, out var info);
+            return info;
+        }
 
         public void MoveToNewByte()
         {

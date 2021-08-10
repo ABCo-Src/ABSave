@@ -1,5 +1,5 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Serialization.Writing.Reading;
+using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Serialization.Writing;
 using System;
@@ -56,10 +56,10 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             Serializer.Reset();
             Deserializer.Reset();
 
-            ResetPosition();
+            ClearStream();
         }
 
-        public void ResetPosition()
+        public void ClearStream()
         {
             GoToStart();
             Stream.SetLength(0);
@@ -89,7 +89,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public byte[] GetByteArr(object[] itms, params short[] data)
         {
-            List<byte> bytes = new List<byte>(64);
+            List<byte> bytes = new(64);
             ABSaveSerializer serializer = null;
             int currentItmsPos = 0;
 

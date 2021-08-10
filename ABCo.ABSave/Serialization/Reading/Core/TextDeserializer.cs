@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace ABCo.ABSave.Serialization.Writing.Reading.Core
+namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal unsafe static class TextDeserializer
     {

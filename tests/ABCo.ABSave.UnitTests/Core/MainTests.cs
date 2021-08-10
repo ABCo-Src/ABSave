@@ -27,7 +27,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.AreEqual(55, Deserializer.ReadItem(CurrentMapItem));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(1, CurrentMapItem);
@@ -49,7 +49,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.AreEqual(55, Deserializer.ReadItem(CurrentMapItem));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(1, CurrentMapItem);
@@ -71,7 +71,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.AreEqual(55, Deserializer.ReadItem(CurrentMapItem));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new BaseIndex(), CurrentMapItem);
@@ -93,7 +93,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.AreEqual(55, Deserializer.ReadItem(CurrentMapItem));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new BaseIndex(), CurrentMapItem);
@@ -115,7 +115,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(ClassWithMinVersion));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new ClassWithMinVersion(), CurrentMapItem);
@@ -137,7 +137,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(ClassWithMinVersion));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new ClassWithMinVersion(), CurrentMapItem);
@@ -161,7 +161,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(ClassWithMinVersion));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new ClassWithMinVersion(), CurrentMapItem);
@@ -188,7 +188,7 @@ namespace ABCo.ABSave.UnitTests.Core
                     AssertAndGoToStart(0xE0, OtherTypeConverter.OUTPUT_BYTE);
 
                     Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(ClassWithMinVersion));
-                    ResetPosition();
+                    ClearStream();
                 }
             }
         }
@@ -207,7 +207,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(ClassWithMinVersion));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new ClassWithMinVersion(), CurrentMapItem);
@@ -234,7 +234,7 @@ namespace ABCo.ABSave.UnitTests.Core
                     AssertAndGoToStart(0xC0, OtherTypeConverter.OUTPUT_BYTE);
 
                     Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(ClassWithMinVersion));
-                    ResetPosition();
+                    ClearStream();
                 }
             }
         }
@@ -263,7 +263,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(SubWithHeader));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new SubWithHeader(), CurrentMapItem);
@@ -284,7 +284,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(SubWithoutHeader));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new SubWithoutHeader(), CurrentMapItem);
@@ -300,17 +300,17 @@ namespace ABCo.ABSave.UnitTests.Core
             OtherTypeConverter.WritesToHeader = true;
             ResetStateWithMapFor<KeyBase>();
             {
-                // With version
+                // With version + no caching
                 Serializer.WriteItem(new KeySubSecond(), CurrentMapItem);
                 AssertAndGoToStart(GetByteArr(new object[] { "Second" }, 128, 6, (short)GenType.String, 0, 128, OtherTypeConverter.OUTPUT_BYTE));
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(KeySubSecond));
 
-                ResetPosition();
+                ClearStream();
 
-                // Without version
+                // Without version + caching
                 Serializer.WriteItem(new KeySubSecond(), CurrentMapItem);
-                AssertAndGoToStart(GetByteArr(new object[] { "Second" }, 134, (short)GenType.String, 128, OtherTypeConverter.OUTPUT_BYTE));
+                AssertAndGoToStart(GetByteArr(0xA0, 128, OtherTypeConverter.OUTPUT_BYTE));
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(KeySubSecond));
             }
@@ -322,18 +322,52 @@ namespace ABCo.ABSave.UnitTests.Core
             OtherTypeConverter.WritesToHeader = false;
             ResetStateWithMapFor<KeyBase>();
             {
-                // With version
+                // With version + no caching
                 Serializer.WriteItem(new KeySubSecond(), CurrentMapItem);
                 AssertAndGoToStart(GetByteArr(new object[] { "Second" }, 128, 6, (short)GenType.String, 0, OtherTypeConverter.OUTPUT_BYTE));
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(KeySubSecond));
 
-                ResetPosition();
+                ClearStream();
 
-                // Without version
+                // Without version + caching
                 Serializer.WriteItem(new KeySubSecond(), CurrentMapItem);
-                AssertAndGoToStart(GetByteArr(new object[] { "Second" }, 134, (short)GenType.String, OtherTypeConverter.OUTPUT_BYTE));
+                AssertAndGoToStart(GetByteArr(0xA0, OtherTypeConverter.OUTPUT_BYTE));
 
+                Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(KeySubSecond));
+            }
+        }
+
+        [TestMethod]
+        public void KeyInheritance_WithoutHeader_MultipleCaches()
+        {
+            OtherTypeConverter.WritesToHeader = false;
+            ResetStateWithMapFor<KeyBase>();
+            {
+                var keyBase = CurrentMap.GetRuntimeMapItem(typeof(IndexKeyBase));
+
+                // Cache some items
+                Serializer.WriteItem(new KeySubSecond(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { "Second" }, 128, 6, (short)GenType.String, 0, OtherTypeConverter.OUTPUT_BYTE));
+                Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(KeySubSecond));
+
+                ClearStream();
+
+                Serializer.WriteItem(new IndexKeySubKey(), keyBase);
+                AssertAndGoToStart(GetByteArr(new object[] { "Key" }, 0x80, 3, (short)GenType.String, 0, OtherTypeConverter.OUTPUT_BYTE));
+                Assert.IsInstanceOfType(Deserializer.ReadItem(keyBase), typeof(IndexKeySubKey));
+
+                ClearStream();
+
+                // See if it uses the cached version of those items
+                Serializer.WriteItem(new IndexKeySubKey(), keyBase);
+                AssertAndGoToStart(GetByteArr(0x91, OtherTypeConverter.OUTPUT_BYTE));
+                Assert.IsInstanceOfType(Deserializer.ReadItem(keyBase), typeof(IndexKeySubKey));
+
+                ClearStream();
+
+                Serializer.WriteItem(new KeySubSecond(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(0xA0, OtherTypeConverter.OUTPUT_BYTE));
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(KeySubSecond));
             }
         }
@@ -350,7 +384,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(IndexKeySubIndex));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new IndexKeySubIndex(), CurrentMapItem);
@@ -372,7 +406,7 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(IndexKeySubIndex));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new IndexKeySubIndex(), CurrentMapItem);
@@ -394,11 +428,11 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(IndexKeySubKey));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new IndexKeySubKey(), CurrentMapItem);
-                AssertAndGoToStart(GetByteArr(new object[] { "Key" }, 131, (short)GenType.String, 128, OtherTypeConverter.OUTPUT_BYTE));
+                AssertAndGoToStart(GetByteArr(0x90, 128, OtherTypeConverter.OUTPUT_BYTE));
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(IndexKeySubKey));
             }
@@ -416,11 +450,11 @@ namespace ABCo.ABSave.UnitTests.Core
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(IndexKeySubKey));
 
-                ResetPosition();
+                ClearStream();
 
                 // Without version
                 Serializer.WriteItem(new IndexKeySubKey(), CurrentMapItem);
-                AssertAndGoToStart(GetByteArr(new object[] { "Key" }, 131, (short)GenType.String, OtherTypeConverter.OUTPUT_BYTE));
+                AssertAndGoToStart(GetByteArr(0x90, OtherTypeConverter.OUTPUT_BYTE));
 
                 Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(IndexKeySubKey));
             }
