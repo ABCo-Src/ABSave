@@ -4,7 +4,7 @@ ABSave is a blazing-fast binary serializer, with an output size smaller than any
 
 ABSave outputs to an extremely compact binary format known as "ABSave", which is built to be both quick to read, as well as extremely closely packed and small. It scales up to very large data sets very well.
 
-In addition, unlike other binary serializers of the same kind, ABSave includes a carefully built "versioning" system, allowing ever evolving and changing classes to still be stored and read even when the data structures enivitably change, and it's achieved with almost no effect on the output size.
+In addition, unlike other binary serializers of the same kind, ABSave includes a carefully built "versioning" system, allowing ever evolving and changing classes to still be stored and read even when the data structures inevitably change, and it's achieved with almost no effect on the output size.
 
 Try it out! You might just like it!
 
