@@ -14,7 +14,7 @@
     <hr>
 
     <p>ABSave is packed internally with so many features that allow it to achieve a very compact output and very fast serialization times, and all of that is available for just a few lines of code!</p>
-    <p>This section is designed to get you going within <i>minutes</i>, and the next part of this page, "versioning", will take a look at a very fundamental issue that almost every binary serializer suffers from, as well as the feature you can use in ABSave that's able to fix it!</p>
+    <p>This section is designed to get you going within <i>minutes</i>, and the next part of this page, "versioning", will take a look at how to use ABSave effectively in ever-changing and evolving use cases.</p>
     
     <h3 id="class-marking">Preparing a class</h3>
     <hr>
@@ -92,9 +92,9 @@ MyClass obj = ABSaveConvert.Deserialize&lt;MyClass&gt;(stream, map);
 
     <h2 id="versioning">Versioning</h2>
     <hr>
-    <p>Just like that, you know the basics of how to use ABSave. However, just before you can go using it in larger applications there's just one thing you should be aware of.</p>
+    <p>Just like that, you know the basics of how to use ABSave. However, just before you can go using it in larger applications there's just one thing you should be aware of. Something a lot of binary serializers suffer from, and something most don't have a solution to, while ABSave does.</p>
     <p>Almost <b>every</b> binary serializer in existence, including ABSave, has one major issue: If you ever change a class, it will fail to read anything that was serialized before that change. 
-    <p>You can find out more about why this happens in the FAQ section of these docs, but this is how almost all binary serializers go.</p>
+    <p>You can find out more about why this happens <a href="#" data-navigates="alongside" data-navigateTo="Mapping>More Versioning.versioning-why">here</a>, but this is how almost all binary serializers go.</p>
     <p>If you do any of these things, anything that had been serialized prior to the change will fail to read:</p>
 
     <ul>
@@ -135,7 +135,8 @@ class MyClass
     </code></pre>
 
     <p>And we need to <i>add</i> a new property to it. But, we've been serializing this class for some time and we don't want to break any existing serialized output.</p>
-    <p>All we need to do is when we add the new property, we give it the <code>Save</code> attribute as before, <b>but</b> with a <code>FromVer = 1</code> on it, like so:</p>
+    <p>All we need to do are two very simple things. First, we need to enable versioning in the settings. To do that, simply add <code>Versioned</code> to the end of your chosen preset, e.g. <code>ABSaveSettings.ForSpeedVersioned</code>. Don't worry, turning it on won't break any previous output, this just means it will use just a few extra bits when we write from now on for version info.</p>
+    <p>And once we've done that, all we need to do now is when we add the new property, we give it the <code>Save</code> attribute as before, <b>but</b> with a <code>FromVer = 1</code> on it, like so:</p>
 
     <pre><code class="language-csharp">
 [SaveMembers]
