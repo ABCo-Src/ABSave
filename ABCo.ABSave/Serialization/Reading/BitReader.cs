@@ -53,7 +53,7 @@ namespace ABCo.ABSave.Serialization.Reading
             }
         }
 
-        public void ReadSettingsHeader() => HeaderDeserializer.ReadHeader(this);
+        public void ReadSettingsHeaderIfNeeded() => HeaderDeserializer.ReadHeader(this);
 
         public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed(false, this);
         public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed(true, this);
@@ -62,6 +62,7 @@ namespace ABCo.ABSave.Serialization.Reading
         public string ReadNonNullString() => TextDeserializer.ReadNonNullString(this);
         public T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest) => TextDeserializer.ReadUTF8<T>(createDest, castDest, this);
 
+        public object? ReadRoot() => ItemDeserializer.DeserializeItem(State.Map._rootItem, this);
         public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
         public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
 

@@ -48,7 +48,12 @@ namespace ABCo.ABSave.Serialization.Writing
         public void Reset() => State.Reset();
         public void Dispose() => State.Map.ReleaseSerializer(this);
 
-        public void SerializeRoot(object? obj) => WriteItem(obj, State.Map._rootItem);
+        public void SerializeRoot(object? obj)
+        {
+            using var writer = GetHeader();
+            writer.WriteSettingsHeaderIfNeeded();
+            writer.WriteRoot(obj);
+        }
 
         public void WriteItem(object? obj, MapItemInfo item)
         {

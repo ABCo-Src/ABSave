@@ -43,7 +43,7 @@ namespace ABCo.ABSave.Serialization.Reading
         }
 
         public void Dispose() => State.Map.ReleaseDeserializer(this);
-        public object? DeserializeRoot() => GetHeader().ReadItem(State.Map._rootItem);
+        public object? DeserializeRoot() => GetHeader().ReadRoot();
 
         public object? ReadItem(MapItemInfo info) => GetHeader().ReadItem(info);
         public object? ReadExactNonNullItem(MapItemInfo info) => GetHeader().ReadExactNonNullItem(info);

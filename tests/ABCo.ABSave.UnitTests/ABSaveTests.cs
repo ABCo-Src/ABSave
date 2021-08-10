@@ -9,21 +9,23 @@ namespace ABCo.ABSave.UnitTests
     public class ABSaveTests : TestBase
     {
         [TestMethod]
-        public void Serialize_ByteArray()
+        public void ByteArray_NoVersioning()
         {
             var map = ABSaveMap.Get<string>(ABSaveSettings.ForSize);
 
             byte[] arr = ABSaveConvert.Serialize("A", map);
-            Assert.AreNotEqual(0, arr.Length);
+            CollectionAssert.AreEqual(new byte[] { 0x61, 65 }, arr);
+            Assert.AreEqual("A", ABSaveConvert.Deserialize<string>(arr, map));
         }
 
         [TestMethod]
-        public void Deserialize_ByteArray()
+        public void ByteArray_Versioning()
         {
             var map = ABSaveMap.Get<string>(ABSaveSettings.ForSize);
-            byte[] arr = ABSaveConvert.Serialize("A", map);
 
-            Assert.AreEqual("A", ABSaveConvert.Deserialize<string>(arr, map));
+            byte[] arr = ABSaveConvert.Serialize("B", map, true);
+            CollectionAssert.AreEqual(new byte[] { 0xE0, 1, 66 }, arr);
+            Assert.AreEqual("B", ABSaveConvert.Deserialize<string>(arr, map));
         }
     }
 }
