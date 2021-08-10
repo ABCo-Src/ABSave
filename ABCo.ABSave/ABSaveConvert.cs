@@ -13,35 +13,35 @@ namespace ABCo.ABSave
     /// </summary>
     public static class ABSaveConvert
     {
-        public static byte[] Serialize<T>(T obj, ABSaveMap map, Dictionary<Type, uint>? targetVersions = null) => SerializeNonGeneric(obj, map, targetVersions);
-        public static byte[] SerializeNonGeneric(object? obj, ABSaveMap map, Dictionary<Type, uint>? targetVersions = null)
+        public static byte[] Serialize<T>(T obj, ABSaveMap map, bool writeVersioning = false, Dictionary<Type, uint>? targetVersions = null) => SerializeNonGeneric(obj, map, writeVersioning, targetVersions);
+        public static byte[] SerializeNonGeneric(object? obj, ABSaveMap map, bool writeVersioning = false, Dictionary<Type, uint>? targetVersions = null)
         {
             var stream = new MemoryStream(); // Use pooling for "MemoryStream"s?
-            SerializeNonGeneric(obj, map, stream, targetVersions);
+            SerializeNonGeneric(obj, map, stream, writeVersioning, targetVersions);
             return stream.ToArray();
         }
 
-        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream, Dictionary<Type, uint>? targetVersions = null) =>
-            SerializeNonGeneric(obj, map, stream, targetVersions);
-        public static void SerializeNonGeneric(object? obj, ABSaveMap map, Stream stream, Dictionary<Type, uint>? targetVersions = null)
+        public static void Serialize<T>(T obj, ABSaveMap map, Stream stream, bool writeVersioning = false, Dictionary<Type, uint>? targetVersions = null) =>
+            SerializeNonGeneric(obj, map, stream, writeVersioning, targetVersions);
+        public static void SerializeNonGeneric(object? obj, ABSaveMap map, Stream stream, bool writeVersioning = false, Dictionary<Type, uint>? targetVersions = null)
         {
-            using ABSaveSerializer serializer = map.GetSerializer(stream, targetVersions);
+            using ABSaveSerializer serializer = map.GetSerializer(stream, writeVersioning, targetVersions);
             serializer.SerializeRoot(obj);
         }
 
-        public static T Deserialize<T>(byte[] arr, ABSaveMap map) =>
+        public static T Deserialize<T>(byte[] arr, ABSaveMap map, bool? writeVersioning = null) =>
             (T)DeserializeNonGeneric(arr, map)!;
 
-        public static object? DeserializeNonGeneric(byte[] arr, ABSaveMap map)
+        public static object? DeserializeNonGeneric(byte[] arr, ABSaveMap map, bool? writeVersioning = null)
         {
             var stream = new MemoryStream(arr);
             return DeserializeNonGeneric(stream, map);
         }
 
-        public static T Deserialize<T>(Stream stream, ABSaveMap map) where T : class? =>
+        public static T Deserialize<T>(Stream stream, ABSaveMap map, bool? writeVersioning = null) where T : class? =>
             (T)DeserializeNonGeneric(stream, map)!;
 
-        public static object? DeserializeNonGeneric(Stream stream, ABSaveMap map)
+        public static object? DeserializeNonGeneric(Stream stream, ABSaveMap map, bool? writeVersioning = null)
         {
             using ABSaveDeserializer deserializer = map.GetDeserializer(stream);
             return deserializer.DeserializeRoot();

@@ -153,7 +153,7 @@ namespace ABCo.ABSave.UnitTests.Core
             OtherTypeConverter.WritesToHeader = true;
             ResetStateWithMapFor<ClassWithMinVersion>();
             {
-                Serializer = CurrentMap.GetSerializer(Stream, new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
+                Serializer = CurrentMap.GetSerializer(Stream, true, new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
 
                 // With version
                 Serializer.WriteItem(new ClassWithMinVersion(), CurrentMapItem);
@@ -174,12 +174,13 @@ namespace ABCo.ABSave.UnitTests.Core
         [TestMethod]
         public void MatchingRef_WithHeader_DoNotWriteVersion()
         {
-            Initialize(ABSaveSettings.ForSpeed.Customize(b => b.SetIncludeVersioning(false)));
+            Initialize(ABSaveSettings.ForSpeed);
 
             OtherTypeConverter.WritesToHeader = true;
             ResetStateWithMapFor<ClassWithMinVersion>();
             {
-                Serializer = CurrentMap.GetSerializer(Stream);
+                Serializer = CurrentMap.GetSerializer(Stream, false);
+                Deserializer = CurrentMap.GetDeserializer(Stream, false);
 
                 // Once with cache, the other without cache
                 for (int i = 0; i < 2; i++)
@@ -199,7 +200,7 @@ namespace ABCo.ABSave.UnitTests.Core
             OtherTypeConverter.WritesToHeader = false;
             ResetStateWithMapFor<ClassWithMinVersion>();
             {
-                Serializer = CurrentMap.GetSerializer(Stream, new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
+                Serializer = CurrentMap.GetSerializer(Stream, true, new Dictionary<System.Type, uint>() { { typeof(ClassWithMinVersion), 0 } });
 
                 // With version
                 Serializer.WriteItem(new ClassWithMinVersion(), CurrentMapItem);
@@ -225,7 +226,8 @@ namespace ABCo.ABSave.UnitTests.Core
             OtherTypeConverter.WritesToHeader = false;
             ResetStateWithMapFor<ClassWithMinVersion>();
             {
-                Serializer = CurrentMap.GetSerializer(Stream);
+                Serializer = CurrentMap.GetSerializer(Stream, false);
+                Deserializer = CurrentMap.GetDeserializer(Stream, false);
 
                 // Once with cache, the other without cache
                 for (int i = 0; i < 2; i++)

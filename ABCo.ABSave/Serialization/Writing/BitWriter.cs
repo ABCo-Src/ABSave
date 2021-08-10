@@ -61,6 +61,8 @@ namespace ABCo.ABSave.Serialization.Writing
             }
         }
 
+        public void WriteSettingsHeader() => HeaderSerializer.WriteHeader(this);
+
         public void WriteItem(object? obj, MapItemInfo info) => ItemSerializer.SerializeItem(obj, info, this);
         public void WriteExactNonNullItem(object obj, MapItemInfo info) => ItemSerializer.SerializeExactNonNullItem(obj, info, this);
 

@@ -28,10 +28,12 @@ namespace ABCo.ABSave.Serialization.Reading
             _currentBitReader = new BitReader(this);
         }
 
-        public void Initialize(Stream source)
+        public void Initialize(Stream source, bool? writeVersioning)
         {
             Source = source;
             Reset();
+
+            if (writeVersioning != null) State.WriteVersioning = writeVersioning.Value;
         }
 
         public void Reset()

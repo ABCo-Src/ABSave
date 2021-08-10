@@ -33,13 +33,14 @@ namespace ABCo.ABSave.Serialization.Writing
             _currentBitWriter = new BitWriter(this);
         }
 
-        public void Initialize(Stream output, Dictionary<Type, uint>? targetVersions)
+        public void Initialize(Stream output, bool writeVersioning, Dictionary<Type, uint>? targetVersions)
         {
             if (!output.CanWrite)
                 throw new Exception("Cannot use unwriteable stream.");
 
             Output = output;
             State.TargetVersions = targetVersions;
+            State.WriteVersioning = writeVersioning;
 
             Reset();
         }

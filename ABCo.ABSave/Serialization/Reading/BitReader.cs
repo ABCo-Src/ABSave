@@ -53,6 +53,8 @@ namespace ABCo.ABSave.Serialization.Reading
             }
         }
 
+        public void ReadSettingsHeader() => HeaderDeserializer.ReadHeader(this);
+
         public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed(false, this);
         public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed(true, this);
 
