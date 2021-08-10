@@ -47,7 +47,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 
         internal static object? DeserializeConverterHeader(Converter converter, BitReader header, bool skipHeader, out VersionInfo info)
         {
-            var details = header.State.GetCachedDetails(converter);
+            var details = header.State.GetCachedInfo(converter);
 
             // Handle the inheritance bit.
             bool sameType = true;
@@ -55,16 +55,16 @@ namespace ABCo.ABSave.Serialization.Reading.Core
                 sameType = ReadHeader(converter, header);
 
             // Read or create the version info if needed
-            HandleVersionNumber(converter, ref details.CurrentInfo, header);
+            HandleVersionNumber(converter, ref details, header);
 
             // Handle inheritance.
-            if (details.CurrentInfo._inheritanceInfo != null && !sameType)
+            if (details._inheritanceInfo != null && !sameType)
             {
                 info = null!;
-                return DeserializeActualType(details.CurrentInfo._inheritanceInfo, converter.ItemType, header);
+                return DeserializeActualType(details._inheritanceInfo, converter.ItemType, header);
             }
 
-            info = details.CurrentInfo;
+            info = details;
             return null;
         }
 
@@ -128,7 +128,11 @@ namespace ABCo.ABSave.Serialization.Reading.Core
                 string key = header.ReadNonNullString();
 
                 // See if there's an item with that key.
-                return info.KeyDeserializeCache!.GetValueOrDefault(key);
+                Type? ret = info.KeyDeserializeCache!.GetValueOrDefault(key);
+
+                // Add the item to the cache, if there is one.
+                if (ret != null) header.State.CachedKeys.Add(ret);
+                return ret;
             }
         }
     }

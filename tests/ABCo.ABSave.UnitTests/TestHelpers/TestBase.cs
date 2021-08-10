@@ -56,10 +56,10 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             Serializer.Reset();
             Deserializer.Reset();
 
-            ResetPosition();
+            ClearStream();
         }
 
-        public void ResetPosition()
+        public void ClearStream()
         {
             GoToStart();
             Stream.SetLength(0);

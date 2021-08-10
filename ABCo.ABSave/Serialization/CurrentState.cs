@@ -37,12 +37,10 @@ namespace ABCo.ABSave.Serialization
             _currentSubTypeCacheCount = 0;
         }
 
-        internal CachedConverterDetails GetCachedDetails(Converter item)
+        internal VersionInfo GetCachedInfo(Converter item)
         {
-            if (item._instanceId >= _cachedConverterDetails.Length)
-                Array.Resize(ref _cachedConverterDetails, (int)Map._highestConverterInstanceId);
-
-            return _cachedConverterDetails[item._instanceId];
+            EnsureConverterInCachedDetails(item);
+            return _cachedConverterDetails[item._instanceId].CurrentInfo;
         }
 
         internal VersionInfo CreateNewCache(Converter item, uint version)
@@ -52,7 +50,19 @@ namespace ABCo.ABSave.Serialization
             return newInfo;
         }
 
-        internal void AddNewKeyCacheNumber(Converter item) => 
+        internal int? GetCachedKeyInfo(Converter item)
+        {
+            EnsureConverterInCachedDetails(item);
+            return _cachedConverterDetails[item._instanceId].KeyInheritanceCachedValue;
+        }
+
+        private void EnsureConverterInCachedDetails(Converter item)
+        {
+            if (item._instanceId >= _cachedConverterDetails.Length)
+                Array.Resize(ref _cachedConverterDetails, (int)Map._highestConverterInstanceId);
+        }
+
+        internal void AddNewKeyCacheNumber(Converter item) =>
             _cachedConverterDetails[item._instanceId].KeyInheritanceCachedValue = _currentSubTypeCacheCount++;
 
         internal byte[] GetStringBuffer(int length)

@@ -15,6 +15,6 @@ namespace ABCo.ABSave.Serialization
         /// The current version info for this converter. The first time the converter is encountered this is obtained, the version number is written, and the value is then cached in here.
         /// </summary>
         public VersionInfo CurrentInfo;
-        public int KeyInheritanceCachedValue;
+        public int? KeyInheritanceCachedValue;
     }
 }
