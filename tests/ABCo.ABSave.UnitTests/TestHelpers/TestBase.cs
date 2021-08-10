@@ -20,7 +20,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public ABSaveSerializer Serializer;
         public ABSaveDeserializer Deserializer;
 
-        public void Initialize(Dictionary<Type, uint> targetVersions = null) => Initialize(ABSaveSettings.ForSpeedVersioned, targetVersions);
+        public void Initialize(Dictionary<Type, uint> targetVersions = null) => Initialize(ABSaveSettings.ForSpeed, targetVersions);
         public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null, bool lazyWriteCompressed = false)
         {
             var settings = template.Customize(b => b
@@ -33,8 +33,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             CurrentMap = ABSaveMap.Get<EmptyClass>(settings);
 
             Stream = new MemoryStream();
-            Serializer = CurrentMap.GetSerializer(Stream, targetVersions);
-            Deserializer = CurrentMap.GetDeserializer(Stream);
+            Serializer = CurrentMap.GetSerializer(Stream, true, targetVersions);
+            Deserializer = CurrentMap.GetDeserializer(Stream, true);
         }
 
         public void GoToStart() => Stream.Position = 0;
@@ -145,7 +145,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             {
                 if (serializer == null)
                 {
-                    serializer = CurrentMap.GetSerializer(new MemoryStream());
+                    serializer = CurrentMap.GetSerializer(new MemoryStream(), true);
                 }
                 else
                 {

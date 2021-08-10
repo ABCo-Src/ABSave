@@ -17,6 +17,7 @@ namespace ABCo.ABSave.Serialization
         public ABSaveMap Map { get; }
         public ABSaveSettings Settings { get; }
         public bool ShouldReverseEndian { get; }
+        public bool WriteVersioning { get; internal set; }
 
         CachedConverterDetails[] _cachedConverterDetails = null!;
         byte[]? _stringBuffer;

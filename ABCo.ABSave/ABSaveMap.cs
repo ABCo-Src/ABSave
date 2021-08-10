@@ -89,10 +89,10 @@ namespace ABCo.ABSave
 
         #region Serializer Pooling
 
-        public ABSaveSerializer GetSerializer(Stream destStream, Dictionary<Type, uint>? targetVersions = null)
+        public ABSaveSerializer GetSerializer(Stream destStream, bool writeVersioning, Dictionary<Type, uint>? targetVersions = null)
         {
             ABSaveSerializer serializer = _serializerPool.TryRent() ?? new ABSaveSerializer(this);
-            serializer.Initialize(destStream, targetVersions);
+            serializer.Initialize(destStream, writeVersioning, targetVersions);
             return serializer;
         }
 
@@ -102,10 +102,10 @@ namespace ABCo.ABSave
 
         #region Deserializer Pooling
 
-        public ABSaveDeserializer GetDeserializer(Stream destStream)
+        public ABSaveDeserializer GetDeserializer(Stream destStream, bool? writeVersioning = null)
         {
             ABSaveDeserializer deserializer = _deserializerPool.TryRent() ?? new ABSaveDeserializer(this);
-            deserializer.Initialize(destStream);
+            deserializer.Initialize(destStream, writeVersioning);
             return deserializer;
         }
 

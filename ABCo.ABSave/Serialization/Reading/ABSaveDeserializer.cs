@@ -28,12 +28,6 @@ namespace ABCo.ABSave.Serialization.Reading
             _currentBitReader = new BitReader(this);
         }
 
-        public void Initialize(Stream source)
-        {
-            Source = source;
-            Reset();
-        }
-
         public void Reset()
         {
             State.Reset();
@@ -41,7 +35,7 @@ namespace ABCo.ABSave.Serialization.Reading
         }
 
         public void Dispose() => State.Map.ReleaseDeserializer(this);
-        public object? DeserializeRoot() => GetHeader().ReadItem(State.Map._rootItem);
+        public object? DeserializeRoot() => GetHeader().ReadRoot();
 
         public object? ReadItem(MapItemInfo info) => GetHeader().ReadItem(info);
         public object? ReadExactNonNullItem(MapItemInfo info) => GetHeader().ReadExactNonNullItem(info);
@@ -149,6 +143,25 @@ namespace ABCo.ABSave.Serialization.Reading
         }
 
         #endregion
+
+        public void Initialize(Stream source, bool? writeVersioning)
+        {
+            Source = source;
+            Reset();
+
+            if (writeVersioning == null)
+            {
+                if (!State.Settings.IncludeVersioningHeader)
+                    throw new Exception("Because 'IncludeVersioningHeader' is disabled in the settings, ABSave cannot automatically discover whether to include versioning numbers are present while deserializing. You must provide 'writeVersioning' to deserialization too, so it can know whether it's present or not.");
+            }
+            else
+            {
+                if (State.Settings.IncludeVersioningHeader)
+                    throw new Exception("When DEserializing, the field 'writeVersioning' should be left blank unless 'IncludeVersioningHeader' is disabled in the settings, because when enabled the versioning header is how ABSave determines whether version numbers are present or not when deserializing.");
+
+                State.WriteVersioning = writeVersioning.Value;
+            }
+        }
 
         public BitReader GetHeader()
         {

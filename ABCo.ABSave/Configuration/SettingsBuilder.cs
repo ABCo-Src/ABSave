@@ -9,7 +9,7 @@ namespace ABCo.ABSave.Configuration
         bool? _lazyWriteCompressed;
         bool? _useUTF8;
         bool? _useLittleEndian;
-        bool? _includeVersioning;
+        bool? _includeVersioningHeader;
 
         List<ConverterInfo>? _converters;
 
@@ -31,9 +31,9 @@ namespace ABCo.ABSave.Configuration
             return this;
         }
 
-        internal SettingsBuilder SetIncludeVersioning(bool includeVersioning)
+        internal SettingsBuilder SetIncludeVersioningHeader(bool includeVersioningHeader)
         {
-            _includeVersioning = includeVersioning;
+            _includeVersioningHeader = includeVersioningHeader;
             return this;
         }
 
@@ -43,14 +43,14 @@ namespace ABCo.ABSave.Configuration
             bool lazyWriteCompressed = _lazyWriteCompressed ?? template.LazyCompressedWriting;
             bool useUTF8 = _useUTF8 ?? template.UseUTF8;
             bool useLittleEndian = _useLittleEndian ?? template.UseLittleEndian;
-            bool includeVersioning = _includeVersioning ?? template.IncludeVersioning;
+            bool includeVersioningHeader = _includeVersioningHeader ?? template.IncludeVersioningHeader;
 
             // Process converters
             EnsureConvertersListInitialized();
             SettingsConverterProcessor.Split(_converters!, out IReadOnlyDictionary<Type, ConverterInfo>? exactConverters, out IReadOnlyList<ConverterInfo>? nonExactConverter);
 
             // Create the new settings.
-            return new ABSaveSettings(lazyWriteCompressed, useUTF8, useLittleEndian, includeVersioning,
+            return new ABSaveSettings(lazyWriteCompressed, useUTF8, useLittleEndian, includeVersioningHeader,
                 _converters!.Count, exactConverters, nonExactConverter);
         }
 
