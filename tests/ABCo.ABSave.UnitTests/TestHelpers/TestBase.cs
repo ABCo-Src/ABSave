@@ -25,6 +25,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         {
             var settings = template.Customize(b => b
                 .SetLazyWriteCompressed(lazyWriteCompressed)
+                .SetIncludeVersioningHeader(false)
                 .AddConverter<BaseTypeConverter>()
                 .AddConverter<SubTypeConverter>()
                 .AddConverter<OtherTypeConverter>()
