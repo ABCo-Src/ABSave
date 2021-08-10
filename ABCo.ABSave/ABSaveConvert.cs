@@ -32,20 +32,20 @@ namespace ABCo.ABSave
         }
 
         public static T Deserialize<T>(byte[] arr, ABSaveMap map, bool? writeVersioning = null) =>
-            (T)DeserializeNonGeneric(arr, map)!;
+            (T)DeserializeNonGeneric(arr, map, writeVersioning)!;
 
         public static object? DeserializeNonGeneric(byte[] arr, ABSaveMap map, bool? writeVersioning = null)
         {
             var stream = new MemoryStream(arr);
-            return DeserializeNonGeneric(stream, map);
+            return DeserializeNonGeneric(stream, map, writeVersioning);
         }
 
         public static T Deserialize<T>(Stream stream, ABSaveMap map, bool? writeVersioning = null) where T : class? =>
-            (T)DeserializeNonGeneric(stream, map)!;
+            (T)DeserializeNonGeneric(stream, map, writeVersioning)!;
 
         public static object? DeserializeNonGeneric(Stream stream, ABSaveMap map, bool? writeVersioning = null)
         {
-            using ABSaveDeserializer deserializer = map.GetDeserializer(stream);
+            using ABSaveDeserializer deserializer = map.GetDeserializer(stream, writeVersioning);
             BitReader header = deserializer.GetHeader();
             header.ReadSettingsHeaderIfNeeded();
             return header.ReadRoot();

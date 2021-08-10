@@ -6,9 +6,10 @@ namespace ABCo.ABSave.Serialization.Writing.Core
 {
     internal static class HeaderSerializer
     {
-        public static void WriteHeader(BitWriter writer)
+        public static void WriteHeader(BitWriter header)
         {
-            writer.WriteBitWith(writer.State.WriteVersioning);
+            if (!header.State.Settings.IncludeVersioningHeader) return;
+            header.WriteBitWith(header.State.WriteVersioning);
         }
     }
 }
