@@ -18,16 +18,35 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 
         public static ulong ReadCompressedLazyFast(bool canBeLong, BitReader source)
         {
-            bool isSingleByte = (source.CurrentByte & 1) > 0;
+            // If the header is big enough, the value will have been fit into the rest of the header.
+            if (source.FreeBits > 3)
+            {
+                if (source.ReadBit())
+                    return source.ReadInteger(source.FreeBits);
+                else
+                    return ReadFull(source.Finish());
+            }
 
-            var deserializer = source.Finish();
-
-            if (isSingleByte)
-                return deserializer.ReadByte();
-            else if (canBeLong)
-                return (ulong)deserializer.ReadInt64();
+            // If not, it may be in its own byte.
             else
-                return (ulong)deserializer.ReadInt32();
+            {
+                bool isSingleByte = (source.CurrentByte & 1) > 0;
+
+                var deserializer = source.Finish();
+
+                if (isSingleByte)
+                    return deserializer.ReadByte();
+                else
+                    return ReadFull(deserializer);
+            }
+
+            ulong ReadFull(ABSaveDeserializer deserializer)
+            {
+                if (canBeLong)
+                    return (ulong)deserializer.ReadInt64();
+                else
+                    return (ulong)deserializer.ReadInt32();
+            }
         }
 
         public static ulong ReadCompressedSlow(BitReader source)
