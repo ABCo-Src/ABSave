@@ -37,17 +37,41 @@ namespace ABCo.ABSave.Serialization.Writing.Core
 
         static void WriteCompressedLazyFast<T>(T data, BitWriter target) where T : INumberContainer
         {
-            // This should be blazing fast, we're literally just going to write whether the number takes up more than a byte, and that's it.
-            if (data.LessThan(255))
+            // This should be as blazing fast as possible, the hope is a lot of the work here will disappear with code-gen.
+            // If the header is big enough, we'll try to fit the value into the rest of the header
+            // and if it doesn't fit, we'll just straight write it.
+            if (target.FreeBits > 3)
             {
-                target.FillRemainingWith(1);
-                target.Finish().WriteByte(data.ToByte());
+                if (data.LessThan(1 << target.FreeBits >> 1))
+                {
+                    target.WriteBitOn();
+                    target.FillRemainingWith(data.ToByte());
+                }
+                else
+                {
+                    target.WriteBitOff();
+                    WriteFull(target.Finish());
+                }
             }
+
+            // If the header is so small it wouldn't be practical to try and fit in, we'll instead try to
+            // fit it into a single byte, and write the full thing if we can't.
             else
             {
-                target.FillRemainingWith(0);
-                var serializer = target.Finish();
+                if (data.LessThan(255))
+                {
+                    target.FillRemainingWith(1);
+                    target.Finish().WriteByte(data.ToByte());
+                }
+                else
+                {
+                    target.FillRemainingWith(0);
+                    WriteFull(target.Finish());
+                }
+            }
 
+            void WriteFull(ABSaveSerializer serializer)
+            {
                 // This check is optimized away by the JIT.
                 if (typeof(T) == typeof(Int32Container))
                     serializer.WriteInt32(data.ToInt32());
