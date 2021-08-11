@@ -30,11 +30,11 @@
             <h1 class="noAnchor">All Features</h1>
             <p>Find out about all the different attributes and what they allow you to do!</p>
         </div>
-        <div data-navigates="alongside" data-navigateTo="Via Settings" class="navBox navBoxLight navBox-half">
+        <div data-navigates="child" data-navigateTo="More Versioning" class="navBox navBoxLight navBox-half">
             <h1 class="noAnchor">More Versioning</h1>
             <p>Find out how to correctly version different scenarios.</p>
         </div>
-        <div data-navigates="alongside" data-navigateTo="Via Settings" class="navBox navBoxLight navBox-half">
+        <div data-navigates="child" data-navigateTo="Via Settings" class="navBox navBoxLight navBox-half">
             <h1 class="noAnchor">Via Settings</h1>
             <p>If you can't access a class, then don't worry! Find out how to map up objects without directly touching them.</p>
         </div>

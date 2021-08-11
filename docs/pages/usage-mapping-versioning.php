@@ -11,7 +11,7 @@
 
     <h1 id="title">More versioning</h1>
     <hr>
-    <p>This page goes a little more in-depth on how to correctly version your objects under <b>all scenarios</b>, how to handle all the different situations that could need versioning.</p>
+    <p>This page goes a little more in-depth on how to correctly version your objects under <b>all scenarios</b>, handling all the different situations that could need versioning.</p>
     <p>As a reminder, these are the different changes you can make that could require a new 'version' to be introduced:</p>
 
     <ul>
@@ -177,6 +177,24 @@ public int A { get; set; }
     <p>If my version is 3 and above, then it will use the '19' attribute, because that takes priority over the lower '1 and above'. However, if my version is 1 or above and <i>below</i> 3, it will use the first attribute instead.</p>
 
     <h2 id="inheritance">Inheritance</h2>
+    <h3 id="inheritance-info">Version inheritance info</h3>
+    <hr>
+    <p><b>NOTE:</b>This builds on top of what's covered in 'All Features', ensure you've read that first. Also make sure you read the <a href="#multiple-attributes">adding multiple attributes</a> section of this page before reading this.</p>
+    <p>This section describes how to version any changes to the <code>SaveInheritance</code> info on an object, for details about how to handle changing the <code>SaveBaseMembers</code> attribute <a href="#inheritance-base">see here</a>.
+    <p>Keep in mind that if you're using the <code>Index</code> mode of inheritance you <b>are</b> allowed to <i>add</i> to the <i>end</i> of the list without any impact on older versions or any reason to need versioning.</p>
+    <p>Versioning the inheritance info is very easy, no matter whether you're changing the mode, or whether you're making a more complex change to the list, quite simply <i>all</i> you need to do is <i>add</i> a second attribute targetted at the newer version, like so:</p>
+
+    <pre><code class="language-csharp">
+[SaveMembers]
+[SaveInheritance(SaveInheritanceMode.Index, typeof(SubOld))]
+[SaveBaseMembers(SaveInheritanceMode.Index, typeof(SubNew), FromVer = 5)]
+class Base
+    </code></pre>
+
+    <p>Now if we're on any version below <code>5</code>, it will go to the first attribute with the <code>SubOld</code> chosen. If we go to version 5 or above, it will go to the second attribute. That's it.</code>
+
+    <p>If you're serializing the base members of a class and decide you want to change the base class you serialize the members of, then you'll need to introduce a new version.</p>
+
     <h3 id="inheritance-base">Version base members</h3>
     <hr>
     <p><b>NOTE:</b> Make sure you've not only read the section about how to serialize base members, but have also read the <a href="#multiple-attributes">adding multiple attributes</a> section just above before reading this.</p>
@@ -199,24 +217,6 @@ class MyClass : B
     </div>
 
     <p>Remember that the base and sub-class have seperate version numbers and as such will not affect each other</p>
-
-    <h3 id="inheritance-info">Version inheritance info</h3>
-    <hr>
-    <p><b>NOTE:</b> Make sure you've not only read the section about how to serialize inheritance info, but have also read the <a href="#multiple-attributes">adding multiple attributes</a> section of this page before reading this.</p>
-    <p>This section describes how to version any changes to the <code>SaveInheritance</code> info on an object, for details about how to handle changing the <code>SaveBaseMembers</code> attribute <a href="#inheritance-base">see here</a>.
-    <p>Keep in mind that if you're using the <code>Index</code> mode of inheritance you <b>are</b> allowed to <i>add</i> to the <i>end</i> of the list without any impact on older versions or any reason to need versioning.</p>
-    <p>Versioning the inheritance info is very easy, no matter whether you're changing the mode, or whether you're making a more complex change to the list, quite simply <i>all</i> you need to do is <i>add</i> a second attribute targetted at the newer version, like so:</p>
-
-    <pre><code class="language-csharp">
-[SaveMembers]
-[SaveInheritance(SaveInheritanceMode.Index, typeof(SubOld))]
-[SaveBaseMembers(SaveInheritanceMode.Index, typeof(SubNew), FromVer = 5)]
-class Base
-    </code></pre>
-
-    <p>Now if we're on any version below <code>5</code>, it will go to the first attribute with the <code>SubOld</code> chosen. If we go to version 5 or above, it will go to the second attribute. That's it.</code>
-
-    <p>If you're serializing the base members of a class and decide you want to change the base class you serialize the members of, then you'll need to introduce a new version.</p>
 
     <h2 id="reordering">Reordering a property</h2>
     <hr>

@@ -15,7 +15,7 @@
 
     <div class="msgBox warningBox">
         <h4 class="noAnchor">Note</h4>
-        <p>You should read the <a href="#" data-navigates="exact" data-navigateTo="Using ABSave>Settings.customize">customize section</a> of the settings guide (in addition to the quick start guide) before reading anything in here!</p>
+        <p>You should read the <a href="#" data-navigates="exact" data-navigateTo="Using ABSave>Settings.customizing">customize section</a> of the settings guide (in addition to the quick start guide) before reading anything in here!</p>
     </div>
     <p>This page describes how to map via settings.</p>
 

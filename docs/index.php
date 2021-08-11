@@ -15,7 +15,8 @@
                     new Section("All Features", "pages/usage-mapping-all.php", "", []),
                     new Section("More Versioning", "pages/usage-mapping-versioning.php", "", []),
                     new Section("Via Settings", "pages/usage-mapping-settings.php", "", []),
-                ])
+                ]),
+                new Section("Manual Driving", "pages/usage-manual.php", "", []),
             ]),
             new Section("Binary Output", "pages/binaryFormat.php", "images/BinaryFormatImg.png", [
                 new Section("Document Structure", "pages/binaryFormat-documentStructure.php", "", []),
