@@ -1,6 +1,6 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Mapping;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using BenchmarkDotNet.Attributes;
 using BenchmarkDotNet.Configs;
 using BenchmarkDotNet.Running;
@@ -9,6 +9,7 @@ using MessagePack;
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.Json;
 
@@ -31,7 +32,6 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         public JsonResponseModel TestObj;
         public JsonResponseModel ABSaveRes;
         public ABSaveMap Map;
-        public ABSaveSerializer Serializer;
 
         [GlobalSetup]
         public void Setup()
@@ -47,22 +47,21 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             BinaryPackResult = new MemoryStream();
 
             Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
-            Serializer = Map.GetSerializer(ABSaveResult);
 
-            var str = File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\model.txt");
+            var str = File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\modelBig.txt");
 
             JsonBytes = Encoding.UTF8.GetBytes(str);
             TestObj = JsonSerializer.Deserialize<JsonResponseModel>(str);
 
             // Serialize everyone
             ABSave();
-            UTF8Json();
-            TextJson();
-            MessagePack();
-            BinaryPack();
+            //UTF8Json();
+            //TextJson();
+            //MessagePack();
+            //BinaryPack();
         }
 
-        //[Benchmark]
+        [Benchmark]
         public void ABSave()
         {
             ABSaveResult.Position = 0;
@@ -76,7 +75,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             Utf8Json.JsonSerializer.Serialize(Utf8JsonResult, TestObj);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public void TextJson()
         {
             TextJsonResult.Position = 0;
@@ -108,7 +107,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             //return null;
         }
 
-        [Benchmark]
+        //[Benchmark]
         public JsonResponseModel UTF8Json_Deserialize()
         {
             Utf8JsonResult.Position = 0;
@@ -119,19 +118,17 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         public JsonResponseModel TextJson_Deserialize()
         {
             TextJsonResult.Position = 0;
-
-            var reader = new Utf8JsonReader(JsonBytes);
-            return JsonSerializer.Deserialize<JsonResponseModel>(ref reader);
+            return JsonSerializer.Deserialize<JsonResponseModel>(JsonBytes);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public JsonResponseModel MessagePack_Deserialize()
         {
             MessagePackResult.Position = 0;
             return MessagePackSerializer.Deserialize<JsonResponseModel>(MessagePackResult);
         }
 
-        [Benchmark(Baseline = true)]
+        //[Benchmark(Baseline = true)]
         public JsonResponseModel BinaryPack_Deserialize()
         {
             BinaryPackResult.Position = 0;
@@ -202,7 +199,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             //Console.ReadLine();
 
             //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(null, new DebugInProcessConfig());
-            //BenchmarkRunner.Run<TestBenchmark>();
+            BenchmarkRunner.Run<TestBenchmark>();
             Console.ReadLine();
 
             var benchmarks = new TestBenchmark();
@@ -210,16 +207,16 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
             for (int i = 0; i < 16; i++)
             {
-                benchmarks.ABSave();
+                benchmarks.ABSave_Deserialize();
             }
 
             GC.Collect();
 
             Debugger.Break();
 
-            for (int i = 0; i < 10000000; i++)
+            for (int i = 0; i < 1000; i++)
             {
-                benchmarks.ABSave();
+                benchmarks.ABSave_Deserialize();
             }
 
             Debugger.Break();

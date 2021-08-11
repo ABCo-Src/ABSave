@@ -1,5 +1,5 @@
-﻿using ABCo.ABSave.Deserialization;
-using ABCo.ABSave.Serialization;
+﻿using ABCo.ABSave.Serialization.Reading;
+using ABCo.ABSave.Serialization.Writing;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -15,10 +15,10 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize();
 
-            Serializer.WriteString("ABC");
+            Serializer.WriteNonNullString("ABC");
             AssertAndGoToStart(3, 65, 66, 67);
 
-            Assert.AreEqual("ABC", Deserializer.ReadString());
+            Assert.AreEqual("ABC", Deserializer.ReadNonNullString());
         }
 
         [TestMethod]
@@ -28,14 +28,14 @@ namespace ABCo.ABSave.UnitTests.Core
 
             // Stack buffer
             {
-                var header = new BitTarget(Serializer);
-                Serializer.WriteUTF8("ABC".AsSpan(), ref header);
+                var header = Serializer.GetHeader();
+                header.WriteUTF8("ABC".AsSpan());
                 AssertAndGoToStart(3, 65, 66, 67);
             }
 
             {
-                var header = new BitSource(Deserializer);
-                "ABC".AsSpan().SequenceEqual(Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header));
+                var header = Deserializer.GetHeader();
+                "ABC".AsSpan().SequenceEqual(header.ReadUTF8(s => new char[s], c => c.AsMemory()));
             }
 
             ResetState();
@@ -51,14 +51,14 @@ namespace ABCo.ABSave.UnitTests.Core
                 var expected = GenerateBlankExpected();
 
                 {
-                    var header = new BitTarget(Serializer);
-                    Serializer.WriteUTF8(chArr.AsSpan(), ref header);
+                    var header = Serializer.GetHeader();
+                    header.WriteUTF8(chArr.AsSpan());
                     AssertAndGoToStart(expected);
                 }
 
                 {
-                    var header = new BitSource(Deserializer);
-                    chArr.AsSpan().SequenceEqual(Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory(), ref header));
+                    var header = Deserializer.GetHeader();
+                    chArr.AsSpan().SequenceEqual(header.ReadUTF8(s => new char[s], c => c.AsMemory()));
                 }
             }
         }

@@ -1,5 +1,5 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Converters;
+using ABCo.ABSave.Serialization.Converters;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using System;
 using System.Collections.Generic;
@@ -18,12 +18,12 @@ namespace ABCo.ABSave.UnitTests.Converters
 
         public void DoSerialize(object obj)
         {
-            Serializer.SerializeExactNonNullItem(obj, CurrentMapItem);
+            Serializer.WriteExactNonNullItem(obj, CurrentMapItem);
         }
 
         public T DoDeserialize<T>()
         {
-            return (T)Deserializer.DeserializeExactNonNullItem(CurrentMapItem);
+            return (T)Deserializer.ReadExactNonNullItem(CurrentMapItem);
         }
     }
 }

@@ -1,8 +1,8 @@
-﻿using ABCo.ABSave.Converters;
-using ABCo.ABSave.Deserialization;
+﻿using ABCo.ABSave.Serialization.Converters;
+using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
@@ -58,8 +58,8 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
         class EmptyConverter : Converter
         {
-            public override void Serialize(in SerializeInfo info, ref BitTarget header) => throw new NotImplementedException();
-            public override object Deserialize(in DeserializeInfo info, ref BitSource header) => throw new NotImplementedException();
+            public override void Serialize(in SerializeInfo info) => throw new NotImplementedException();
+            public override object Deserialize(in DeserializeInfo info) => throw new NotImplementedException();
         }
 
         [TestMethod]

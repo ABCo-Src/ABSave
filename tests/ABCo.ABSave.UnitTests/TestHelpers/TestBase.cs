@@ -1,7 +1,7 @@
 ﻿using ABCo.ABSave.Configuration;
-using ABCo.ABSave.Deserialization;
+using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Mapping;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,6 +25,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         {
             var settings = template.Customize(b => b
                 .SetLazyWriteCompressed(lazyWriteCompressed)
+                .SetIncludeVersioningHeader(false)
                 .AddConverter<BaseTypeConverter>()
                 .AddConverter<SubTypeConverter>()
                 .AddConverter<OtherTypeConverter>()
@@ -33,8 +34,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             CurrentMap = ABSaveMap.Get<EmptyClass>(settings);
 
             Stream = new MemoryStream();
-            Serializer = CurrentMap.GetSerializer(Stream, targetVersions);
-            Deserializer = CurrentMap.GetDeserializer(Stream);
+            Serializer = CurrentMap.GetSerializer(Stream, true, targetVersions);
+            Deserializer = CurrentMap.GetDeserializer(Stream, true);
         }
 
         public void GoToStart() => Stream.Position = 0;
@@ -56,10 +57,10 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             Serializer.Reset();
             Deserializer.Reset();
 
-            ResetPosition();
+            ClearStream();
         }
 
-        public void ResetPosition()
+        public void ClearStream()
         {
             GoToStart();
             Stream.SetLength(0);
@@ -89,7 +90,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public byte[] GetByteArr(object[] itms, params short[] data)
         {
-            List<byte> bytes = new List<byte>(64);
+            List<byte> bytes = new(64);
             ABSaveSerializer serializer = null;
             int currentItmsPos = 0;
 
@@ -124,7 +125,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                             SetupSerializer();
 
                             var genMap = (GenMap)itms[currentItmsPos++];
-                            serializer.SerializeExactNonNullItem(genMap.Obj, genMap.Item);
+                            serializer.WriteExactNonNullItem(genMap.Obj, genMap.Item);
                             bytes.AddRange(((MemoryStream)serializer.Output).ToArray());
 
                             break;
@@ -145,7 +146,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             {
                 if (serializer == null)
                 {
-                    serializer = CurrentMap.GetSerializer(new MemoryStream());
+                    serializer = CurrentMap.GetSerializer(new MemoryStream(), true);
                 }
                 else
                 {

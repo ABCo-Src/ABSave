@@ -17,7 +17,18 @@ namespace ABCo.ABSave.UnitTests.Converters
         {
             BaseWithHeaderMember,
             None,
-            BaseWithoutHeaderMember
+            BaseWithoutHeaderMember,
+        }
+
+        [TestMethod]
+        [DataRow(BaseClass.BaseWithHeaderMember)]
+        [DataRow(BaseClass.None)]
+        [DataRow(BaseClass.BaseWithoutHeaderMember)]
+        public void EmptyClass(BaseClass version)
+        {
+            RunTest(new NoMembersSub(), (int)version, 0xC0, null,
+                Array.Empty<byte>(),
+                Array.Empty<byte>());
         }
 
         [TestMethod]
@@ -64,7 +75,7 @@ namespace ABCo.ABSave.UnitTests.Converters
                 new byte[] { SubTypeConverter.OUTPUT_BYTE, 0xE0, SubTypeConverter.OUTPUT_BYTE });
         }
 
-        void RunTest<T>(T instance, int version, byte noBaseExpectedFirstByte, byte baseExpectedFirstByte, byte[] versionExpected, byte[] nonVersionExpected)
+        void RunTest<T>(T instance, int version, byte? noBaseExpectedFirstByte, byte? baseExpectedFirstByte, byte[] versionExpected, byte[] nonVersionExpected)
             where T : BaseWithoutHeader
         {
             instance.Init(version);
@@ -77,32 +88,38 @@ namespace ABCo.ABSave.UnitTests.Converters
                 0 => new byte[] { 0xC0, 0, 0xC0, 0x80, SubTypeConverter.OUTPUT_BYTE },
                 1 => new byte[] { 0xC1 },
                 2 => new byte[] { 0xC2, 0, 0xC0, SubTypeConverter.OUTPUT_BYTE },
+                //3 => new byte[] { 0xC3, 0 },
                 _ => throw new Exception()
             };
 
-            Serializer.SerializeItem(instance, CurrentMapItem);
+            Serializer.WriteItem(instance, CurrentMapItem);
             AssertAndGoToStart(baseExpectedWithVersion.Concat(versionExpected).ToArray());
-            ReflectiveAssert(instance, (T)Deserializer.DeserializeItem(CurrentMapItem));
+            ReflectiveAssert(instance, (T)Deserializer.ReadItem(CurrentMapItem));
 
-            ResetPosition();
+            ClearStream();
 
             // Without version
             byte[] baseExpectedWithoutVersion = version switch
             {
-                0 => new byte[] { 0xF8, SubTypeConverter.OUTPUT_BYTE, baseExpectedFirstByte },
-                1 => new byte[] { noBaseExpectedFirstByte },
-                2 => new byte[] { 0xF0, SubTypeConverter.OUTPUT_BYTE, baseExpectedFirstByte },
+                0 => baseExpectedFirstByte == null ? new byte[] { 0xF8, SubTypeConverter.OUTPUT_BYTE } : new byte[] { 0xF8, SubTypeConverter.OUTPUT_BYTE, baseExpectedFirstByte.Value },
+                1 => noBaseExpectedFirstByte == null ? Array.Empty<byte>() : new byte[] { noBaseExpectedFirstByte.Value },
+                2 => baseExpectedFirstByte == null ? new byte[] { 0xF0, SubTypeConverter.OUTPUT_BYTE } : new byte[] { 0xF0, SubTypeConverter.OUTPUT_BYTE, baseExpectedFirstByte.Value },
+                //3 => noBaseExpectedFirstByte == null ? Array.Empty<byte>() : new byte[] { noBaseExpectedFirstByte.Value },
                 _ => throw new Exception()
             };
 
-            Serializer.SerializeItem(instance, CurrentMapItem);
+            Serializer.WriteItem(instance, CurrentMapItem);
             AssertAndGoToStart(baseExpectedWithoutVersion.Concat(nonVersionExpected).ToArray());
-            ReflectiveAssert(instance, (T)Deserializer.DeserializeItem(CurrentMapItem));
+            ReflectiveAssert(instance, (T)Deserializer.ReadItem(CurrentMapItem));
         }
     }
 
+
     [SaveMembers]
-    class BaseWithHeader
+    class EmptyBase { }
+
+    [SaveMembers]
+    class BaseWithHeader : EmptyBase
     {
         [Save(0)]
         public SubWithHeader2 BaseA { get; set; }
@@ -130,6 +147,17 @@ namespace ABCo.ABSave.UnitTests.Converters
     [SaveMembers]
     [SaveBaseMembers(typeof(BaseWithHeader), ToVer = 1)]
     [SaveBaseMembers(typeof(BaseWithoutHeader), FromVer = 2)]
+    [SaveBaseMembers(typeof(EmptyBase), FromVer = 3)]
+    class NoMembersSub : BaseWithoutHeader
+    {
+        public NoMembersSub() { }
+        protected override void SubInit() { }
+    }
+
+    [SaveMembers]
+    [SaveBaseMembers(typeof(BaseWithHeader), ToVer = 1)]
+    [SaveBaseMembers(typeof(BaseWithoutHeader), FromVer = 2)]
+    [SaveBaseMembers(typeof(EmptyBase), FromVer = 3)]
     class NoHeaderNoHeader : BaseWithoutHeader
     {
         [Save(0)]
@@ -145,6 +173,7 @@ namespace ABCo.ABSave.UnitTests.Converters
     [SaveMembers]
     [SaveBaseMembers(typeof(BaseWithHeader), ToVer = 1)]
     [SaveBaseMembers(typeof(BaseWithoutHeader), FromVer = 2)]
+    [SaveBaseMembers(typeof(EmptyBase), FromVer = 3)]
     class HeaderNoHeader : BaseWithoutHeader
     {
         [Save(0)]
@@ -160,6 +189,7 @@ namespace ABCo.ABSave.UnitTests.Converters
     [SaveMembers]
     [SaveBaseMembers(typeof(BaseWithHeader), ToVer = 1)]
     [SaveBaseMembers(typeof(BaseWithoutHeader), FromVer = 2)]
+    [SaveBaseMembers(typeof(EmptyBase), FromVer = 3)]
     class NoHeaderHeader : BaseWithoutHeader
     {
         [Save(0)]
@@ -175,6 +205,7 @@ namespace ABCo.ABSave.UnitTests.Converters
     [SaveMembers]
     [SaveBaseMembers(typeof(BaseWithHeader), ToVer = 1)]
     [SaveBaseMembers(typeof(BaseWithoutHeader), FromVer = 2)]
+    [SaveBaseMembers(typeof(EmptyBase), FromVer = 3)]
     class HeaderHeader : BaseWithoutHeader
     {
         [Save(0)]

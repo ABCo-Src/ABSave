@@ -1,9 +1,9 @@
-﻿using ABCo.ABSave.Converters;
-using ABCo.ABSave.Deserialization;
+﻿using ABCo.ABSave.Serialization.Converters;
+using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description.Attributes.Converters;
 using ABCo.ABSave.Mapping.Generation.Converters;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
 using System;
 
 namespace ABCo.ABSave.UnitTests.TestHelpers
@@ -24,21 +24,24 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public override bool CheckType(CheckTypeInfo info) =>
             info.Type == typeof(BaseIndex) || info.Type.IsSubclassOf(typeof(BaseIndex));
 
-        public override void Serialize(in SerializeInfo info, ref BitTarget header)
+        public override void Serialize(in SerializeInfo info)
         {
             if (WritesToHeader)
             {
-                header.WriteBitOn();
-                header.Apply();
+                info.Header.WriteBitOn();
+                info.Header.MoveToNextByte();
             }
 
-            header.Serializer.WriteByte(OUTPUT_BYTE);
+            var serializer = info.Header.Finish();
+            serializer.WriteByte(OUTPUT_BYTE);
         }
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info)
         {
-            if (WritesToHeader && !header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
-            if (header.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
+            if (WritesToHeader && !info.Header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
+
+            var deserializer = info.Header.Finish();
+            if (deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
 
             return OUTPUT_BYTE;
         }

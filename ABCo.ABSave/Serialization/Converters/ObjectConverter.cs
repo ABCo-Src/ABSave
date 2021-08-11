@@ -1,4 +1,4 @@
-﻿using ABCo.ABSave.Deserialization;
+﻿using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
@@ -8,11 +8,12 @@ using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.Converters;
 using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using ABCo.ABSave.Mapping.Generation.Object;
-using ABCo.ABSave.Serialization;
+using ABCo.ABSave.Serialization.Writing;
+using ABCo.ABSave.Serialization.Writing.Core;
 using System;
 using System.Reflection;
 
-namespace ABCo.ABSave.Converters
+namespace ABCo.ABSave.Serialization.Converters
 {
     [SelectOtherWithCheckType]
     public class ObjectConverter : Converter
@@ -39,7 +40,8 @@ namespace ABCo.ABSave.Converters
             if (attr != null)
                 baseConv = GetBaseObjectConverter(info, attr);
 
-            return (new ObjectVersionInfo(members, baseConv), true);
+            bool usesHeader = members.Length > 0 || baseConv != null;
+            return (new ObjectVersionInfo(members, baseConv), usesHeader);
         }
 
         ObjectConverter GetBaseObjectConverter(InitializeInfo info, SaveBaseMembersAttribute attr)
@@ -66,75 +68,51 @@ namespace ABCo.ABSave.Converters
 
         protected override void DoHandleAllVersionsGenerated() => _intermediateInfo.Release();
 
-        // TODO: When map guides come along, instead of manually calling the temporarily internal
-        // "ABSaveSerializer.HandleVersionNumber" ourselves, we should be able to communicate with the base
-        // ObjectConverter that serialize into our instance as opposed to making a new one.
-        public override void Serialize(in SerializeInfo info, ref BitTarget header) =>
-            Serialize(info.Instance, info.VersionInfo, ref header);
+        public override void Serialize(in SerializeInfo info) =>
+            Serialize(info.Instance, info.ActualType, info.VersionInfo, info.Header);
 
-        void Serialize(object instance, VersionInfo info, ref BitTarget header)
+        void Serialize(object instance, Type actualType, VersionInfo info, BitWriter header)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
             ObjectConverter? baseType = versionInfo.BaseObject;
-
-            if (members.Length == 0 && baseType == null)
-            {
-                header.Apply();
-                return;
-            }
 
             if (baseType != null)
             {
-                header.Serializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
-                baseType.Serialize(instance, baseInfo, ref header);
+                var baseInfo = header.WriteExactNonNullHeader(instance, actualType, baseType);
+                baseType.Serialize(instance, actualType, baseInfo!, header);
             }
 
-            // Serialize the first member.
-            header.Serializer.SerializeItem(members[0].Accessor.Getter(instance), members[0].Map, ref header);
+            if (members.Length == 0) return;
 
             // Serialize the rest.
-            for (int i = 1; i < members.Length; i++)
-                header.Serializer.SerializeItem(members[i].Accessor.Getter(instance), members[i].Map);
+            for (int i = 0; i < members.Length; i++)
+                header.WriteItem(members[i].Accessor.Getter(instance), members[i].Map);
         }
 
-        public override object Deserialize(in DeserializeInfo info, ref BitSource header)
+        public override object Deserialize(in DeserializeInfo info)
         {
             object res = Activator.CreateInstance(info.ActualType)!;
-            DeserializeInto(res, info.VersionInfo, ref header);
+            DeserializeInto(res, info.VersionInfo, info.Header);
             return res;
         }
 
-        void DeserializeInto(object obj, VersionInfo info, ref BitSource header)
+        void DeserializeInto(object obj, VersionInfo info, BitReader header)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
             ObjectConverter? baseType = versionInfo.BaseObject;
 
-            int deserializeWithoutHeaderStart;
-
-            // If there's a base type to be serialized, the header goes to that,
-            // and we'll deserialize the first member without the header.
-            if (baseType == null)
+            if (baseType != null)
             {
-                deserializeWithoutHeaderStart = 1;
-
-                // Deserialize the first member using the header
-                members[0].Accessor.Setter(obj, header.Deserializer.DeserializeItem(members[0].Map, ref header));
-            }
-            else
-            {
-
-                header.Deserializer.HandleVersionNumber(baseType, out VersionInfo baseInfo, ref header);
-                baseType.DeserializeInto(obj, baseInfo, ref header);
-
-                // The header goes to the base type so we'll deserialize the first member in the loop of members that don't get the header.
-                deserializeWithoutHeaderStart = 0;
+                // TODO: Don't directly call this with map guides.
+                VersionInfo baseInfo = header.ReadExactNonNullHeader(baseType);
+                baseType.DeserializeInto(obj, baseInfo, header);
             }
 
             // Deserialize all the members that don't get the header.
-            for (int i = deserializeWithoutHeaderStart; i < members.Length; i++)
-                members[i].Accessor.Setter(obj, header.Deserializer.DeserializeItem(members[i].Map));
+            for (int i = 0; i < members.Length; i++)
+                members[i].Accessor.Setter(obj, header.ReadItem(members[i].Map));
         }
 
         internal class ObjectVersionInfo : VersionInfo
