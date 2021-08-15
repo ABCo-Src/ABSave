@@ -5,7 +5,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ABSaveStrongName.snk</AssemblyOriginatorKeyFile>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>1.0.3-beta</Version>
+    <Version>2.0.0-beta</Version>
     <Authors>ABPerson</Authors>
     <Company>ABCo</Company>
     <Description>A blazing-fast binary serializer with very small output powered by live IL injection!</Description>
@@ -15,7 +15,7 @@
     <PackageTags>Serializer, Deserializer, Binary, Converter, Type converter, Fast, IL generation</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Icon.png</PackageIcon>
-    <PackageReleaseNotes>Bug fix when handling primitive arrays</PackageReleaseNotes>
+    <PackageReleaseNotes>Huge overall experience improvements, with minor breaking changes applied to achieve them.</PackageReleaseNotes>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
