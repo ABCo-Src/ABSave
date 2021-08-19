@@ -16,6 +16,7 @@
                     new Section("More Versioning", "pages/usage-mapping-versioning.php", "", []),
                     new Section("Via Settings", "pages/usage-mapping-settings.php", "", []),
                 ]),
+                new Section("Custom Converters", "pages/usage-customConverter.php", "", []),
                 new Section("Manual Driving", "pages/usage-manual.php", "", []),
             ]),
             new Section("Binary Output", "pages/binaryFormat.php", "images/BinaryFormatImg.png", [
