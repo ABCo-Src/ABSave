@@ -159,7 +159,7 @@ namespace ABCo.ABSave.Serialization.Reading
                 if (State.Settings.IncludeVersioningHeader)
                     throw new Exception("When DEserializing, the field 'writeVersioning' should be left blank unless 'IncludeVersioningHeader' is disabled in the settings, because when enabled the versioning header is how ABSave determines whether version numbers are present or not when deserializing.");
 
-                State.WriteVersioning = writeVersioning.Value;
+                State.HasVersioningInfo = writeVersioning.Value;
             }
         }
 

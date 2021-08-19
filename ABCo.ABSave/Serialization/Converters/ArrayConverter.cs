@@ -33,7 +33,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override uint Initialize(InitializeInfo info)
         {
-            if (_info.Type != ArrayType.Unknown) return 0;
+            if (_info.Type == ArrayType.Unknown) return 0;
 
             Type? elemType = info.Type.GetElementType();
             PopulateTypeInfo(ref _info, info.GetMap(elemType!), info.Type);

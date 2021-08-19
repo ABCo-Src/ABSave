@@ -98,10 +98,10 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             if (info != null) return false;
 
             // If not, write the version and add the converter to the cache.
-            uint version = header.State.WriteVersioning ? WriteNewVersionInfo(item, header) : 0;
+            uint version = header.State.HasVersioningInfo ? WriteNewVersionInfo(item, header) : 0;
             info = header.State.CreateNewCache(item, version);
 
-            return header.State.WriteVersioning;
+            return header.State.HasVersioningInfo;
         }
 
         static uint WriteNewVersionInfo(Converter item, BitWriter target)

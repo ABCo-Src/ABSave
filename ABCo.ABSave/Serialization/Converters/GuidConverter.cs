@@ -17,7 +17,7 @@ namespace ABCo.ABSave.Serialization.Converters
             Span<byte> bytes = stackalloc byte[16];
             guid.TryWriteBytes(bytes);
 
-            serializer.WriteBytes(bytes);
+            serializer.WriteRawBytes(bytes);
         }
 
         public override object Deserialize(in DeserializeInfo info)

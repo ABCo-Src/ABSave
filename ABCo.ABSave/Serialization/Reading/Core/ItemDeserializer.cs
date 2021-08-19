@@ -73,7 +73,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             // If the version has already been read, do nothing
             if (item != null) return;
 
-            item = header.State.WriteVersioning ?
+            item = header.State.HasVersioningInfo ?
                 header.State.CreateNewCache(converter, ReadNewVersionInfo(header)) :
                 header.State.Map.GetVersionInfo(converter, 0);
         }

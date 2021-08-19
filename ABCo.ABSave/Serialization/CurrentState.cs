@@ -14,10 +14,25 @@ namespace ABCo.ABSave.Serialization
     /// </summary>
     public class CurrentState
     {
+        /// <summary>
+        /// The current map
+        /// </summary>
         public ABSaveMap Map { get; }
+
+        /// <summary>
+        /// The current settings
+        /// </summary>
         public ABSaveSettings Settings { get; }
+
+        /// <summary>
+        /// Whether the target endianness for the ABSave document.
+        /// </summary>
         public bool ShouldReverseEndian { get; }
-        public bool WriteVersioning { get; internal set; }
+
+        /// <summary>
+        /// Denotes whether versioning info is present or not.
+        /// </summary>
+        public bool HasVersioningInfo { get; internal set; }
 
         CachedConverterDetails[] _cachedConverterDetails = null!;
         byte[]? _stringBuffer;

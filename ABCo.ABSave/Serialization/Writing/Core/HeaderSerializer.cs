@@ -9,7 +9,7 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         public static void WriteHeader(BitWriter header)
         {
             if (!header.State.Settings.IncludeVersioningHeader) return;
-            header.WriteBitWith(header.State.WriteVersioning);
+            header.WriteBitWith(header.State.HasVersioningInfo);
         }
     }
 }

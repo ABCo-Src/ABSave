@@ -41,7 +41,7 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             header.WriteCompressedInt((uint)actualSize);
 
             var serializer = header.Finish();
-            serializer.WriteBytes(buffer.Slice(0, actualSize));
+            serializer.WriteRawBytes(buffer.Slice(0, actualSize));
         }
     }
 }
