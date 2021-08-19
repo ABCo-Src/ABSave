@@ -119,69 +119,13 @@ namespace ABCo.ABSave.Serialization.Converters
                         break;
                     }
 
-                // Unknown
                 default:
-                    SerializeUnknown(arr, actualType, header);
-                    break;
-            }
-        }
+                    throw new Exception("Unknown arrays ('Array') are not currently supported, you can try defining your own converter if you'd like.");
 
-        private void SerializeUnknown(Array arr, Type actualType, BitWriter header)
-        {
-            var context = new ArrayTypeInfo();
-            PopulateTypeInfo(ref context, header.State.GetRuntimeMapItem(actualType.GetElementType()!), actualType);
-
-            // Write the unknown information.
-            switch (context.Type)
-            {
-                // TODO: This doesn't work with element type versions so temporarily disabled!
-                //case ArrayType.SZArrayFast:
-
-                //    header.WriteBitOff();
-                //    header.WriteBitOff();
-                //    SerializeFast(arr, context.FastConversion, ref header);
-
-                //    break;
-                case ArrayType.SZArrayManual:
-
-                    header.WriteBitOff();
-                    header.WriteBitOff();
-                    header.WriteCompressedInt((uint)arr.Length);
-
-                    for (int i = 0; i < arr.Length; i++) header.WriteItem(arr.GetValue(i), context.PerItem);
-
-                    break;
-                case ArrayType.SNZArray:
-
-                    // Write the header
-                    header.WriteBitOff();
-                    header.WriteBitOn();
-                    header.WriteCompressedInt((uint)arr.Length);
-
-                    int j = arr.GetLowerBound(0);
-                    header.WriteCompressedLong((ulong)j);
-
-                    int endIndex = j + arr.Length;
-                    for (; j < endIndex; j++) header.WriteItem(arr.GetValue(j), context.PerItem);
-
-                    break;
-                case ArrayType.MultiDimensional:
-
-                    // Get information
-                    MDSerializeArrayInfo mdContext = GetMultiDimensionInfo(arr, ref context, header, out int[] lowerBounds);
-                    int firstLength = arr.GetLength(0);
-
-                    header.WriteBitOn();
-                    header.WriteBitWith(mdContext.CustomLowerBounds);
-                    header.WriteInteger(context.Rank, 5);
-
-                    header.WriteCompressedInt((uint)firstLength);
-
-                    SerializeMultiDimensionalArrayData(arr, ref context, ref mdContext, firstLength, lowerBounds);
-
-                    break;
-                case ArrayType.Unknown:
-                    throw new Exception("ABSAVE: An array could not serialized.");
+                    // Unknown
+                    //default:
+                    //    SerializeUnknown(arr, actualType, header);
+                    //    break;
             }
         }
 
@@ -287,60 +231,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
                 // Unknown
                 default:
-                    return DeserializeUnknown(header);
-            }
-        }
-
-        private object DeserializeUnknown(BitReader header)
-        {
-            // Get type information.
-            Type elementType = null!; // TODO: Get element type
-            MapItemInfo perItem = header.State.GetRuntimeMapItem(elementType);
-
-            // Read the header information
-            bool isMultiDimensional = header.ReadBit();
-            bool hasCustomLowerBounds = header.ReadBit();
-
-            // Multi-dimensional
-            if (isMultiDimensional)
-            {
-                int rank = header.ReadInteger(5);
-
-                int size = (int)header.ReadCompressedInt();
-                var context = new ArrayTypeInfo((byte)rank, elementType, perItem);
-                return DeserializeMultiDimensionalArray(in context, hasCustomLowerBounds, size, header);
-            }
-
-            // Single-dimensional
-            else
-            {
-                // SNZArray
-                if (hasCustomLowerBounds)
-                {
-                    int size = (int)header.ReadCompressedInt();
-
-                    int i = (int)header.ReadCompressedInt();
-                    var arr = Array.CreateInstance(elementType, new int[] { size }, new int[] { i });
-
-                    int end = i + size;
-                    for (; i < end; i++) arr.SetValue(header.ReadItem(perItem), i);
-                    return arr;
-                }
-
-                // SZArray
-                else
-                {
-                    // Try to fast convert
-                    // TODO: This doesn't work with element type versions so temporarily disabled!
-                    //var fastType = GetFastType(elementType);
-                    //if (fastType != FastConversionType.None) return DeserializeFast(fastType, ref header);
-
-                    int size = (int)header.ReadCompressedInt();
-                    var arr = Array.CreateInstance(elementType, size);
-
-                    for (int i = 0; i < size; i++) arr.SetValue(header.ReadItem(perItem), i);
-                    return arr;
-                }
+                    throw new Exception("Unknown arrays ('Array') are not currently supported, you can try defining your own converter if you'd like.");
             }
         }
 
