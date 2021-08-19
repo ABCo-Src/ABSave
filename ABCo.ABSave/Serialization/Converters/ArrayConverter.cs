@@ -33,7 +33,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override uint Initialize(InitializeInfo info)
         {
-            if (_info.Type == ArrayType.Unknown) return 0;
+            if (_info.Type != ArrayType.None) return 0;
 
             Type? elemType = info.Type.GetElementType();
             PopulateTypeInfo(ref _info, info.GetMap(elemType!), info.Type);
@@ -507,19 +507,21 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public enum ArrayType : byte
         {
-            Unknown = 0,
+            None,
+
+            Unknown,
 
             // A single-dimensional, zero-based array, where each item has to be manually converted via the map.
-            SZArrayManual = 1,
+            SZArrayManual,
 
             // A single-dimensional, zero-based array, where each item can be quickly binary converted.
-            SZArrayFast = 2,
+            SZArrayFast,
 
             // A single-dimensional, non-zero-based array.
-            SNZArray = 3,
+            SNZArray,
 
             // A multi-dimensional (non-zero-based) array.
-            MultiDimensional = 4
+            MultiDimensional
         }
 
         public enum FastConversionType : byte
