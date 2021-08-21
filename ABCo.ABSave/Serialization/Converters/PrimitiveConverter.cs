@@ -78,6 +78,11 @@ namespace ABCo.ABSave.Serialization.Converters
                     header.WriteCompressedInt((ushort)instance);
                     break;
 
+                case PrimitiveType.Char:
+
+                    header.WriteCompressedInt((char)instance);
+                    break;
+
                 case PrimitiveType.Int32:
 
                     header.WriteCompressedInt((uint)(int)instance);
@@ -205,11 +210,42 @@ namespace ABCo.ABSave.Serialization.Converters
 
             var deserializer = info.Header.Finish();
 
+            if (info.Header.State.Settings.CompressPrimitives)
+                return DeserializeCompressed(info.Header);
+            else
+                return DeserializeDirect(deserializer);
+
+        }
+
+        object DeserializeCompressed(BitReader reader)
+        {
             unchecked
             {
                 return _typeCode switch
                 {
-                    PrimitiveType.Boolean => deserializer.ReadByte() > 0,
+                    PrimitiveType.Byte => reader.Finish().ReadByte(),
+                    PrimitiveType.SByte => (sbyte)reader.Finish().ReadByte(),
+                    PrimitiveType.UInt16 => (ushort)reader.ReadCompressedInt(),
+                    PrimitiveType.Int16 => (short)reader.ReadCompressedInt(),
+                    PrimitiveType.Char => (char)reader.ReadCompressedInt(),
+                    PrimitiveType.UInt32 => reader.ReadCompressedInt(),
+                    PrimitiveType.Int32 => (int)reader.ReadCompressedInt(),
+                    PrimitiveType.UInt64 => reader.ReadCompressedLong(),
+                    PrimitiveType.Int64 => (long)reader.ReadCompressedLong(),
+                    PrimitiveType.Single => reader.Finish().ReadSingle(),
+                    PrimitiveType.Double => reader.Finish().ReadDouble(),
+                    PrimitiveType.Decimal => reader.Finish().ReadDecimal(),
+                    _ => throw new Exception("Invalid numerical type."),
+                };
+            }
+        }
+
+        object DeserializeDirect(ABSaveDeserializer deserializer)
+        {
+            unchecked
+            {
+                return _typeCode switch
+                {
                     //PrimitiveType.IntPtr => IntPtr.Size == 8 ? (IntPtr)reader.ReadInt64() : (IntPtr)reader.ReadInt32(),
                     //PrimitiveType.UIntPtr => UIntPtr.Size == 8 ? (UIntPtr)reader.ReadInt64() : (UIntPtr)reader.ReadInt32(),
                     PrimitiveType.Byte => deserializer.ReadByte(),
