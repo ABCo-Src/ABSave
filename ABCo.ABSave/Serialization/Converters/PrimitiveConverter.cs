@@ -48,8 +48,80 @@ namespace ABCo.ABSave.Serialization.Converters
                 return;
             }
 
-            ABSaveSerializer serializer = info.Header.Finish();
+            if (info.Header.State.Settings.CompressPrimitives)
+                SerializeCompressed(info.Header, info.Instance);
+            else
+                SerializeDirect(info.Header.Finish(), info.Instance);
+        }
 
+        void SerializeCompressed(BitWriter header, object instance)
+        {
+            switch (_typeCode)
+            {
+                case PrimitiveType.Byte:
+
+                    header.Finish().WriteByte((byte)instance);
+                    break;
+
+                case PrimitiveType.SByte:
+
+                    header.Finish().WriteByte((byte)instance);
+                    break;
+
+                case PrimitiveType.Int16:
+
+                    header.WriteCompressedInt((uint)(short)instance);
+                    break;
+
+                case PrimitiveType.UInt16:
+
+                    header.WriteCompressedInt((ushort)instance);
+                    break;
+
+                case PrimitiveType.Char:
+
+                    header.WriteCompressedInt((char)instance);
+                    break;
+
+                case PrimitiveType.Int32:
+
+                    header.WriteCompressedInt((uint)(int)instance);
+                    break;
+
+                case PrimitiveType.UInt32:
+
+                    header.WriteCompressedInt((uint)instance);
+                    break;
+
+                case PrimitiveType.Int64:
+
+                    header.WriteCompressedLong((ulong)(long)instance);
+                    break;
+
+                case PrimitiveType.UInt64:
+
+                    header.WriteCompressedLong((ulong)instance);
+                    break;
+
+                case PrimitiveType.Single:
+
+                    header.Finish().WriteSingle((float)instance);
+                    break;
+
+                case PrimitiveType.Double:
+
+                    header.Finish().WriteDouble((double)instance);
+                    break;
+
+                case PrimitiveType.Decimal:
+
+                    header.Finish().WriteDecimal((decimal)instance);
+                    break;
+            }
+        }
+
+        void SerializeDirect(ABSaveSerializer serializer, object instance)
+        {
             switch (_typeCode)
             {
                 //case PrimitiveType.IntPtr:
@@ -70,62 +142,62 @@ namespace ABCo.ABSave.Serialization.Converters
 
                 case PrimitiveType.Byte:
 
-                    serializer.WriteByte((byte)info.Instance);
+                    serializer.WriteByte((byte)instance);
                     break;
 
                 case PrimitiveType.SByte:
 
-                    serializer.WriteByte((byte)(sbyte)info.Instance);
+                    serializer.WriteByte((byte)(sbyte)instance);
                     break;
 
                 case PrimitiveType.UInt16:
 
-                    serializer.WriteInt16((short)(ushort)info.Instance);
+                    serializer.WriteInt16((short)(ushort)instance);
                     break;
 
                 case PrimitiveType.Int16:
 
-                    serializer.WriteInt16((short)info.Instance);
+                    serializer.WriteInt16((short)instance);
                     break;
 
                 case PrimitiveType.Char:
 
-                    serializer.WriteInt16((short)(char)info.Instance);
+                    serializer.WriteInt16((short)(char)instance);
                     break;
 
                 case PrimitiveType.UInt32:
 
-                    serializer.WriteInt32((int)(uint)info.Instance);
+                    serializer.WriteInt32((int)(uint)instance);
                     break;
 
                 case PrimitiveType.Int32:
 
-                    serializer.WriteInt32((int)info.Instance);
+                    serializer.WriteInt32((int)instance);
                     break;
 
                 case PrimitiveType.UInt64:
 
-                    serializer.WriteInt64((long)(ulong)info.Instance);
+                    serializer.WriteInt64((long)(ulong)instance);
                     break;
 
                 case PrimitiveType.Int64:
 
-                    serializer.WriteInt64((long)info.Instance);
+                    serializer.WriteInt64((long)instance);
                     break;
 
                 case PrimitiveType.Single:
 
-                    serializer.WriteSingle((float)info.Instance);
+                    serializer.WriteSingle((float)instance);
                     break;
 
                 case PrimitiveType.Double:
 
-                    serializer.WriteDouble((double)info.Instance);
+                    serializer.WriteDouble((double)instance);
                     break;
 
                 case PrimitiveType.Decimal:
 
-                    serializer.WriteDecimal((decimal)info.Instance);
+                    serializer.WriteDecimal((decimal)instance);
                     break;
                 default:
                     throw new Exception("ABSAVE: Invalid numerical type.");
@@ -138,21 +210,52 @@ namespace ABCo.ABSave.Serialization.Converters
 
             var deserializer = info.Header.Finish();
 
+            if (info.Header.State.Settings.CompressPrimitives)
+                return DeserializeCompressed(info.Header);
+            else
+                return DeserializeDirect(deserializer);
+
+        }
+
+        object DeserializeCompressed(BitReader reader)
+        {
             unchecked
             {
                 return _typeCode switch
                 {
-                    PrimitiveType.Boolean => deserializer.ReadByte() > 0,
+                    PrimitiveType.Byte => reader.Finish().ReadByte(),
+                    PrimitiveType.SByte => (sbyte)reader.Finish().ReadByte(),
+                    PrimitiveType.UInt16 => (ushort)reader.ReadCompressedInt(),
+                    PrimitiveType.Int16 => (short)reader.ReadCompressedInt(),
+                    PrimitiveType.Char => (char)reader.ReadCompressedInt(),
+                    PrimitiveType.UInt32 => reader.ReadCompressedInt(),
+                    PrimitiveType.Int32 => (int)reader.ReadCompressedInt(),
+                    PrimitiveType.UInt64 => reader.ReadCompressedLong(),
+                    PrimitiveType.Int64 => (long)reader.ReadCompressedLong(),
+                    PrimitiveType.Single => reader.Finish().ReadSingle(),
+                    PrimitiveType.Double => reader.Finish().ReadDouble(),
+                    PrimitiveType.Decimal => reader.Finish().ReadDecimal(),
+                    _ => throw new Exception("Invalid numerical type."),
+                };
+            }
+        }
+
+        object DeserializeDirect(ABSaveDeserializer deserializer)
+        {
+            unchecked
+            {
+                return _typeCode switch
+                {
                     //PrimitiveType.IntPtr => IntPtr.Size == 8 ? (IntPtr)reader.ReadInt64() : (IntPtr)reader.ReadInt32(),
                     //PrimitiveType.UIntPtr => UIntPtr.Size == 8 ? (UIntPtr)reader.ReadInt64() : (UIntPtr)reader.ReadInt32(),
                     PrimitiveType.Byte => deserializer.ReadByte(),
                     PrimitiveType.SByte => (sbyte)deserializer.ReadByte(),
-                    PrimitiveType.UInt16 => deserializer.ReadInt16(),
+                    PrimitiveType.UInt16 => (ushort)deserializer.ReadInt16(),
                     PrimitiveType.Int16 => deserializer.ReadInt16(),
                     PrimitiveType.Char => (char)deserializer.ReadInt16(),
-                    PrimitiveType.UInt32 => deserializer.ReadInt32(),
+                    PrimitiveType.UInt32 => (uint)deserializer.ReadInt32(),
                     PrimitiveType.Int32 => deserializer.ReadInt32(),
-                    PrimitiveType.UInt64 => deserializer.ReadInt64(),
+                    PrimitiveType.UInt64 => (ulong)deserializer.ReadInt64(),
                     PrimitiveType.Int64 => deserializer.ReadInt64(),
                     PrimitiveType.Single => deserializer.ReadSingle(),
                     PrimitiveType.Double => deserializer.ReadDouble(),
