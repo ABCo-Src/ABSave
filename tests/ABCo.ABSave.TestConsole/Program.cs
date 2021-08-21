@@ -199,7 +199,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             //Console.ReadLine();
 
             //BenchmarkSwitcher.FromAssembly(typeof(Program).Assembly).Run(null, new DebugInProcessConfig());
-            //BenchmarkRunner.Run<TestBenchmark>();
+            BenchmarkRunner.Run<TestBenchmark>();
             //Console.ReadLine();
 
             var benchmarks = new TestBenchmark();

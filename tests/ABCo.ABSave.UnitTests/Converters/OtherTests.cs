@@ -57,6 +57,30 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
+        public void Boolean()
+        {
+            Setup<bool>(ABSaveSettings.ForSpeed);
+
+            using (var header = Serializer.GetHeader())
+            {
+                header.WriteItem(true, CurrentMapItem);
+                header.WriteItem(true, CurrentMapItem);
+                header.WriteItem(false, CurrentMapItem);
+                header.WriteItem(true, CurrentMapItem);
+            }
+
+            AssertAndGoToStart(0, 0xD0);
+
+            var deserializeHeader = Deserializer.GetHeader();
+            {
+                Assert.AreEqual(true, deserializeHeader.ReadItem(CurrentMapItem));
+                Assert.AreEqual(true, deserializeHeader.ReadItem(CurrentMapItem));
+                Assert.AreEqual(false, deserializeHeader.ReadItem(CurrentMapItem));
+                Assert.AreEqual(true, deserializeHeader.ReadItem(CurrentMapItem));
+            }
+        }
+
+        [TestMethod]
         public void Version()
         {
             Setup<Version>(ABSaveSettings.ForSpeed);

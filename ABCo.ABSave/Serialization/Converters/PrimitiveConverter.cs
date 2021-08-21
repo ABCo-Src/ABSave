@@ -134,6 +134,8 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override object Deserialize(in DeserializeInfo info)
         {
+            if (_typeCode == PrimitiveType.Boolean) return info.Header.ReadBit();
+
             var deserializer = info.Header.Finish();
 
             unchecked
