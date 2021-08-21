@@ -21,26 +21,28 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
-        public void DateTime()
+        [DataRow(false)]
+        [DataRow(true)]
+        public void DateTime(bool compressed)
         {
-            Setup<DateTime>(ABSaveSettings.ForSpeed);
+            Setup<DateTime>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
             var dateTime = new DateTime(1989, 6, 3, 7, 3, 8);
 
             DoSerialize(dateTime);
-            AssertAndGoToStart(Concat(0, BitConverter.GetBytes(dateTime.Ticks)));
-
+            GoToStart();
             Assert.AreEqual(dateTime, DoDeserialize<DateTime>());
         }
 
         [TestMethod]
-        public void TimeSpan()
+        [DataRow(false)]
+        [DataRow(true)]
+        public void TimeSpan(bool compressed)
         {
-            Setup<TimeSpan>(ABSaveSettings.ForSpeed);
+            Setup<TimeSpan>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
             var timeSpan = new TimeSpan(19, 7, 3, 8);
 
             DoSerialize(timeSpan);
-            AssertAndGoToStart(Concat(0, BitConverter.GetBytes(timeSpan.Ticks)));
-
+            GoToStart();
             Assert.AreEqual(timeSpan, DoDeserialize<TimeSpan>());
         }
 
