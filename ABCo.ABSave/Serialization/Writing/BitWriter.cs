@@ -18,7 +18,7 @@ namespace ABCo.ABSave.Serialization.Writing
         public SerializeCurrentState State => _serializer.State;
         internal BitWriter(ABSaveSerializer serializer) => _serializer = serializer;
 
-        internal void SetupHeader()
+        internal void Reset()
         {
             FreeBits = 8;
             _target = 0;

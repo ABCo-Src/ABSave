@@ -45,7 +45,12 @@ namespace ABCo.ABSave.Serialization.Writing
             Reset();
         }
 
-        public void Reset() => State.Reset();
+        public void Reset()
+        {
+            _currentBitWriter.Reset();
+            State.Reset();
+        }
+
         public void Dispose() => State.Map.ReleaseSerializer(this);
 
         public void SerializeRoot(object? obj)
@@ -207,7 +212,7 @@ namespace ABCo.ABSave.Serialization.Writing
 
         public BitWriter GetHeader()
         {
-            _currentBitWriter.SetupHeader();
+            _currentBitWriter.Finish();
             return _currentBitWriter;
         }
     }
