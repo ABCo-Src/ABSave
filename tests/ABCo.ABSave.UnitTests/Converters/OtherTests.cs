@@ -51,7 +51,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             var obj = new KeyValuePair<byte, bool>(234, true);
 
             DoSerialize(obj);
-            AssertAndGoToStart(0, 0, 234, 0, 1);
+            AssertAndGoToStart(0, 0, 234, 0, 0x80);
 
             Assert.AreEqual(obj, DoDeserialize<KeyValuePair<byte, bool>>());
         }

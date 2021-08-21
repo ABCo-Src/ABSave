@@ -42,18 +42,16 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override void Serialize(in SerializeInfo info)
         {
+            if (_typeCode == PrimitiveType.Boolean)
+            {
+                info.Header.WriteBitWith((bool)info.Instance);
+                return;
+            }
+
             ABSaveSerializer serializer = info.Header.Finish();
 
             switch (_typeCode)
             {
-                case PrimitiveType.Boolean:
-                    bool bl = (bool)info.Instance;
-
-                    if (bl) serializer.WriteByte(1);
-                    else serializer.WriteByte(0);
-
-                    break;
-
                 //case PrimitiveType.IntPtr:
 
                 //    if (IntPtr.Size == 8)

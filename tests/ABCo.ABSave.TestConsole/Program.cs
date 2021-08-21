@@ -46,7 +46,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSize);
 
             var str = File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\modelBig.txt");
 
@@ -174,10 +174,10 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             Console.WriteLine("OUTPUT SIZES:");
 
             Print(ABSave, ABSaveResult);
-            //Print(UTF8Json, Utf8JsonResult);
-            //Print(TextJson, TextJsonResult);
-            //Print(MessagePack, MessagePackResult);
-            //Print(BinaryPack, BinaryPackResult);
+            Print(UTF8Json, Utf8JsonResult);
+            Print(TextJson, TextJsonResult);
+            Print(MessagePack, MessagePackResult);
+            Print(BinaryPack, BinaryPackResult);
             //Print(NewtonsoftJson, NewtonsoftJsonResult);
             //Print(XML, XMLResult);
 
