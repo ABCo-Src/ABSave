@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
+using ABCo.ABSave.Serialization.Writing.Core;
 
 namespace ABCo.ABSave.Serialization.Writing
 {
@@ -53,24 +54,14 @@ namespace ABCo.ABSave.Serialization.Writing
 
         public void Dispose() => State.Map.ReleaseSerializer(this);
 
-        public void SerializeRoot(object? obj)
-        {
-            using var writer = GetHeader();
-            writer.WriteSettingsHeaderIfNeeded();
-            writer.WriteRoot(obj);
-        }
+        #region Bit Writing
 
-        public void WriteItem(object? obj, MapItemInfo item)
-        {
-            using var writer = GetHeader();
-            writer.WriteItem(obj, item);
-        }
+        public void WriteBitOn() => _currentBitWriter.WriteBitOn();
+        public void WriteBitOff() => _currentBitWriter.WriteBitOff();
+        public void WriteBitWith(bool value) => _currentBitWriter.WriteBitWith(value);
 
-        public void WriteExactNonNullItem(object? obj, MapItemInfo item)
-        {
-            using var writer = GetHeader();
-            writer.WriteExactNonNullItem(obj!, item);
-        }
+
+        #endregion
 
         #region Byte Writing
 
@@ -87,6 +78,8 @@ namespace ABCo.ABSave.Serialization.Writing
         /// </summary>
         public unsafe void WriteInt16(short num)
         {
+            _currentBitWriter.Finish();
+
             if (State.ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
             WriteRawBytes(new ReadOnlySpan<byte>((byte*)&num, 2));
         }
@@ -96,6 +89,8 @@ namespace ABCo.ABSave.Serialization.Writing
         /// </summary>
         public unsafe void WriteInt32(int num)
         {
+            _currentBitWriter.Finish();
+
             if (State.ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
             WriteRawBytes(new ReadOnlySpan<byte>((byte*)&num, 4));
         }
@@ -105,6 +100,8 @@ namespace ABCo.ABSave.Serialization.Writing
         /// </summary>
         public unsafe void WriteInt64(long num)
         {
+            _currentBitWriter.Finish();
+
             if (State.ShouldReverseEndian) num = BinaryPrimitives.ReverseEndianness(num);
             WriteRawBytes(new ReadOnlySpan<byte>((byte*)&num, 8));
         }
@@ -114,6 +111,8 @@ namespace ABCo.ABSave.Serialization.Writing
         /// </summary>
         public unsafe void WriteSingle(float num)
         {
+            _currentBitWriter.Finish();
+
             if (State.ShouldReverseEndian)
             {
                 int asInt = BitConverter.SingleToInt32Bits(num);
@@ -128,6 +127,8 @@ namespace ABCo.ABSave.Serialization.Writing
         /// </summary>
         public unsafe void WriteDouble(double num)
         {
+            _currentBitWriter.Finish();
+
             if (State.ShouldReverseEndian)
             {
                 long asInt = BitConverter.DoubleToInt64Bits(num);
@@ -142,6 +143,8 @@ namespace ABCo.ABSave.Serialization.Writing
         /// </summary>
         public void WriteDecimal(decimal num)
         {
+            _currentBitWriter.Finish();
+
             int[]? bits = decimal.GetBits(num);
             for (int i = 0; i < 4; i++)
                 WriteInt32(bits[i]);
@@ -152,6 +155,8 @@ namespace ABCo.ABSave.Serialization.Writing
         /// </summary>
         public unsafe void FastWriteShorts(ReadOnlySpan<short> shorts)
         {
+            _currentBitWriter.Finish();
+
             ReadOnlySpan<byte> bytes = MemoryMarshal.Cast<short, byte>(shorts);
 
             if (State.ShouldReverseEndian)
@@ -172,43 +177,28 @@ namespace ABCo.ABSave.Serialization.Writing
             else WriteRawBytes(bytes);
         }
 
+        public void Flush() => _currentBitWriter.Finish();
+
         #endregion
 
-        /// <summary>
-        /// Writes an string. Dedicates a bit to storing whether the string is null or not.
-        /// </summary>
-        public void WriteNullableString(string? str)
+        public void WriteRoot(object? obj)
         {
-            using var writer = GetHeader();
-            writer.WriteNullableString(str);
+            _currentBitWriter.WriteSettingsHeaderIfNeeded();
+            ItemSerializer.SerializeItem(obj, State.Map._rootItem, _currentBitWriter);
         }
 
-        /// <summary>
-        /// Writes an non-null string.
-        /// </summary>
-        public void WriteNonNullString(string str)
-        {
-            using var writer = GetHeader();
-            writer.WriteNonNullString(str);
-        }
+        public void WriteSettingsHeaderIfNeeded() => HeaderSerializer.WriteHeader(_currentBitWriter);
 
-        /// <summary>
-        /// Writes the given integer in "compressed" (as few bytes as possible) form.
-        /// </summary>
-        public void WriteCompressedInt(uint data)
-        {
-            using var writer = GetHeader();
-            writer.WriteCompressedInt(data);
-        }
+        public void WriteItem(object? obj, MapItemInfo info) => ItemSerializer.SerializeItem(obj, info, _currentBitWriter);
+        public void WriteExactNonNullItem(object obj, MapItemInfo info) => ItemSerializer.SerializeExactNonNullItem(obj, info, _currentBitWriter);
 
-        /// <summary>
-        /// Writes the given long in "compressed" (as few bytes as possible) form.
-        /// </summary>
-        public void WriteCompressedLong(ulong data)
-        {
-            using var writer = GetHeader();
-            writer.WriteCompressedLong(data);
-        }
+        public void WriteCompressedInt(uint data) => CompressedSerializer.WriteCompressedInt(data, _currentBitWriter);
+        public void WriteCompressedLong(ulong data) => CompressedSerializer.WriteCompressedLong(data, _currentBitWriter);
+        public void WriteNullableString(string? str) => TextSerializer.WriteString(str, _currentBitWriter);
+        public void WriteNonNullString(string str) => TextSerializer.WriteNonNullString(str, _currentBitWriter);
+
+        public void WriteText(ReadOnlySpan<char> bytes) => TextSerializer.WriteText(bytes, _currentBitWriter);
+        public void WriteUTF8(ReadOnlySpan<char> bytes) => TextSerializer.WriteUTF8(bytes, _currentBitWriter);
 
         public BitWriter GetHeader()
         {

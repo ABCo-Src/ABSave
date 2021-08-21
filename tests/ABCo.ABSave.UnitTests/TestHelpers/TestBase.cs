@@ -74,6 +74,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public void AssertOutput(params byte[] expected)
         {
+            Serializer.Flush();
+
             var actual = Stream.ToArray();
             var matches = expected.SequenceEqual(actual);
 
