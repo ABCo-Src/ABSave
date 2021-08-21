@@ -25,7 +25,13 @@ namespace ABCo.ABSave.Serialization.Converters
             }
         }
 
-        public static void SerializeTicks(long ticks, BitWriter writer) => writer.Finish().WriteInt64(ticks);
+        public static void SerializeTicks(long ticks, BitWriter writer)
+        {
+            if (writer.State.Settings.CompressPrimitives)
+                writer.WriteCompressedLong((ulong)ticks);
+            else
+                writer.Finish().WriteInt64(ticks);
+        }
 
         public override object Deserialize(in DeserializeInfo info) => _type switch
         {
@@ -34,7 +40,13 @@ namespace ABCo.ABSave.Serialization.Converters
             _ => throw new Exception("Invalid tick-based type"),
         };
 
-        public static long DeserializeTicks(BitReader header) => header.Finish().ReadInt64();
+        public static long DeserializeTicks(BitReader header)
+        {
+            if (header.State.Settings.CompressPrimitives)
+                return (long)header.ReadCompressedLong();
+            else
+                return header.Finish().ReadInt64();
+        }
 
         public override uint Initialize(InitializeInfo info)
         {
