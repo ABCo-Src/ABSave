@@ -39,22 +39,22 @@ namespace ABCo.ABSave.Serialization.Converters
             switch (_type)
             {
                 case StringType.String:
-                    info.Header.WriteNonNullString((string)info.Instance);
+                    info.Serializer.WriteNonNullString((string)info.Instance);
                     break;
                 case StringType.CharArray:
-                    SerializeCharArray((char[])info.Instance, info.Header);
+                    SerializeCharArray((char[])info.Instance, info.Serializer);
                     break;
                 case StringType.StringBuilder:
 
-                    SerializeStringBuilder((StringBuilder)info.Instance, info.Header);
+                    SerializeStringBuilder((StringBuilder)info.Instance, info.Serializer);
                     break;
             }
         }
 
-        public static void SerializeCharArray(char[] obj, BitWriter header) =>
+        public static void SerializeCharArray(char[] obj, ABSaveSerializer header) =>
             header.WriteText(obj.AsSpan());
 
-        public static void SerializeStringBuilder(StringBuilder obj, BitWriter header)
+        public static void SerializeStringBuilder(StringBuilder obj, ABSaveSerializer header)
         {
             // TODO: Use "GetChunks" with .NET 5!
             char[] tmp = obj.Length < ABSaveUtils.MAX_STACK_SIZE ? new char[obj.Length] : ArrayPool<char>.Shared.Rent(obj.Length);
@@ -70,29 +70,28 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override object Deserialize(in DeserializeInfo info) => _type switch
         {
-            StringType.String => info.Header.ReadNonNullString(),
-            StringType.CharArray => DeserializeCharArray(info.Header),
-            StringType.StringBuilder => DeserializeStringBuilder(info.Header),
+            StringType.String => info.Deserializer.ReadNonNullString(),
+            StringType.CharArray => DeserializeCharArray(info.Deserializer),
+            StringType.StringBuilder => DeserializeStringBuilder(info.Deserializer),
             _ => throw new Exception("Invalid StringType in text converter context"),
         };
 
-        public static char[] DeserializeCharArray(BitReader header)
+        public static char[] DeserializeCharArray(ABSaveDeserializer deserializer)
         {
-            if (header.State.Settings.UseUTF8)
-                return header.ReadUTF8(s => new char[s], c => c.AsMemory());
+            if (deserializer.State.Settings.UseUTF8)
+                return deserializer.ReadUTF8(s => new char[s], c => c.AsMemory());
             else
             {
-                int size = (int)header.ReadCompressedInt();
+                int size = (int)deserializer.ReadCompressedInt();
                 char[]? chArr = new char[size];
 
-                var deserializer = header.Finish();
                 deserializer.FastReadShorts(MemoryMarshal.Cast<char, short>(chArr.AsSpan()));
 
                 return chArr;
             }
         }
 
-        public static StringBuilder DeserializeStringBuilder(BitReader header) => new StringBuilder(header.ReadNonNullString());
+        public static StringBuilder DeserializeStringBuilder(ABSaveDeserializer deserializer) => new StringBuilder(deserializer.ReadNonNullString());
 
         #endregion
 

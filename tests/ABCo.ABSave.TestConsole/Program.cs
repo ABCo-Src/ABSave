@@ -46,7 +46,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSize);
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
 
             var str = File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\modelBig.txt");
 

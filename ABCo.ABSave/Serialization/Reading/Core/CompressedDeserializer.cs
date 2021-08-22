@@ -6,33 +6,31 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal static class CompressedDeserializer
     {
-        public static ulong ReadCompressed(bool canBeLong, BitReader source)
+        public static ulong ReadCompressed(bool canBeLong, ABSaveDeserializer deserializer)
         {
-            if (source.FreeBits == 0) source.MoveToNewByte();
+            if (deserializer.CurrentByteFreeBits == 0) deserializer.MoveToNewCurrentByte();
 
-            if (source.State.Settings.LazyCompressedWriting)
-                return ReadCompressedLazyFast(canBeLong, source);
+            if (deserializer.State.Settings.LazyCompressedWriting)
+                return ReadCompressedLazyFast(canBeLong, deserializer);
             else
-                return ReadCompressedSlow(source);
+                return ReadCompressedSlow(deserializer);
         }
 
-        public static ulong ReadCompressedLazyFast(bool canBeLong, BitReader source)
+        public static ulong ReadCompressedLazyFast(bool canBeLong, ABSaveDeserializer deserializer)
         {
             // If the header is big enough, the value will have been fit into the rest of the header.
-            if (source.FreeBits > 3)
+            if (deserializer.CurrentByteFreeBits > 3)
             {
-                if (source.ReadBit())
-                    return source.ReadInteger(source.FreeBits);
+                if (deserializer.ReadBit())
+                    return deserializer.ReadInteger(deserializer.CurrentByteFreeBits);
                 else
-                    return ReadFull(source.Finish());
+                    return ReadFull(deserializer);
             }
 
             // If not, it may be in its own byte.
             else
             {
-                bool isSingleByte = (source.CurrentByte & 1) > 0;
-
-                var deserializer = source.Finish();
+                bool isSingleByte = (deserializer.GetCurrentByte() & 1) > 0;
 
                 if (isSingleByte)
                     return deserializer.ReadByte();
@@ -49,16 +47,14 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             }
         }
 
-        public static ulong ReadCompressedSlow(BitReader source)
+        public static ulong ReadCompressedSlow(ABSaveDeserializer deserializer)
         {
             // Process header
-            byte preHeaderCapacity = source.FreeBits;
-            (byte noContBytes, byte headerLen) = ReadNoContBytes(source);
+            byte preHeaderCapacity = deserializer.CurrentByteFreeBits;
+            (byte noContBytes, byte headerLen) = ReadNoContBytes(deserializer);
 
             byte bitsToGo = (byte)(8 * noContBytes);
-            ulong res = ReadFirstByteData(source, headerLen, bitsToGo, preHeaderCapacity);
-
-            var deserializer = source.Finish();
+            ulong res = ReadFirstByteData(deserializer, headerLen, bitsToGo, preHeaderCapacity);
 
             while (bitsToGo > 0)
             {
@@ -69,7 +65,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             return res;
         }
 
-        static ulong ReadFirstByteData(BitReader source, byte headerLen, byte noContBits, byte preHeaderCapacity)
+        static ulong ReadFirstByteData(ABSaveDeserializer deserializer, byte headerLen, byte noContBits, byte preHeaderCapacity)
         {
             bool isExtended = preHeaderCapacity < 4;
             ulong res = 0;
@@ -78,16 +74,16 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             if (isExtended)
             {
                 // If there are still "y" bits left, get them.
-                if (headerLen < preHeaderCapacity) res = (ulong)source.ReadInteger(source.FreeBits) << noContBits << 8;
+                if (headerLen < preHeaderCapacity) res = (ulong)deserializer.ReadInteger(deserializer.CurrentByteFreeBits) << noContBits << 8;
 
                 // Make sure we're ready to read "x"s. There will always be "x"es as the header can not physically take them all up.
-                if (source.FreeBits == 0) source.MoveToNewByte();
+                if (deserializer.CurrentByteFreeBits == 0) deserializer.MoveToNewCurrentByte();
             }
 
-            return res | ((ulong)source.ReadInteger(source.FreeBits) << noContBits);
+            return res | ((ulong)deserializer.ReadInteger(deserializer.CurrentByteFreeBits) << noContBits);
         }
 
-        static (byte noContBytes, byte headerLen) ReadNoContBytes(BitReader source)
+        static (byte noContBytes, byte headerLen) ReadNoContBytes(ABSaveDeserializer source)
         {
             for (byte i = 0; i < 8; i++)
             {

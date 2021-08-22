@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
+using ABCo.ABSave.Serialization.Writing.Core;
 
 namespace ABCo.ABSave.Serialization.Writing
 {
@@ -21,14 +22,16 @@ namespace ABCo.ABSave.Serialization.Writing
     /// </summary>
     public sealed partial class ABSaveSerializer : IDisposable
     {
-        public Stream Output { get; private set; } = null!;
+        Stream _output = null!;
         public SerializeCurrentState State { get; }
 
-        readonly BitWriter _currentBitWriter;
+        public byte CurrentByteFreeBits => _currentBitWriter.FreeBits;
+
+        BitWriter _currentBitWriter;
 
         internal ABSaveSerializer(ABSaveMap map)
         {
-            Output = null!;
+            _output = null!;
             State = new SerializeCurrentState(map);
             _currentBitWriter = new BitWriter(this);
         }
@@ -38,40 +41,63 @@ namespace ABCo.ABSave.Serialization.Writing
             if (!output.CanWrite)
                 throw new Exception("Cannot use unwriteable stream.");
 
-            Output = output;
+            _output = output;
             State.TargetVersions = targetVersions;
             State.HasVersioningInfo = writeVersioning;
 
             Reset();
         }
 
-        public void Reset() => State.Reset();
-        public void Dispose() => State.Map.ReleaseSerializer(this);
-
-        public void SerializeRoot(object? obj)
+        public void Reset()
         {
-            using var writer = GetHeader();
-            writer.WriteSettingsHeaderIfNeeded();
-            writer.WriteRoot(obj);
+            _currentBitWriter.Reset();
+            State.Reset();
         }
 
-        public void WriteItem(object? obj, MapItemInfo item)
+        public void Dispose()
         {
-            using var writer = GetHeader();
-            writer.WriteItem(obj, item);
+            Flush();
+            State.Map.ReleaseSerializer(this);
         }
 
-        public void WriteExactNonNullItem(object? obj, MapItemInfo item)
+        public Stream GetStream()
         {
-            using var writer = GetHeader();
-            writer.WriteExactNonNullItem(obj!, item);
+            _currentBitWriter.Finish();
+            return _output;
         }
+
+        #region Bit Writing
+
+        public void WriteBitOn() => _currentBitWriter.WriteBitOn();
+        public void WriteBitOff() => _currentBitWriter.WriteBitOff();
+        public void WriteBitWith(bool value) => _currentBitWriter.WriteBitWith(value);
+        public void WriteInteger(byte number, byte bitsRequired) => _currentBitWriter.WriteInteger(number, bitsRequired);
+        public void FillRemainderOfCurrentByteWith(int n) => _currentBitWriter.FillRemainingWith(n);
+        public void FinishWritingBitsToCurrentByte() => _currentBitWriter.MoveToNextByte();
+
+        #endregion
 
         #region Byte Writing
 
-        public void WriteByte(byte byt) => Output.WriteByte(byt);
-        public void WriteRawBytes(byte[] arr) => Output.Write(arr, 0, arr.Length);
-        public void WriteRawBytes(ReadOnlySpan<byte> data) => Output.Write(data);
+        internal void WriteByteUnchecked(byte byt) => _output.WriteByte(byt);
+
+        public void WriteByte(byte byt)
+        {
+            _currentBitWriter.Finish();
+            _output.WriteByte(byt);
+        }
+
+        public void WriteRawBytes(byte[] arr)
+        {
+            _currentBitWriter.Finish();
+            _output.Write(arr, 0, arr.Length);
+        }
+
+        public void WriteRawBytes(ReadOnlySpan<byte> data) 
+        {
+            _currentBitWriter.Finish();
+            _output.Write(data);
+        }
 
         #endregion
 
@@ -167,48 +193,26 @@ namespace ABCo.ABSave.Serialization.Writing
             else WriteRawBytes(bytes);
         }
 
+        public void Flush() => _currentBitWriter.Finish();
+
         #endregion
 
-        /// <summary>
-        /// Writes an string. Dedicates a bit to storing whether the string is null or not.
-        /// </summary>
-        public void WriteNullableString(string? str)
-        {
-            using var writer = GetHeader();
-            writer.WriteNullableString(str);
-        }
+        public void WriteRoot(object? obj) => ItemSerializer.SerializeItem(obj, State.Map._rootItem, this);
 
-        /// <summary>
-        /// Writes an non-null string.
-        /// </summary>
-        public void WriteNonNullString(string str)
-        {
-            using var writer = GetHeader();
-            writer.WriteNonNullString(str);
-        }
+        public void WriteSettingsHeaderIfNeeded() => HeaderSerializer.WriteHeader(this);
 
-        /// <summary>
-        /// Writes the given integer in "compressed" (as few bytes as possible) form.
-        /// </summary>
-        public void WriteCompressedInt(uint data)
-        {
-            using var writer = GetHeader();
-            writer.WriteCompressedInt(data);
-        }
+        public void WriteItem(object? obj, MapItemInfo info) => ItemSerializer.SerializeItem(obj, info, this);
+        public void WriteExactNonNullItem(object obj, MapItemInfo info) => ItemSerializer.SerializeExactNonNullItem(obj, info, this);
 
-        /// <summary>
-        /// Writes the given long in "compressed" (as few bytes as possible) form.
-        /// </summary>
-        public void WriteCompressedLong(ulong data)
-        {
-            using var writer = GetHeader();
-            writer.WriteCompressedLong(data);
-        }
+        public VersionInfo WriteExactNonNullHeader(object obj, Type actualType, Converter converter) =>
+            ItemSerializer.SerializeConverterHeader(obj, converter, actualType, true, this)!;
 
-        public BitWriter GetHeader()
-        {
-            _currentBitWriter.SetupHeader();
-            return _currentBitWriter;
-        }
+        public void WriteCompressedInt(uint data) => CompressedSerializer.WriteCompressedInt(data, this);
+        public void WriteCompressedLong(ulong data) => CompressedSerializer.WriteCompressedLong(data, this);
+        public void WriteNullableString(string? str) => TextSerializer.WriteString(str, this);
+        public void WriteNonNullString(string str) => TextSerializer.WriteNonNullString(str, this);
+
+        public void WriteText(ReadOnlySpan<char> bytes) => TextSerializer.WriteText(bytes, this);
+        public void WriteUTF8(ReadOnlySpan<char> bytes) => TextSerializer.WriteUTF8(bytes, this);
     }
 }

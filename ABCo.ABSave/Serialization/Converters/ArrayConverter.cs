@@ -69,9 +69,9 @@ namespace ABCo.ABSave.Serialization.Converters
         #region Serialization
 
         public override void Serialize(in SerializeInfo info) =>
-            Serialize((Array)info.Instance, info.ActualType, info.Header);
+            Serialize((Array)info.Instance, info.ActualType, info.Serializer);
 
-        void Serialize(Array arr, Type actualType, BitWriter header)
+        void Serialize(Array arr, Type actualType, ABSaveSerializer serializer)
         {
             int len = arr.Length;
 
@@ -86,8 +86,8 @@ namespace ABCo.ABSave.Serialization.Converters
                 //    }
                 case ArrayType.SZArrayManual:
                     {
-                        header.WriteCompressedInt((uint)len);
-                        for (int i = 0; i < len; i++) header.WriteItem(arr.GetValue(i), _info.PerItem);
+                        serializer.WriteCompressedInt((uint)len);
+                        for (int i = 0; i < len; i++) serializer.WriteItem(arr.GetValue(i), _info.PerItem);
 
                         break;
                     }
@@ -95,24 +95,24 @@ namespace ABCo.ABSave.Serialization.Converters
                 // Extremely rare to not be in an "Array" (unknown), but may as well support it.
                 case ArrayType.SNZArray:
                     {
-                        header.WriteCompressedInt((uint)len);
+                        serializer.WriteCompressedInt((uint)len);
 
                         int i = arr.GetLowerBound(0);
-                        header.WriteCompressedInt((uint)i);
+                        serializer.WriteCompressedInt((uint)i);
 
                         int end = i + len;
-                        for (; i < end; i++) header.WriteItem(arr.GetValue(i), _info.PerItem);
+                        for (; i < end; i++) serializer.WriteItem(arr.GetValue(i), _info.PerItem);
 
                         break;
                     }
                 case ArrayType.MultiDimensional:
                     {
                         // Get information about the array.
-                        MDSerializeArrayInfo mdContext = GetMultiDimensionInfo(arr, ref _info, header, out int[] lowerBounds);
+                        MDSerializeArrayInfo mdContext = GetMultiDimensionInfo(arr, ref _info, serializer, out int[] lowerBounds);
                         int firstLength = arr.GetLength(0);
 
-                        header.WriteBitWith(mdContext.CustomLowerBounds);
-                        header.WriteCompressedInt((uint)firstLength);
+                        serializer.WriteBitWith(mdContext.CustomLowerBounds);
+                        serializer.WriteCompressedInt((uint)firstLength);
 
                         SerializeMultiDimensionalArrayData(arr, ref _info, ref mdContext, firstLength, lowerBounds);
 
@@ -139,13 +139,13 @@ namespace ABCo.ABSave.Serialization.Converters
             for (int i = 1; i < lengths.Length; i++)
             {
                 lengths[i] = arr.GetLength(i);
-                mdContext.Writer.WriteCompressedLong((ulong)lengths[i]);
+                mdContext.Serializer.WriteCompressedLong((ulong)lengths[i]);
             }
 
             // Write the lower bounds
             if (mdContext.CustomLowerBounds)
                 for (int i = 0; i < lengths.Length; i++)
-                    mdContext.Writer.WriteCompressedLong((ulong)lowerBounds[i]);
+                    mdContext.Serializer.WriteCompressedLong((ulong)lowerBounds[i]);
 
             SerializeDimension(0, lengths, lowerBounds, ref mdContext, ref context);
         }
@@ -162,7 +162,7 @@ namespace ABCo.ABSave.Serialization.Converters
             // Deepest dimension
             if (nextDimension == mdInfo.Array.Rank)
                 for (; currentPos[dimension] < endIndex; currentPos[dimension]++)
-                    mdInfo.Writer.WriteItem(mdInfo.Array.GetValue(currentPos), info.PerItem);
+                    mdInfo.Serializer.WriteItem(mdInfo.Array.GetValue(currentPos), info.PerItem);
 
             // Outer dimension
             else
@@ -172,7 +172,7 @@ namespace ABCo.ABSave.Serialization.Converters
             currentPos[dimension] = originalPos;
         }
 
-        static MDSerializeArrayInfo GetMultiDimensionInfo(Array arr, ref ArrayTypeInfo context, BitWriter serializer, out int[] lowerBounds)
+        static MDSerializeArrayInfo GetMultiDimensionInfo(Array arr, ref ArrayTypeInfo context, ABSaveSerializer serializer, out int[] lowerBounds)
         {
             lowerBounds = new int[context.Rank];
 
@@ -193,9 +193,9 @@ namespace ABCo.ABSave.Serialization.Converters
 
         #region Deserialization
 
-        public override object Deserialize(in DeserializeInfo info) => Deserialize(info.Header);
+        public override object Deserialize(in DeserializeInfo info) => Deserialize(info.Deserializer);
 
-        object Deserialize(BitReader header)
+        object Deserialize(ABSaveDeserializer header)
         {
             switch (_info.Type)
             {
@@ -235,7 +235,7 @@ namespace ABCo.ABSave.Serialization.Converters
             }
         }
 
-        unsafe object DeserializeMultiDimensionalArray(in ArrayTypeInfo context, bool hasCustomLowerBounds, int firstLength, BitReader header)
+        unsafe object DeserializeMultiDimensionalArray(in ArrayTypeInfo context, bool hasCustomLowerBounds, int firstLength, ABSaveDeserializer header)
         {
             // Read the lengths.
             int[] lengths = new int[context.Rank];
@@ -255,7 +255,7 @@ namespace ABCo.ABSave.Serialization.Converters
             // Create the array, and deserialize.
             Array res = hasCustomLowerBounds ? Array.CreateInstance(context.ElementType, lengths, lowerBounds) : Array.CreateInstance(context.ElementType, lengths);
 
-            var mdContext = new MDDeserializeArrayInfo(res, header.Finish());
+            var mdContext = new MDDeserializeArrayInfo(res, header);
             DeserializeDimension(0, lengths, lowerBounds, in context, in mdContext);
 
             return res;
@@ -296,7 +296,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
         #region Primitive Optimization
 
-        //static unsafe void SerializeFast(Array arr, FastConversionType type, BitWriter header)
+        //static unsafe void SerializeFast(Array arr, FastConversionType type, ABSaveSerializer header)
         //{
         //    // TODO: Remove tight coupling with TextConverter.
         //    if (type == FastConversionType.Char) TextConverter.SerializeCharArray((char[])arr, ref header);
@@ -325,7 +325,7 @@ namespace ABCo.ABSave.Serialization.Converters
         //    }
         //}
 
-        //unsafe static Array DeserializeFast(FastConversionType type, BitReader header)
+        //unsafe static Array DeserializeFast(FastConversionType type, ABSaveDeserializer header)
         //{
         //    // TODO: Remove tight coupling with TextConverter.
         //    if (type == FastConversionType.Char) return TextConverter.DeserializeCharArray(ref header);
@@ -372,13 +372,13 @@ namespace ABCo.ABSave.Serialization.Converters
         readonly struct MDSerializeArrayInfo
         {
             public readonly Array Array;
-            public readonly BitWriter Writer;
+            public readonly ABSaveSerializer Serializer;
             public readonly bool CustomLowerBounds;
 
-            public MDSerializeArrayInfo(Array arr, BitWriter writer, bool zeroLowerBounds)
+            public MDSerializeArrayInfo(Array arr, ABSaveSerializer serializer, bool zeroLowerBounds)
             {
                 Array = arr;
-                Writer = writer;
+                Serializer = serializer;
                 CustomLowerBounds = zeroLowerBounds;
             }
         }

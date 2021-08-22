@@ -15,19 +15,15 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize();
 
-            var target = Serializer.GetHeader();
-
-            target.WriteBitOn();
+            Serializer.WriteBitOn();
 
             if (overflow)
             {
                 for (int i = 0; i < 8; i++)
                 {
-                    target.WriteBitOn();
+                    Serializer.WriteBitOn();
                 }
             }
-
-            target.Finish();
 
             if (overflow)
             {
@@ -46,19 +42,15 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize();
 
-            var target = Serializer.GetHeader();
-
-            target.WriteBitOff();
+            Serializer.WriteBitOff();
 
             if (overflow)
             {
                 for (int i = 0; i < 8; i++)
                 {
-                    target.WriteBitOff();
+                    Serializer.WriteBitOff();
                 }
             }
-
-            target.Finish();
 
             if (overflow)
             {
@@ -75,10 +67,8 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize();
 
-            var target = Serializer.GetHeader();
-            target.WriteInteger(48, 6);
-            target.WriteInteger(2, 2);
-            target.Finish();
+            Serializer.WriteInteger(48, 6);
+            Serializer.WriteInteger(2, 2);
 
             AssertAndGoToStart(194);
         }
@@ -88,10 +78,8 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize(ABSaveSettings.ForSpeed);
 
-            var target = Serializer.GetHeader();
-            target.WriteInteger(0, 4);
-            target.WriteInteger(42, 6);
-            target.Finish();
+            Serializer.WriteInteger(0, 4);
+            Serializer.WriteInteger(42, 6);
 
             AssertAndGoToStart(10, 128);
         }
@@ -100,16 +88,14 @@ namespace ABCo.ABSave.UnitTests.Core
         public void FreeBits()
         {
             Initialize(ABSaveSettings.ForSize);
-            var target = Serializer.GetHeader();
 
-            target.WriteInteger(0, 4);
-            Assert.AreEqual(target.FreeBits, 4);
-            target.WriteBitOff();
-            target.WriteBitOn();
-            Assert.AreEqual(target.FreeBits, 2);
-            target.WriteInteger(42, 6);
-            Assert.AreEqual(target.FreeBits, 4);
-            target.Finish();
+            Serializer.WriteInteger(0, 4);
+            Assert.AreEqual(Serializer.CurrentByteFreeBits, 4);
+            Serializer.WriteBitOff();
+            Serializer.WriteBitOn();
+            Assert.AreEqual(Serializer.CurrentByteFreeBits, 2);
+            Serializer.WriteInteger(42, 6);
+            Assert.AreEqual(Serializer.CurrentByteFreeBits, 4);
         }
     }
 }

@@ -74,6 +74,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public void AssertOutput(params byte[] expected)
         {
+            Serializer.Flush();
+
             var actual = Stream.ToArray();
             var matches = expected.SequenceEqual(actual);
 
@@ -117,7 +119,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
                             SetupSerializer();
                             ((Action<ABSaveSerializer>)itms[currentItmsPos++])(serializer);
-                            bytes.AddRange(((MemoryStream)serializer.Output).ToArray());
+                            bytes.AddRange(((MemoryStream)serializer.GetStream()).ToArray());
 
                             break;
                         case GenType.MapItem:
@@ -126,7 +128,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
                             var genMap = (GenMap)itms[currentItmsPos++];
                             serializer.WriteExactNonNullItem(genMap.Obj, genMap.Item);
-                            bytes.AddRange(((MemoryStream)serializer.Output).ToArray());
+                            bytes.AddRange(((MemoryStream)serializer.GetStream()).ToArray());
 
                             break;
                         case GenType.Size:
@@ -134,7 +136,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                             SetupSerializer();
                             serializer.WriteCompressedLong((ulong)itms[currentItmsPos++]);
 
-                            bytes.AddRange(((MemoryStream)serializer.Output).ToArray());
+                            bytes.AddRange(((MemoryStream)serializer.GetStream()).ToArray());
                             break;
                     }
                 }
@@ -151,7 +153,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                 else
                 {
                     serializer.Reset();
-                    serializer.Output.Position = 0;
+                    serializer.GetStream().Position = 0;
                 }
             }
         }
