@@ -17,35 +17,35 @@ namespace ABCo.ABSave.Serialization.Converters
             switch (_type)
             {
                 case TicksType.DateTime:
-                    SerializeTicks(((DateTime)info.Instance).Ticks, info.Header);
+                    SerializeTicks(((DateTime)info.Instance).Ticks, info.Serializer);
                     break;
                 case TicksType.TimeSpan:
-                    SerializeTicks(((TimeSpan)info.Instance).Ticks, info.Header);
+                    SerializeTicks(((TimeSpan)info.Instance).Ticks, info.Serializer);
                     break;
             }
         }
 
-        public static void SerializeTicks(long ticks, ABSaveSerializer writer)
+        public static void SerializeTicks(long ticks, ABSaveSerializer serializer)
         {
-            if (writer.State.Settings.CompressPrimitives)
-                writer.WriteCompressedLong((ulong)ticks);
+            if (serializer.State.Settings.CompressPrimitives)
+                serializer.WriteCompressedLong((ulong)ticks);
             else
-                writer.WriteInt64(ticks);
+                serializer.WriteInt64(ticks);
         }
 
         public override object Deserialize(in DeserializeInfo info) => _type switch
         {
-            TicksType.DateTime => new DateTime(DeserializeTicks(info.Header)),
-            TicksType.TimeSpan => new TimeSpan(DeserializeTicks(info.Header)),
+            TicksType.DateTime => new DateTime(DeserializeTicks(info.Deserializer)),
+            TicksType.TimeSpan => new TimeSpan(DeserializeTicks(info.Deserializer)),
             _ => throw new Exception("Invalid tick-based type"),
         };
 
-        public static long DeserializeTicks(ABSaveDeserializer header)
+        public static long DeserializeTicks(ABSaveDeserializer serializer)
         {
-            if (header.State.Settings.CompressPrimitives)
-                return (long)header.ReadCompressedLong();
+            if (serializer.State.Settings.CompressPrimitives)
+                return (long)serializer.ReadCompressedLong();
             else
-                return header.ReadInt64();
+                return serializer.ReadInt64();
         }
 
         public override uint Initialize(InitializeInfo info)

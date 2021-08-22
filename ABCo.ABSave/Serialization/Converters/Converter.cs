@@ -71,10 +71,10 @@ namespace ABCo.ABSave.Serialization.Converters
             public object Instance { get; }
             public Type ActualType { get; }
             public VersionInfo VersionInfo { get; }
-            public ABSaveSerializer Header { get; }
+            public ABSaveSerializer Serializer { get; }
 
-            internal SerializeInfo(object instance, Type actualType, VersionInfo versionInfo, ABSaveSerializer header) =>
-                (Instance, ActualType, VersionInfo, Header) = (instance, actualType, versionInfo, header);
+            internal SerializeInfo(object instance, Type actualType, VersionInfo versionInfo, ABSaveSerializer serializer) =>
+                (Instance, ActualType, VersionInfo, Serializer) = (instance, actualType, versionInfo, serializer);
         }
 
         public abstract void Serialize(in SerializeInfo info);
@@ -82,13 +82,13 @@ namespace ABCo.ABSave.Serialization.Converters
         public struct DeserializeInfo
         {
             public Type ActualType { get; }
-            public ABSaveDeserializer Header { get; }
+            public ABSaveDeserializer Deserializer { get; }
             internal VersionInfo VersionInfo { get; }
 
-            public CurrentState State => Header.State;
+            public CurrentState State => Deserializer.State;
 
-            internal DeserializeInfo(Type actualType, VersionInfo versionInfo, ABSaveDeserializer header) =>
-                (ActualType, VersionInfo, Header) = (actualType, versionInfo, header);
+            internal DeserializeInfo(Type actualType, VersionInfo versionInfo, ABSaveDeserializer deserializer) =>
+                (ActualType, VersionInfo, Deserializer) = (actualType, versionInfo, deserializer);
         }
 
         public abstract object Deserialize(in DeserializeInfo info);

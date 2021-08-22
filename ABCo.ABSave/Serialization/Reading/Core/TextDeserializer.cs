@@ -8,31 +8,31 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal unsafe static class TextDeserializer
     {
-        public static string? ReadNullableString(ABSaveDeserializer header)
+        public static string? ReadNullableString(ABSaveDeserializer deserializer)
         {
-            if (!header.ReadBit()) return null;
+            if (!deserializer.ReadBit()) return null;
 
-            return ReadNonNullString(header);
+            return ReadNonNullString(deserializer);
         }
 
-        public static string ReadNonNullString(ABSaveDeserializer header)
+        public static string ReadNonNullString(ABSaveDeserializer deserializer)
         {
-            if (header.State.Settings.UseUTF8)
+            if (deserializer.State.Settings.UseUTF8)
             {
-                int byteSize = (int)header.ReadCompressedInt();
+                int byteSize = (int)deserializer.ReadCompressedInt();
 
                 // Read the data
-                Span<byte> buffer = byteSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[byteSize] : header.State.GetStringBuffer(byteSize);
-                header.ReadBytes(buffer);
+                Span<byte> buffer = byteSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[byteSize] : deserializer.State.GetStringBuffer(byteSize);
+                deserializer.ReadBytes(buffer);
 
                 // Encode
                 return Encoding.UTF8.GetString(buffer);
             }
             else
             {
-                int size = (int)header.ReadCompressedInt();
+                int size = (int)deserializer.ReadCompressedInt();
 
-                return string.Create(size, header, (chars, state) =>
+                return string.Create(size, deserializer, (chars, state) =>
                 {
                     state.FastReadShorts(MemoryMarshal.Cast<char, short>(chars));
                 });

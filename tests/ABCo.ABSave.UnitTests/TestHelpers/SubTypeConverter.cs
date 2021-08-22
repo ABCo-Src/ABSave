@@ -24,25 +24,25 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         {
             if (_writesToHeader)
             {
-                info.Header.WriteBitOn();
-                info.Header.FinishWritingBitsToCurrentByte();
+                info.Serializer.WriteBitOn();
+                info.Serializer.FinishWritingBitsToCurrentByte();
             }
 
-            info.Header.WriteByte(OUTPUT_BYTE);
+            info.Serializer.WriteByte(OUTPUT_BYTE);
         }
 
         public override object Deserialize(in DeserializeInfo info)
         {
             if (_writesToHeader)
             {
-                if (!info.Header.ReadBit()) throw new Exception("Sub deserialization failed.");
+                if (!info.Deserializer.ReadBit()) throw new Exception("Sub deserialization failed.");
 
-                if (info.Header.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
+                if (info.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
 
                 return _isNo2 ? new SubWithHeader2() : new SubWithHeader();
             }
 
-            if (info.Header.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
+            if (info.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
 
             return _isNo2 ? new SubWithoutHeader2() : new SubWithoutHeader();
         }

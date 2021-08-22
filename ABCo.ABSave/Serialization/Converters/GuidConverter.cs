@@ -15,14 +15,14 @@ namespace ABCo.ABSave.Serialization.Converters
             Span<byte> bytes = stackalloc byte[16];
             guid.TryWriteBytes(bytes);
 
-            info.Header.WriteRawBytes(bytes);
+            info.Serializer.WriteRawBytes(bytes);
         }
 
         public override object Deserialize(in DeserializeInfo info)
         {
             Span<byte> data = stackalloc byte[16];
           
-            info.Header.ReadBytes(data);
+            info.Deserializer.ReadBytes(data);
             return new Guid(data);
         }
     }

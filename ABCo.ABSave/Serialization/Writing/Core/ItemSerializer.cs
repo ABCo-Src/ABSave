@@ -13,37 +13,37 @@ namespace ABCo.ABSave.Serialization.Writing.Core
 {
     internal static class ItemSerializer
     {
-        public static void SerializeItem(object? obj, MapItemInfo info, ABSaveSerializer header)
+        public static void SerializeItem(object? obj, MapItemInfo info, ABSaveSerializer serializer)
         {
             // Say it's "not null" if it is nullable.
             if (obj == null)
-                header.WriteBitOff();
+                serializer.WriteBitOff();
             else
             {
-                if (info.IsNullable) header.WriteBitOn();
-                SerializeItemNoSetup(obj, info, header, info.IsNullable);
+                if (info.IsNullable) serializer.WriteBitOn();
+                SerializeItemNoSetup(obj, info, serializer, info.IsNullable);
             }
         }
 
-        public static void SerializeExactNonNullItem(object obj, MapItemInfo info, ABSaveSerializer header) =>
-            SerializeItemNoSetup(obj, info, header, true);
+        public static void SerializeExactNonNullItem(object obj, MapItemInfo info, ABSaveSerializer serializer) =>
+            SerializeItemNoSetup(obj, info, serializer, true);
 
-        static void SerializeItemNoSetup(object obj, MapItemInfo info, ABSaveSerializer header, bool skipHeader)
+        static void SerializeItemNoSetup(object obj, MapItemInfo info, ABSaveSerializer serializer, bool skipHeader)
         {
             Converter item = info.Converter;
             ABSaveUtils.WaitUntilNotGenerating(item);
 
-            SerializeConverter(obj, info.Converter, header, skipHeader);
+            SerializeConverter(obj, info.Converter, serializer, skipHeader);
         }
 
-        static void SerializeConverter(object obj, Converter converter, ABSaveSerializer header, bool skipHeader)
+        static void SerializeConverter(object obj, Converter converter, ABSaveSerializer serializer, bool skipHeader)
         {
             Type? actualType = obj.GetType();
 
-            var currentInfo = SerializeConverterHeader(obj, converter, actualType, skipHeader, header);
+            var currentInfo = SerializeConverterHeader(obj, converter, actualType, skipHeader, serializer);
             if (currentInfo == null) return;
 
-            var serializeInfo = new Converter.SerializeInfo(obj, actualType, currentInfo, header);
+            var serializeInfo = new Converter.SerializeInfo(obj, actualType, currentInfo, serializer);
             converter.Serialize(in serializeInfo);
         }
 

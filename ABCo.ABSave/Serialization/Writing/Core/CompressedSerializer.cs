@@ -22,8 +22,8 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         }
 
         // NOTE: All uses of "INumberContainer" virtual calls in here are elided by the JIT thanks to generics.
-        public static void WriteCompressedInt(uint data, ABSaveSerializer target) => WriteCompressed(new Int32Container((int)data), target);
-        public static void WriteCompressedLong(ulong data, ABSaveSerializer target) => WriteCompressed(new Int64Container((long)data), target);
+        public static void WriteCompressedInt(uint data, ABSaveSerializer serializer) => WriteCompressed(new Int32Container((int)data), serializer);
+        public static void WriteCompressedLong(ulong data, ABSaveSerializer serializer) => WriteCompressed(new Int64Container((long)data), serializer);
 
         static void WriteCompressed<T>(T data, ABSaveSerializer target) where T : INumberContainer
         {
@@ -35,22 +35,22 @@ namespace ABCo.ABSave.Serialization.Writing.Core
                 WriteCompressedSlow(data, target);
         }
 
-        static void WriteCompressedLazyFast<T>(T data, ABSaveSerializer target) where T : INumberContainer
+        static void WriteCompressedLazyFast<T>(T data, ABSaveSerializer serializer) where T : INumberContainer
         {
             // This should be as blazing fast as possible, the hope is a lot of the work here will disappear with code-gen.
             // If the header is big enough, we'll try to fit the value into the rest of the header
             // and if it doesn't fit, we'll just straight write it.
-            if (target.CurrentByteFreeBits > 3)
+            if (serializer.CurrentByteFreeBits > 3)
             {
-                if (data.LessThan(1 << target.CurrentByteFreeBits >> 1))
+                if (data.LessThan(1 << serializer.CurrentByteFreeBits >> 1))
                 {
-                    target.WriteBitOn();
-                    target.FillRemainderOfCurrentByteWith(data.ToByte());
+                    serializer.WriteBitOn();
+                    serializer.FillRemainderOfCurrentByteWith(data.ToByte());
                 }
                 else
                 {
-                    target.WriteBitOff();
-                    WriteFull(target);
+                    serializer.WriteBitOff();
+                    WriteFull(serializer);
                 }
             }
 
@@ -60,13 +60,13 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             {
                 if (data.LessThan(255))
                 {
-                    target.FillRemainderOfCurrentByteWith(1);
-                    target.WriteByte(data.ToByte());
+                    serializer.FillRemainderOfCurrentByteWith(1);
+                    serializer.WriteByte(data.ToByte());
                 }
                 else
                 {
-                    target.FillRemainderOfCurrentByteWith(0);
-                    WriteFull(target);
+                    serializer.FillRemainderOfCurrentByteWith(0);
+                    WriteFull(serializer);
                 }
             }
 
@@ -80,43 +80,43 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             }
         }
 
-        static void WriteCompressedSlow<T>(T data, ABSaveSerializer target) where T : INumberContainer
+        static void WriteCompressedSlow<T>(T data, ABSaveSerializer serializer) where T : INumberContainer
         {
-            var dataInfo = GetCompressedDataInfo(data, target.CurrentByteFreeBits);
+            var dataInfo = GetCompressedDataInfo(data, serializer.CurrentByteFreeBits);
 
             // Write the first byte
-            WriteFirstByte(target, data, dataInfo);
+            WriteFirstByte(serializer, data, dataInfo);
 
             // Write the data in the remaining bytes
             while (dataInfo.BitsToGo > 0)
             {
                 dataInfo.BitsToGo -= 8;
-                target.WriteByte((byte)data.ShiftRight(dataInfo.BitsToGo));
+                serializer.WriteByte((byte)data.ShiftRight(dataInfo.BitsToGo));
             }
         }
 
-        static void WriteFirstByte<T>(ABSaveSerializer target, T data, CompressedDataInfo dataInfo) where T : INumberContainer
+        static void WriteFirstByte<T>(ABSaveSerializer serializer, T data, CompressedDataInfo dataInfo) where T : INumberContainer
         {
-            bool isExtendedByte = target.CurrentByteFreeBits < 4;
-            bool byteWillHaveFreeSpace = dataInfo.HeaderLen < target.CurrentByteFreeBits;
+            bool isExtendedByte = serializer.CurrentByteFreeBits < 4;
+            bool byteWillHaveFreeSpace = dataInfo.HeaderLen < serializer.CurrentByteFreeBits;
 
             // Write the header
-            target.WriteInteger(dataInfo.Header, dataInfo.HeaderLen);
+            serializer.WriteInteger(dataInfo.Header, dataInfo.HeaderLen);
 
             // Handle extended starts (yyy-xxxxxxxx)
             if (isExtendedByte)
             {
                 // Write any free "y"s.
-                if (byteWillHaveFreeSpace) target.WriteInteger((byte)(data.ShiftRight(dataInfo.BitsToGo) >> 8), target.CurrentByteFreeBits);
+                if (byteWillHaveFreeSpace) serializer.WriteInteger((byte)(data.ShiftRight(dataInfo.BitsToGo) >> 8), serializer.CurrentByteFreeBits);
 
                 // The next byte will definitely have some free space, as we can not physically fill all of the remaining "xxxxxxxx"s with the header.
                 // Ensure we're definitely ready for the next byte.
-                if (target.CurrentByteFreeBits == 0) target.FinishWritingBitsToCurrentByte();
+                if (serializer.CurrentByteFreeBits == 0) serializer.FinishWritingBitsToCurrentByte();
 
                 byteWillHaveFreeSpace = true;
             }
 
-            if (byteWillHaveFreeSpace) target.WriteInteger((byte)data.ShiftRight(dataInfo.BitsToGo), target.CurrentByteFreeBits);
+            if (byteWillHaveFreeSpace) serializer.WriteInteger((byte)data.ShiftRight(dataInfo.BitsToGo), serializer.CurrentByteFreeBits);
         }
 
         static CompressedDataInfo GetCompressedDataInfo<T>(T num, byte bitsFree) where T : INumberContainer

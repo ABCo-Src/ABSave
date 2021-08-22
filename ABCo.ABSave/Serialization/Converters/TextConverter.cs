@@ -39,14 +39,14 @@ namespace ABCo.ABSave.Serialization.Converters
             switch (_type)
             {
                 case StringType.String:
-                    info.Header.WriteNonNullString((string)info.Instance);
+                    info.Serializer.WriteNonNullString((string)info.Instance);
                     break;
                 case StringType.CharArray:
-                    SerializeCharArray((char[])info.Instance, info.Header);
+                    SerializeCharArray((char[])info.Instance, info.Serializer);
                     break;
                 case StringType.StringBuilder:
 
-                    SerializeStringBuilder((StringBuilder)info.Instance, info.Header);
+                    SerializeStringBuilder((StringBuilder)info.Instance, info.Serializer);
                     break;
             }
         }
@@ -70,28 +70,28 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override object Deserialize(in DeserializeInfo info) => _type switch
         {
-            StringType.String => info.Header.ReadNonNullString(),
-            StringType.CharArray => DeserializeCharArray(info.Header),
-            StringType.StringBuilder => DeserializeStringBuilder(info.Header),
+            StringType.String => info.Deserializer.ReadNonNullString(),
+            StringType.CharArray => DeserializeCharArray(info.Deserializer),
+            StringType.StringBuilder => DeserializeStringBuilder(info.Deserializer),
             _ => throw new Exception("Invalid StringType in text converter context"),
         };
 
-        public static char[] DeserializeCharArray(ABSaveDeserializer header)
+        public static char[] DeserializeCharArray(ABSaveDeserializer deserializer)
         {
-            if (header.State.Settings.UseUTF8)
-                return header.ReadUTF8(s => new char[s], c => c.AsMemory());
+            if (deserializer.State.Settings.UseUTF8)
+                return deserializer.ReadUTF8(s => new char[s], c => c.AsMemory());
             else
             {
-                int size = (int)header.ReadCompressedInt();
+                int size = (int)deserializer.ReadCompressedInt();
                 char[]? chArr = new char[size];
 
-                header.FastReadShorts(MemoryMarshal.Cast<char, short>(chArr.AsSpan()));
+                deserializer.FastReadShorts(MemoryMarshal.Cast<char, short>(chArr.AsSpan()));
 
                 return chArr;
             }
         }
 
-        public static StringBuilder DeserializeStringBuilder(ABSaveDeserializer header) => new StringBuilder(header.ReadNonNullString());
+        public static StringBuilder DeserializeStringBuilder(ABSaveDeserializer deserializer) => new StringBuilder(deserializer.ReadNonNullString());
 
         #endregion
 

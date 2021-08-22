@@ -8,38 +8,38 @@ namespace ABCo.ABSave.Serialization.Writing.Core
 {
     internal static class TextSerializer
     {
-        public static void WriteString(string? str, ABSaveSerializer header)
+        public static void WriteString(string? str, ABSaveSerializer serializer)
         {
-            if (str == null) header.WriteBitOff();
+            if (str == null) serializer.WriteBitOff();
             else
             {
-                header.WriteBitOn();
-                WriteNonNullString(str, header);
+                serializer.WriteBitOn();
+                WriteNonNullString(str, serializer);
             }
         }
 
-        public static void WriteNonNullString(string str, ABSaveSerializer header) => WriteText(str.AsSpan(), header);
+        public static void WriteNonNullString(string str, ABSaveSerializer serializer) => WriteText(str.AsSpan(), serializer);
 
-        public static void WriteText(ReadOnlySpan<char> chars, ABSaveSerializer header)
+        public static void WriteText(ReadOnlySpan<char> chars, ABSaveSerializer serializer)
         {
-            if (header.State.Settings.UseUTF8)
-                WriteUTF8(chars, header);
+            if (serializer.State.Settings.UseUTF8)
+                WriteUTF8(chars, serializer);
             else
             {
-                header.WriteCompressedInt((uint)chars.Length);
-                header.FastWriteShorts(MemoryMarshal.Cast<char, short>(chars));
+                serializer.WriteCompressedInt((uint)chars.Length);
+                serializer.FastWriteShorts(MemoryMarshal.Cast<char, short>(chars));
             }
         }
 
-        public static void WriteUTF8(ReadOnlySpan<char> data, ABSaveSerializer header)
+        public static void WriteUTF8(ReadOnlySpan<char> data, ABSaveSerializer serializer)
         {
             int maxSize = Encoding.UTF8.GetMaxByteCount(data.Length);
-            Span<byte> buffer = maxSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[maxSize] : header.State.GetStringBuffer(maxSize);
+            Span<byte> buffer = maxSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[maxSize] : serializer.State.GetStringBuffer(maxSize);
 
             int actualSize = Encoding.UTF8.GetBytes(data, buffer);
 
-            header.WriteCompressedInt((uint)actualSize);
-            header.WriteRawBytes(buffer.Slice(0, actualSize));
+            serializer.WriteCompressedInt((uint)actualSize);
+            serializer.WriteRawBytes(buffer.Slice(0, actualSize));
         }
     }
 }
