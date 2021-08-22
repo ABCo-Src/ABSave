@@ -27,13 +27,13 @@ namespace ABCo.ABSave.Serialization.Converters
                 SerializeNonGeneric((DictionaryEntry)info.Instance, info.Header);
         }
 
-        void SerializeGeneric(dynamic obj, BitWriter writer)
+        void SerializeGeneric(dynamic obj, ABSaveSerializer writer)
         {
             writer.WriteItem(obj.Key, _keyMap);
             writer.WriteItem(obj.Value, _valueMap);
         }
 
-        void SerializeNonGeneric(DictionaryEntry obj, BitWriter writer)
+        void SerializeNonGeneric(DictionaryEntry obj, ABSaveSerializer writer)
         {
             writer.WriteItem(obj.Key, _keyMap);
             writer.WriteItem(obj.Value, _valueMap);

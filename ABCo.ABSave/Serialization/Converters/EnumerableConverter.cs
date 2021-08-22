@@ -49,7 +49,7 @@ namespace ABCo.ABSave.Serialization.Converters
                 SerializeDictionary(info.Instance, dictionaryInfo, info.Header);
         }
 
-        void SerializeCollection(object obj, CollectionInfo info, BitWriter header)
+        void SerializeCollection(object obj, CollectionInfo info, ABSaveSerializer header)
         {
             int size = info.GetCount(obj);
             header.WriteCompressedInt((uint)size);
@@ -58,7 +58,7 @@ namespace ABCo.ABSave.Serialization.Converters
             while (enumerator.MoveNext()) header.WriteItem(enumerator.Current, _elementOrKeyMap);
         }
 
-        void SerializeDictionary(object obj, DictionaryInfo info, BitWriter header)
+        void SerializeDictionary(object obj, DictionaryInfo info, ABSaveSerializer header)
         {
             int size = info.GetCount(obj);
             header.WriteCompressedInt((uint)size);

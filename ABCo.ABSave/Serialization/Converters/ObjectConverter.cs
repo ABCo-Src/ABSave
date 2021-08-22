@@ -71,7 +71,7 @@ namespace ABCo.ABSave.Serialization.Converters
         public override void Serialize(in SerializeInfo info) =>
             Serialize(info.Instance, info.ActualType, info.VersionInfo, info.Header);
 
-        void Serialize(object instance, Type actualType, VersionInfo info, BitWriter header)
+        void Serialize(object instance, Type actualType, VersionInfo info, ABSaveSerializer header)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;

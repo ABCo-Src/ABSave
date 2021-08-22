@@ -25,12 +25,12 @@ namespace ABCo.ABSave.Serialization.Converters
             }
         }
 
-        public static void SerializeTicks(long ticks, BitWriter writer)
+        public static void SerializeTicks(long ticks, ABSaveSerializer writer)
         {
             if (writer.State.Settings.CompressPrimitives)
                 writer.WriteCompressedLong((ulong)ticks);
             else
-                writer.Finish().WriteInt64(ticks);
+                writer.WriteInt64(ticks);
         }
 
         public override object Deserialize(in DeserializeInfo info) => _type switch

@@ -29,11 +29,10 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             if (WritesToHeader)
             {
                 info.Header.WriteBitOn();
-                info.Header.MoveToNextByte();
+                info.Header.FinishWritingBitsToCurrentByte();
             }
 
-            var serializer = info.Header.Finish();
-            serializer.WriteByte(OUTPUT_BYTE);
+            info.Header.WriteByte(OUTPUT_BYTE);
         }
 
         public override object Deserialize(in DeserializeInfo info)

@@ -63,13 +63,10 @@ namespace ABCo.ABSave.UnitTests.Converters
         {
             Setup<bool>(ABSaveSettings.ForSpeed);
 
-            using (var header = Serializer.GetHeader())
-            {
-                header.WriteItem(true, CurrentMapItem);
-                header.WriteItem(true, CurrentMapItem);
-                header.WriteItem(false, CurrentMapItem);
-                header.WriteItem(true, CurrentMapItem);
-            }
+            Serializer.WriteItem(true, CurrentMapItem);
+            Serializer.WriteItem(true, CurrentMapItem);
+            Serializer.WriteItem(false, CurrentMapItem);
+            Serializer.WriteItem(true, CurrentMapItem);
 
             AssertAndGoToStart(0, 0xD0);
 

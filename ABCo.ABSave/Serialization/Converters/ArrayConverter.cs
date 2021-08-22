@@ -71,7 +71,7 @@ namespace ABCo.ABSave.Serialization.Converters
         public override void Serialize(in SerializeInfo info) =>
             Serialize((Array)info.Instance, info.ActualType, info.Header);
 
-        void Serialize(Array arr, Type actualType, BitWriter header)
+        void Serialize(Array arr, Type actualType, ABSaveSerializer header)
         {
             int len = arr.Length;
 
@@ -172,7 +172,7 @@ namespace ABCo.ABSave.Serialization.Converters
             currentPos[dimension] = originalPos;
         }
 
-        static MDSerializeArrayInfo GetMultiDimensionInfo(Array arr, ref ArrayTypeInfo context, BitWriter serializer, out int[] lowerBounds)
+        static MDSerializeArrayInfo GetMultiDimensionInfo(Array arr, ref ArrayTypeInfo context, ABSaveSerializer serializer, out int[] lowerBounds)
         {
             lowerBounds = new int[context.Rank];
 
@@ -296,7 +296,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
         #region Primitive Optimization
 
-        //static unsafe void SerializeFast(Array arr, FastConversionType type, BitWriter header)
+        //static unsafe void SerializeFast(Array arr, FastConversionType type, ABSaveSerializer header)
         //{
         //    // TODO: Remove tight coupling with TextConverter.
         //    if (type == FastConversionType.Char) TextConverter.SerializeCharArray((char[])arr, ref header);
@@ -372,10 +372,10 @@ namespace ABCo.ABSave.Serialization.Converters
         readonly struct MDSerializeArrayInfo
         {
             public readonly Array Array;
-            public readonly BitWriter Writer;
+            public readonly ABSaveSerializer Writer;
             public readonly bool CustomLowerBounds;
 
-            public MDSerializeArrayInfo(Array arr, BitWriter writer, bool zeroLowerBounds)
+            public MDSerializeArrayInfo(Array arr, ABSaveSerializer writer, bool zeroLowerBounds)
             {
                 Array = arr;
                 Writer = writer;

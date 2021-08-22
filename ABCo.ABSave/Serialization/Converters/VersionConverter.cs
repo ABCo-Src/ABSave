@@ -12,7 +12,7 @@ namespace ABCo.ABSave.Serialization.Converters
     {
         public override void Serialize(in SerializeInfo info) => SerializeVersion((Version)info.Instance, info.Header);
 
-        public static void SerializeVersion(Version version, BitWriter header)
+        public static void SerializeVersion(Version version, ABSaveSerializer header)
         {
             bool hasMajor = version.Major != 1;
             bool hasMinor = version.Minor > 0;
@@ -28,9 +28,6 @@ namespace ABCo.ABSave.Serialization.Converters
             if (hasMinor) header.WriteCompressedInt((uint)version.Minor);
             if (hasBuild) header.WriteCompressedInt((uint)version.Build);
             if (hasRevision) header.WriteCompressedInt((uint)version.Revision);
-
-            // If the header hasn't been applied yet, apply it now
-            if (header.FreeBits < 8) header.MoveToNextByte();
         }
 
         public override object Deserialize(in DeserializeInfo info) => DeserializeVersion(info.Header);

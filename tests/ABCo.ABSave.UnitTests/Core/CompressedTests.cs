@@ -120,20 +120,16 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize(ABSaveSettings.ForSpeed, null, lazy);
 
-            // Serialization
-            using (var header = Serializer.GetHeader())
-            {
-                // Write up the number of bits we want free.
-                header.WriteInteger(0, (byte)(8 - bitsFree));
+            // Write up the number of bits we want free.
+            Serializer.WriteInteger(0, (byte)(8 - bitsFree));
 
-                if (data < uint.MaxValue) 
-                {
-                    header.WriteCompressedInt((uint)data);
-                }
-                else
-                {
-                    header.WriteCompressedLong(data);
-                }
+            if (data < uint.MaxValue)
+            {
+                Serializer.WriteCompressedInt((uint)data);
+            }
+            else
+            {
+                Serializer.WriteCompressedLong(data);
             }
 
             Serializer.WriteByte(127);

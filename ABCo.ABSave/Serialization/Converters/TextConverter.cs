@@ -51,10 +51,10 @@ namespace ABCo.ABSave.Serialization.Converters
             }
         }
 
-        public static void SerializeCharArray(char[] obj, BitWriter header) =>
+        public static void SerializeCharArray(char[] obj, ABSaveSerializer header) =>
             header.WriteText(obj.AsSpan());
 
-        public static void SerializeStringBuilder(StringBuilder obj, BitWriter header)
+        public static void SerializeStringBuilder(StringBuilder obj, ABSaveSerializer header)
         {
             // TODO: Use "GetChunks" with .NET 5!
             char[] tmp = obj.Length < ABSaveUtils.MAX_STACK_SIZE ? new char[obj.Length] : ArrayPool<char>.Shared.Rent(obj.Length);

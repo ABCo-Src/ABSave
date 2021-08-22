@@ -46,7 +46,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSize);
+            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
 
             var str = File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\modelBig.txt");
 
@@ -98,7 +98,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             BinaryConverter.Serialize(TestObj, BinaryPackResult);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public JsonResponseModel ABSave_Deserialize()
         {
             ABSaveResult.Position = 0;
@@ -114,7 +114,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             return Utf8Json.JsonSerializer.Deserialize<JsonResponseModel>(Utf8JsonResult);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public JsonResponseModel TextJson_Deserialize()
         {
             TextJsonResult.Position = 0;

@@ -10,14 +10,12 @@ namespace ABCo.ABSave.Serialization.Converters
     {
         public override void Serialize(in SerializeInfo info)
         {
-            var serializer = info.Header.Finish();
-
             var guid = (Guid)info.Instance;
 
             Span<byte> bytes = stackalloc byte[16];
             guid.TryWriteBytes(bytes);
 
-            serializer.WriteRawBytes(bytes);
+            info.Header.WriteRawBytes(bytes);
         }
 
         public override object Deserialize(in DeserializeInfo info)

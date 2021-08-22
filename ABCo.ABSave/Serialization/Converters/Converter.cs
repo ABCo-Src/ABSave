@@ -71,9 +71,9 @@ namespace ABCo.ABSave.Serialization.Converters
             public object Instance { get; }
             public Type ActualType { get; }
             public VersionInfo VersionInfo { get; }
-            public BitWriter Header { get; }
+            public ABSaveSerializer Header { get; }
 
-            internal SerializeInfo(object instance, Type actualType, VersionInfo versionInfo, BitWriter header) =>
+            internal SerializeInfo(object instance, Type actualType, VersionInfo versionInfo, ABSaveSerializer header) =>
                 (Instance, ActualType, VersionInfo, Header) = (instance, actualType, versionInfo, header);
         }
 

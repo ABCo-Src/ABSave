@@ -51,21 +51,21 @@ namespace ABCo.ABSave.Serialization.Converters
             if (info.Header.State.Settings.CompressPrimitives)
                 SerializeCompressed(info.Header, info.Instance);
             else
-                SerializeDirect(info.Header.Finish(), info.Instance);
+                SerializeDirect(info.Header, info.Instance);
         }
 
-        void SerializeCompressed(BitWriter header, object instance)
+        void SerializeCompressed(ABSaveSerializer header, object instance)
         {
             switch (_typeCode)
             {
                 case PrimitiveType.Byte:
 
-                    header.Finish().WriteByte((byte)instance);
+                    header.WriteByte((byte)instance);
                     break;
 
                 case PrimitiveType.SByte:
 
-                    header.Finish().WriteByte((byte)instance);
+                    header.WriteByte((byte)instance);
                     break;
 
                 case PrimitiveType.Int16:
@@ -105,17 +105,17 @@ namespace ABCo.ABSave.Serialization.Converters
 
                 case PrimitiveType.Single:
 
-                    header.Finish().WriteSingle((float)instance);
+                    header.WriteSingle((float)instance);
                     break;
 
                 case PrimitiveType.Double:
 
-                    header.Finish().WriteDouble((double)instance);
+                    header.WriteDouble((double)instance);
                     break;
 
                 case PrimitiveType.Decimal:
 
-                    header.Finish().WriteDecimal((decimal)instance);
+                    header.WriteDecimal((decimal)instance);
                     break;
             }
         }
