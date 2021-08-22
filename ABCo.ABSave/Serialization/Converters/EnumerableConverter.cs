@@ -84,7 +84,7 @@ namespace ABCo.ABSave.Serialization.Converters
             else throw new Exception("Unrecognized enumerable info.");
         }
 
-        object DeserializeCollection(CollectionInfo info, Type type, BitReader header)
+        object DeserializeCollection(CollectionInfo info, Type type, ABSaveDeserializer header)
         {
             int size = (int)header.ReadCompressedInt();
             object? collection = info.CreateCollection(type, size);
@@ -95,7 +95,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return collection;
         }
 
-        object DeserializeDictionary(DictionaryInfo info, Type type, BitReader header)
+        object DeserializeDictionary(DictionaryInfo info, Type type, ABSaveDeserializer header)
         {
             int size = (int)header.ReadCompressedInt();
             object? collection = info.CreateCollection(type, size);

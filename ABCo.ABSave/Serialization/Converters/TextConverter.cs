@@ -76,7 +76,7 @@ namespace ABCo.ABSave.Serialization.Converters
             _ => throw new Exception("Invalid StringType in text converter context"),
         };
 
-        public static char[] DeserializeCharArray(BitReader header)
+        public static char[] DeserializeCharArray(ABSaveDeserializer header)
         {
             if (header.State.Settings.UseUTF8)
                 return header.ReadUTF8(s => new char[s], c => c.AsMemory());
@@ -85,14 +85,13 @@ namespace ABCo.ABSave.Serialization.Converters
                 int size = (int)header.ReadCompressedInt();
                 char[]? chArr = new char[size];
 
-                var deserializer = header.Finish();
-                deserializer.FastReadShorts(MemoryMarshal.Cast<char, short>(chArr.AsSpan()));
+                header.FastReadShorts(MemoryMarshal.Cast<char, short>(chArr.AsSpan()));
 
                 return chArr;
             }
         }
 
-        public static StringBuilder DeserializeStringBuilder(BitReader header) => new StringBuilder(header.ReadNonNullString());
+        public static StringBuilder DeserializeStringBuilder(ABSaveDeserializer header) => new StringBuilder(header.ReadNonNullString());
 
         #endregion
 

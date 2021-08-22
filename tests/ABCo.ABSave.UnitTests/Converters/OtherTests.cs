@@ -70,12 +70,11 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             AssertAndGoToStart(0, 0xD0);
 
-            var deserializeHeader = Deserializer.GetHeader();
             {
-                Assert.AreEqual(true, deserializeHeader.ReadItem(CurrentMapItem));
-                Assert.AreEqual(true, deserializeHeader.ReadItem(CurrentMapItem));
-                Assert.AreEqual(false, deserializeHeader.ReadItem(CurrentMapItem));
-                Assert.AreEqual(true, deserializeHeader.ReadItem(CurrentMapItem));
+                Assert.AreEqual(true, Deserializer.ReadItem(CurrentMapItem));
+                Assert.AreEqual(true, Deserializer.ReadItem(CurrentMapItem));
+                Assert.AreEqual(false, Deserializer.ReadItem(CurrentMapItem));
+                Assert.AreEqual(true, Deserializer.ReadItem(CurrentMapItem));
             }
         }
 

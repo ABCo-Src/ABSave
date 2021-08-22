@@ -21,9 +21,8 @@ namespace ABCo.ABSave.Serialization.Converters
         public override object Deserialize(in DeserializeInfo info)
         {
             Span<byte> data = stackalloc byte[16];
-
-            var deserializer = info.Header.Finish();
-            deserializer.ReadBytes(data);
+          
+            info.Header.ReadBytes(data);
             return new Guid(data);
         }
     }

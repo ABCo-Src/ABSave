@@ -39,8 +39,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         {
             if (WritesToHeader && !info.Header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
 
-            var deserializer = info.Header.Finish();
-            if (deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
+            if (info.Header.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
 
             return OUTPUT_BYTE;
         }

@@ -32,7 +32,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override object Deserialize(in DeserializeInfo info) => DeserializeVersion(info.Header);
 
-        public static Version DeserializeVersion(BitReader header)
+        public static Version DeserializeVersion(ABSaveDeserializer header)
         {
             bool hasMajor = header.ReadBit();
             bool hasMinor = header.ReadBit();

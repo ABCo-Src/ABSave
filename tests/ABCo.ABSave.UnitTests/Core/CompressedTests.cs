@@ -137,18 +137,16 @@ namespace ABCo.ABSave.UnitTests.Core
 
             // Deserialization
             {
-                var header = Deserializer.GetHeader();
-
                 // Read up the number of bits we want free.
-                header.ReadInteger((byte)(8 - bitsFree));
+                Deserializer.ReadInteger((byte)(8 - bitsFree));
 
                 if (data < uint.MaxValue)
                 {
-                    Assert.AreEqual((uint)data, header.ReadCompressedInt());
+                    Assert.AreEqual((uint)data, Deserializer.ReadCompressedInt());
                 }
                 else
                 {
-                    Assert.AreEqual(data, header.ReadCompressedLong());
+                    Assert.AreEqual(data, Deserializer.ReadCompressedLong());
                 }
             }
 

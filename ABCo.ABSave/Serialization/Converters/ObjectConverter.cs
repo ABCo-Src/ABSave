@@ -97,7 +97,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return res;
         }
 
-        void DeserializeInto(object obj, VersionInfo info, BitReader header)
+        void DeserializeInto(object obj, VersionInfo info, ABSaveDeserializer header)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;

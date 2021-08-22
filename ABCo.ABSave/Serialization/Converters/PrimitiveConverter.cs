@@ -208,23 +208,21 @@ namespace ABCo.ABSave.Serialization.Converters
         {
             if (_typeCode == PrimitiveType.Boolean) return info.Header.ReadBit();
 
-            var deserializer = info.Header.Finish();
-
             if (info.Header.State.Settings.CompressPrimitives)
                 return DeserializeCompressed(info.Header);
             else
-                return DeserializeDirect(deserializer);
+                return DeserializeDirect(info.Header);
 
         }
 
-        object DeserializeCompressed(BitReader reader)
+        object DeserializeCompressed(ABSaveDeserializer reader)
         {
             unchecked
             {
                 return _typeCode switch
                 {
-                    PrimitiveType.Byte => reader.Finish().ReadByte(),
-                    PrimitiveType.SByte => (sbyte)reader.Finish().ReadByte(),
+                    PrimitiveType.Byte => reader.ReadByte(),
+                    PrimitiveType.SByte => (sbyte)reader.ReadByte(),
                     PrimitiveType.UInt16 => (ushort)reader.ReadCompressedInt(),
                     PrimitiveType.Int16 => (short)reader.ReadCompressedInt(),
                     PrimitiveType.Char => (char)reader.ReadCompressedInt(),
@@ -232,9 +230,9 @@ namespace ABCo.ABSave.Serialization.Converters
                     PrimitiveType.Int32 => (int)reader.ReadCompressedInt(),
                     PrimitiveType.UInt64 => reader.ReadCompressedLong(),
                     PrimitiveType.Int64 => (long)reader.ReadCompressedLong(),
-                    PrimitiveType.Single => reader.Finish().ReadSingle(),
-                    PrimitiveType.Double => reader.Finish().ReadDouble(),
-                    PrimitiveType.Decimal => reader.Finish().ReadDecimal(),
+                    PrimitiveType.Single => reader.ReadSingle(),
+                    PrimitiveType.Double => reader.ReadDouble(),
+                    PrimitiveType.Decimal => reader.ReadDecimal(),
                     _ => throw new Exception("Invalid numerical type."),
                 };
             }

@@ -33,8 +33,7 @@ namespace ABCo.ABSave.UnitTests.Core
             }
 
             {
-                var header = Deserializer.GetHeader();
-                "ABC".AsSpan().SequenceEqual(header.ReadUTF8(s => new char[s], c => c.AsMemory()));
+                "ABC".AsSpan().SequenceEqual(Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory()));
             }
 
             ResetState();
@@ -55,8 +54,7 @@ namespace ABCo.ABSave.UnitTests.Core
                 }
 
                 {
-                    var header = Deserializer.GetHeader();
-                    chArr.AsSpan().SequenceEqual(header.ReadUTF8(s => new char[s], c => c.AsMemory()));
+                    chArr.AsSpan().SequenceEqual(Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory()));
                 }
             }
         }

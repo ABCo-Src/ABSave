@@ -14,7 +14,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal static class ItemDeserializer
     {
-        public static object? DeserializeItem(MapItemInfo info, BitReader header)
+        public static object? DeserializeItem(MapItemInfo info, ABSaveDeserializer header)
         {
             // Null check
             if (!info.IsValueTypeItem || info.IsNullable)
@@ -25,10 +25,10 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             return DeserializeItemNoSetup(info, header, info.IsNullable);
         }
 
-        public static object DeserializeExactNonNullItem(MapItemInfo info, BitReader header) =>
+        public static object DeserializeExactNonNullItem(MapItemInfo info, ABSaveDeserializer header) =>
             DeserializeItemNoSetup(info, header, true);
 
-        static object DeserializeItemNoSetup(MapItemInfo info, BitReader header, bool skipHeader)
+        static object DeserializeItemNoSetup(MapItemInfo info, ABSaveDeserializer header, bool skipHeader)
         {
             Converter item = info.Converter;
             ABSaveUtils.WaitUntilNotGenerating(item);
@@ -36,7 +36,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             return DeserializeConverter(info.Converter, header, skipHeader);
         }
 
-        static object DeserializeConverter(Converter converter, BitReader header, bool skipHeader)
+        static object DeserializeConverter(Converter converter, ABSaveDeserializer header, bool skipHeader)
         {
             object? inheritanceHandled = DeserializeConverterHeader(converter, header, skipHeader, out var info);
             if (inheritanceHandled != null) return inheritanceHandled;
@@ -45,7 +45,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             return converter.Deserialize(in deserializeInfo);
         }
 
-        internal static object? DeserializeConverterHeader(Converter converter, BitReader header, bool skipHeader, out VersionInfo info)
+        internal static object? DeserializeConverterHeader(Converter converter, ABSaveDeserializer header, bool skipHeader, out VersionInfo info)
         {
             var details = header.State.GetCachedInfo(converter);
 
@@ -68,7 +68,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             return null;
         }
 
-        static void HandleVersionNumber(Converter converter, ref VersionInfo item, BitReader header)
+        static void HandleVersionNumber(Converter converter, ref VersionInfo item, ABSaveDeserializer header)
         {
             // If the version has already been read, do nothing
             if (item != null) return;
@@ -78,7 +78,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
                 header.State.Map.GetVersionInfo(converter, 0);
         }
 
-        static bool ReadHeader(Converter item, BitReader header)
+        static bool ReadHeader(Converter item, ABSaveDeserializer header)
         {
             if (item.IsValueItemType) return false;
 
@@ -86,10 +86,10 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             return header.ReadBit();
         }
 
-        static uint ReadNewVersionInfo(BitReader header) => header.ReadCompressedInt();
+        static uint ReadNewVersionInfo(ABSaveDeserializer header) => header.ReadCompressedInt();
 
         // Returns: Whether the sub-type was converted in here and we should return now.
-        static object DeserializeActualType(SaveInheritanceAttribute info, Type baseType, BitReader header)
+        static object DeserializeActualType(SaveInheritanceAttribute info, Type baseType, ABSaveDeserializer header)
         {
             Type? actualType = info.Mode switch
             {
@@ -105,13 +105,13 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             return DeserializeItemNoSetup(header.State.GetRuntimeMapItem(actualType), header, true);
         }
 
-        static Type? TryReadListInheritance(SaveInheritanceAttribute info, Type baseType, BitReader header)
+        static Type? TryReadListInheritance(SaveInheritanceAttribute info, Type baseType, ABSaveDeserializer header)
         {
             uint key = header.ReadCompressedInt();
             return info.IndexDeserializeCache.GetValueOrDefault(key);
         }
 
-        static Type? TryReadKeyInheritance(SaveInheritanceAttribute info, Type baseType, BitReader header)
+        static Type? TryReadKeyInheritance(SaveInheritanceAttribute info, Type baseType, ABSaveDeserializer header)
         {
             // If it's cached, use the cache.
             if (header.ReadBit())

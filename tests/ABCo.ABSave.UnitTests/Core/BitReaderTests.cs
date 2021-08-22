@@ -13,22 +13,21 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize();
 
-            var source = Deserializer.GetHeader();
             Stream.WriteByte(0b11000100);
             Stream.WriteByte(0b10000000);
             Stream.Position = 0;
 
-            Assert.IsTrue(source.ReadBit());
-            Assert.IsTrue(source.ReadBit());
-            Assert.IsFalse(source.ReadBit());
-            Assert.IsFalse(source.ReadBit());
-            Assert.IsFalse(source.ReadBit());
-            Assert.IsTrue(source.ReadBit());
-            Assert.IsFalse(source.ReadBit());
-            Assert.IsFalse(source.ReadBit());
+            Assert.IsTrue(Deserializer.ReadBit());
+            Assert.IsTrue(Deserializer.ReadBit());
+            Assert.IsFalse(Deserializer.ReadBit());
+            Assert.IsFalse(Deserializer.ReadBit());
+            Assert.IsFalse(Deserializer.ReadBit());
+            Assert.IsTrue(Deserializer.ReadBit());
+            Assert.IsFalse(Deserializer.ReadBit());
+            Assert.IsFalse(Deserializer.ReadBit());
 
             // Overflow
-            Assert.IsTrue(source.ReadBit());
+            Assert.IsTrue(Deserializer.ReadBit());
         }
 
         [TestMethod]
@@ -36,13 +35,12 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize(ABSaveSettings.ForSpeed);
 
-            var source = Deserializer.GetHeader();
             Stream.WriteByte(0b11000110);
             Stream.WriteByte(0b01000000);
             Stream.Position = 0;
 
-            Assert.AreEqual(12, source.ReadInteger(4));
-            Assert.AreEqual(25, source.ReadInteger(6));
+            Assert.AreEqual(12, Deserializer.ReadInteger(4));
+            Assert.AreEqual(25, Deserializer.ReadInteger(6));
         }
 
         [TestMethod]
@@ -50,12 +48,11 @@ namespace ABCo.ABSave.UnitTests.Core
         {
             Initialize(ABSaveSettings.ForSpeed);
 
-            var source = Deserializer.GetHeader();
             Stream.WriteByte(0b10000110);
             Stream.Position = 0;
 
-            source.ReadBit();
-            Assert.AreEqual(6, source.ReadInteger(7));
+            Deserializer.ReadBit();
+            Assert.AreEqual(6, Deserializer.ReadInteger(7));
         }
     }
 }

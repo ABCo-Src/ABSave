@@ -8,24 +8,22 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal unsafe static class TextDeserializer
     {
-        public static string? ReadNullableString(BitReader header)
+        public static string? ReadNullableString(ABSaveDeserializer header)
         {
             if (!header.ReadBit()) return null;
 
             return ReadNonNullString(header);
         }
 
-        public static string ReadNonNullString(BitReader header)
+        public static string ReadNonNullString(ABSaveDeserializer header)
         {
             if (header.State.Settings.UseUTF8)
             {
                 int byteSize = (int)header.ReadCompressedInt();
 
-                var deserializer = header.Finish();
-
                 // Read the data
                 Span<byte> buffer = byteSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[byteSize] : header.State.GetStringBuffer(byteSize);
-                deserializer.ReadBytes(buffer);
+                header.ReadBytes(buffer);
 
                 // Encode
                 return Encoding.UTF8.GetString(buffer);
@@ -34,23 +32,20 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             {
                 int size = (int)header.ReadCompressedInt();
 
-                var deserializer = header.Finish();
-                return string.Create(size, deserializer, (chars, state) =>
+                return string.Create(size, header, (chars, state) =>
                 {
                     state.FastReadShorts(MemoryMarshal.Cast<char, short>(chars));
                 });
             }
         }
 
-        public static T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest, BitReader header)
+        public static T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest, ABSaveDeserializer header)
         {
             int byteSize = (int)header.ReadCompressedInt();
 
-            var deserializer = header.Finish();
-
             // Read the data
             Span<byte> buffer = byteSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[byteSize] : header.State.GetStringBuffer(byteSize);
-            deserializer.ReadBytes(buffer);
+            header.ReadBytes(buffer);
 
             // Allocate the destination with the correct size.
             int charSize = Encoding.UTF8.GetCharCount(buffer);

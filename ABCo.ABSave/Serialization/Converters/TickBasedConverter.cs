@@ -40,12 +40,12 @@ namespace ABCo.ABSave.Serialization.Converters
             _ => throw new Exception("Invalid tick-based type"),
         };
 
-        public static long DeserializeTicks(BitReader header)
+        public static long DeserializeTicks(ABSaveDeserializer header)
         {
             if (header.State.Settings.CompressPrimitives)
                 return (long)header.ReadCompressedLong();
             else
-                return header.Finish().ReadInt64();
+                return header.ReadInt64();
         }
 
         public override uint Initialize(InitializeInfo info)

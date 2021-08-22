@@ -195,7 +195,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override object Deserialize(in DeserializeInfo info) => Deserialize(info.Header);
 
-        object Deserialize(BitReader header)
+        object Deserialize(ABSaveDeserializer header)
         {
             switch (_info.Type)
             {
@@ -235,7 +235,7 @@ namespace ABCo.ABSave.Serialization.Converters
             }
         }
 
-        unsafe object DeserializeMultiDimensionalArray(in ArrayTypeInfo context, bool hasCustomLowerBounds, int firstLength, BitReader header)
+        unsafe object DeserializeMultiDimensionalArray(in ArrayTypeInfo context, bool hasCustomLowerBounds, int firstLength, ABSaveDeserializer header)
         {
             // Read the lengths.
             int[] lengths = new int[context.Rank];
@@ -255,7 +255,7 @@ namespace ABCo.ABSave.Serialization.Converters
             // Create the array, and deserialize.
             Array res = hasCustomLowerBounds ? Array.CreateInstance(context.ElementType, lengths, lowerBounds) : Array.CreateInstance(context.ElementType, lengths);
 
-            var mdContext = new MDDeserializeArrayInfo(res, header.Finish());
+            var mdContext = new MDDeserializeArrayInfo(res, header);
             DeserializeDimension(0, lengths, lowerBounds, in context, in mdContext);
 
             return res;
@@ -325,7 +325,7 @@ namespace ABCo.ABSave.Serialization.Converters
         //    }
         //}
 
-        //unsafe static Array DeserializeFast(FastConversionType type, BitReader header)
+        //unsafe static Array DeserializeFast(FastConversionType type, ABSaveDeserializer header)
         //{
         //    // TODO: Remove tight coupling with TextConverter.
         //    if (type == FastConversionType.Char) return TextConverter.DeserializeCharArray(ref header);

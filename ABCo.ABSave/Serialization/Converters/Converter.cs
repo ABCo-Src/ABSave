@@ -82,12 +82,12 @@ namespace ABCo.ABSave.Serialization.Converters
         public struct DeserializeInfo
         {
             public Type ActualType { get; }
-            public BitReader Header { get; }
+            public ABSaveDeserializer Header { get; }
             internal VersionInfo VersionInfo { get; }
 
             public CurrentState State => Header.State;
 
-            internal DeserializeInfo(Type actualType, VersionInfo versionInfo, BitReader header) =>
+            internal DeserializeInfo(Type actualType, VersionInfo versionInfo, ABSaveDeserializer header) =>
                 (ActualType, VersionInfo, Header) = (actualType, versionInfo, header);
         }
 

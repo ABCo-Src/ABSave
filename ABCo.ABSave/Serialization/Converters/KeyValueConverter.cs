@@ -47,7 +47,7 @@ namespace ABCo.ABSave.Serialization.Converters
                 return DeserializeNonGeneric(info.Header);
         }
 
-        object DeserializeGeneric(Type actualType, BitReader header)
+        object DeserializeGeneric(Type actualType, ABSaveDeserializer header)
         {
             object? key = header.ReadItem(_keyMap);
             object? value = header.ReadItem(_valueMap);
@@ -55,7 +55,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return Activator.CreateInstance(actualType, key, value)!;
         }
 
-        DictionaryEntry DeserializeNonGeneric(BitReader header)
+        DictionaryEntry DeserializeNonGeneric(ABSaveDeserializer header)
         {
             object? key = header.ReadItem(_keyMap);
             object? value = header.ReadItem(_valueMap);

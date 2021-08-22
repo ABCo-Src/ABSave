@@ -45,9 +45,8 @@ namespace ABCo.ABSave
         public static object? DeserializeNonGeneric(Stream stream, ABSaveMap map, bool? writeVersioning = null)
         {
             using ABSaveDeserializer deserializer = map.GetDeserializer(stream, writeVersioning);
-            BitReader header = deserializer.GetHeader();
-            header.ReadSettingsHeaderIfNeeded();
-            return header.ReadRoot();
+            deserializer.ReadSettingsHeaderIfNeeded();
+            return deserializer.ReadRoot();
         }
     }
 }

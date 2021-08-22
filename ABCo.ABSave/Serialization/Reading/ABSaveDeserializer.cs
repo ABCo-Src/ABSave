@@ -20,6 +20,8 @@ namespace ABCo.ABSave.Serialization.Reading
         public Stream Source { get; private set; }
         public DeserializeCurrentState State { get; private set; }
 
+        public byte CurrentByteFreeBits => _currentBitReader.FreeBits;
+
         readonly BitReader _currentBitReader;
 
         internal ABSaveDeserializer(ABSaveMap map)
@@ -37,22 +39,22 @@ namespace ABCo.ABSave.Serialization.Reading
 
         public void Dispose() => State.Map.ReleaseDeserializer(this);
 
-        public void ReadSettingsHeaderIfNeeded() => HeaderDeserializer.ReadHeader(_currentBitReader);
+        public void ReadSettingsHeaderIfNeeded() => HeaderDeserializer.ReadHeader(this);
 
-        public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed(false, _currentBitReader);
-        public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed(true, _currentBitReader);
+        public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed(false, this);
+        public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed(true, this);
 
-        public string? ReadNullableString() => TextDeserializer.ReadNullableString(_currentBitReader);
-        public string ReadNonNullString() => TextDeserializer.ReadNonNullString(_currentBitReader);
-        public T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest) => TextDeserializer.ReadUTF8<T>(createDest, castDest, _currentBitReader);
+        public string? ReadNullableString() => TextDeserializer.ReadNullableString(this);
+        public string ReadNonNullString() => TextDeserializer.ReadNonNullString(this);
+        public T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest) => TextDeserializer.ReadUTF8<T>(createDest, castDest, this);
 
-        public object? ReadRoot() => ItemDeserializer.DeserializeItem(State.Map._rootItem, _currentBitReader);
-        public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, _currentBitReader);
-        public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, _currentBitReader);
+        public object? ReadRoot() => ItemDeserializer.DeserializeItem(State.Map._rootItem, this);
+        public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
+        public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
 
         public VersionInfo ReadExactNonNullHeader(Converter converter)
         {
-            ItemDeserializer.DeserializeConverterHeader(converter, _currentBitReader, true, out var info);
+            ItemDeserializer.DeserializeConverterHeader(converter, this, true, out var info);
             return info;
         }
 
@@ -60,14 +62,30 @@ namespace ABCo.ABSave.Serialization.Reading
 
         public bool ReadBit() => _currentBitReader.ReadBit();
         public byte ReadInteger(byte bitsRequired) => _currentBitReader.ReadInteger(bitsRequired);
+        public byte GetCurrentByte() => _currentBitReader.CurrentByte;
+        public void MoveToNewCurrentByte() => _currentBitReader.MoveToNewByte();
 
         #endregion
 
         #region Byte Reading
 
-        public byte ReadByte() => (byte)Source.ReadByte();
-        public void ReadBytes(Span<byte> dest) => Source.Read(dest);
-        public void ReadBytes(byte[] dest) => Source.Read(dest, 0, dest.Length);
+        public byte ReadByte()
+        {
+            _currentBitReader.Reset();
+            return (byte)Source.ReadByte();
+        }
+
+        public void ReadBytes(Span<byte> dest)
+        {
+            _currentBitReader.Reset();
+            Source.Read(dest);
+        }
+
+        public void ReadBytes(byte[] dest)
+        {
+            _currentBitReader.Reset();
+            Source.Read(dest, 0, dest.Length);
+        }
 
         #endregion
 
@@ -178,12 +196,6 @@ namespace ABCo.ABSave.Serialization.Reading
 
                 State.HasVersioningInfo = writeVersioning.Value;
             }
-        }
-
-        public BitReader GetHeader()
-        {
-            _currentBitReader.SetupHeader();
-            return _currentBitReader;
         }
     }
 }
