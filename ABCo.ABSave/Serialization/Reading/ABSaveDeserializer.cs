@@ -22,7 +22,7 @@ namespace ABCo.ABSave.Serialization.Reading
 
         public byte CurrentByteFreeBits => _currentBitReader.FreeBits;
 
-        readonly BitReader _currentBitReader;
+        BitReader _currentBitReader;
 
         internal ABSaveDeserializer(ABSaveMap map)
         {

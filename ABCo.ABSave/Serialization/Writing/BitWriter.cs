@@ -9,14 +9,19 @@ using System.Runtime.InteropServices;
 namespace ABCo.ABSave.Serialization.Writing
 {
     [StructLayout(LayoutKind.Auto)]
-    internal class BitWriter : IDisposable
+    internal struct BitWriter : IDisposable
     {
         ABSaveSerializer _serializer;
         public byte FreeBits { get; private set; }
         int _target;
 
         public SerializeCurrentState State => _serializer.State;
-        internal BitWriter(ABSaveSerializer serializer) => _serializer = serializer;
+        internal BitWriter(ABSaveSerializer serializer)
+        {
+            _serializer = serializer;
+            FreeBits = 0;
+            _target = 0;
+        }
 
         internal void Reset()
         {

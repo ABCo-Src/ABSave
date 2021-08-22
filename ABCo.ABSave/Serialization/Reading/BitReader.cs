@@ -11,7 +11,7 @@ namespace ABCo.ABSave.Serialization.Reading
     /// <summary>
     /// Reads data bit-by-bit. Typically used to read from the header for an item, but can be created by a converter to allow more manual bit reading/writing.
     /// </summary>
-    public class BitReader
+    internal struct BitReader
     {
         ABSaveDeserializer _deserializer;
         public byte FreeBits { get; private set; }
@@ -20,7 +20,12 @@ namespace ABCo.ABSave.Serialization.Reading
         public DeserializeCurrentState State => _deserializer.State;
         public byte CurrentByte => (byte)_source;
 
-        public BitReader(ABSaveDeserializer deserializer) => _deserializer = deserializer;
+        public BitReader(ABSaveDeserializer deserializer)
+        {
+            _deserializer = deserializer;
+            FreeBits = 0;
+            _source = 0;
+        }
 
         public void Reset() => FreeBits = 0;
 

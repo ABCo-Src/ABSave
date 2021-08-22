@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Serialization.Writing
 
         public byte CurrentByteFreeBits => _currentBitWriter.FreeBits;
 
-        readonly BitWriter _currentBitWriter;
+        BitWriter _currentBitWriter;
 
         internal ABSaveSerializer(ABSaveMap map)
         {
