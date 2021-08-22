@@ -54,7 +54,11 @@ namespace ABCo.ABSave.Serialization.Writing
             State.Reset();
         }
 
-        public void Dispose() => State.Map.ReleaseSerializer(this);
+        public void Dispose()
+        {
+            Flush();
+            State.Map.ReleaseSerializer(this);
+        }
 
         public Stream GetStream()
         {
@@ -193,11 +197,7 @@ namespace ABCo.ABSave.Serialization.Writing
 
         #endregion
 
-        public void WriteRoot(object? obj)
-        {
-            WriteSettingsHeaderIfNeeded();
-            ItemSerializer.SerializeItem(obj, State.Map._rootItem, this);
-        }
+        public void WriteRoot(object? obj) => ItemSerializer.SerializeItem(obj, State.Map._rootItem, this);
 
         public void WriteSettingsHeaderIfNeeded() => HeaderSerializer.WriteHeader(this);
 

@@ -98,7 +98,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             BinaryConverter.Serialize(TestObj, BinaryPackResult);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public JsonResponseModel ABSave_Deserialize()
         {
             ABSaveResult.Position = 0;
@@ -114,7 +114,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             return Utf8Json.JsonSerializer.Deserialize<JsonResponseModel>(Utf8JsonResult);
         }
 
-        //[Benchmark]
+        [Benchmark]
         public JsonResponseModel TextJson_Deserialize()
         {
             TextJsonResult.Position = 0;
