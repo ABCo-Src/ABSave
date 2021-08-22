@@ -11,6 +11,7 @@ using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
+using ABCo.ABSave.Serialization.Reading.Core;
 
 namespace ABCo.ABSave.Serialization.Reading
 {
@@ -35,16 +36,32 @@ namespace ABCo.ABSave.Serialization.Reading
         }
 
         public void Dispose() => State.Map.ReleaseDeserializer(this);
-        public object? DeserializeRoot() => GetHeader().ReadRoot();
 
-        public object? ReadItem(MapItemInfo info) => GetHeader().ReadItem(info);
-        public object? ReadExactNonNullItem(MapItemInfo info) => GetHeader().ReadExactNonNullItem(info);
+        public void ReadSettingsHeaderIfNeeded() => HeaderDeserializer.ReadHeader(_currentBitReader);
 
-        public string? ReadNullableString() => GetHeader().ReadNullableString();
-        public string ReadNonNullString() => GetHeader().ReadNonNullString();
+        public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed(false, _currentBitReader);
+        public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed(true, _currentBitReader);
 
-        public uint ReadCompressedInt() => GetHeader().ReadCompressedInt();
-        public ulong ReadCompressedLong() => GetHeader().ReadCompressedLong();
+        public string? ReadNullableString() => TextDeserializer.ReadNullableString(_currentBitReader);
+        public string ReadNonNullString() => TextDeserializer.ReadNonNullString(_currentBitReader);
+        public T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest) => TextDeserializer.ReadUTF8<T>(createDest, castDest, _currentBitReader);
+
+        public object? ReadRoot() => ItemDeserializer.DeserializeItem(State.Map._rootItem, _currentBitReader);
+        public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, _currentBitReader);
+        public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, _currentBitReader);
+
+        public VersionInfo ReadExactNonNullHeader(Converter converter)
+        {
+            ItemDeserializer.DeserializeConverterHeader(converter, _currentBitReader, true, out var info);
+            return info;
+        }
+
+        #region Bit Reading
+
+        public bool ReadBit() => _currentBitReader.ReadBit();
+        public byte ReadInteger(byte bitsRequired) => _currentBitReader.ReadInteger(bitsRequired);
+
+        #endregion
 
         #region Byte Reading
 
