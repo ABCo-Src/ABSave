@@ -28,28 +28,4 @@ namespace ABCo.ABSave.Mapping
 
         internal MapItemInfo(Converter item, bool isNullable) => (Converter, IsNullable) = (item, isNullable);
     }
-
-    public class VersionInfo
-    {
-        public uint VersionNumber { get; private set; }
-
-        internal SaveInheritanceAttribute? _inheritanceInfo;
-
-        protected internal VersionInfo() { }
-
-        internal void Assign(uint version, SaveInheritanceAttribute? inheritanceInfo)
-        {
-            VersionNumber = version;
-            _inheritanceInfo = inheritanceInfo;
-        }
-    }
-
-    /// <summary>
-    /// Info about a member that's shared across all versions it occurs.
-    /// </summary>
-    internal class ObjectMemberSharedInfo
-    {
-        public MapItemInfo Map;
-        public MemberAccessor Accessor;
-    }
 }
