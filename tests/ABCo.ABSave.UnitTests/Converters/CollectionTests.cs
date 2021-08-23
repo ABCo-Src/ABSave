@@ -31,7 +31,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         {
             var info = new InitializeInfo(type, CurrentGenerator);
 
-            var converter = new EnumerableConverter();
+            var converter = new CollectionConverter();
             converter.Initialize(info);
 
             return converter;
