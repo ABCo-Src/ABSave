@@ -22,8 +22,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public static bool WritesToHeader;
         public const int OUTPUT_BYTE = 155;
 
-        public override (VersionInfo, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, WritesToHeader);
-
         public override void Serialize(in SerializeInfo info)
         {
             if (WritesToHeader)

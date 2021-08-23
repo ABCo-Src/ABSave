@@ -258,8 +258,6 @@ namespace ABCo.ABSave.Serialization.Converters
             None
         }
 
-        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, true);
-
         private bool TryHandleDirectTypes(InitializeInfo info, Type type)
         {
             if (type.IsGenericType)

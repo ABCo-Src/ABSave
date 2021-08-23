@@ -104,7 +104,5 @@ namespace ABCo.ABSave.Serialization.Converters
         }
 
         #endregion
-
-        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, true);
     }
 }

@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _intermediateInfo);
         }
 
-        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version)
+        public override VersionInfo? GetVersionInfo(InitializeInfo info, uint version)
         {
             ObjectMemberSharedInfo[]? members = _hasOneVersion ?
                 ObjectVersionMapper.GenerateForOneVersion(this, info._gen) :
@@ -40,8 +40,7 @@ namespace ABCo.ABSave.Serialization.Converters
             if (attr != null)
                 baseConv = GetBaseObjectConverter(info, attr);
 
-            bool usesHeader = members.Length > 0 || baseConv != null;
-            return (new ObjectVersionInfo(members, baseConv), usesHeader);
+            return new ObjectVersionInfo(members, baseConv);
         }
 
         ObjectConverter GetBaseObjectConverter(InitializeInfo info, SaveBaseMembersAttribute attr)

@@ -32,18 +32,14 @@ namespace ABCo.ABSave.Mapping
     public class VersionInfo
     {
         public uint VersionNumber { get; private set; }
-        public bool UsesHeader { get; private set; }
 
         internal SaveInheritanceAttribute? _inheritanceInfo;
 
-        protected VersionInfo() { }
-        internal VersionInfo(bool usesHeader) =>
-            UsesHeader = usesHeader;
+        protected internal VersionInfo() { }
 
-        internal void Assign(uint version, bool usesHeader, SaveInheritanceAttribute? inheritanceInfo)
+        internal void Assign(uint version, SaveInheritanceAttribute? inheritanceInfo)
         {
             VersionNumber = version;
-            UsesHeader = usesHeader;
             _inheritanceInfo = inheritanceInfo;
         }
     }

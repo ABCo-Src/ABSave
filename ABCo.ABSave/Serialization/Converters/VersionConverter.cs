@@ -46,7 +46,5 @@ namespace ABCo.ABSave.Serialization.Converters
 
             return new Version(major, minor, build, revision);
         }
-
-        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, true);
     }
 }

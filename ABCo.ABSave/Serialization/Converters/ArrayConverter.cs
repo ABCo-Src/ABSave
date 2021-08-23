@@ -425,8 +425,6 @@ namespace ABCo.ABSave.Serialization.Converters
             UShort
         }
 
-        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, true);
-
         [StructLayout(LayoutKind.Auto)]
         struct ArrayTypeInfo
         {

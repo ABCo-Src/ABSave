@@ -18,7 +18,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         bool _isNo2;
 
         public const int OUTPUT_BYTE = 110;
-        public override (VersionInfo, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, _writesToHeader);
 
         public override void Serialize(in SerializeInfo info)
         {

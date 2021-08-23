@@ -52,7 +52,7 @@ namespace ABCo.ABSave.Serialization.Converters
         /// Gets information that can be used by the converter and varies depending on the version number in the source.
         /// This info will be cached and may be used across many threads so ensure it does not change once created.
         /// </summary>
-        public virtual (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, false);
+        public virtual VersionInfo? GetVersionInfo(InitializeInfo info, uint version) => null;
 
         /// <summary>
         /// Called when all of the different possible versions right up to the highest version have been generated.

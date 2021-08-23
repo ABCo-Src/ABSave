@@ -19,8 +19,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public static bool WritesToHeader;
 
-        public override (VersionInfo, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, WritesToHeader);
-
         public override bool CheckType(CheckTypeInfo info) =>
             info.Type == typeof(BaseIndex) || info.Type.IsSubclassOf(typeof(BaseIndex));
 

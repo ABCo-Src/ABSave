@@ -281,7 +281,5 @@ namespace ABCo.ABSave.Serialization.Converters
             Double = 14,
             Decimal = 15,
         }
-
-        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, true);
     }
 }

@@ -50,19 +50,14 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         internal static VersionInfo? SerializeConverterHeader(object obj, Converter converter, Type actualType, bool skipHeader, ABSaveSerializer header)
         {
             var cache = header.State.GetCachedInfo(converter);
-            bool appliedHeader = true;
 
             // Write the null and inheritance bits.
             bool sameType = true;
             if (!converter.IsValueItemType && !skipHeader)
-            {
                 sameType = WriteHeaderNullAndInheritance(actualType, converter, header);
-                appliedHeader = false;
-            }
 
             // Write and get the info for a version, if necessary
-            if (HandleVersionNumber(converter, ref cache, header))
-                appliedHeader = true;
+            HandleVersionNumber(converter, ref cache, header);
 
             // Handle inheritance if needed.
             if (cache._inheritanceInfo != null && !sameType)
@@ -70,10 +65,6 @@ namespace ABCo.ABSave.Serialization.Writing.Core
                 SerializeActualType(cache._inheritanceInfo, obj, actualType, converter, header);
                 return null;
             }
-
-            // Apply the header if it's not being used and hasn't already been applied.
-            if (!cache.UsesHeader && !appliedHeader)
-                header.FinishWritingBitsToCurrentByte();
 
             return cache;
         }
@@ -92,16 +83,14 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         /// Handles the version info for a given converter. If the version hasn't been written yet, it's written now. If not, nothing is written.
         /// </summary>
         /// <returns>Whether we applied the header</returns>
-        static bool HandleVersionNumber(Converter item, ref VersionInfo info, ABSaveSerializer header)
+        static void HandleVersionNumber(Converter item, ref VersionInfo info, ABSaveSerializer header)
         {
             // If the version has already been written (there's info in the cache), do nothing
-            if (info != null) return false;
+            if (info != null) return;
 
             // If not, write the version and add the converter to the cache.
             uint version = header.State.HasVersioningInfo ? WriteNewVersionInfo(item, header) : 0;
             info = header.State.CreateNewCache(item, version);
-
-            return header.State.HasVersioningInfo;
         }
 
         static uint WriteNewVersionInfo(Converter item, ABSaveSerializer target)
