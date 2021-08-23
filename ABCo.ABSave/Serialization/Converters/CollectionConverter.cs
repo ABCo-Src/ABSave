@@ -11,12 +11,13 @@ using System.Collections.Generic;
 
 namespace ABCo.ABSave.Serialization.Converters
 {
+    [Select(typeof(ICollection<>), 0)]
     [Select(typeof(IList<>), 0)]
     [Select(typeof(IDictionary<,>), 0, 1)]
     [Select(typeof(List<>), 0)]
     [Select(typeof(Dictionary<,>), 0, 1)]
     [SelectOtherWithCheckType]
-    public class EnumerableConverter : Converter
+    public class CollectionConverter : Converter
     {
         public IEnumerableInfo _info = null!;
         public Type _elementOrKeyType = null!;

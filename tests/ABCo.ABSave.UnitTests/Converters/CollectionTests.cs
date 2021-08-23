@@ -27,7 +27,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             CurrentGenerator.Initialize(CurrentMap);
         }
 
-        EnumerableConverter InitializeNew(Type type)
+        CollectionConverter InitializeNew(Type type)
         {
             var info = new InitializeInfo(type, CurrentGenerator);
 
