@@ -38,7 +38,7 @@ namespace ABCo.ABSave.UnitTests.Converters
                 Setup<string[]>(Settings);
 
                 DoSerialize(arr);
-                AssertAndGoToStart(0, 5, 192, 1, 65, 193, 66, 193, 67, 193, 68, 193, 69);
+                AssertAndGoToStart(0, 5, 0x80, 1, 65, 0x81, 66, 0x81, 67, 0x81, 68, 0x81, 69);
                 CollectionAssert.AreEqual(arr, DoDeserialize<string[]>());
             }
         }

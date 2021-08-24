@@ -21,26 +21,28 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
-        public void DateTime()
+        [DataRow(false)]
+        [DataRow(true)]
+        public void DateTime(bool compressed)
         {
-            Setup<DateTime>(ABSaveSettings.ForSpeed);
+            Setup<DateTime>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
             var dateTime = new DateTime(1989, 6, 3, 7, 3, 8);
 
             DoSerialize(dateTime);
-            AssertAndGoToStart(Concat(0, BitConverter.GetBytes(dateTime.Ticks)));
-
+            GoToStart();
             Assert.AreEqual(dateTime, DoDeserialize<DateTime>());
         }
 
         [TestMethod]
-        public void TimeSpan()
+        [DataRow(false)]
+        [DataRow(true)]
+        public void TimeSpan(bool compressed)
         {
-            Setup<TimeSpan>(ABSaveSettings.ForSpeed);
+            Setup<TimeSpan>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
             var timeSpan = new TimeSpan(19, 7, 3, 8);
 
             DoSerialize(timeSpan);
-            AssertAndGoToStart(Concat(0, BitConverter.GetBytes(timeSpan.Ticks)));
-
+            GoToStart();
             Assert.AreEqual(timeSpan, DoDeserialize<TimeSpan>());
         }
 
@@ -51,9 +53,29 @@ namespace ABCo.ABSave.UnitTests.Converters
             var obj = new KeyValuePair<byte, bool>(234, true);
 
             DoSerialize(obj);
-            AssertAndGoToStart(0, 0, 234, 0, 1);
+            AssertAndGoToStart(0, 0, 234, 0, 0x80);
 
             Assert.AreEqual(obj, DoDeserialize<KeyValuePair<byte, bool>>());
+        }
+
+        [TestMethod]
+        public void Boolean()
+        {
+            Setup<bool>(ABSaveSettings.ForSpeed);
+
+            Serializer.WriteItem(true, CurrentMapItem);
+            Serializer.WriteItem(true, CurrentMapItem);
+            Serializer.WriteItem(false, CurrentMapItem);
+            Serializer.WriteItem(true, CurrentMapItem);
+
+            AssertAndGoToStart(0, 0xD0);
+
+            {
+                Assert.AreEqual(true, Deserializer.ReadItem(CurrentMapItem));
+                Assert.AreEqual(true, Deserializer.ReadItem(CurrentMapItem));
+                Assert.AreEqual(false, Deserializer.ReadItem(CurrentMapItem));
+                Assert.AreEqual(true, Deserializer.ReadItem(CurrentMapItem));
+            }
         }
 
         [TestMethod]
@@ -81,6 +103,140 @@ namespace ABCo.ABSave.UnitTests.Converters
             {
                 Assert.AreEqual(versions[i], DoDeserialize<Version>());
             }
+        }
+
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Byte(bool compressed)
+        {
+            Setup<byte>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize((byte)124);
+            GoToStart();
+            Assert.AreEqual(124, DoDeserialize<byte>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Int16(bool compressed)
+        {
+            Setup<short>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize((short)1671);
+            GoToStart();
+            Assert.AreEqual(1671, DoDeserialize<short>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void UInt16(bool compressed)
+        {
+            Setup<ushort>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize((ushort)1671);
+            GoToStart();
+            Assert.AreEqual(1671, DoDeserialize<ushort>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Char(bool compressed)
+        {
+            Setup<char>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize('\u1056');
+            GoToStart();
+            Assert.AreEqual('\u1056', DoDeserialize<char>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Int32(bool compressed)
+        {
+            Setup<int>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize(1671);
+            GoToStart();
+            Assert.AreEqual(1671, DoDeserialize<int>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void UInt32(bool compressed)
+        {
+            Setup<uint>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize((uint)1671);
+            GoToStart();
+            Assert.AreEqual((uint)1671, DoDeserialize<uint>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Int64(bool compressed)
+        {
+            Setup<long>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize(567L);
+            GoToStart();
+            Assert.AreEqual(567L, DoDeserialize<long>());
+        }
+
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void UInt64(bool compressed)
+        {
+            Setup<ulong>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize(567UL);
+            GoToStart();
+            Assert.AreEqual(567UL, DoDeserialize<ulong>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Single(bool compressed)
+        {
+            Setup<float>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize(3.5f);
+            GoToStart();
+            Assert.AreEqual(3.5f, DoDeserialize<float>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Double(bool compressed)
+        {
+            Setup<double>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize(3.5d);
+            GoToStart();
+            Assert.AreEqual(3.5d, DoDeserialize<double>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Decimal(bool compressed)
+        {
+            Setup<decimal>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize(56.57M);
+            GoToStart();
+            Assert.AreEqual(56.57M, DoDeserialize<decimal>());
         }
     }
 }

@@ -26,9 +26,8 @@ namespace ABCo.ABSave
         public static void SerializeNonGeneric(object? obj, ABSaveMap map, Stream stream, bool writeVersioning = false, Dictionary<Type, uint>? targetVersions = null)
         {
             using ABSaveSerializer serializer = map.GetSerializer(stream, writeVersioning, targetVersions);
-            using BitWriter header = serializer.GetHeader();
-            header.WriteSettingsHeaderIfNeeded();
-            header.WriteRoot(obj);
+            serializer.WriteSettingsHeaderIfNeeded();
+            serializer.WriteRoot(obj);
         }
 
         public static T Deserialize<T>(byte[] arr, ABSaveMap map, bool? writeVersioning = null) =>
@@ -46,9 +45,8 @@ namespace ABCo.ABSave
         public static object? DeserializeNonGeneric(Stream stream, ABSaveMap map, bool? writeVersioning = null)
         {
             using ABSaveDeserializer deserializer = map.GetDeserializer(stream, writeVersioning);
-            BitReader header = deserializer.GetHeader();
-            header.ReadSettingsHeaderIfNeeded();
-            return header.ReadRoot();
+            deserializer.ReadSettingsHeaderIfNeeded();
+            return deserializer.ReadRoot();
         }
     }
 }

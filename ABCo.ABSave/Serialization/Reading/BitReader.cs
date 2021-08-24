@@ -11,7 +11,7 @@ namespace ABCo.ABSave.Serialization.Reading
     /// <summary>
     /// Reads data bit-by-bit. Typically used to read from the header for an item, but can be created by a converter to allow more manual bit reading/writing.
     /// </summary>
-    public class BitReader
+    internal struct BitReader
     {
         ABSaveDeserializer _deserializer;
         public byte FreeBits { get; private set; }
@@ -20,12 +20,14 @@ namespace ABCo.ABSave.Serialization.Reading
         public DeserializeCurrentState State => _deserializer.State;
         public byte CurrentByte => (byte)_source;
 
-        public BitReader(ABSaveDeserializer deserializer) => _deserializer = deserializer;
-
-        public void SetupHeader()
+        public BitReader(ABSaveDeserializer deserializer)
         {
+            _deserializer = deserializer;
             FreeBits = 0;
+            _source = 0;
         }
+
+        public void Reset() => FreeBits = 0;
 
         public bool ReadBit()
         {
@@ -53,25 +55,6 @@ namespace ABCo.ABSave.Serialization.Reading
             }
         }
 
-        public void ReadSettingsHeaderIfNeeded() => HeaderDeserializer.ReadHeader(this);
-
-        public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed(false, this);
-        public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed(true, this);
-
-        public string? ReadNullableString() => TextDeserializer.ReadNullableString(this);
-        public string ReadNonNullString() => TextDeserializer.ReadNonNullString(this);
-        public T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest) => TextDeserializer.ReadUTF8<T>(createDest, castDest, this);
-
-        public object? ReadRoot() => ItemDeserializer.DeserializeItem(State.Map._rootItem, this);
-        public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
-        public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
-
-        public VersionInfo ReadExactNonNullHeader(Converter converter)
-        {
-            ItemDeserializer.DeserializeConverterHeader(converter, this, true, out var info);
-            return info;
-        }
-
         public void MoveToNewByte()
         {
             _source = _deserializer.ReadByte();
@@ -86,18 +69,18 @@ namespace ABCo.ABSave.Serialization.Reading
     }
 
     //[StructLayout(LayoutKind.Auto)]
-    //public struct BitReader
+    //public struct ABSaveDeserializer
     //{
-    //    CurrentBitReader _currentBitReader;
-    //    public int FreeBits => _currentBitReader.FreeBits;
+    //    CurrentABSaveDeserializer _currentABSaveDeserializer;
+    //    public int FreeBits => _currentABSaveDeserializer.FreeBits;
 
-    //    internal BitReader(CurrentBitReader currentReader)
+    //    internal ABSaveDeserializer(CurrentABSaveDeserializer currentReader)
     //    {
-    //        _currentBitReader = currentReader;
+    //        _currentABSaveDeserializer = currentReader;
     //    }
 
-    //    public bool ReadBit() => _currentBitReader.ReadBit();
-    //    public byte ReadInteger(byte bitsRequired) => _currentBitReader.ReadInteger(bitsRequired);
+    //    public bool ReadBit() => _currentABSaveDeserializer.ReadBit();
+    //    public byte ReadInteger(byte bitsRequired) => _currentABSaveDeserializer.ReadInteger(bitsRequired);
     //    public ABSaveDeserializer Finish()
     //    {
 

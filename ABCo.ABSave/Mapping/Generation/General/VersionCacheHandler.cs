@@ -66,14 +66,14 @@ namespace ABCo.ABSave.Mapping.Generation.General
 
         static VersionInfo GetVersionInfo(Converter converter, uint version, MapGenerator gen)
         {
-            (VersionInfo? newVer, bool usesHeader) = converter.GetVersionInfo(new InitializeInfo(converter.ItemType, gen), version);
+            VersionInfo? newVer = converter.GetVersionInfo(new InitializeInfo(converter.ItemType, gen), version);
 
             SaveInheritanceAttribute? inheritanceInfo = null;
             if (converter._allInheritanceAttributes != null)
                 inheritanceInfo = MappingHelpers.FindAttributeForVersion(converter._allInheritanceAttributes, version);
 
-            newVer ??= new VersionInfo(usesHeader);
-            newVer.Assign(version, usesHeader, inheritanceInfo);
+            newVer ??= new VersionInfo();
+            newVer.Assign(version, inheritanceInfo);
 
             return newVer;
         }

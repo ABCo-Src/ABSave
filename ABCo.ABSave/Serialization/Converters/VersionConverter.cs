@@ -10,46 +10,41 @@ namespace ABCo.ABSave.Serialization.Converters
     [Select(typeof(Version))]
     public class VersionConverter : Converter
     {
-        public override void Serialize(in SerializeInfo info) => SerializeVersion((Version)info.Instance, info.Header);
+        public override void Serialize(in SerializeInfo info) => SerializeVersion((Version)info.Instance, info.Serializer);
 
-        public static void SerializeVersion(Version version, BitWriter header)
+        public static void SerializeVersion(Version version, ABSaveSerializer serializer)
         {
             bool hasMajor = version.Major != 1;
             bool hasMinor = version.Minor > 0;
             bool hasBuild = version.Build > 0;
             bool hasRevision = version.Revision > 0;
 
-            header.WriteBitWith(hasMajor);
-            header.WriteBitWith(hasMinor);
-            header.WriteBitWith(hasBuild);
-            header.WriteBitWith(hasRevision);
+            serializer.WriteBitWith(hasMajor);
+            serializer.WriteBitWith(hasMinor);
+            serializer.WriteBitWith(hasBuild);
+            serializer.WriteBitWith(hasRevision);
 
-            if (hasMajor) header.WriteCompressedInt((uint)version.Major);
-            if (hasMinor) header.WriteCompressedInt((uint)version.Minor);
-            if (hasBuild) header.WriteCompressedInt((uint)version.Build);
-            if (hasRevision) header.WriteCompressedInt((uint)version.Revision);
-
-            // If the header hasn't been applied yet, apply it now
-            if (header.FreeBits < 8) header.MoveToNextByte();
+            if (hasMajor) serializer.WriteCompressedInt((uint)version.Major);
+            if (hasMinor) serializer.WriteCompressedInt((uint)version.Minor);
+            if (hasBuild) serializer.WriteCompressedInt((uint)version.Build);
+            if (hasRevision) serializer.WriteCompressedInt((uint)version.Revision);
         }
 
-        public override object Deserialize(in DeserializeInfo info) => DeserializeVersion(info.Header);
+        public override object Deserialize(in DeserializeInfo info) => DeserializeVersion(info.Deserializer);
 
-        public static Version DeserializeVersion(BitReader header)
+        public static Version DeserializeVersion(ABSaveDeserializer deserializer)
         {
-            bool hasMajor = header.ReadBit();
-            bool hasMinor = header.ReadBit();
-            bool hasBuild = header.ReadBit();
-            bool hasRevision = header.ReadBit();
+            bool hasMajor = deserializer.ReadBit();
+            bool hasMinor = deserializer.ReadBit();
+            bool hasBuild = deserializer.ReadBit();
+            bool hasRevision = deserializer.ReadBit();
 
-            int major = hasMajor ? (int)header.ReadCompressedInt() : 1;
-            int minor = hasMinor ? (int)header.ReadCompressedInt() : 0;
-            int build = hasBuild ? (int)header.ReadCompressedInt() : 0;
-            int revision = hasRevision ? (int)header.ReadCompressedInt() : 0;
+            int major = hasMajor ? (int)deserializer.ReadCompressedInt() : 1;
+            int minor = hasMinor ? (int)deserializer.ReadCompressedInt() : 0;
+            int build = hasBuild ? (int)deserializer.ReadCompressedInt() : 0;
+            int revision = hasRevision ? (int)deserializer.ReadCompressedInt() : 0;
 
             return new Version(major, minor, build, revision);
         }
-
-        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, true);
     }
 }

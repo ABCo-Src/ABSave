@@ -7,7 +7,7 @@ namespace ABCo.ABSave.Configuration
         internal static ConverterInfo[] Infos { get; } = new ConverterInfo[]
         {
             new ConverterInfo(typeof(KeyValueConverter), 0),
-            new ConverterInfo(typeof(EnumerableConverter), 1),
+            new ConverterInfo(typeof(CollectionConverter), 1),
             new ConverterInfo(typeof(ArrayConverter), 2),
             new ConverterInfo(typeof(PrimitiveConverter), 3),
             new ConverterInfo(typeof(GuidConverter), 4),

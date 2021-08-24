@@ -28,14 +28,12 @@ namespace ABCo.ABSave.UnitTests.Core
 
             // Stack buffer
             {
-                var header = Serializer.GetHeader();
-                header.WriteUTF8("ABC".AsSpan());
+                Serializer.WriteUTF8("ABC".AsSpan());
                 AssertAndGoToStart(3, 65, 66, 67);
             }
 
             {
-                var header = Deserializer.GetHeader();
-                "ABC".AsSpan().SequenceEqual(header.ReadUTF8(s => new char[s], c => c.AsMemory()));
+                "ABC".AsSpan().SequenceEqual(Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory()));
             }
 
             ResetState();
@@ -51,14 +49,12 @@ namespace ABCo.ABSave.UnitTests.Core
                 var expected = GenerateBlankExpected();
 
                 {
-                    var header = Serializer.GetHeader();
-                    header.WriteUTF8(chArr.AsSpan());
+                    Serializer.WriteUTF8(chArr.AsSpan());
                     AssertAndGoToStart(expected);
                 }
 
                 {
-                    var header = Deserializer.GetHeader();
-                    chArr.AsSpan().SequenceEqual(header.ReadUTF8(s => new char[s], c => c.AsMemory()));
+                    chArr.AsSpan().SequenceEqual(Deserializer.ReadUTF8(s => new char[s], c => c.AsMemory()));
                 }
             }
         }

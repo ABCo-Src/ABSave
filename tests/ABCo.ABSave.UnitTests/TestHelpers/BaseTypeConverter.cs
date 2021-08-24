@@ -19,8 +19,6 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public static bool WritesToHeader;
 
-        public override (VersionInfo, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, WritesToHeader);
-
         public override bool CheckType(CheckTypeInfo info) =>
             info.Type == typeof(BaseIndex) || info.Type.IsSubclassOf(typeof(BaseIndex));
 
@@ -28,20 +26,18 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         {
             if (WritesToHeader)
             {
-                info.Header.WriteBitOn();
-                info.Header.MoveToNextByte();
+                info.Serializer.WriteBitOn();
+                info.Serializer.FinishWritingBitsToCurrentByte();
             }
 
-            var serializer = info.Header.Finish();
-            serializer.WriteByte(OUTPUT_BYTE);
+            info.Serializer.WriteByte(OUTPUT_BYTE);
         }
 
         public override object Deserialize(in DeserializeInfo info)
         {
-            if (WritesToHeader && !info.Header.ReadBit()) throw new Exception("Deserialize read invalid header bit");
+            if (WritesToHeader && !info.Deserializer.ReadBit()) throw new Exception("Deserialize read invalid header bit");
 
-            var deserializer = info.Header.Finish();
-            if (deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
+            if (info.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Deserialize read invalid byte");
 
             return OUTPUT_BYTE;
         }

@@ -11,12 +11,13 @@ using System.Collections.Generic;
 
 namespace ABCo.ABSave.Serialization.Converters
 {
+    [Select(typeof(ICollection<>), 0)]
     [Select(typeof(IList<>), 0)]
     [Select(typeof(IDictionary<,>), 0, 1)]
     [Select(typeof(List<>), 0)]
     [Select(typeof(Dictionary<,>), 0, 1)]
     [SelectOtherWithCheckType]
-    public class EnumerableConverter : Converter
+    public class CollectionConverter : Converter
     {
         public IEnumerableInfo _info = null!;
         public Type _elementOrKeyType = null!;
@@ -44,30 +45,30 @@ namespace ABCo.ABSave.Serialization.Converters
         public override void Serialize(in SerializeInfo info)
         {
             if (_info is CollectionInfo collectionInfo)
-                SerializeCollection(info.Instance, collectionInfo, info.Header);
+                SerializeCollection(info.Instance, collectionInfo, info.Serializer);
             else if (_info is DictionaryInfo dictionaryInfo)
-                SerializeDictionary(info.Instance, dictionaryInfo, info.Header);
+                SerializeDictionary(info.Instance, dictionaryInfo, info.Serializer);
         }
 
-        void SerializeCollection(object obj, CollectionInfo info, BitWriter header)
+        void SerializeCollection(object obj, CollectionInfo info, ABSaveSerializer serializer)
         {
             int size = info.GetCount(obj);
-            header.WriteCompressedInt((uint)size);
+            serializer.WriteCompressedInt((uint)size);
 
             IEnumerator? enumerator = info.GetEnumerator(obj);
-            while (enumerator.MoveNext()) header.WriteItem(enumerator.Current, _elementOrKeyMap);
+            while (enumerator.MoveNext()) serializer.WriteItem(enumerator.Current, _elementOrKeyMap);
         }
 
-        void SerializeDictionary(object obj, DictionaryInfo info, BitWriter header)
+        void SerializeDictionary(object obj, DictionaryInfo info, ABSaveSerializer serializer)
         {
             int size = info.GetCount(obj);
-            header.WriteCompressedInt((uint)size);
+            serializer.WriteCompressedInt((uint)size);
 
             IDictionaryEnumerator? enumerator = info.GetEnumerator(obj);
             while (enumerator.MoveNext())
             {
-                header.WriteItem(enumerator.Key, _elementOrKeyMap);
-                header.WriteItem(enumerator.Value, _valueMap);
+                serializer.WriteItem(enumerator.Key, _elementOrKeyMap);
+                serializer.WriteItem(enumerator.Value, _valueMap);
             }
         }
 
@@ -78,34 +79,34 @@ namespace ABCo.ABSave.Serialization.Converters
         public override object Deserialize(in DeserializeInfo info)
         {
             if (_info is CollectionInfo collectionInfo)
-                return DeserializeCollection(collectionInfo, info.ActualType, info.Header);
+                return DeserializeCollection(collectionInfo, info.ActualType, info.Deserializer);
             else if (_info is DictionaryInfo dictionaryInfo)
-                return DeserializeDictionary(dictionaryInfo, info.ActualType, info.Header);
+                return DeserializeDictionary(dictionaryInfo, info.ActualType, info.Deserializer);
             else throw new Exception("Unrecognized enumerable info.");
         }
 
-        object DeserializeCollection(CollectionInfo info, Type type, BitReader header)
+        object DeserializeCollection(CollectionInfo info, Type type, ABSaveDeserializer deserializer)
         {
-            int size = (int)header.ReadCompressedInt();
+            int size = (int)deserializer.ReadCompressedInt();
             object? collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
-                info.AddItem(collection, header.ReadItem(_elementOrKeyMap));
+                info.AddItem(collection, deserializer.ReadItem(_elementOrKeyMap));
 
             return collection;
         }
 
-        object DeserializeDictionary(DictionaryInfo info, Type type, BitReader header)
+        object DeserializeDictionary(DictionaryInfo info, Type type, ABSaveDeserializer deserializer)
         {
-            int size = (int)header.ReadCompressedInt();
+            int size = (int)deserializer.ReadCompressedInt();
             object? collection = info.CreateCollection(type, size);
 
             for (int i = 0; i < size; i++)
             {
-                object? key = header.ReadItem(_elementOrKeyMap);
+                object? key = deserializer.ReadItem(_elementOrKeyMap);
                 if (key == null) throw new NullDictionaryKeyException();
 
-                object? value = header.ReadItem(_valueMap);
+                object? value = deserializer.ReadItem(_valueMap);
                 info.AddItem(collection, key, value);
             }
 
@@ -257,8 +258,6 @@ namespace ABCo.ABSave.Serialization.Converters
             NonGenericIList,
             None
         }
-
-        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, true);
 
         private bool TryHandleDirectTypes(InitializeInfo info, Type type)
         {

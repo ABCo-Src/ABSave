@@ -18,36 +18,30 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         bool _isNo2;
 
         public const int OUTPUT_BYTE = 110;
-        public override (VersionInfo, bool) GetVersionInfo(InitializeInfo info, uint version) => (null, _writesToHeader);
 
         public override void Serialize(in SerializeInfo info)
         {
             if (_writesToHeader)
             {
-                info.Header.WriteBitOn();
-                info.Header.MoveToNextByte();
+                info.Serializer.WriteBitOn();
+                info.Serializer.FinishWritingBitsToCurrentByte();
             }
 
-            var serializer = info.Header.Finish();
-            serializer.WriteByte(OUTPUT_BYTE);
+            info.Serializer.WriteByte(OUTPUT_BYTE);
         }
 
         public override object Deserialize(in DeserializeInfo info)
         {
             if (_writesToHeader)
             {
-                if (!info.Header.ReadBit()) throw new Exception("Sub deserialization failed.");
+                if (!info.Deserializer.ReadBit()) throw new Exception("Sub deserialization failed.");
 
-                var deserializer = info.Header.Finish();
-                if (deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
+                if (info.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
 
                 return _isNo2 ? new SubWithHeader2() : new SubWithHeader();
             }
 
-            {
-                var deserializer = info.Header.Finish();
-                if (deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
-            }
+            if (info.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
 
             return _isNo2 ? new SubWithoutHeader2() : new SubWithoutHeader();
         }

@@ -21,44 +21,44 @@ namespace ABCo.ABSave.Serialization.Converters
         public override void Serialize(in SerializeInfo info)
         {
             if (_isGeneric)
-                SerializeGeneric((dynamic)info.Instance, info.Header);
+                SerializeGeneric((dynamic)info.Instance, info.Serializer);
 
             else
-                SerializeNonGeneric((DictionaryEntry)info.Instance, info.Header);
+                SerializeNonGeneric((DictionaryEntry)info.Instance, info.Serializer);
         }
 
-        void SerializeGeneric(dynamic obj, BitWriter writer)
+        void SerializeGeneric(dynamic obj, ABSaveSerializer serializer)
         {
-            writer.WriteItem(obj.Key, _keyMap);
-            writer.WriteItem(obj.Value, _valueMap);
+            serializer.WriteItem(obj.Key, _keyMap);
+            serializer.WriteItem(obj.Value, _valueMap);
         }
 
-        void SerializeNonGeneric(DictionaryEntry obj, BitWriter writer)
+        void SerializeNonGeneric(DictionaryEntry obj, ABSaveSerializer serializer)
         {
-            writer.WriteItem(obj.Key, _keyMap);
-            writer.WriteItem(obj.Value, _valueMap);
+            serializer.WriteItem(obj.Key, _keyMap);
+            serializer.WriteItem(obj.Value, _valueMap);
         }
 
         public override object Deserialize(in DeserializeInfo info)
         {
             if (_isGeneric)
-                return DeserializeGeneric(info.ActualType, info.Header);
+                return DeserializeGeneric(info.ActualType, info.Deserializer);
             else
-                return DeserializeNonGeneric(info.Header);
+                return DeserializeNonGeneric(info.Deserializer);
         }
 
-        object DeserializeGeneric(Type actualType, BitReader header)
+        object DeserializeGeneric(Type actualType, ABSaveDeserializer deserializer)
         {
-            object? key = header.ReadItem(_keyMap);
-            object? value = header.ReadItem(_valueMap);
+            object? key = deserializer.ReadItem(_keyMap);
+            object? value = deserializer.ReadItem(_valueMap);
 
             return Activator.CreateInstance(actualType, key, value)!;
         }
 
-        DictionaryEntry DeserializeNonGeneric(BitReader header)
+        DictionaryEntry DeserializeNonGeneric(ABSaveDeserializer deserializer)
         {
-            object? key = header.ReadItem(_keyMap);
-            object? value = header.ReadItem(_valueMap);
+            object? key = deserializer.ReadItem(_keyMap);
+            object? value = deserializer.ReadItem(_valueMap);
 
             if (key == null) throw new NullDictionaryKeyException();
             return new DictionaryEntry(key, value);

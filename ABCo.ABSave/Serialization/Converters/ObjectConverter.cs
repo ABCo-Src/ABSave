@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _intermediateInfo);
         }
 
-        public override (VersionInfo?, bool) GetVersionInfo(InitializeInfo info, uint version)
+        public override VersionInfo? GetVersionInfo(InitializeInfo info, uint version)
         {
             ObjectMemberSharedInfo[]? members = _hasOneVersion ?
                 ObjectVersionMapper.GenerateForOneVersion(this, info._gen) :
@@ -40,8 +40,7 @@ namespace ABCo.ABSave.Serialization.Converters
             if (attr != null)
                 baseConv = GetBaseObjectConverter(info, attr);
 
-            bool usesHeader = members.Length > 0 || baseConv != null;
-            return (new ObjectVersionInfo(members, baseConv), usesHeader);
+            return new ObjectVersionInfo(members, baseConv);
         }
 
         ObjectConverter GetBaseObjectConverter(InitializeInfo info, SaveBaseMembersAttribute attr)
@@ -69,9 +68,9 @@ namespace ABCo.ABSave.Serialization.Converters
         protected override void DoHandleAllVersionsGenerated() => _intermediateInfo.Release();
 
         public override void Serialize(in SerializeInfo info) =>
-            Serialize(info.Instance, info.ActualType, info.VersionInfo, info.Header);
+            Serialize(info.Instance, info.ActualType, info.VersionInfo, info.Serializer);
 
-        void Serialize(object instance, Type actualType, VersionInfo info, BitWriter header)
+        void Serialize(object instance, Type actualType, VersionInfo info, ABSaveSerializer serializer)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
@@ -79,25 +78,25 @@ namespace ABCo.ABSave.Serialization.Converters
 
             if (baseType != null)
             {
-                var baseInfo = header.WriteExactNonNullHeader(instance, actualType, baseType);
-                baseType.Serialize(instance, actualType, baseInfo!, header);
+                var baseInfo = serializer.WriteExactNonNullHeader(instance, actualType, baseType);
+                baseType.Serialize(instance, actualType, baseInfo!, serializer);
             }
 
             if (members.Length == 0) return;
 
             // Serialize the rest.
             for (int i = 0; i < members.Length; i++)
-                header.WriteItem(members[i].Accessor.Getter(instance), members[i].Map);
+                serializer.WriteItem(members[i].Accessor.Getter(instance), members[i].Map);
         }
 
         public override object Deserialize(in DeserializeInfo info)
         {
             object res = Activator.CreateInstance(info.ActualType)!;
-            DeserializeInto(res, info.VersionInfo, info.Header);
+            DeserializeInto(res, info.VersionInfo, info.Deserializer);
             return res;
         }
 
-        void DeserializeInto(object obj, VersionInfo info, BitReader header)
+        void DeserializeInto(object obj, VersionInfo info, ABSaveDeserializer deserializer)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
@@ -106,13 +105,13 @@ namespace ABCo.ABSave.Serialization.Converters
             if (baseType != null)
             {
                 // TODO: Don't directly call this with map guides.
-                VersionInfo baseInfo = header.ReadExactNonNullHeader(baseType);
-                baseType.DeserializeInto(obj, baseInfo, header);
+                VersionInfo baseInfo = deserializer.ReadExactNonNullHeader(baseType);
+                baseType.DeserializeInto(obj, baseInfo, deserializer);
             }
 
             // Deserialize all the members that don't get the header.
             for (int i = 0; i < members.Length; i++)
-                members[i].Accessor.Setter(obj, header.ReadItem(members[i].Map));
+                members[i].Accessor.Setter(obj, deserializer.ReadItem(members[i].Map));
         }
 
         internal class ObjectVersionInfo : VersionInfo

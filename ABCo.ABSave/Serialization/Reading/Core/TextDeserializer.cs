@@ -8,23 +8,21 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal unsafe static class TextDeserializer
     {
-        public static string? ReadNullableString(BitReader header)
+        public static string? ReadNullableString(ABSaveDeserializer deserializer)
         {
-            if (!header.ReadBit()) return null;
+            if (!deserializer.ReadBit()) return null;
 
-            return ReadNonNullString(header);
+            return ReadNonNullString(deserializer);
         }
 
-        public static string ReadNonNullString(BitReader header)
+        public static string ReadNonNullString(ABSaveDeserializer deserializer)
         {
-            if (header.State.Settings.UseUTF8)
+            if (deserializer.State.Settings.UseUTF8)
             {
-                int byteSize = (int)header.ReadCompressedInt();
-
-                var deserializer = header.Finish();
+                int byteSize = (int)deserializer.ReadCompressedInt();
 
                 // Read the data
-                Span<byte> buffer = byteSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[byteSize] : header.State.GetStringBuffer(byteSize);
+                Span<byte> buffer = byteSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[byteSize] : deserializer.State.GetStringBuffer(byteSize);
                 deserializer.ReadBytes(buffer);
 
                 // Encode
@@ -32,9 +30,8 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             }
             else
             {
-                int size = (int)header.ReadCompressedInt();
+                int size = (int)deserializer.ReadCompressedInt();
 
-                var deserializer = header.Finish();
                 return string.Create(size, deserializer, (chars, state) =>
                 {
                     state.FastReadShorts(MemoryMarshal.Cast<char, short>(chars));
@@ -42,15 +39,13 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             }
         }
 
-        public static T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest, BitReader header)
+        public static T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest, ABSaveDeserializer header)
         {
             int byteSize = (int)header.ReadCompressedInt();
 
-            var deserializer = header.Finish();
-
             // Read the data
             Span<byte> buffer = byteSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[byteSize] : header.State.GetStringBuffer(byteSize);
-            deserializer.ReadBytes(buffer);
+            header.ReadBytes(buffer);
 
             // Allocate the destination with the correct size.
             int charSize = Encoding.UTF8.GetCharCount(buffer);
