@@ -15,7 +15,7 @@ namespace ABCo.ABSave.UnitTests
             var map = ABSaveMap.Get<string>(ABSaveSettings.ForSize);
 
             byte[] arr = ABSaveConvert.Serialize("A", map);
-            CollectionAssert.AreEqual(new byte[] { 0x61, 65 }, arr);
+            CollectionAssert.AreEqual(new byte[] { 0x41, 65 }, arr);
             Assert.AreEqual("A", ABSaveConvert.Deserialize<string>(arr, map));
         }
 
@@ -25,7 +25,7 @@ namespace ABCo.ABSave.UnitTests
             var map = ABSaveMap.Get<string>(ABSaveSettings.ForSize);
 
             byte[] arr = ABSaveConvert.Serialize("B", map, true);
-            CollectionAssert.AreEqual(new byte[] { 0xE0, 1, 66 }, arr);
+            CollectionAssert.AreEqual(new byte[] { 0xC0, 1, 66 }, arr);
             Assert.AreEqual("B", ABSaveConvert.Deserialize<string>(arr, map));
         }
 
@@ -35,7 +35,7 @@ namespace ABCo.ABSave.UnitTests
             var map = ABSaveMap.Get<string>(ABSaveSettings.ForSize.Customize(s => s.SetIncludeVersioningHeader(false)));
 
             byte[] arr = ABSaveConvert.Serialize("A", map);
-            CollectionAssert.AreEqual(new byte[] { 0xC1, 65 }, arr);
+            CollectionAssert.AreEqual(new byte[] { 0x81, 65 }, arr);
             Assert.AreEqual("A", ABSaveConvert.Deserialize<string>(arr, map, false));
         }
 
@@ -45,7 +45,7 @@ namespace ABCo.ABSave.UnitTests
             var map = ABSaveMap.Get<string>(ABSaveSettings.ForSize.Customize(s => s.SetIncludeVersioningHeader(false)));
 
             byte[] arr = ABSaveConvert.Serialize("B", map, true);
-            CollectionAssert.AreEqual(new byte[] { 0xC0, 1, 66 }, arr);
+            CollectionAssert.AreEqual(new byte[] { 0x80, 1, 66 }, arr);
             Assert.AreEqual("B", ABSaveConvert.Deserialize<string>(arr, map, true));
         }
 

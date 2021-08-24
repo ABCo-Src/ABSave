@@ -9,11 +9,6 @@ namespace ABCo.ABSave.Mapping.Description.Attributes
         public SaveInheritanceMode Mode;
         internal bool HasGeneratedFullKeyCache;
 
-        ///// <summary>
-        ///// Whether to ignore any types that aren't in the list or don't have a key and simply serialize their base members.
-        ///// </summary>
-        //public bool IgnoreUnmarkedTypes = false;
-
         internal Dictionary<Type, uint> IndexSerializeCache;
         internal Dictionary<uint, Type> IndexDeserializeCache;
 

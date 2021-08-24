@@ -15,25 +15,25 @@ namespace ABCo.ABSave.Serialization.Writing.Core
     {
         public static void SerializeItem(object? obj, MapItemInfo info, ABSaveSerializer serializer)
         {
-            // Say it's "not null" if it is nullable.
             if (obj == null)
                 serializer.WriteBitOff();
             else
             {
-                if (info.IsNullable) serializer.WriteBitOn();
-                SerializeItemNoSetup(obj, info, serializer, info.IsNullable);
+                // Write "not-null".
+                if (!info.Converter.IsValueItemType || info.IsNullable)
+                    serializer.WriteBitOn();
+
+                SerializeItemNoSetup(obj, info.Converter, serializer, info.IsNullable);
             }
         }
 
         public static void SerializeExactNonNullItem(object obj, MapItemInfo info, ABSaveSerializer serializer) =>
-            SerializeItemNoSetup(obj, info, serializer, true);
+            SerializeItemNoSetup(obj, info.Converter, serializer, true);
 
-        static void SerializeItemNoSetup(object obj, MapItemInfo info, ABSaveSerializer serializer, bool skipHeader)
+        static void SerializeItemNoSetup(object obj, Converter info, ABSaveSerializer serializer, bool skipHeader)
         {
-            Converter item = info.Converter;
-            ABSaveUtils.WaitUntilNotGenerating(item);
-
-            SerializeConverter(obj, info.Converter, serializer, skipHeader);
+            ABSaveUtils.WaitUntilNotGenerating(info);
+            SerializeConverter(obj, info, serializer, skipHeader);
         }
 
         static void SerializeConverter(object obj, Converter converter, ABSaveSerializer serializer, bool skipHeader)
@@ -51,46 +51,27 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         {
             var cache = header.State.GetCachedInfo(converter);
 
-            // Write the null and inheritance bits.
-            bool sameType = true;
-            if (!converter.IsValueItemType && !skipHeader)
-                sameType = WriteHeaderNullAndInheritance(actualType, converter, header);
-
             // Write and get the info for a version, if necessary
-            HandleVersionNumber(converter, ref cache, header);
+            if (cache == null)
+                cache = HandleNewVersion(converter, header);
 
-            // Handle inheritance if needed.
-            if (cache._inheritanceInfo != null && !sameType)
+            if (cache._inheritanceInfo != null && !skipHeader)
             {
-                SerializeActualType(cache._inheritanceInfo, obj, actualType, converter, header);
+                SerializeActualTypeIfNeeded(cache._inheritanceInfo, obj, actualType, converter, header);
                 return null;
             }
 
             return cache;
         }
 
-        // Returns: Whether the type has changed.
-        static bool WriteHeaderNullAndInheritance(Type actualType, Converter item, ABSaveSerializer target)
-        {
-            target.WriteBitOn(); // Non-Null
-
-            bool sameType = item.ItemType == actualType;
-            target.WriteBitWith(sameType);
-            return sameType;
-        }
-
         /// <summary>
         /// Handles the version info for a given converter. If the version hasn't been written yet, it's written now. If not, nothing is written.
         /// </summary>
         /// <returns>Whether we applied the header</returns>
-        static void HandleVersionNumber(Converter item, ref VersionInfo info, ABSaveSerializer header)
+        static VersionInfo HandleNewVersion(Converter item, ABSaveSerializer header)
         {
-            // If the version has already been written (there's info in the cache), do nothing
-            if (info != null) return;
-
-            // If not, write the version and add the converter to the cache.
             uint version = header.State.HasVersioningInfo ? WriteNewVersionInfo(item, header) : 0;
-            info = header.State.CreateNewCache(item, version);
+            return header.State.CreateNewCache(item, version);
         }
 
         static uint WriteNewVersionInfo(Converter item, ABSaveSerializer target)
@@ -105,40 +86,50 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             return targetVersion;
         }
 
-        // Returns: Whether the sub-type was converted in here and we should return now.
-        static void SerializeActualType(SaveInheritanceAttribute info, object obj, Type actualType, Converter converter, ABSaveSerializer header)
+        static void SerializeActualTypeIfNeeded(SaveInheritanceAttribute info, object obj, Type actualType, Converter converter, ABSaveSerializer serializer)
         {
-            var actual = header.State.GetRuntimeMapItem(actualType);
-            int? cacheNum = header.State.GetCachedKeyInfo(actual.Converter);
+            bool sameType = converter.ItemType == actualType;
+            serializer.WriteBitWith(sameType);
+
+            // If it's the same type, just serialize that same type.
+            if (sameType)
+            {
+                SerializeItemNoSetup(obj, converter, serializer, true);
+                return;
+            }
+
+            // If not, write inheritance info and serialize the actual type!
+            var actual = serializer.State.GetRuntimeMapItem(actualType);
+            int? cacheNum = serializer.State.GetCachedKeyInfo(actual.Converter);
 
             switch (info.Mode)
             {
                 case SaveInheritanceMode.Index:
-                    if (!TryWriteListInheritance(info, actualType, false, header))
+                    if (!TryWriteListInheritance(info, actualType, false, serializer))
                         throw new UnsupportedSubTypeException(converter.ItemType, actualType);
 
                     break;
                 case SaveInheritanceMode.Key:
-                    WriteKeyInheritance(info, cacheNum, converter, actual.Converter, header);
+                    WriteKeyInheritance(info, cacheNum, converter, actual.Converter, serializer);
 
                     break;
                 case SaveInheritanceMode.IndexOrKey:
-                    if (!TryWriteListInheritance(info, actualType, true, header))
+                    if (!TryWriteListInheritance(info, actualType, true, serializer))
                     {
-                        header.WriteBitOff();
-                        WriteKeyInheritance(info, cacheNum, converter, actual.Converter, header);
+                        serializer.WriteBitOff();
+                        WriteKeyInheritance(info, cacheNum, converter, actual.Converter, serializer);
                     }
 
                     break;
             }
 
             // Serialize the actual type now.
-            SerializeItemNoSetup(obj, actual, header, true);
+            SerializeItemNoSetup(obj, actual.Converter, serializer, true);
         }
 
         static bool TryWriteListInheritance(SaveInheritanceAttribute info, Type actualType, bool writeOnIfSuccessful, ABSaveSerializer header)
         {
-            if (info.IndexSerializeCache!.TryGetValue(actualType, out uint pos))
+            if (info.IndexSerializeCache.TryGetValue(actualType, out uint pos))
             {
                 if (writeOnIfSuccessful) header.WriteBitOn();
                 header.WriteCompressedInt(pos);

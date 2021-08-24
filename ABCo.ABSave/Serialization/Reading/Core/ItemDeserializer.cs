@@ -22,18 +22,16 @@ namespace ABCo.ABSave.Serialization.Reading.Core
                 if (!deserializer.ReadBit()) return null;
             }
 
-            return DeserializeItemNoSetup(info, deserializer, info.IsNullable);
+            return DeserializeItemNoSetup(info.Converter, deserializer, info.IsNullable);
         }
 
         public static object DeserializeExactNonNullItem(MapItemInfo info, ABSaveDeserializer deserializer) =>
-            DeserializeItemNoSetup(info, deserializer, true);
+            DeserializeItemNoSetup(info.Converter, deserializer, true);
 
-        static object DeserializeItemNoSetup(MapItemInfo info, ABSaveDeserializer deserializer, bool skipHeader)
+        static object DeserializeItemNoSetup(Converter info, ABSaveDeserializer deserializer, bool skipHeader)
         {
-            Converter item = info.Converter;
-            ABSaveUtils.WaitUntilNotGenerating(item);
-
-            return DeserializeConverter(info.Converter, deserializer, skipHeader);
+            ABSaveUtils.WaitUntilNotGenerating(info);
+            return DeserializeConverter(info, deserializer, skipHeader);
         }
 
         static object DeserializeConverter(Converter converter, ABSaveDeserializer deserializer, bool skipHeader)
@@ -49,60 +47,43 @@ namespace ABCo.ABSave.Serialization.Reading.Core
         {
             var details = deserializer.State.GetCachedInfo(converter);
 
-            // Handle the inheritance bit.
-            bool sameType = true;
-            if (!skipHeader)
-                sameType = ReadHeader(converter, deserializer);
+            // Read or get the version info, if needed
+            if (details == null)
+                details = HandleNewVersion(converter, deserializer);
 
-            // Read or create the version info if needed
-            HandleVersionNumber(converter, ref details, deserializer);
-
-            // Handle inheritance.
-            if (details._inheritanceInfo != null && !sameType)
+            if (details._inheritanceInfo != null && !skipHeader)
             {
                 info = null!;
-                return DeserializeActualType(details._inheritanceInfo, converter.ItemType, deserializer);
+                return DeserializeActualType(details._inheritanceInfo, converter, deserializer);
             }
 
             info = details;
             return null;
         }
 
-        static void HandleVersionNumber(Converter converter, ref VersionInfo item, ABSaveDeserializer deserializer)
-        {
-            // If the version has already been read, do nothing
-            if (item != null) return;
-
-            item = deserializer.State.HasVersioningInfo ?
+        static VersionInfo HandleNewVersion(Converter converter, ABSaveDeserializer deserializer) =>
+            deserializer.State.HasVersioningInfo ?
                 deserializer.State.CreateNewCache(converter, ReadNewVersionInfo(deserializer)) :
                 deserializer.State.Map.GetVersionInfo(converter, 0);
-        }
-
-        static bool ReadHeader(Converter item, ABSaveDeserializer header)
-        {
-            if (item.IsValueItemType) return false;
-
-            // Type
-            return header.ReadBit();
-        }
 
         static uint ReadNewVersionInfo(ABSaveDeserializer header) => header.ReadCompressedInt();
 
-        // Returns: Whether the sub-type was converted in here and we should return now.
-        static object DeserializeActualType(SaveInheritanceAttribute info, Type baseType, ABSaveDeserializer deserializer)
+        static object? DeserializeActualType(SaveInheritanceAttribute info, Converter baseConverter, ABSaveDeserializer deserializer)
         {
+            // If it's the same type, just deserialize that same type.
+            if (deserializer.ReadBit())
+                return DeserializeItemNoSetup(baseConverter, deserializer, true);
+
             Type? actualType = info.Mode switch
             {
-                SaveInheritanceMode.Index => TryReadListInheritance(info, baseType, deserializer),
-                SaveInheritanceMode.Key => TryReadKeyInheritance(info, baseType, deserializer),
-                SaveInheritanceMode.IndexOrKey => deserializer.ReadBit() ? TryReadListInheritance(info, baseType, deserializer) : TryReadKeyInheritance(info, baseType, deserializer),
+                SaveInheritanceMode.Index => TryReadListInheritance(info, baseConverter.ItemType, deserializer),
+                SaveInheritanceMode.Key => TryReadKeyInheritance(info, baseConverter.ItemType, deserializer),
+                SaveInheritanceMode.IndexOrKey => deserializer.ReadBit() ? TryReadListInheritance(info, baseConverter.ItemType, deserializer) : TryReadKeyInheritance(info, baseConverter.ItemType, deserializer),
                 _ => throw new Exception("Invalid save inheritance mode")
             };
 
-            if (actualType == null) throw new InvalidSubTypeInfoException(baseType);
-
             // Deserialize the actual type.
-            return DeserializeItemNoSetup(deserializer.State.GetRuntimeMapItem(actualType), deserializer, true);
+            return DeserializeItemNoSetup(deserializer.State.GetRuntimeMapItem(actualType).Converter, deserializer, true);
         }
 
         static Type? TryReadListInheritance(SaveInheritanceAttribute info, Type baseType, ABSaveDeserializer deserializer)

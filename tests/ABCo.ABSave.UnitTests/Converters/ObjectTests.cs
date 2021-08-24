@@ -26,7 +26,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         [DataRow(BaseClass.BaseWithoutHeaderMember)]
         public void EmptyClass(BaseClass version)
         {
-            RunTest(new NoMembersSub(), (int)version, 0xC0, null,
+            RunTest(new NoMembersSub(), (int)version, 0x80, null,
                 Array.Empty<byte>(),
                 Array.Empty<byte>());
         }
@@ -37,9 +37,9 @@ namespace ABCo.ABSave.UnitTests.Converters
         [DataRow(BaseClass.BaseWithoutHeaderMember)]
         public void NeitherUseHeader(BaseClass version)
         {
-            RunTest(new NoHeaderNoHeader(), (int)version, 0xF0, 0xC0,
-                new byte[] { 0xC0, SubTypeConverter.OUTPUT_BYTE, 0xC0, SubTypeConverter.OUTPUT_BYTE },
-                new byte[] { SubTypeConverter.OUTPUT_BYTE, 0xC0, SubTypeConverter.OUTPUT_BYTE });
+            RunTest(new NoHeaderNoHeader(), (int)version, 0xC0, 0x80,
+                new byte[] { 0x80, SubTypeConverter.OUTPUT_BYTE, 0x80, SubTypeConverter.OUTPUT_BYTE },
+                new byte[] { SubTypeConverter.OUTPUT_BYTE, 0x80, SubTypeConverter.OUTPUT_BYTE });
         }
 
         [TestMethod]
@@ -48,9 +48,9 @@ namespace ABCo.ABSave.UnitTests.Converters
         [DataRow(BaseClass.BaseWithoutHeaderMember)]
         public void FirstUsesHeader(BaseClass version)
         {
-            RunTest(new HeaderNoHeader(), (int)version, 0xF8, 0xE0,
-                new byte[] { 0xC0, 0x80, SubTypeConverter.OUTPUT_BYTE, 0xC0, SubTypeConverter.OUTPUT_BYTE },
-                new byte[] { SubTypeConverter.OUTPUT_BYTE, 0xC0, SubTypeConverter.OUTPUT_BYTE });
+            RunTest(new HeaderNoHeader(), (int)version, 0xE0, 0xC0,
+                new byte[] { 0x80, 0x80, SubTypeConverter.OUTPUT_BYTE, 0x80, SubTypeConverter.OUTPUT_BYTE },
+                new byte[] { SubTypeConverter.OUTPUT_BYTE, 0x80, SubTypeConverter.OUTPUT_BYTE });
         }
 
         [TestMethod]
@@ -59,9 +59,9 @@ namespace ABCo.ABSave.UnitTests.Converters
         [DataRow(BaseClass.BaseWithoutHeaderMember)]
         public void SecondUsesHeader(BaseClass version)
         {
-            RunTest(new NoHeaderHeader(), (int)version, 0xF0, 0xC0,
-                new byte[] { 0xC0, SubTypeConverter.OUTPUT_BYTE, 0xC0, 0x80, SubTypeConverter.OUTPUT_BYTE },
-                new byte[] { SubTypeConverter.OUTPUT_BYTE, 0xE0, SubTypeConverter.OUTPUT_BYTE });
+            RunTest(new NoHeaderHeader(), (int)version, 0xC0, 0x80,
+                new byte[] { 0x80, SubTypeConverter.OUTPUT_BYTE, 0x80, 0x80, SubTypeConverter.OUTPUT_BYTE },
+                new byte[] { SubTypeConverter.OUTPUT_BYTE, 0xC0, SubTypeConverter.OUTPUT_BYTE });
         }
 
         [TestMethod]
@@ -70,9 +70,9 @@ namespace ABCo.ABSave.UnitTests.Converters
         [DataRow(BaseClass.BaseWithoutHeaderMember)]
         public void BothUseHeader(BaseClass version)
         {
-            RunTest(new HeaderHeader(), (int)version, 0xF8, 0xE0,
-                new byte[] { 0xC0, 0x80, SubTypeConverter.OUTPUT_BYTE, 0xE0, SubTypeConverter.OUTPUT_BYTE },
-                new byte[] { SubTypeConverter.OUTPUT_BYTE, 0xE0, SubTypeConverter.OUTPUT_BYTE });
+            RunTest(new HeaderHeader(), (int)version, 0xE0, 0xC0,
+                new byte[] { 0x80, 0x80, SubTypeConverter.OUTPUT_BYTE, 0xC0, SubTypeConverter.OUTPUT_BYTE },
+                new byte[] { SubTypeConverter.OUTPUT_BYTE, 0xC0, SubTypeConverter.OUTPUT_BYTE });
         }
 
         void RunTest<T>(T instance, int version, byte? noBaseExpectedFirstByte, byte? baseExpectedFirstByte, byte[] versionExpected, byte[] nonVersionExpected)
@@ -85,9 +85,9 @@ namespace ABCo.ABSave.UnitTests.Converters
             // With version
             byte[] baseExpectedWithVersion = version switch
             {
-                0 => new byte[] { 0xC0, 0, 0xC0, 0x80, SubTypeConverter.OUTPUT_BYTE },
-                1 => new byte[] { 0xC1 },
-                2 => new byte[] { 0xC2, 0, 0xC0, SubTypeConverter.OUTPUT_BYTE },
+                0 => new byte[] { 0x80, 0x00, 0x80, 0x80, SubTypeConverter.OUTPUT_BYTE },
+                1 => new byte[] { 0x81 },
+                2 => new byte[] { 0x82, 0x00, 0x80, SubTypeConverter.OUTPUT_BYTE },
                 //3 => new byte[] { 0xC3, 0 },
                 _ => throw new Exception()
             };
@@ -101,9 +101,9 @@ namespace ABCo.ABSave.UnitTests.Converters
             // Without version
             byte[] baseExpectedWithoutVersion = version switch
             {
-                0 => baseExpectedFirstByte == null ? new byte[] { 0xF8, SubTypeConverter.OUTPUT_BYTE } : new byte[] { 0xF8, SubTypeConverter.OUTPUT_BYTE, baseExpectedFirstByte.Value },
+                0 => baseExpectedFirstByte == null ? new byte[] { 0xE0, SubTypeConverter.OUTPUT_BYTE } : new byte[] { 0xE0, SubTypeConverter.OUTPUT_BYTE, baseExpectedFirstByte.Value },
                 1 => noBaseExpectedFirstByte == null ? Array.Empty<byte>() : new byte[] { noBaseExpectedFirstByte.Value },
-                2 => baseExpectedFirstByte == null ? new byte[] { 0xF0, SubTypeConverter.OUTPUT_BYTE } : new byte[] { 0xF0, SubTypeConverter.OUTPUT_BYTE, baseExpectedFirstByte.Value },
+                2 => baseExpectedFirstByte == null ? new byte[] { 0xC0, SubTypeConverter.OUTPUT_BYTE } : new byte[] { 0xC0, SubTypeConverter.OUTPUT_BYTE, baseExpectedFirstByte.Value },
                 //3 => noBaseExpectedFirstByte == null ? Array.Empty<byte>() : new byte[] { noBaseExpectedFirstByte.Value },
                 _ => throw new Exception()
             };
