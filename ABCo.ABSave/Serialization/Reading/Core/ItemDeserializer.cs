@@ -82,6 +82,8 @@ namespace ABCo.ABSave.Serialization.Reading.Core
                 _ => throw new Exception("Invalid save inheritance mode")
             };
 
+            if (actualType == null) throw new InvalidSubTypeInfoException(baseType);
+
             // Deserialize the actual type.
             return DeserializeItemNoSetup(deserializer.State.GetRuntimeMapItem(actualType).Converter, deserializer, true);
         }
