@@ -38,12 +38,12 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
                 if (info.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
 
-                return _isNo2 ? new SubWithHeader2() : new SubWithHeader();
+                return _isNo2 ? (object)new SubWithHeader2() : new SubWithHeader();
             }
 
             if (info.Deserializer.ReadByte() != OUTPUT_BYTE) throw new Exception("Sub deserialization failed.");
 
-            return _isNo2 ? new SubWithoutHeader2() : new SubWithoutHeader();
+            return _isNo2 ? (object)new SubWithoutHeader2() : new SubWithoutHeader();
         }
 
         public override uint Initialize(InitializeInfo info)
