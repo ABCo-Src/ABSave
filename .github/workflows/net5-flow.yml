@@ -26,4 +26,4 @@ jobs:
         run: dotnet build tests/ABCo.ABSave.UnitTests/ABCo.ABSave.UnitTests.csproj --no-restore --configuration Release --framework net5.0
       
       - name: Run Tests
-        run: dotnet test --no-build --configuration Release
+        run: dotnet test --no-build --configuration Release --framework net5.0

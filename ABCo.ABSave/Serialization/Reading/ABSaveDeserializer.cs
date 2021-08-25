@@ -85,7 +85,7 @@ namespace ABCo.ABSave.Serialization.Reading
             try
             {
                 _source.Read(buffer, 0, dest.Length);
-                buffer.AsSpan().CopyTo(dest);
+                buffer.AsSpan().Slice(0, dest.Length).CopyTo(dest);
             }
             finally
             {

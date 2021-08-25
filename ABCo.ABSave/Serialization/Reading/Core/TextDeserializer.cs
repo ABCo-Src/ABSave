@@ -69,14 +69,14 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             int charSize = Encoding.UTF8.GetCharCount(buffer);
 #endif
 
-            T dest = createDest(byteSize);
+            T dest = createDest(charSize);
             Memory<char> destMem = castDest(dest);
 
             // Encode
 #if NETSTANDARD2_0
             fixed (byte* bufferPtr = buffer)
                 using (var destMemPtr = destMem.Pin())
-                    Encoding.UTF8.GetChars(bufferPtr, buffer.Length, (char*)destMemPtr.Pointer, destMem.Length);
+                    Encoding.UTF8.GetChars(bufferPtr, byteSize, (char*)destMemPtr.Pointer, destMem.Length);
 #else
             Encoding.UTF8.GetChars(buffer.Slice(byteSize), destMem.Span);
 #endif
