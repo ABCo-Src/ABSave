@@ -39,14 +39,14 @@ namespace ABCo.ABSave.UnitTests.Core
             ResetState();
 
             // Heap buffer. (Trying twice to make sure getting an already used buffer works)
-            TestHeapBuffer();
+            TestHeapBuffer(1200);
             ResetState();
-            TestHeapBuffer();
+            TestHeapBuffer(1100);
 
-            void TestHeapBuffer()
+            void TestHeapBuffer(int size)
             {
-                var chArr = GenerateBlankCharArr();
-                var expected = GenerateBlankExpected();
+                var chArr = GenerateBlankCharArr(size);
+                var expected = GenerateBlankExpected(size);
 
                 {
                     Serializer.WriteUTF8(chArr.AsSpan());
@@ -59,19 +59,19 @@ namespace ABCo.ABSave.UnitTests.Core
             }
         }
 
-        static char[] GenerateBlankCharArr()
+        static char[] GenerateBlankCharArr(int size)
         {
-            var res = new char[1200];
+            var res = new char[size];
             Array.Fill(res, 'A');
             return res;
         }
 
-        static byte[] GenerateBlankExpected()
+        static byte[] GenerateBlankExpected(int size)
         {
-            var expected = new byte[1202];
+            var expected = new byte[size + 2];
             expected[0] = 0b10000100;
-            expected[1] = 0b10110000;
-            Array.Fill(expected, (byte)'A', 2, 1200);
+            expected[1] = (byte)(size & 255);
+            Array.Fill(expected, (byte)'A', 2, size);
 
             return expected;
         }

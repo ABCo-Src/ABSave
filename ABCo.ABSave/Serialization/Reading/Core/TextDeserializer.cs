@@ -78,7 +78,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
                 using (var destMemPtr = destMem.Pin())
                     Encoding.UTF8.GetChars(bufferPtr, buffer.Length, (char*)destMemPtr.Pointer, destMem.Length);
 #else
-            Encoding.UTF8.GetChars(buffer, destMem.Span);
+            Encoding.UTF8.GetChars(buffer.Slice(byteSize), destMem.Span);
 #endif
             return dest;
         }
