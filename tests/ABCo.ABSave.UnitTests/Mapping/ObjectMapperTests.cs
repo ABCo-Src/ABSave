@@ -7,6 +7,7 @@ using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Reflection;
+using ABCo.ABSave.Mapping.Description.Attributes;
 
 namespace ABCo.ABSave.UnitTests.Mapping
 {
@@ -214,5 +215,31 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             Assert.ThrowsException<UnsupportedVersionException>(() => Map.GetVersionInfo((ObjectConverter)pos.Converter, 4));
         }
+
+        [TestMethod]
+        public void GetVersion_New_WithFieldsAndProperties()
+        {
+            Setup();
+            var converter = Generator.GetMap(typeof(MixedClass)).Converter;
+            var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(converter, 0);
+
+            Assert.AreEqual(3, info.Members.Length);
+            Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[0].Map);
+            Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[1].Map);
+            Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[2].Map);
+        }
+    }
+
+    [SaveMembers(SaveMembersMode.Properties | SaveMembersMode.Fields)]
+    class MixedClass
+    {
+        [Save(0)]
+        public int A = 0;
+
+        [Save(5)]
+        public DateTime B { get; set; }
+
+        [Save(10)]
+        public long C = 0;
     }
 }
