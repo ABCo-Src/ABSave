@@ -1,4 +1,4 @@
-name: Build & Test Pull Request
+name: Build & Test .NET 5.0
 
 on: 
   push:
@@ -22,14 +22,8 @@ jobs:
       - name: Restore Packages
         run: dotnet restore
 
-      - name: Build ABSave .NET 5.0
+      - name: Build ABSave
         run: dotnet build --no-restore --framework net5.0 --configuration Release
       
-      - name: Run Tests .NET 5.0
-        run: dotnet test --no-build --configuration  Release
-        
-      - name: Build ABSave .NET Standard 2.1
-        run: dotnet build --no-restore --configuration Release
-        
-      - name: Run Tests .NET Standard 2.1
+      - name: Run Tests
         run: dotnet test --no-build --configuration Release
