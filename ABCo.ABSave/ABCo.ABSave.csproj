@@ -16,7 +16,7 @@
     <PackageTags>Serializer, Deserializer, Binary, Converter, Type converter, Fast, IL generation</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Icon.png</PackageIcon>
-    <PackageReleaseNotes>Huge overall experience improvements, with minor breaking changes applied to achieve them.</PackageReleaseNotes>
+    <PackageReleaseNotes>Improve APIs + Improve Stability + Add Standard 2.0 support</PackageReleaseNotes>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
