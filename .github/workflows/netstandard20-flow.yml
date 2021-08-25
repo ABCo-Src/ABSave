@@ -17,7 +17,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '2.0.x'
+          dotnet-version: '2.1.x'
 
       - name: Build & Restore
         run: dotnet build tests/ABCo.ABSave.UnitTests/ABCo.ABSave.UnitTests.csproj --configuration Release --framework netcoreapp2.1 
