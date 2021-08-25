@@ -18,7 +18,7 @@ namespace ABCo.ABSave.Serialization.Reading
 {
     public sealed partial class ABSaveDeserializer : IDisposable
     {
-        public Stream Source { get; private set; }
+        Stream _source;
         public DeserializeCurrentState State { get; private set; }
 
         public byte CurrentByteFreeBits => _currentBitReader.FreeBits;
@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Serialization.Reading
 
         internal ABSaveDeserializer(ABSaveMap map)
         {
-            Source = null!;
+            _source = null!;
             State = new DeserializeCurrentState(map);
             _currentBitReader = new BitReader(this);
         }
@@ -73,7 +73,7 @@ namespace ABCo.ABSave.Serialization.Reading
         public byte ReadByte()
         {
             _currentBitReader.Reset();
-            return (byte)Source.ReadByte();
+            return (byte)_source.ReadByte();
         }
 
         public void ReadBytes(Span<byte> dest)
@@ -84,7 +84,7 @@ namespace ABCo.ABSave.Serialization.Reading
             byte[] buffer = ArrayPool<byte>.Shared.Rent(dest.Length);
             try
             {
-                Source.Read(buffer, 0, dest.Length);
+                _source.Read(buffer, 0, dest.Length);
                 buffer.AsSpan().CopyTo(dest);
             }
             finally
@@ -92,14 +92,14 @@ namespace ABCo.ABSave.Serialization.Reading
                 ArrayPool<byte>.Shared.Return(buffer);
             }
 #else
-            Source.Read(dest);
+            _source.Read(dest);
 #endif
         }
 
         public void ReadBytes(byte[] dest)
         {
             _currentBitReader.Reset();
-            Source.Read(dest, 0, dest.Length);
+            _source.Read(dest, 0, dest.Length);
         }
 
 #endregion
@@ -206,11 +206,13 @@ namespace ABCo.ABSave.Serialization.Reading
             else ReadBytes(destBytes);
         }
 
-#endregion
+        #endregion
+
+        public Stream GetStream() => _source;
 
         public void Initialize(Stream source, bool? writeVersioning)
         {
-            Source = source;
+            _source = source;
             Reset();
 
             if (writeVersioning == null)
