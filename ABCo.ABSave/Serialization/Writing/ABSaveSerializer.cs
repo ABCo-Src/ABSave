@@ -84,9 +84,6 @@ namespace ABCo.ABSave.Serialization.Writing
 
         public void WriteByte(byte byt)
         {
-#if NETSTANDARD2_1
-            throw new Exception();
-#endif
             _currentBitWriter.Finish();
             _output.WriteByte(byt);
         }
