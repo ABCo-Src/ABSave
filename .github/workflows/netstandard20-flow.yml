@@ -17,13 +17,10 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '2.1.x'
+          dotnet-version: 5.0.301
 
-      - name: Build ABSave
-        run: dotnet build ABCo.ABSave/ABCo.ABSave.csproj --configuration Release --framework netstandard2.0
-
-      - name: Build Tests
+      - name: Build
         run: dotnet build tests/ABCo.ABSave.UnitTests/ABCo.ABSave.UnitTests.csproj --configuration Release --framework netcoreapp2.1
       
       - name: Test
-        run: dotnet test --no-build --configuration Release
+        run: dotnet test --no-build --configuration Release --framework netcoreapp2.1
