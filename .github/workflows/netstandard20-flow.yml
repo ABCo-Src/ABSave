@@ -19,6 +19,11 @@ jobs:
         with:
           dotnet-version: 5.0.301
 
+      - name: Setup netstandard2 equivalent runtime
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '2.1.x'
+
       - name: Build
         run: dotnet build tests/ABCo.ABSave.UnitTests/ABCo.ABSave.UnitTests.csproj --configuration Release --framework netcoreapp2.1
       
