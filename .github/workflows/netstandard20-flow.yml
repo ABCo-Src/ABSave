@@ -23,7 +23,7 @@ jobs:
         run: dotnet restore
 
       - name: Build ABSave
-        run: dotnet build --no-restore --framework netcoreapp2.0 --configuration Release
+        run: dotnet build --no-restore --configuration Release
       
       - name: Run Tests
         run: dotnet test --no-build --configuration Release
