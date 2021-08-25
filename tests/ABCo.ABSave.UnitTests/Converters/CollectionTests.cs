@@ -15,7 +15,7 @@ namespace ABCo.ABSave.UnitTests.Converters
     [TestClass]
     public class CollectionTests : ConverterTestBase
     {
-        static ABSaveSettings Settings = null!;
+        static ABSaveSettings Settings = null;
         public MapGenerator CurrentGenerator;
 
         [TestInitialize]
@@ -255,7 +255,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             public IEnumerator<KeyValuePair<string, int>> GetEnumerator() => throw new NotImplementedException();
             public bool Remove(string key) => throw new NotImplementedException();
             public bool Remove(KeyValuePair<string, int> item) => throw new NotImplementedException();
-            public bool TryGetValue(string key, [MaybeNullWhen(false)] out int value) => throw new NotImplementedException();
+            public bool TryGetValue(string key, out int value) => throw new NotImplementedException();
             IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
         }
     }

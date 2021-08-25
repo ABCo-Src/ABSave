@@ -80,7 +80,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         {
             instance.Init(version);
 
-            Setup<T>(ABSaveSettings.ForSpeed, new() { { typeof(T), (uint)version } });
+            Setup<T>(ABSaveSettings.ForSpeed, new Dictionary<Type, uint>() { { typeof(T), (uint)version } });
 
             // With version
             byte[] baseExpectedWithVersion = version switch

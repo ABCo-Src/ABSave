@@ -92,7 +92,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
         public byte[] GetByteArr(object[] itms, params short[] data)
         {
-            List<byte> bytes = new(64);
+            List<byte> bytes = new List<byte>(64);
             ABSaveSerializer serializer = null;
             int currentItmsPos = 0;
 
