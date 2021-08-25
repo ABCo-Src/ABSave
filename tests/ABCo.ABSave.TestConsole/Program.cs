@@ -194,6 +194,8 @@ namespace ABCo.ABSave.Testing.ConsoleApp
     {
         static void Main()
         {
+            Type type = typeof(string).Assembly.GetType("System.Byte[*]");
+
             //GenerateAndSaveNewModel();
             TestOutputSize();
             //Console.ReadLine();

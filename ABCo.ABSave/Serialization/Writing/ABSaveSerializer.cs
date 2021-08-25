@@ -14,6 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Runtime.InteropServices;
 using ABCo.ABSave.Serialization.Writing.Core;
+using System.Buffers;
 
 namespace ABCo.ABSave.Serialization.Writing
 {
@@ -96,7 +97,21 @@ namespace ABCo.ABSave.Serialization.Writing
         public void WriteRawBytes(ReadOnlySpan<byte> data) 
         {
             _currentBitWriter.Finish();
+
+#if NETSTANDARD2_0
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(data.Length);
+            try
+            {
+                data.CopyTo(buffer);
+                _output.Write(buffer, 0, data.Length);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+#else
             _output.Write(data);
+#endif
         }
 
         #endregion
@@ -137,7 +152,11 @@ namespace ABCo.ABSave.Serialization.Writing
         {
             if (State.ShouldReverseEndian)
             {
+#if NETSTANDARD2_0
+                int asInt = *(int*)&num;
+#else
                 int asInt = BitConverter.SingleToInt32Bits(num);
+#endif
                 asInt = BinaryPrimitives.ReverseEndianness(asInt);
                 WriteRawBytes(new ReadOnlySpan<byte>((byte*)&asInt, 4));
             }
@@ -195,7 +214,7 @@ namespace ABCo.ABSave.Serialization.Writing
 
         public void Flush() => _currentBitWriter.Finish();
 
-        #endregion
+#endregion
 
         public void WriteRoot(object? obj) => ItemSerializer.SerializeItem(obj, State.Map._rootItem, this);
 

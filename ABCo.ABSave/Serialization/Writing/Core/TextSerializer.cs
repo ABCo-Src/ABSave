@@ -31,12 +31,20 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             }
         }
 
-        public static void WriteUTF8(ReadOnlySpan<char> data, ABSaveSerializer serializer)
+        public static unsafe void WriteUTF8(ReadOnlySpan<char> data, ABSaveSerializer serializer)
         {
             int maxSize = Encoding.UTF8.GetMaxByteCount(data.Length);
             Span<byte> buffer = maxSize <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[maxSize] : serializer.State.GetStringBuffer(maxSize);
 
+#if NETSTANDARD2_0
+            int actualSize;
+
+            fixed (char* dataPtr = data)
+            fixed (byte* bufferPtr = buffer)
+                actualSize = Encoding.UTF8.GetBytes(dataPtr, data.Length, bufferPtr, buffer.Length);
+#else
             int actualSize = Encoding.UTF8.GetBytes(data, buffer);
+#endif
 
             serializer.WriteCompressedInt((uint)actualSize);
             serializer.WriteRawBytes(buffer.Slice(0, actualSize));

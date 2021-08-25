@@ -32,7 +32,9 @@ namespace ABCo.ABSave.Mapping.Generation.Converters
 
                 if (exactTypes.Length > 0)
                 {
+#if !NETSTANDARD2_0
                     exactConverters.EnsureCapacity(exactConverters.Count + exactTypes.Length);
+#endif
 
                     for (int j = 0; j < exactTypes.Length; j++)
                         exactConverters.Add(exactTypes[j].Type, currentConverter);

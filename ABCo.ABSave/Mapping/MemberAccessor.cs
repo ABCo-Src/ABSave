@@ -24,7 +24,7 @@ namespace ABCo.ABSave.Mapping
         {
             MemberAccessorType.Field => ((FieldInfo)Object1).GetValue(parent),
             MemberAccessorType.SlowProperty => ((PropertyInfo)Object1).GetValue(parent),
-            MemberAccessorType.AllRefProperty => Unsafe.As<Func<object, object?>>(Object1)(parent),
+            MemberAccessorType.AllRefProperty => Unsafe.As<Func<object, object?>>(Object1)!(parent),
             MemberAccessorType.PrimitiveProperty => PrimitivePropertyGetter(parent),
             _ => throw new Exception("Unrecognized member accessor type"),
         };

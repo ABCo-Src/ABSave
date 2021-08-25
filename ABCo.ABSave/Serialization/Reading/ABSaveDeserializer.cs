@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using ABCo.ABSave.Serialization.Reading.Core;
+using System.Buffers;
 
 namespace ABCo.ABSave.Serialization.Reading
 {
@@ -78,7 +79,21 @@ namespace ABCo.ABSave.Serialization.Reading
         public void ReadBytes(Span<byte> dest)
         {
             _currentBitReader.Reset();
+
+#if NETSTANDARD2_0
+            byte[] buffer = ArrayPool<byte>.Shared.Rent(dest.Length);
+            try
+            {
+                Source.Read(buffer, 0, dest.Length);
+                buffer.AsSpan().CopyTo(dest);
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
+#else
             Source.Read(dest);
+#endif
         }
 
         public void ReadBytes(byte[] dest)
@@ -87,9 +102,9 @@ namespace ABCo.ABSave.Serialization.Reading
             Source.Read(dest, 0, dest.Length);
         }
 
-        #endregion
+#endregion
 
-        #region Numerical Reading
+#region Numerical Reading
 
         public unsafe short ReadInt16()
         {
@@ -118,7 +133,14 @@ namespace ABCo.ABSave.Serialization.Reading
             {
                 int res = 0;
                 ReadBytes(new Span<byte>((byte*)&res, 4));
-                return BitConverter.Int32BitsToSingle(BinaryPrimitives.ReverseEndianness(res));
+
+                int reversed = BinaryPrimitives.ReverseEndianness(res);
+
+#if NETSTANDARD2_0
+                return *((float*)&reversed);
+#else
+                return BitConverter.Int32BitsToSingle(reversed);
+#endif
             }
             else
             {
@@ -134,7 +156,14 @@ namespace ABCo.ABSave.Serialization.Reading
             {
                 long res = 0;
                 ReadBytes(new Span<byte>((byte*)&res, 8));
-                return BitConverter.Int64BitsToDouble(BinaryPrimitives.ReverseEndianness(res));
+
+                long reversed = BinaryPrimitives.ReverseEndianness(res);
+
+#if NETSTANDARD2_0
+                return *((double*)&reversed);
+#else
+                return BitConverter.Int64BitsToDouble(reversed);
+#endif
             }
             else
             {
@@ -177,7 +206,7 @@ namespace ABCo.ABSave.Serialization.Reading
             else ReadBytes(destBytes);
         }
 
-        #endregion
+#endregion
 
         public void Initialize(Stream source, bool? writeVersioning)
         {

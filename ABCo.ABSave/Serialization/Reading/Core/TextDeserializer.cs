@@ -26,16 +26,28 @@ namespace ABCo.ABSave.Serialization.Reading.Core
                 deserializer.ReadBytes(buffer);
 
                 // Encode
+#if NETSTANDARD2_0
+                fixed (byte* bufferPtr = buffer)
+                    return Encoding.UTF8.GetString(bufferPtr, buffer.Length);
+#else
                 return Encoding.UTF8.GetString(buffer);
+#endif
             }
             else
             {
                 int size = (int)deserializer.ReadCompressedInt();
+                int byteSize = size * sizeof(char);
 
+#if NETSTANDARD2_0
+                Span<byte> buffer = size <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[byteSize] : deserializer.State.GetStringBuffer(byteSize);
+                deserializer.FastReadShorts(MemoryMarshal.Cast<byte, short>(buffer));
+                return buffer.ToString();
+#else
                 return string.Create(size, deserializer, (chars, state) =>
                 {
                     state.FastReadShorts(MemoryMarshal.Cast<char, short>(chars));
                 });
+#endif
             }
         }
 
@@ -48,12 +60,26 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             header.ReadBytes(buffer);
 
             // Allocate the destination with the correct size.
+
+#if NETSTANDARD2_0
+            int charSize;
+            fixed (byte* bufferPtr = buffer)
+                charSize = Encoding.UTF8.GetCharCount(bufferPtr, buffer.Length);
+#else
             int charSize = Encoding.UTF8.GetCharCount(buffer);
+#endif
+
             T dest = createDest(byteSize);
             Memory<char> destMem = castDest(dest);
 
             // Encode
+#if NETSTANDARD2_0
+            fixed (byte* bufferPtr = buffer)
+                using (var destMemPtr = destMem.Pin())
+                    Encoding.UTF8.GetChars(bufferPtr, buffer.Length, (char*)destMemPtr.Pointer, destMem.Length);
+#else
             Encoding.UTF8.GetChars(buffer, destMem.Span);
+#endif
             return dest;
         }
     }

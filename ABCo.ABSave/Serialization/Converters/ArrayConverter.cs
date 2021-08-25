@@ -46,7 +46,11 @@ namespace ABCo.ABSave.Serialization.Converters
             info.ElementType = itemInfo.GetItemType();
             info.PerItem = itemInfo;
 
+#if NETSTANDARD2_0
+            if (IsSZArrayStandard2(ref info, type))
+#else
             if (type.IsSZArray)
+#endif
             {
                 info.FastConversion = GetFastType(info.ElementType);
                 info.Type = ArrayType.SZArrayManual;
@@ -66,7 +70,7 @@ namespace ABCo.ABSave.Serialization.Converters
             }
         }
 
-        #region Serialization
+#region Serialization
 
         public override void Serialize(in SerializeInfo info) =>
             Serialize((Array)info.Instance, info.ActualType, info.Serializer);
@@ -189,9 +193,9 @@ namespace ABCo.ABSave.Serialization.Converters
             return new MDSerializeArrayInfo(arr, serializer, customLowerBounds);
         }
 
-        #endregion
+#endregion
 
-        #region Deserialization
+#region Deserialization
 
         public override object Deserialize(in DeserializeInfo info) => Deserialize(info.Deserializer);
 
@@ -282,7 +286,7 @@ namespace ABCo.ABSave.Serialization.Converters
             currentPos[dimension] = oldPos;
         }
 
-        #endregion
+#endregion
 
         static FastConversionType GetFastType(Type elementType) => Type.GetTypeCode(elementType) switch
         {
@@ -294,7 +298,7 @@ namespace ABCo.ABSave.Serialization.Converters
             _ => FastConversionType.None
         };
 
-        #region Primitive Optimization
+#region Primitive Optimization
 
         //static unsafe void SerializeFast(Array arr, FastConversionType type, ABSaveSerializer header)
         //{
@@ -366,7 +370,7 @@ namespace ABCo.ABSave.Serialization.Converters
         //    }
         //}
 
-        #endregion
+#endregion
 
         [StructLayout(LayoutKind.Auto)]
         readonly struct MDSerializeArrayInfo
@@ -445,5 +449,14 @@ namespace ABCo.ABSave.Serialization.Converters
                 PerItem = perItem;
             }
         }
+
+#if NETSTANDARD2_0
+        static bool IsSZArrayStandard2(ref ArrayTypeInfo info, Type type)
+        {
+            // This is the best way (sadly) of determining for certain if the type is an SZArray or not on Standard 2.0.
+            Type szVersion = info.ElementType.MakeArrayType();
+            return type == szVersion;
+        }
+#endif
     }
 }
