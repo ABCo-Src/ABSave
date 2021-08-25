@@ -1,4 +1,4 @@
-name: Build & Test .NET 5.0
+name: '[5.0] Build & Test'
 
 on: 
   push:
