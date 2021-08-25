@@ -23,7 +23,7 @@ jobs:
         run: dotnet restore
 
       - name: Build
-        run: dotnet build tests/ABCo.ABSave.UnitTests/ABCo.ABSave.UnitTests.csproj --no-restore --framework netcoreapp2.1 
+        run: dotnet build tests/ABCo.ABSave.UnitTests/ABCo.ABSave.UnitTests.csproj --no-restore  --configuration Release --framework netcoreapp2.1 
       
       - name: Test
         run: dotnet test --no-build --configuration Release --framework netcoreapp2.1
