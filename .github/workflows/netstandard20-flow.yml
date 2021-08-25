@@ -17,13 +17,13 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '2.1.x'
+          dotnet-version: 5.0.301
 
       - name: Restore Packages
         run: dotnet restore
 
       - name: Build ABSave
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build --no-restore --framework netcoreapp2.0 --configuration Release
       
       - name: Run Tests
         run: dotnet test --no-build --configuration Release
