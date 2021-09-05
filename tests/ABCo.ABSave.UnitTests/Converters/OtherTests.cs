@@ -2,6 +2,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ABCo.ABSave.UnitTests.Converters
 {
@@ -56,6 +57,42 @@ namespace ABCo.ABSave.UnitTests.Converters
             AssertAndGoToStart(0, 0, 234, 0, 0x80);
 
             Assert.AreEqual(obj, DoDeserialize<KeyValuePair<byte, bool>>());
+        }
+
+        [TestMethod]
+        public void String()
+        {
+            Setup<string>(ABSaveSettings.ForSize);
+            var obj = "ABC";
+
+            DoSerialize(obj);
+            AssertAndGoToStart(0, 3, 65, 66, 67);
+
+            Assert.AreEqual(obj, DoDeserialize<string>());
+        }
+
+        [TestMethod]
+        public void StringBuilder()
+        {
+            Setup<StringBuilder>(ABSaveSettings.ForSize);
+            var obj = new StringBuilder("ABC");
+
+            DoSerialize(obj);
+            AssertAndGoToStart(0, 3, 65, 66, 67);
+
+            Assert.AreEqual(obj.ToString(), DoDeserialize<StringBuilder>().ToString());
+        }
+
+        [TestMethod]
+        public void CharArray()
+        {
+            Setup<char[]>(ABSaveSettings.ForSize);
+            var obj = new char[3] { 'A', 'B', 'C' };
+
+            DoSerialize(obj);
+            AssertAndGoToStart(0, 3, 65, 66, 67);
+
+            Assert.AreEqual(new string(obj), new string(DoDeserialize<char[]>()));
         }
 
         [TestMethod]
