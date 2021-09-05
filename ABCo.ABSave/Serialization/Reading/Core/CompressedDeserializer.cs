@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ABCo.ABSave.Mapping.Description.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,8 +9,6 @@ namespace ABCo.ABSave.Serialization.Reading.Core
     {
         public static ulong ReadCompressed(bool canBeLong, ABSaveDeserializer deserializer)
         {
-            if (deserializer.CurrentByteFreeBits == 0) deserializer.MoveToNewCurrentByte();
-
             if (deserializer.State.Settings.LazyCompressedWriting)
                 return ReadCompressedLazyFast(canBeLong, deserializer);
             else
@@ -70,17 +69,22 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             bool isExtended = preHeaderCapacity < 4;
             ulong res = 0;
 
-            // For an extended first byte (yyy-xxxxxxxx)
             if (isExtended)
             {
-                // If there are still "y" bits left, get them.
-                if (headerLen < preHeaderCapacity) res = (ulong)deserializer.ReadInteger(deserializer.CurrentByteFreeBits) << noContBits << 8;
+                // If we have an extended first byte (yyy-xxxxxxxx), and there are still "y" bits left, get them.
+                if (headerLen < preHeaderCapacity)
+                    res = (ulong)deserializer.ReadInteger(deserializer.CurrentByteFreeBits) << noContBits << 8;
 
-                // Make sure we're ready to read "x"s. There will always be "x"es as the header can not physically take them all up.
-                if (deserializer.CurrentByteFreeBits == 0) deserializer.MoveToNewCurrentByte();
+                goto ReadRemainingBits;
             }
 
-            return res | ((ulong)deserializer.ReadInteger(deserializer.CurrentByteFreeBits) << noContBits);
+            // If the header took up the entire first byte (which we can tell by the fact that we've
+            // overflowed to having 8 free bits), don't bother reading the remaining bits.
+            if (deserializer.CurrentByteFreeBits == 8)
+                return 0;
+
+            ReadRemainingBits:
+                return res | ((ulong)deserializer.ReadInteger(deserializer.CurrentByteFreeBits) << noContBits);
         }
 
         static (byte noContBytes, byte headerLen) ReadNoContBytes(ABSaveDeserializer source)

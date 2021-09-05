@@ -12,33 +12,35 @@ namespace ABCo.ABSave.Serialization.Writing
     internal struct BitWriter : IDisposable
     {
         ABSaveSerializer _serializer;
-        public byte FreeBits { get; private set; }
+
+        public byte FreeBits => (byte)(_freeBits == 0 ? 8 : _freeBits);
+        byte _freeBits;
         int _target;
 
         public SerializeCurrentState State => _serializer.State;
         internal BitWriter(ABSaveSerializer serializer)
         {
             _serializer = serializer;
-            FreeBits = 0;
+            _freeBits = 0;
             _target = 0;
         }
 
         internal void Reset()
         {
-            FreeBits = 8;
+            _freeBits = 8;
             _target = 0;
         }
 
         public void WriteBitOn()
         {
-            if (FreeBits == 0) MoveToNextByte();
-            _target |= 1 << --FreeBits;
+            if (_freeBits == 0) MoveToNextByte();
+            _target |= 1 << --_freeBits;
         }
 
         public void WriteBitOff()
         {
-            if (FreeBits == 0) MoveToNextByte();
-            FreeBits--;
+            if (_freeBits == 0) MoveToNextByte();
+            _freeBits--;
         }
 
         public void WriteBitWith(bool value)
@@ -49,20 +51,20 @@ namespace ABCo.ABSave.Serialization.Writing
 
         public void WriteInteger(byte number, byte bitsRequired)
         {
-            if (bitsRequired > FreeBits)
+            if (bitsRequired > _freeBits)
             {
-                byte remainingFromFirst = (byte)(bitsRequired - FreeBits);
+                byte remainingFromFirst = (byte)(bitsRequired - _freeBits);
                 _target |= number >> remainingFromFirst;
 
                 MoveToNextByte();
 
-                FreeBits -= remainingFromFirst;
-                _target |= number << FreeBits;
+                _freeBits -= remainingFromFirst;
+                _target |= number << _freeBits;
             }
             else
             {
-                FreeBits -= bitsRequired;
-                _target |= number << FreeBits;
+                _freeBits -= bitsRequired;
+                _target |= number << _freeBits;
             }
         }
 
@@ -70,18 +72,20 @@ namespace ABCo.ABSave.Serialization.Writing
         {
             _serializer.WriteByteUnchecked((byte)_target);
             _target = 0;
-            FreeBits = 8;
+            _freeBits = 8;
         }
 
         public void FillRemainingWith(int n)
         {
+            if (_freeBits == 0) MoveToNextByte();
+
             _target |= n;
-            FreeBits = 0;
+            _freeBits = 0;
         }
 
         public ABSaveSerializer Finish()
         {
-            if (FreeBits != 8) MoveToNextByte();
+            if (_freeBits != 8) MoveToNextByte();
             return _serializer;
         }
 

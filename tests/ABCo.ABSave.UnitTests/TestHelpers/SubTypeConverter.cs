@@ -22,10 +22,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public override void Serialize(in SerializeInfo info)
         {
             if (_writesToHeader)
-            {
                 info.Serializer.WriteBitOn();
-                info.Serializer.FinishWritingBitsToCurrentByte();
-            }
 
             info.Serializer.WriteByte(OUTPUT_BYTE);
         }

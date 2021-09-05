@@ -14,7 +14,9 @@ namespace ABCo.ABSave.Serialization.Reading
     internal struct BitReader
     {
         ABSaveDeserializer _deserializer;
-        public byte FreeBits { get; private set; }
+
+        public byte FreeBits => (byte)(_freeBits == 0 ? 8 : _freeBits);
+        byte _freeBits;
         int _source;
 
         public DeserializeCurrentState State => _deserializer.State;
@@ -23,47 +25,47 @@ namespace ABCo.ABSave.Serialization.Reading
         public BitReader(ABSaveDeserializer deserializer)
         {
             _deserializer = deserializer;
-            FreeBits = 0;
+            _freeBits = 0;
             _source = 0;
         }
 
-        public void Reset() => FreeBits = 0;
+        public void Reset() => _freeBits = 0;
 
         public bool ReadBit()
         {
-            if (FreeBits == 0) MoveToNewByte();
-            return (_source & (1 << --FreeBits)) > 0;
+            if (_freeBits == 0) MoveToNewByte();
+            return (_source & (1 << --_freeBits)) > 0;
         }
 
         public byte ReadInteger(byte bitsRequired)
         {
-            if (bitsRequired > FreeBits)
+            if (bitsRequired > _freeBits)
             {
-                int remainingFromFirst = bitsRequired - FreeBits;
+                int remainingFromFirst = bitsRequired - _freeBits;
                 int firstByteData = (_source & ABSaveUtils.IntFillMap[bitsRequired]) << remainingFromFirst;
 
                 MoveToNewByte();
 
-                FreeBits -= (byte)remainingFromFirst;
-                int secondByteData = (_source >> FreeBits) & ABSaveUtils.IntFillMap[bitsRequired];
+                _freeBits -= (byte)remainingFromFirst;
+                int secondByteData = (_source >> _freeBits) & ABSaveUtils.IntFillMap[bitsRequired];
                 return (byte)(firstByteData | secondByteData);
             }
             else
             {
-                FreeBits -= bitsRequired;
-                return (byte)((_source >> FreeBits) & ABSaveUtils.IntFillMap[bitsRequired]);
+                _freeBits -= bitsRequired;
+                return (byte)((_source >> _freeBits) & ABSaveUtils.IntFillMap[bitsRequired]);
             }
         }
 
         public void MoveToNewByte()
         {
             _source = _deserializer.ReadByte();
-            FreeBits = 8;
+            _freeBits = 8;
         }
 
         public ABSaveDeserializer Finish()
         {
-            FreeBits = 0;
+            _freeBits = 0;
             return _deserializer;
         }
     }
