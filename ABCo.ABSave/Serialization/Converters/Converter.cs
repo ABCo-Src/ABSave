@@ -68,7 +68,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public struct SerializeInfo
         {
-            public object Instance { get; }
+            public object? Instance { get; }
             public Type ActualType { get; }
             public VersionInfo VersionInfo { get; }
             public ABSaveSerializer Serializer { get; }
@@ -91,6 +91,6 @@ namespace ABCo.ABSave.Serialization.Converters
                 (ActualType, VersionInfo, Deserializer) = (actualType, versionInfo, deserializer);
         }
 
-        public abstract object Deserialize(in DeserializeInfo info);
+        public abstract object? Deserialize(in DeserializeInfo info);
     }
 }

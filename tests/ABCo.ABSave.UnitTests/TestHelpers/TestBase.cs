@@ -14,7 +14,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     public abstract class TestBase
     {
         public ABSaveMap CurrentMap;
-        public MapItemInfo CurrentMapItem;
+        public Converter CurrentMapItem;
 
         public MemoryStream Stream;
         public ABSaveSerializer Serializer;
@@ -210,8 +210,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     public struct GenMap
     {
         public object Obj;
-        public MapItemInfo Item;
+        public Converter Item;
 
-        public GenMap(object obj, MapItemInfo item) => (Obj, Item) = (obj, item);
+        public GenMap(object obj, Converter item) => (Obj, Item) = (obj, item);
     }
 }

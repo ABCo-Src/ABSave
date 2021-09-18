@@ -89,6 +89,6 @@ namespace ABCo.ABSave.Serialization
             else return _stringBuffer;
         }
 
-        public MapItemInfo GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
+        public Converter GetRuntimeMapItem(Type type) => Map.GetRuntimeMapItem(type);
     }
 }

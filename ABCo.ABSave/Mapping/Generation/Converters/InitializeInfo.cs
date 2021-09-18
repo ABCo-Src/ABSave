@@ -10,7 +10,7 @@ namespace ABCo.ABSave.Mapping.Generation.Converters
 
         internal MapGenerator _gen;
 
-        public MapItemInfo GetMap(Type type) => _gen.GetMap(type);
+        public Converter GetMap(Type type) => _gen.GetMap(type);
 
         internal InitializeInfo(Type type, MapGenerator gen)
         {

@@ -16,7 +16,7 @@ namespace ABCo.ABSave
     public class ABSaveMap
     {
         internal static ThreadLocal<MapGenerator> _generatorPool = new ThreadLocal<MapGenerator>(() => new MapGenerator());
-        internal MapItemInfo _rootItem;
+        internal Converter _rootItem;
         internal uint _highestConverterInstanceId;
 
         readonly LightConcurrentPool<ABSaveSerializer> _serializerPool = new LightConcurrentPool<ABSaveSerializer>(2);
@@ -64,10 +64,10 @@ namespace ABCo.ABSave
             return res;
         }
 
-        internal MapItemInfo GetRuntimeMapItem(Type type)
+        internal Converter GetRuntimeMapItem(Type type)
         {
             MapGenerator? gen = GetGenerator();
-            MapItemInfo map = gen.GetRuntimeMap(type);
+            Converter map = gen.GetRuntimeMap(type);
             ReleaseGenerator(gen);
             return map;
         }

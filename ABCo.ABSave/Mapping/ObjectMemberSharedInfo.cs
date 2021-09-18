@@ -9,7 +9,7 @@ namespace ABCo.ABSave.Mapping
     /// </summary>
     internal class ObjectMemberSharedInfo
     {
-        public MapItemInfo Map;
+        public Converter Map;
         public MemberAccessor Accessor;
     }
 }

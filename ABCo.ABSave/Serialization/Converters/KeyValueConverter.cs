@@ -15,8 +15,8 @@ namespace ABCo.ABSave.Serialization.Converters
     public class KeyValueConverter : Converter
     {
         bool _isGeneric;
-        MapItemInfo _keyMap;
-        MapItemInfo _valueMap;
+        Converter _keyMap;
+        Converter _valueMap;
 
         public override void Serialize(in SerializeInfo info)
         {

@@ -40,7 +40,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return 0;
         }
 
-        static void PopulateTypeInfo(ref ArrayTypeInfo info, MapItemInfo itemInfo, Type type)
+        static void PopulateTypeInfo(ref ArrayTypeInfo info, Converter itemInfo, Type type)
         {
             int rank = type.GetArrayRank();
             info.ElementType = itemInfo.GetItemType();
@@ -436,10 +436,10 @@ namespace ABCo.ABSave.Serialization.Converters
             public byte Rank;
             public FastConversionType FastConversion;
             public Type ElementType;
-            public MapItemInfo PerItem;
+            public Converter PerItem;
 
             // For multi-dimensional arrays.
-            public ArrayTypeInfo(byte rank, Type elementType, MapItemInfo perItem)
+            public ArrayTypeInfo(byte rank, Type elementType, Converter perItem)
             {
                 Type = ArrayType.MultiDimensional;
                 FastConversion = FastConversionType.None;

@@ -21,11 +21,11 @@ namespace ABCo.ABSave.Serialization.Converters
     {
         public IEnumerableInfo _info = null!;
         public Type _elementOrKeyType = null!;
-        public MapItemInfo _elementOrKeyMap;
+        public Converter _elementOrKeyMap;
 
         // Optional:
         public Type? _valueType;
-        public MapItemInfo _valueMap;
+        public Converter _valueMap;
 
         public override uint Initialize(InitializeInfo info)
         {

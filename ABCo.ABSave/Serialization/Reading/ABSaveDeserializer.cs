@@ -50,8 +50,8 @@ namespace ABCo.ABSave.Serialization.Reading
         public T ReadUTF8<T>(Func<int, T> createDest, Func<T, Memory<char>> castDest) => TextDeserializer.ReadUTF8<T>(createDest, castDest, this);
 
         public object? ReadRoot() => ItemDeserializer.DeserializeItem(State.Map._rootItem, this);
-        public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
-        public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
+        public object? ReadItem(Converter info) => ItemDeserializer.DeserializeItem(info, this);
+        public object ReadExactNonNullItem(Converter info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
 
         public VersionInfo ReadExactNonNullHeader(Converter converter)
         {

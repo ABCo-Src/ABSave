@@ -13,7 +13,7 @@ namespace ABCo.ABSave.Serialization.Writing.Core
 {
     internal static class ItemSerializer
     {
-        public static void SerializeItem(object? obj, MapItemInfo info, ABSaveSerializer serializer)
+        public static void SerializeItem(object? obj, Converter info, ABSaveSerializer serializer)
         {
             if (obj == null)
                 serializer.WriteBitOff();
@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             }
         }
 
-        public static void SerializeExactNonNullItem(object obj, MapItemInfo info, ABSaveSerializer serializer) =>
+        public static void SerializeExactNonNullItem(object obj, Converter info, ABSaveSerializer serializer) =>
             SerializeItemNoSetup(obj, info.Converter, serializer, true);
 
         static void SerializeItemNoSetup(object obj, Converter info, ABSaveSerializer serializer, bool skipHeader)

@@ -4,28 +4,28 @@ using System;
 
 namespace ABCo.ABSave.Mapping
 {
-    public struct MapItemInfo
-    {
-        public bool IsNullable { get; internal set; }
-        public Converter Converter;
+    //public struct Converter
+    //{
+    //    public bool IsNullable { get; internal set; }
+    //    public Converter Converter { get; set; }
 
-        /// <summary>
-        /// Gets the item type this info represents, including the nullability.
-        /// </summary>
-        public Type GetItemType() =>
-            IsNullable ? typeof(Nullable<>).MakeGenericType(Converter.ItemType) : Converter.ItemType;
+    //    /// <summary>
+    //    /// Gets the item type this info represents, including the nullability.
+    //    /// </summary>
+    //    public Type GetItemType() =>
+    //        IsNullable ? typeof(Nullable<>).MakeGenericType(Converter.ItemType) : Converter.ItemType;
 
-        public bool IsValueTypeItem => IsNullable || Converter.IsValueItemType;
+    //    public bool IsValueTypeItem => IsNullable || Converter.IsValueItemType;
 
-        public override bool Equals(object? obj) => obj is MapItemInfo info && this == info;
-        public static bool operator ==(MapItemInfo left, MapItemInfo right) =>
-            left.IsNullable == right.IsNullable && left.Converter == right.Converter;
+    //    public override bool Equals(object? obj) => obj is Converter info && this == info;
+    //    public static bool operator ==(Converter left, Converter right) =>
+    //        left.IsNullable == right.IsNullable && left.Converter == right.Converter;
 
-        public static bool operator !=(MapItemInfo left, MapItemInfo right) =>
-           left.IsNullable != right.IsNullable || left.Converter != right.Converter;
+    //    public static bool operator !=(Converter left, Converter right) =>
+    //       left.IsNullable != right.IsNullable || left.Converter != right.Converter;
 
-        public override int GetHashCode() => base.GetHashCode();
+    //    public override int GetHashCode() => base.GetHashCode();
 
-        internal MapItemInfo(Converter item, bool isNullable) => (Converter, IsNullable) = (item, isNullable);
-    }
+    //    internal Converter(Converter item, bool isNullable) => (Converter, IsNullable) = (item, isNullable);
+    //}
 }

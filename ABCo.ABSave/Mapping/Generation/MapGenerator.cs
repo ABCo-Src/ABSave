@@ -19,23 +19,23 @@ namespace ABCo.ABSave.Mapping.Generation
         // parallel processed at the very end of the generation process.
         readonly List<MemberAccessorGenerator.PropertyToProcess> _propertyAccessorsToProcess = new List<MemberAccessorGenerator.PropertyToProcess>();
 
-        public MapItemInfo GetMap(Type type)
+        public Converter GetMap(Type type)
         {
             bool isNullable = TryExpandNullable(ref type);
 
             Converter? existingItem = GetExistingOrAddNull(type);
-            if (existingItem != null) return new MapItemInfo(existingItem, isNullable);
+            if (existingItem != null) return new Converter(existingItem, isNullable);
 
             return GenerateMap(type, isNullable);
         }
 
-        MapItemInfo GenerateMap(Type type, bool isNullable)
+        Converter GenerateMap(Type type, bool isNullable)
         {
             Converter? item = TryGenerateConverter(type);
             if (item == null) throw new UnserializableTypeException(type);
 
             item._isGenerating = false;
-            return new MapItemInfo(item, isNullable);
+            return new Converter(item, isNullable);
         }
 
         internal Converter? TryGenerateConverter(Type type)
@@ -110,7 +110,7 @@ namespace ABCo.ABSave.Mapping.Generation
         Converter GetConverterInstance(ConverterInfo info) =>
             _converterCache[info.ConverterId] ??= (Converter)Activator.CreateInstance(info.ConverterType)!;
 
-        internal MapItemInfo GetRuntimeMap(Type type) => GetMap(type);
+        internal Converter GetRuntimeMap(Type type) => GetMap(type);
 
         // ABSave Concurrent Generation System:
         //

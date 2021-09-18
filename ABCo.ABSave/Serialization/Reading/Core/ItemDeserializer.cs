@@ -14,7 +14,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal static class ItemDeserializer
     {
-        public static object? DeserializeItem(MapItemInfo info, ABSaveDeserializer deserializer)
+        public static object? DeserializeItem(Converter info, ABSaveDeserializer deserializer)
         {
             // Null check
             if (!info.IsValueTypeItem || info.IsNullable)
@@ -25,7 +25,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             return DeserializeItemNoSetup(info.Converter, deserializer, info.IsNullable);
         }
 
-        public static object DeserializeExactNonNullItem(MapItemInfo info, ABSaveDeserializer deserializer) =>
+        public static object DeserializeExactNonNullItem(Converter info, ABSaveDeserializer deserializer) =>
             DeserializeItemNoSetup(info.Converter, deserializer, true);
 
         static object DeserializeItemNoSetup(Converter info, ABSaveDeserializer deserializer, bool skipHeader)
