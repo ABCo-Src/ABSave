@@ -256,6 +256,32 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
+        public void Nullable_Null()
+        {
+            BaseTypeConverter.WritesToHeader = true;
+            ResetStateWithMapFor(typeof(int?));
+            {
+                Serializer.WriteItem(null, CurrentMapItem);
+                AssertAndGoToStart(0);
+
+                Assert.AreEqual(null, Deserializer.ReadItem(CurrentMapItem));
+            }
+        }
+
+        [TestMethod]
+        public void Nullable_NotNull()
+        {
+            BaseTypeConverter.WritesToHeader = true;
+            ResetStateWithMapFor(typeof(byte?));
+            {
+                Serializer.WriteItem((byte)5, CurrentMapItem);
+                AssertAndGoToStart(0x80, 5);
+
+                Assert.AreEqual((byte)5, Deserializer.ReadItem(CurrentMapItem));
+            }
+        }
+
+        [TestMethod]
         public void DifferentRef_NoInheritanceInfo()
         {
             ResetStateWithMapFor<NoInheritanceInfoBase>();
