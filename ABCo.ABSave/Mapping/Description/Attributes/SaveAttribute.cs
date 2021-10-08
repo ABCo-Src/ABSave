@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace ABCo.ABSave.Mapping.Description.Attributes
 {
-    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property, AllowMultiple = true)]
     public sealed class SaveAttribute : AttributeWithVersion
     {
         public int Order;
