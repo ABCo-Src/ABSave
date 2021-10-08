@@ -228,6 +228,50 @@ namespace ABCo.ABSave.UnitTests.Mapping
             Assert.AreEqual(Generator.GetMap(typeof(DateTime)), info.Members[1].Map);
             Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[2].Map);
         }
+
+        [TestMethod]
+        public void GetVersion_New_WithMultipleSaves()
+        {
+            Setup();
+
+            var converter = Generator.GetMap(typeof(MultipleSaveClass)).Converter;
+
+            // Version 0 & 1
+            for (uint i = 0; i < 2; i++)
+            {
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(converter, i);
+                Assert.AreEqual(3, info.Members.Length);
+                Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[0].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[1].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(short)), info.Members[2].Map);
+            }
+
+            // Version 2
+            {
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(converter, 2);
+                Assert.AreEqual(3, info.Members.Length);
+                Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[1].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[0].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(short)), info.Members[2].Map);
+            }
+
+            // Version 3
+            {
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(converter, 3);
+                Assert.AreEqual(2, info.Members.Length);
+                Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[0].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(short)), info.Members[1].Map);
+            }
+
+            // Version 4
+            {
+                var info = (ObjectConverter.ObjectVersionInfo)Map.GetVersionInfo(converter, 4);
+                Assert.AreEqual(3, info.Members.Length);
+                Assert.AreEqual(Generator.GetMap(typeof(long)), info.Members[1].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(short)), info.Members[2].Map);
+                Assert.AreEqual(Generator.GetMap(typeof(int)), info.Members[0].Map);
+            }
+        }
     }
 
     [SaveMembers(SaveMembersMode.Properties | SaveMembersMode.Fields)]
@@ -241,5 +285,20 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
         [Save(10)]
         public long C = 0;
+    }
+
+    [SaveMembers]
+    class MultipleSaveClass
+    {
+        [Save(0, FromVer = 0)]
+        [Save(2, FromVer = 2, ToVer = 2)]
+        [Save(4, FromVer = 4)]
+        public int A { get; set; }
+
+        [Save(1)]
+        public long B { get; set; }
+
+        [Save(3)]
+        public short C { get; set; }
     }
 }
