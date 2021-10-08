@@ -5,15 +5,13 @@ using System.Runtime.InteropServices;
 
 namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
 {
-    internal sealed class IntermediateItem : IComparable<IntermediateItem>
+    internal class IntermediateItem : IComparable<IntermediateItem>
     {
-        public int Order;
+        public int SingleOrder;
 
         // Whether this item has been processed into an "ObjectMemberSharedInfo" yet or not.
         public bool IsProcessed;
-
-        public volatile bool AttributesProcessed;
-        public bool DoNotSave;
+        public bool HasMultipleOrders;
 
         public uint StartVer;
         public uint EndVer;
@@ -32,6 +30,13 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
         }
 
         // For sorting:
-        public int CompareTo(IntermediateItem? other) => Order.CompareTo(other!.Order);
+        public int CompareTo(IntermediateItem? other) => SingleOrder.CompareTo(other!.SingleOrder);
+    }
+
+    internal sealed class IntermediateItemWithMultipleOrders : IntermediateItem
+    {
+        public SaveAttribute[] AllOrders;
+
+        public IntermediateItemWithMultipleOrders(SaveAttribute[] allOrders) => AllOrders = allOrders;
     }
 }

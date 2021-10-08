@@ -44,34 +44,33 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             object[]? attributes = info.GetCustomAttributes(typeof(SaveAttribute), false);
             if (attributes.Length == 0) return null;
 
-            var newItem = new IntermediateItem();
-
             // Create the item.
-            bool successful = FillItemFromAttributes(newItem, info, attributes);
-            if (!successful) throw new IncompleteDetailsException(info);
+            var newItem = CreateItemFromAttributes(info, (SaveAttribute[])attributes);
+            if (newItem == null) throw new IncompleteDetailsException(info);
 
             IntermediateMapper.UpdateContextFromItem(ref ctx, newItem);
             return newItem;
         }
 
-        static bool FillItemFromAttributes(IntermediateItem dest, MemberInfo info, object[] attributes)
+        static IntermediateItem? CreateItemFromAttributes(MemberInfo info, SaveAttribute[] attributes)
         {
-            dest.Details.Unprocessed = info;
+            IntermediateItem dest;
 
-            bool loadedSaveAttribute = false;
-            for (int i = 0; i < attributes.Length; i++)
+            if (attributes.Length == 1)
             {
-                // TODO: Add more attributes 
-                switch (attributes[i])
-                {
-                    case SaveAttribute save:
-                        IntermediateMapper.FillMainInfo(dest, save.Order, save.FromVer, save.ToVer);
-                        loadedSaveAttribute = true;
-                        break;
-                }
+                dest = new IntermediateItem();
+                IntermediateMapper.FillMainInfo(dest, attributes[0].Order, attributes[0].FromVer, attributes[0].ToVer);
+            }
+            else
+            {
+                dest = new IntermediateItemWithMultipleOrders(attributes);
+
+                MappingHelpers.ProcessVersionedAttributes(ref dest.EndVer, attributes);
+                dest.StartVer = attributes[0].FromVer;
             }
 
-            return loadedSaveAttribute;
+            dest.Details.Unprocessed = info;
+            return dest;
         }
 
         static FieldInfo[] GetFields(BindingFlags bindingFlags, Type classType, SaveMembersMode mode)

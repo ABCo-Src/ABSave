@@ -22,7 +22,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             IntermediateItem info = new IntermediateItem();
             IntermediateMapper.FillMainInfo(info, 3, 6, uint.MaxValue);
 
-            Assert.AreEqual(3, info.Order);
+            Assert.AreEqual(3, info.SingleOrder);
             Assert.AreEqual(6u, info.StartVer);
             Assert.AreEqual(uint.MaxValue, info.EndVer);
         }
@@ -149,7 +149,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             var item = IntermediateReflectionMapper.GetItemForMember(ref ctx, member);
 
-            Assert.AreEqual(1, item.Order);
+            Assert.AreEqual(1, item.SingleOrder);
             Assert.AreEqual(1u, item.StartVer);
             Assert.AreEqual(2u, item.EndVer);
         }

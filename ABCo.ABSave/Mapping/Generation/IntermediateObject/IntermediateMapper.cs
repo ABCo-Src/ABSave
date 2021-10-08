@@ -33,7 +33,7 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
 
         internal static void FillMainInfo(IntermediateItem newItem, int order, uint startVer, uint endVer)
         {
-            newItem.Order = order;
+            newItem.SingleOrder = order;
             newItem.StartVer = startVer;
             newItem.EndVer = endVer;
         }
@@ -43,8 +43,8 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             // Check ordering
             if (ctx.TranslationCurrentOrderInfo != -1)
             {
-                if (newItem.Order >= ctx.TranslationCurrentOrderInfo)
-                    ctx.TranslationCurrentOrderInfo = newItem.Order;
+                if (newItem.SingleOrder >= ctx.TranslationCurrentOrderInfo)
+                    ctx.TranslationCurrentOrderInfo = newItem.SingleOrder;
                 else
                     ctx.TranslationCurrentOrderInfo = -1;
             }
