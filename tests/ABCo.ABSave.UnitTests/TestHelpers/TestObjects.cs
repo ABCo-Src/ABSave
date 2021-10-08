@@ -71,6 +71,23 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public override int GetHashCode() => base.GetHashCode();
     }
 
+    [SaveMembers]
+    class NoInheritanceInfoBase
+    {
+        [Save(0)]
+        public bool A { get; set; } = true;
+
+        [Save(0)]
+        public int B { get; set; } = 30;
+    }
+
+    [SaveMembers]
+    class NoInheritanceInfoSub : NoInheritanceInfoBase
+    {
+        [Save(1)]
+        public int C { get; set; } = 15;
+    }
+
     #endregion
 
     #region General
