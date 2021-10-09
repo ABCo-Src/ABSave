@@ -9,6 +9,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace ABCo.ABSave.UnitTests.Converters
 {
@@ -53,12 +54,36 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
+        public void Convert_List()
+        {
+            Setup<List<byte>>(Settings);
+
+            var obj = new List<byte> { 1, 2, 3, 4 };
+
+            DoSerialize(obj);
+            AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
+            CollectionAssert.AreEqual(obj, DoDeserialize<List<byte>>());
+        }
+
+        [TestMethod]
         public void Context_GenericICollection_NonGenericIList()
         {
             var converter = InitializeNew(typeof(GenericAndNonGeneric));
 
             Assert.IsInstanceOfType(converter._info, typeof(NonGenericIListInfo));
-            Assert.AreEqual(typeof(string), converter._elementOrKeyType);
+            Assert.AreEqual(typeof(int), converter._elementOrKeyType);
+        }
+
+        [TestMethod]
+        public void Convert_GenericICollection_NonGenericIList()
+        {
+            Setup<GenericAndNonGeneric>(Settings);
+
+            var obj = new GenericAndNonGeneric() { 1, 2, 3, 4 };
+
+            DoSerialize(obj);
+            AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
+            CollectionAssert.AreEqual(obj, DoDeserialize<GenericAndNonGeneric>());
         }
 
         [TestMethod]
@@ -68,6 +93,19 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             Assert.IsInstanceOfType(converter._info, typeof(GenericICollectionInfo));
             Assert.AreEqual(typeof(int), converter._elementOrKeyType);
+        }
+
+
+        [TestMethod]
+        public void Convert_GenericICollection()
+        {
+            Setup<GenericICollection>(Settings);
+
+            var obj = new GenericICollection() { 1, 2, 3, 4 };
+
+            DoSerialize(obj);
+            AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
+            CollectionAssert.AreEqual(obj.Inner, DoDeserialize<GenericICollection>().Inner);
         }
 
         //[TestMethod]
@@ -95,57 +133,26 @@ namespace ABCo.ABSave.UnitTests.Converters
             var converter = InitializeNew(typeof(GenericIDictionary));
 
             Assert.IsInstanceOfType(converter._info, typeof(GenericIDictionaryInfo));
-            Assert.AreEqual(typeof(string), converter._elementOrKeyType);
+            Assert.AreEqual(typeof(int), converter._elementOrKeyType);
             Assert.AreEqual(typeof(int), converter._valueType);
         }
 
-        //[TestMethod]
-        //public void Context_NonGenericIDictionary()
-        //{
-        //    var converter = InitializeNew(typeof(Hashtable));
-
-        //    Assert.IsInstanceOfType(converter._info, typeof(NonGenericIDictionaryInfo));
-        //    Assert.AreEqual(typeof(object), converter._elementOrKeyType);
-        //    Assert.AreEqual(typeof(object), converter._valueType);
-        //}
 
         [TestMethod]
-        public void Convert_List()
+        public void Convert_GenericIDictionary()
         {
-            Setup<List<byte>>(Settings);
+            Setup<GenericIDictionary>(Settings);
 
-            var obj = new List<byte> { 1, 2, 3, 4 };
-
-            DoSerialize(obj);
-            AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
-            CollectionAssert.AreEqual(obj, DoDeserialize<List<byte>>());
-        }
-
-        [TestMethod]
-        public void Convert_IDictionary_Generic()
-        {
-            Setup<Dictionary<byte, byte>>(Settings);
-
-            var obj = new Dictionary<byte, byte> { { 1, 2 }, { 3, 4 } };
+            var obj = new GenericIDictionary() { { 1, 2 }, { 3, 4 } };
 
             DoSerialize(obj);
             AssertAndGoToStart(0, 2, 0, 1, 2, 3, 4);
-            CollectionAssert.AreEqual(obj, DoDeserialize<Dictionary<byte, byte>>());
+
+            var deserialized = DoDeserialize<GenericIDictionary>();
+            CollectionAssert.AreEqual(obj.Keys.ToList(), deserialized.Keys.ToList());
+            CollectionAssert.AreEqual(obj.Values.ToList(), deserialized.Values.ToList());
         }
 
-        //[TestMethod]
-        //public void Convert_IList_NonGeneric()
-        //{
-        //    Setup<ArrayList>(Settings);
-
-        //    var obj = new ArrayList() { (byte)7 };
-
-        //    Action<ABSaveSerializer> writeType = s => s.SerializeItem((byte)7, s.GetRuntimeMapItem(typeof(object)));
-
-        //    DoSerialize(obj);
-        //    AssertAndGoToStart(GetByteArr(new object[] { writeType }, 1, (short)GenType.Action));
-        //    CollectionAssert.AreEqual(obj, DoDeserialize<ArrayList>());
-        //}
 
         //        public void SerializeIDictionary_Generic()
         //        {
@@ -202,61 +209,67 @@ namespace ABCo.ABSave.UnitTests.Converters
         //            TestUtilities.CompareWriters(expected, actual);
         //        }
 
-        class GenericAndNonGeneric : ICollection<string>, IList
+        public class GenericAndNonGeneric : ICollection<int>, IList
         {
+            List<int> _inner = new List<int>();
+
             public object this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public int Count => throw new NotImplementedException();
-            public bool IsReadOnly => throw new NotImplementedException();
-            public bool IsFixedSize => throw new NotImplementedException();
-            public bool IsSynchronized => throw new NotImplementedException();
-            public object SyncRoot => throw new NotImplementedException();
-            public void Add(string item) => throw new NotImplementedException();
-            public int Add(object value) => throw new NotImplementedException();
-            public void Clear() => throw new NotImplementedException();
-            public bool Contains(string item) => throw new NotImplementedException();
-            public bool Contains(object value) => throw new NotImplementedException();
-            public void CopyTo(string[] array, int arrayIndex) => throw new NotImplementedException();
-            public void CopyTo(Array array, int index) => throw new NotImplementedException();
-            public IEnumerator<string> GetEnumerator() => throw new NotImplementedException();
-            public int IndexOf(object value) => throw new NotImplementedException();
-            public void Insert(int index, object value) => throw new NotImplementedException();
-            public bool Remove(string item) => throw new NotImplementedException();
-            public void Remove(object value) => throw new NotImplementedException();
-            public void RemoveAt(int index) => throw new NotImplementedException();
-            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+            public int Count => _inner.Count;
+            public bool IsReadOnly => false;
+            public bool IsFixedSize => false;
+            public bool IsSynchronized => false;
+            public object SyncRoot => null;
+            public void Add(int item) => _inner.Add(item);
+            public int Add(object value) => ((IList)_inner).Add(value);
+            public void Clear() => _inner.Clear();
+            public bool Contains(int item) => _inner.Contains(item);
+            public bool Contains(object value) => _inner.Contains((int)value);
+            public void CopyTo(int[] array, int arrayIndex) => _inner.CopyTo(array, arrayIndex);
+            public void CopyTo(Array array, int index) => _inner.CopyTo((int[])array, index);
+            public IEnumerator<int> GetEnumerator() => _inner.GetEnumerator();
+            public int IndexOf(object value) => _inner.IndexOf((int)value);
+            public void Insert(int index, object value) => _inner.Insert(index, (int)value);
+            public bool Remove(int item) => _inner.Remove(item);
+            public void Remove(object value) => _inner.Remove((int)value);
+            public void RemoveAt(int index) => _inner.RemoveAt(index);
+            IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_inner).GetEnumerator();
         }
 
-        class GenericICollection : ICollection<int>
+        public class GenericICollection : ICollection<int>
         {
-            public int Count => throw new NotImplementedException();
-            public bool IsReadOnly => throw new NotImplementedException();
-            public void Add(int item) => throw new NotImplementedException();
-            public void Clear() => throw new NotImplementedException();
-            public bool Contains(int item) => throw new NotImplementedException();
-            public void CopyTo(int[] array, int arrayIndex) => throw new NotImplementedException();
-            public IEnumerator<int> GetEnumerator() => throw new NotImplementedException();
-            public bool Remove(int item) => throw new NotImplementedException();
-            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+            public List<int> Inner = new List<int>();
+
+            public int Count => Inner.Count;
+            public bool IsReadOnly => false;
+            public void Add(int item) => Inner.Add(item);
+            public void Clear() => Inner.Clear();
+            public bool Contains(int item) => Inner.Contains(item);
+            public void CopyTo(int[] array, int arrayIndex) => Inner.CopyTo(array, arrayIndex);
+            public IEnumerator<int> GetEnumerator() => Inner.GetEnumerator();
+            public bool Remove(int item) => Inner.Remove(item);
+            IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Inner).GetEnumerator();
         }
 
-        class GenericIDictionary : IDictionary<string, int>
+        public class GenericIDictionary : IDictionary<int, int>
         {
-            public int this[string key] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public ICollection<string> Keys => throw new NotImplementedException();
-            public ICollection<int> Values => throw new NotImplementedException();
-            public int Count => throw new NotImplementedException();
-            public bool IsReadOnly => throw new NotImplementedException();
-            public void Add(string key, int value) => throw new NotImplementedException();
-            public void Add(KeyValuePair<string, int> item) => throw new NotImplementedException();
-            public void Clear() => throw new NotImplementedException();
-            public bool Contains(KeyValuePair<string, int> item) => throw new NotImplementedException();
-            public bool ContainsKey(string key) => throw new NotImplementedException();
-            public void CopyTo(KeyValuePair<string, int>[] array, int arrayIndex) => throw new NotImplementedException();
-            public IEnumerator<KeyValuePair<string, int>> GetEnumerator() => throw new NotImplementedException();
-            public bool Remove(string key) => throw new NotImplementedException();
-            public bool Remove(KeyValuePair<string, int> item) => throw new NotImplementedException();
-            public bool TryGetValue(string key, out int value) => throw new NotImplementedException();
-            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+            Dictionary<int, int> _inner = new Dictionary<int, int>();
+
+            public int this[int key] { get => _inner[key]; set => _inner[key] = value; }
+            public ICollection<int> Keys => _inner.Keys;
+            public ICollection<int> Values => _inner.Values;
+            public int Count => _inner.Count;
+            public bool IsReadOnly => false;
+            public void Add(int key, int value) => _inner.Add(key, value);
+            public void Add(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Add(item);
+            public void Clear() => _inner.Clear();
+            public bool Contains(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Contains(item);
+            public bool ContainsKey(int key) => _inner.ContainsKey(key);
+            public void CopyTo(KeyValuePair<int, int>[] array, int arrayIndex) => ((IDictionary<int, int>)_inner).CopyTo(array, arrayIndex);
+            public IEnumerator<KeyValuePair<int, int>> GetEnumerator() => _inner.GetEnumerator();
+            public bool Remove(int key) => _inner.Remove(key);
+            public bool Remove(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Remove(item);
+            public bool TryGetValue(int key, out int value) => _inner.TryGetValue(key, out value);
+            IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_inner).GetEnumerator();
         }
     }
 }

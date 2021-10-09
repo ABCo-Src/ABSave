@@ -36,7 +36,7 @@ namespace ABCo.ABSave.Helpers
         public override int GetCount(object obj) => ((dynamic)obj).Count;
         public override IEnumerator GetEnumerator(object obj) => ((IEnumerable)obj).GetEnumerator();
         public override object CreateCollection(Type type, int count) => (dynamic)Activator.CreateInstance(type)!;
-        public override void AddItem(object obj, object? itm) => ((dynamic)obj).Add(itm);
+        public override void AddItem(object obj, object? itm) => ((dynamic)obj).Add((dynamic?)itm);
     }
 
     internal class NonGenericIListInfo : CollectionInfo
@@ -69,7 +69,7 @@ namespace ABCo.ABSave.Helpers
         }
 
         public override object CreateCollection(Type type, int count) => (dynamic)Activator.CreateInstance(type)!;
-        public override void AddItem(object obj, object key, object? value) => ((dynamic)obj).Add(key, value);
+        public override void AddItem(object obj, object key, object? value) => ((dynamic)obj).Add((dynamic)key, (dynamic?)value);
     }
 
     internal class NonGenericIDictionaryInfo : DictionaryInfo
