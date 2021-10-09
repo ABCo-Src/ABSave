@@ -19,6 +19,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         public void DoSerialize(object obj)
         {
             Serializer.WriteExactNonNullItem(obj, CurrentMapItem);
+            Serializer.Flush();
         }
 
         public T DoDeserialize<T>()

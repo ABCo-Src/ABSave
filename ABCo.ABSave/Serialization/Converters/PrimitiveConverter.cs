@@ -22,6 +22,7 @@ namespace ABCo.ABSave.Serialization.Converters
     [Select(typeof(decimal))]
     [Select(typeof(IntPtr))]
     [Select(typeof(UIntPtr))]
+    [SelectOtherWithCheckType]
     public class PrimitiveConverter : Converter
     {
         PrimitiveType _typeCode;
@@ -38,7 +39,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return 0;
         }
 
-        public override bool CheckType(CheckTypeInfo info) => info.Type.IsPrimitive;
+        public override bool CheckType(CheckTypeInfo info) => info.Type.IsPrimitive || info.Type.IsEnum;
 
         public override void Serialize(in SerializeInfo info)
         {
