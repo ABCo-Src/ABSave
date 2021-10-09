@@ -43,7 +43,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return new ObjectVersionInfo(members, baseConv);
         }
 
-        ObjectConverter GetBaseObjectConverter(InitializeInfo info, SaveBaseMembersAttribute attr)
+        static ObjectConverter GetBaseObjectConverter(InitializeInfo info, SaveBaseMembersAttribute attr)
         {
             if (!info.Type.IsSubclassOf(attr.BaseType))
                 throw new InvalidSaveBaseMembersException($"The type {info.Type.Name} has an attribute on it saying that ABSave should serialize the base members {attr.BaseType.Name}, but the type doesn't inherit from this type anywhere in its inheritance chain! The attribute must describe a base type of the class.");
@@ -70,7 +70,7 @@ namespace ABCo.ABSave.Serialization.Converters
         public override void Serialize(in SerializeInfo info) =>
             Serialize(info.Instance, info.ActualType, info.VersionInfo, info.Serializer);
 
-        void Serialize(object instance, Type actualType, VersionInfo info, ABSaveSerializer serializer)
+        static void Serialize(object instance, Type actualType, VersionInfo info, ABSaveSerializer serializer)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
@@ -79,7 +79,7 @@ namespace ABCo.ABSave.Serialization.Converters
             if (baseType != null)
             {
                 var baseInfo = serializer.WriteExactNonNullHeader(instance, actualType, baseType);
-                baseType.Serialize(instance, actualType, baseInfo!, serializer);
+                Serialize(instance, actualType, baseInfo!, serializer);
             }
 
             if (members.Length == 0) return;
@@ -96,7 +96,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return res;
         }
 
-        void DeserializeInto(object obj, VersionInfo info, ABSaveDeserializer deserializer)
+        static void DeserializeInto(object obj, VersionInfo info, ABSaveDeserializer deserializer)
         {
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
@@ -106,7 +106,7 @@ namespace ABCo.ABSave.Serialization.Converters
             {
                 // TODO: Don't directly call this with map guides.
                 VersionInfo baseInfo = deserializer.ReadExactNonNullHeader(baseType);
-                baseType.DeserializeInto(obj, baseInfo, deserializer);
+                DeserializeInto(obj, baseInfo, deserializer);
             }
 
             // Deserialize all the members that don't get the header.

@@ -13,7 +13,7 @@ namespace ABCo.ABSave.Serialization.Reading
     /// </summary>
     internal struct BitReader
     {
-        ABSaveDeserializer _deserializer;
+        readonly ABSaveDeserializer _deserializer;
 
         public byte FreeBits => (byte)(_freeBits == 0 ? 8 : _freeBits);
         byte _freeBits;

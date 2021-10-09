@@ -19,7 +19,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
     [Select(typeof(ClassWithMinVersion))]
     public class OtherTypeConverter : Converter
     {
-        public static bool WritesToHeader;
+        public static bool WritesToHeader { get; set; }
         public const int OUTPUT_BYTE = 155;
 
         public override void Serialize(in SerializeInfo info)

@@ -11,7 +11,7 @@ namespace ABCo.ABSave.Serialization.Writing
     [StructLayout(LayoutKind.Auto)]
     internal struct BitWriter : IDisposable
     {
-        ABSaveSerializer _serializer;
+        readonly ABSaveSerializer _serializer;
 
         public byte FreeBits => (byte)(_freeBits == 0 ? 8 : _freeBits);
         byte _freeBits;
