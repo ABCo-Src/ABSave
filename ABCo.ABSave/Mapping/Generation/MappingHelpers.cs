@@ -8,15 +8,17 @@ namespace ABCo.ABSave.Mapping.Generation
 {
     internal static class MappingHelpers
     {
-        public static void UpdateHighestVersionFromRange(ref uint highestVersion, uint startVer, uint endVer)
+        public static bool UpdateHighestVersionFromRange(ref uint highestVersion, uint startVer, uint endVer)
         {
             if (endVer <= startVer) throw new InvalidAttributeToVerException();
 
-            // If there is no upper we'll only update the highest version based on what the minimum is.
+            // If there is no upper we'll only update the highest version based on what the minimum is, if that's what we're meant to do.
             if (endVer == uint.MaxValue)
             {
                 if (startVer > highestVersion)
                     highestVersion = startVer;
+
+                return true;
             }
 
             // If not, update based on what their custom high is.
@@ -24,31 +26,44 @@ namespace ABCo.ABSave.Mapping.Generation
             {
                 if (endVer > highestVersion)
                     highestVersion = endVer;
+
+                return false;
             }
         }
 
-        public static void ProcessVersionedAttributes<T>(ref uint highestVersion, T[] attr) where T : AttributeWithVersion
+        public static bool SortVersionedAttributes<T>(out uint highestVersion, T[] attr) where T : AttributeWithVersion
         {
+            highestVersion = 0;
+
             // Sort them by their "FromVer".
             Array.Sort(attr, Comparer<AttributeWithVersion>.Default);
 
+            bool anyUnsetItems = false;
             for (int i = 0; i < attr.Length; i++)
             {
                 AttributeWithVersion info = attr[i];
-                UpdateHighestVersionFromRange(ref highestVersion, info.FromVer, info.ToVer);
+                anyUnsetItems = UpdateHighestVersionFromRange(ref highestVersion, info.FromVer, info.ToVer);
             }
+
+            return anyUnsetItems;
         }
 
-        public static T? FindAttributeForVersion<T>(T[] attributes, uint version)
+        public static T? FindAttributeForVersion<T>(T[] sortedAttributes, uint version)
             where T : AttributeWithVersion
         {
-            if (attributes == null) return null;
+            if (sortedAttributes == null) return null;
 
-            for (int i = 0; i < attributes.Length; i++)
+            for (int i = 0; i < sortedAttributes.Length; i++)
             {
-                T currentAttribute = attributes[i];
-                if (currentAttribute.FromVer <= version && currentAttribute.ToVer > version)
-                    return currentAttribute;
+                T currentAttribute = sortedAttributes[i];
+
+                if (currentAttribute.FromVer <= version)
+                {
+                    if (currentAttribute.ToVer > version)
+                        return currentAttribute;
+
+                    return null;
+                }
             }
 
             return null;

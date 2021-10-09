@@ -19,9 +19,12 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             var ctx = new IntermediateMappingContext(type, mode);
 
             // Coming soon: Settings-based mapping
+            (IntermediateItem[] members, bool hasMemberWithMultipleOrders) = IntermediateReflectionMapper.FillInfo(ref ctx);
+
             intermediateInfo = new IntermediateObjectInfo
             {
-                Members = IntermediateReflectionMapper.FillInfo(ref ctx),
+                Members = members,
+                HasMembersWithMultipleOrders = hasMemberWithMultipleOrders,
                 BaseMemberAttributes = GetBaseMembersAttributes(ref ctx, type)
             };
 
@@ -34,11 +37,11 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
         internal static void FillMainInfo(IntermediateItem newItem, int order, uint startVer, uint endVer)
         {
             newItem.SingleOrder = order;
-            newItem.StartVer = startVer;
-            newItem.EndVer = endVer;
+            newItem.FromVer = startVer;
+            newItem.ToVer = endVer;
         }
 
-        internal static void UpdateContextFromItem(ref IntermediateMappingContext ctx, IntermediateItem newItem)
+        internal static void UpdateContextFromSingleOrderItem(ref IntermediateMappingContext ctx, IntermediateItem newItem)
         {
             // Check ordering
             if (ctx.TranslationCurrentOrderInfo != -1)
@@ -49,7 +52,7 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
                     ctx.TranslationCurrentOrderInfo = -1;
             }
 
-            MappingHelpers.UpdateHighestVersionFromRange(ref ctx.HighestVersion, newItem.StartVer, newItem.EndVer);
+            MappingHelpers.UpdateHighestVersionFromRange(ref ctx.HighestVersion, newItem.FromVer, newItem.ToVer);
         }
 
         internal static SaveBaseMembersAttribute[]? GetBaseMembersAttributes(ref IntermediateMappingContext ctx, Type type)
@@ -57,7 +60,7 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
             SaveBaseMembersAttribute[] attr = (SaveBaseMembersAttribute[])type.GetCustomAttributes<SaveBaseMembersAttribute>(false);
             if (attr.Length == 0) return null;
 
-            MappingHelpers.ProcessVersionedAttributes(ref ctx.HighestVersion, attr);
+            MappingHelpers.SortVersionedAttributes(out ctx.HighestVersion, attr);
             return attr;
         }
     }

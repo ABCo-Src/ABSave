@@ -13,7 +13,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
     /// </summary>
     internal static class IntermediateReflectionMapper
     {
-        public static IntermediateItem[] FillInfo(ref IntermediateMappingContext ctx)
+        public static (IntermediateItem[] members, bool hasMemberWithMultipleOrders) FillInfo(ref IntermediateMappingContext ctx)
         {
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly;
             Type? classType = ctx.ClassType;
@@ -22,20 +22,30 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             FieldInfo[] currentFields = GetFields(bindingFlags, classType, ctx.Mode);
             PropertyInfo[] currentProperties = GetProperties(bindingFlags, classType, ctx.Mode);
 
-            // Process the members
+            // Process the member.
             var dest = new List<IntermediateItem>(currentFields.Length + currentProperties.Length);
-            AddMembers(ref ctx, currentFields, dest);
-            AddMembers(ref ctx, currentProperties, dest);
-            return dest.ToArray();
+
+            bool hasMemberWithMultipleOrders = AddMembers(ref ctx, currentFields, dest);
+            if (AddMembers(ref ctx, currentProperties, dest)) hasMemberWithMultipleOrders = true;
+
+            return (dest.ToArray(), hasMemberWithMultipleOrders);
         }
 
-        static void AddMembers(ref IntermediateMappingContext ctx, MemberInfo[] members, List<IntermediateItem> dest)
+        static bool AddMembers(ref IntermediateMappingContext ctx, MemberInfo[] members, List<IntermediateItem> dest)
         {
+            bool hasMemberWithMultipleOrders = false;
+
             for (int i = 0; i < members.Length; i++)
             {
                 IntermediateItem? newItem = GetItemForMember(ref ctx, members[i]);
-                if (newItem != null) dest.Add(newItem);
+                if (newItem != null)
+                {
+                    if (newItem.HasMultipleOrders) hasMemberWithMultipleOrders = true;
+                    dest.Add(newItem);
+                }
             }
+
+            return hasMemberWithMultipleOrders;
         }
 
         internal static IntermediateItem? GetItemForMember(ref IntermediateMappingContext ctx, MemberInfo info)
@@ -45,14 +55,13 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             if (attributes.Length == 0) return null;
 
             // Create the item.
-            var newItem = CreateItemFromAttributes(info, (SaveAttribute[])attributes);
+            var newItem = CreateItemFromAttributes(ref ctx, info, (SaveAttribute[])attributes);
             if (newItem == null) throw new IncompleteDetailsException(info);
 
-            IntermediateMapper.UpdateContextFromItem(ref ctx, newItem);
             return newItem;
         }
 
-        static IntermediateItem? CreateItemFromAttributes(MemberInfo info, SaveAttribute[] attributes)
+        static IntermediateItem? CreateItemFromAttributes(ref IntermediateMappingContext ctx, MemberInfo info, SaveAttribute[] attributes)
         {
             IntermediateItem dest;
 
@@ -60,13 +69,17 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             {
                 dest = new IntermediateItem();
                 IntermediateMapper.FillMainInfo(dest, attributes[0].Order, attributes[0].FromVer, attributes[0].ToVer);
+                IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, dest);
             }
             else
             {
                 dest = new IntermediateItemWithMultipleOrders(attributes);
 
-                MappingHelpers.ProcessVersionedAttributes(ref dest.EndVer, attributes);
-                dest.StartVer = attributes[0].FromVer;
+                bool containedUnsetItems = MappingHelpers.SortVersionedAttributes(out uint highestVersion, attributes);
+                dest.FromVer = attributes[attributes.Length - 1].FromVer;
+                dest.ToVer = containedUnsetItems ? uint.MaxValue : highestVersion;
+
+                MappingHelpers.UpdateHighestVersionFromRange(ref ctx.HighestVersion, dest.FromVer, highestVersion);
             }
 
             dest.Details.Unprocessed = info;

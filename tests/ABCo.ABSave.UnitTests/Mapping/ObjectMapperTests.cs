@@ -291,7 +291,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
     class MultipleSaveClass
     {
         [Save(0, FromVer = 0)]
-        [Save(2, FromVer = 2, ToVer = 2)]
+        [Save(2, FromVer = 2, ToVer = 3)]
         [Save(4, FromVer = 4)]
         public int A { get; set; }
 

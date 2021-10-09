@@ -23,8 +23,8 @@ namespace ABCo.ABSave.UnitTests.Mapping
             IntermediateMapper.FillMainInfo(info, 3, 6, uint.MaxValue);
 
             Assert.AreEqual(3, info.SingleOrder);
-            Assert.AreEqual(6u, info.StartVer);
-            Assert.AreEqual(uint.MaxValue, info.EndVer);
+            Assert.AreEqual(6u, info.FromVer);
+            Assert.AreEqual(uint.MaxValue, info.ToVer);
         }
 
         [TestMethod]
@@ -34,13 +34,13 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             IntermediateItem info = new IntermediateItem();
             IntermediateMapper.FillMainInfo(info, 3, 6, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 5, 8, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 9, 11, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             Assert.AreEqual(9, ctx.TranslationCurrentOrderInfo);
             Assert.AreEqual(11u, ctx.HighestVersion);
@@ -53,13 +53,13 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             IntermediateItem info = new IntermediateItem();
             IntermediateMapper.FillMainInfo(info, 3, 6, 7);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 5, 8, 34);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 9, 11, 59);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             Assert.AreEqual(9, ctx.TranslationCurrentOrderInfo);
             Assert.AreEqual(59u, ctx.HighestVersion);
@@ -74,13 +74,13 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
             IntermediateItem info = new IntermediateItem();
             IntermediateMapper.FillMainInfo(info, 3, 0, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 5, 0, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 9, 0, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             Assert.AreEqual(9, ctx.TranslationCurrentOrderInfo);
             Assert.AreEqual(0u, ctx.HighestVersion);
@@ -96,13 +96,13 @@ namespace ABCo.ABSave.UnitTests.Mapping
             IntermediateItem info = new IntermediateItem();
 
             IntermediateMapper.FillMainInfo(info, 3, 0, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 5, 0, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 9, 0, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             Assert.AreEqual(9, ctx.TranslationCurrentOrderInfo);
         }
@@ -117,13 +117,13 @@ namespace ABCo.ABSave.UnitTests.Mapping
             IntermediateItem info = new IntermediateItem();
 
             IntermediateMapper.FillMainInfo(info, 9, 0, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 5, 0, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             IntermediateMapper.FillMainInfo(info, 7, 0, uint.MaxValue);
-            IntermediateMapper.UpdateContextFromItem(ref ctx, info);
+            IntermediateMapper.UpdateContextFromSingleOrderItem(ref ctx, info);
 
             Assert.AreEqual(-1, ctx.TranslationCurrentOrderInfo);
         }
@@ -150,8 +150,8 @@ namespace ABCo.ABSave.UnitTests.Mapping
             var item = IntermediateReflectionMapper.GetItemForMember(ref ctx, member);
 
             Assert.AreEqual(1, item.SingleOrder);
-            Assert.AreEqual(1u, item.StartVer);
-            Assert.AreEqual(2u, item.EndVer);
+            Assert.AreEqual(1u, item.FromVer);
+            Assert.AreEqual(2u, item.ToVer);
         }
 
         //[TestMethod]

@@ -10,8 +10,8 @@ namespace ABCo.ABSave.Mapping.Description.Attributes
         public uint FromVer = 0;
 
         /// <summary>
-        /// The last version number this attribute takes effect on. 
-        /// For example, if <see cref="FromVer"/> was 1 and <see cref="ToVer"/> was 1 then this attribute would only be available in version 1, no other versions.
+        /// The last version number this attribute takes effect on. This value is EXCLUSIVE. 
+        /// For example, if <see cref="FromVer"/> was 1 and <see cref="ToVer"/> was 2 then this attribute would only be available in version 1, no other versions.
         /// </summary>
         public uint ToVer = uint.MaxValue;
 

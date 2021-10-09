@@ -81,7 +81,7 @@ namespace ABCo.ABSave.Mapping.Generation
 
             // Setup the backing information for the converter.
             converter._allInheritanceAttributes =
-                InheritanceHandler.GetInheritanceAttributes(type, ref converter._highestVersion);
+                InheritanceHandler.GetInheritanceAttributes(type, out converter._highestVersion);
 
             VersionCacheHandler.SetupVersionCacheOnItem(converter, this);
             return converter;

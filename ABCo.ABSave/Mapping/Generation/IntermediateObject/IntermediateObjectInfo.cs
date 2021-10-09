@@ -11,6 +11,8 @@ namespace ABCo.ABSave.Mapping.Generation.IntermediateObject
         public IntermediateItem[]? Members;
         public SaveBaseMembersAttribute[]? BaseMemberAttributes;
 
+        public bool HasMembersWithMultipleOrders;
+
         public void Release()
         {
             Members = null;
