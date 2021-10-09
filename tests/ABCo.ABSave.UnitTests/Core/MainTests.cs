@@ -2,6 +2,7 @@
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 using System.Collections.Generic;
 
 namespace ABCo.ABSave.UnitTests.Core
@@ -251,6 +252,53 @@ namespace ABCo.ABSave.UnitTests.Core
                 AssertAndGoToStart(0);
 
                 Assert.AreEqual(null, Deserializer.ReadItem(CurrentMapItem));
+            }
+        }
+
+        [TestMethod]
+        public void Nullable_Null()
+        {
+            BaseTypeConverter.WritesToHeader = true;
+            ResetStateWithMapFor(typeof(int?));
+            {
+                Serializer.WriteItem(null, CurrentMapItem);
+                AssertAndGoToStart(0);
+
+                Assert.AreEqual(null, Deserializer.ReadItem(CurrentMapItem));
+            }
+        }
+
+        [TestMethod]
+        public void Nullable_NotNull()
+        {
+            BaseTypeConverter.WritesToHeader = true;
+            ResetStateWithMapFor(typeof(byte?));
+            {
+                Serializer.WriteItem((byte)5, CurrentMapItem);
+                AssertAndGoToStart(0x80, 5);
+
+                Assert.AreEqual((byte)5, Deserializer.ReadItem(CurrentMapItem));
+            }
+        }
+
+        [TestMethod]
+        public void DifferentRef_NoInheritanceInfo()
+        {
+            ResetStateWithMapFor<NoInheritanceInfoBase>();
+            {
+                // With version
+                Serializer.WriteItem(new NoInheritanceInfoSub(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { BitConverter.GetBytes(30) }, 0x80, 0, 0x80, (short)GenType.ByteArr));
+
+                Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(NoInheritanceInfoBase));
+
+                ClearStream();
+
+                // Without version
+                Serializer.WriteItem(new NoInheritanceInfoSub(), CurrentMapItem);
+                AssertAndGoToStart(GetByteArr(new object[] { BitConverter.GetBytes(30) }, 0xC0, (short)GenType.ByteArr));
+
+                Assert.IsInstanceOfType(Deserializer.ReadItem(CurrentMapItem), typeof(NoInheritanceInfoBase));
             }
         }
 

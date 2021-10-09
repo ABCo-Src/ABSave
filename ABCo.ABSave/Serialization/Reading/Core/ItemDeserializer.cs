@@ -76,9 +76,9 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 
             Type? actualType = info.Mode switch
             {
-                SaveInheritanceMode.Index => TryReadListInheritance(info, baseConverter.ItemType, deserializer),
+                SaveInheritanceMode.Index => TryReadListInheritance(info, deserializer),
                 SaveInheritanceMode.Key => TryReadKeyInheritance(info, baseConverter.ItemType, deserializer),
-                SaveInheritanceMode.IndexOrKey => deserializer.ReadBit() ? TryReadListInheritance(info, baseConverter.ItemType, deserializer) : TryReadKeyInheritance(info, baseConverter.ItemType, deserializer),
+                SaveInheritanceMode.IndexOrKey => deserializer.ReadBit() ? TryReadListInheritance(info, deserializer) : TryReadKeyInheritance(info, baseConverter.ItemType, deserializer),
                 _ => throw new Exception("Invalid save inheritance mode")
             };
 
@@ -88,7 +88,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             return DeserializeItemNoSetup(deserializer.State.GetRuntimeMapItem(actualType).Converter, deserializer, true);
         }
 
-        static Type? TryReadListInheritance(SaveInheritanceAttribute info, Type baseType, ABSaveDeserializer deserializer)
+        static Type? TryReadListInheritance(SaveInheritanceAttribute info, ABSaveDeserializer deserializer)
         {
             uint key = deserializer.ReadCompressedInt();
             return info.IndexDeserializeCache.GetValueOrDefault(key);

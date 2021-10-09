@@ -181,7 +181,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             //Print(NewtonsoftJson, NewtonsoftJsonResult);
             //Print(XML, XMLResult);
 
-            void Print(Action a, Stream stream)
+            static void Print(Action a, Stream stream)
             {
                 a();
                 Console.WriteLine(a.Method.Name + ": " + stream.Length);
@@ -234,7 +234,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
         public static void GenerateAndSaveNewModel()
         {
-            JsonResponseModel model = new JsonResponseModel();
+            JsonResponseModel model = new();
             model.Initialize();
 
             var options = new JsonSerializerOptions

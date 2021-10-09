@@ -27,8 +27,6 @@ namespace ABCo.ABSave.Serialization.Writing.Core
 
         static void WriteCompressed<T>(T data, ABSaveSerializer target) where T : INumberContainer
         {
-            if (target.CurrentByteFreeBits == 0) target.FinishWritingBitsToCurrentByte();
-
             if (target.State.Settings.LazyCompressedWriting)
                 WriteCompressedLazyFast(data, target);
             else
@@ -110,9 +108,6 @@ namespace ABCo.ABSave.Serialization.Writing.Core
                 if (byteWillHaveFreeSpace) serializer.WriteInteger((byte)(data.ShiftRight(dataInfo.BitsToGo) >> 8), serializer.CurrentByteFreeBits);
 
                 // The next byte will definitely have some free space, as we can not physically fill all of the remaining "xxxxxxxx"s with the header.
-                // Ensure we're definitely ready for the next byte.
-                if (serializer.CurrentByteFreeBits == 0) serializer.FinishWritingBitsToCurrentByte();
-
                 byteWillHaveFreeSpace = true;
             }
 

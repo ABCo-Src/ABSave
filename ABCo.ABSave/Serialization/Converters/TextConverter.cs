@@ -18,7 +18,7 @@ namespace ABCo.ABSave.Serialization.Converters
     {
         StringType _type;
 
-        public override bool CheckType(CheckTypeInfo info)
+        public override uint Initialize(InitializeInfo info)
         {
             if (info.Type == typeof(string))
                 _type = StringType.String;
@@ -26,10 +26,8 @@ namespace ABCo.ABSave.Serialization.Converters
                 _type = StringType.StringBuilder;
             else if (info.Type == typeof(char[]))
                 _type = StringType.CharArray;
-            else
-                return false;
 
-            return true;
+            return 0;
         }
 
         #region Serialization
@@ -61,7 +59,7 @@ namespace ABCo.ABSave.Serialization.Converters
             obj.CopyTo(0, tmp, 0, obj.Length);
 
             header.WriteText(new ReadOnlySpan<char>(tmp));
-            ArrayPool<char>.Shared.Return(tmp);
+            if (obj.Length >= ABSaveUtils.MAX_STACK_SIZE) ArrayPool<char>.Shared.Return(tmp);
         }
 
         #endregion

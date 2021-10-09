@@ -523,7 +523,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
     static class Randomizer
     {
-        private static readonly Random Random = new Random();
+        private static readonly Random Random = new();
         public static bool NextBool() => Random.Next() % 2 == 1;
         public static int NextInt() => Random.Next();
         public static int NextInt(int min, int max) => Random.Next(min, max);

@@ -198,7 +198,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             //IntermediateObjInfoMapper.Release(info);
         }
 
-        void TestFields(bool isValueTypeParent)
+        static void TestFields(bool isValueTypeParent)
         {
             var highestVersion = IntermediateMapper.CreateIntermediateObjectInfo(
                 isValueTypeParent ? typeof(FieldStruct) : typeof(FieldClass), SaveMembersMode.Fields, out var members);
@@ -231,7 +231,7 @@ namespace ABCo.ABSave.UnitTests.Mapping
             TestProperties(isValueTypeParent);
         }
 
-        void TestProperties(bool isValueTypeParent)
+        static void TestProperties(bool isValueTypeParent)
         {
             var highestVersion = IntermediateMapper.CreateIntermediateObjectInfo(
                isValueTypeParent ? typeof(AllPrimitiveStruct) : typeof(AllPrimitiveClass), SaveMembersMode.Properties, out var members);
