@@ -12,7 +12,7 @@
             lock (_items)
             {
                 if (_itemCount == 0) return null;
-                return _items[_itemCount--];
+                return _items[--_itemCount];
             }
         }
 
@@ -21,7 +21,7 @@
             lock (_items)
             {
                 int newCount = _itemCount + 1;
-                if (newCount == _items.Length) return;
+                if (_itemCount == _items.Length) return;
 
                 _items[_itemCount] = item;
                 _itemCount = newCount;

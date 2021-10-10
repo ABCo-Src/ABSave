@@ -37,6 +37,37 @@ namespace ABCo.ABSave.UnitTests
         }
 
         [TestMethod]
+        public void LightConcurrentPool_Empty()
+        {
+            var pool = new LightConcurrentPool<string>(4);
+            Assert.IsNull(pool.TryRent());
+        }
+
+        [TestMethod]
+        public void LightConcurrentPool_ExistingItem()
+        {
+            var pool = new LightConcurrentPool<string>(4);
+            pool.Release("abc");
+            Assert.AreEqual("abc", pool.TryRent());
+        }
+
+        [TestMethod]
+        public void LightConcurrentPool_Filled()
+        {
+            var pool = new LightConcurrentPool<string>(4);
+            pool.Release("abc");
+            pool.Release("def");
+            pool.Release("ghi");
+            pool.Release("jkl");
+            pool.Release("mno");
+
+            Assert.AreEqual("jkl", pool.TryRent());
+            Assert.AreEqual("ghi", pool.TryRent());
+            Assert.AreEqual("def", pool.TryRent());
+            Assert.AreEqual("abc", pool.TryRent());
+        }
+
+        [TestMethod]
         public void SettingsBuilder_CustomValues()
         {
             var settings = ABSaveSettings.ForSpeed.Customize(b => b
