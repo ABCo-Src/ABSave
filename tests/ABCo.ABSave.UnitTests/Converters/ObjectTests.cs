@@ -1,4 +1,5 @@
 ﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Exceptions;
 using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -75,6 +76,12 @@ namespace ABCo.ABSave.UnitTests.Converters
                 new byte[] { SubTypeConverter.OUTPUT_BYTE, 0xC0, SubTypeConverter.OUTPUT_BYTE });
         }
 
+        [TestMethod]
+        public void Invalid_IncorrectBase() => Assert.ThrowsException<InvalidSaveBaseMembersException>(() => Setup<CompletelyInvalidBase>(ABSaveSettings.ForSpeed));
+
+        [TestMethod]
+        public void Invalid_UnserializableBase() => Assert.ThrowsException<InvalidSaveBaseMembersException>(() => Setup<UnserializableBase>(ABSaveSettings.ForSpeed));
+
         void RunTest<T>(T instance, int version, byte? noBaseExpectedFirstByte, byte? baseExpectedFirstByte, byte[] versionExpected, byte[] nonVersionExpected)
             where T : BaseWithoutHeader
         {
@@ -114,6 +121,15 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
     }
 
+    [SaveBaseMembers(typeof(string))]
+    [SaveMembers]
+    class CompletelyInvalidBase { }
+
+    class Unserializable { }
+
+    [SaveBaseMembers(typeof(Unserializable))]
+    [SaveMembers]
+    class UnserializableBase : Unserializable { }
 
     [SaveMembers]
     class EmptyBase { }
