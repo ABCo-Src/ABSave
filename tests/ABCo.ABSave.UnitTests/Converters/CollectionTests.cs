@@ -10,6 +10,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using ABCo.ABSave.Exceptions;
 
 namespace ABCo.ABSave.UnitTests.Converters
 {
@@ -139,7 +140,7 @@ namespace ABCo.ABSave.UnitTests.Converters
 
 
         [TestMethod]
-        public void Convert_GenericIDictionary()
+        public void Convert_GenericIDictionary_Valid()
         {
             Setup<GenericIDictionary>(Settings);
 
@@ -151,6 +152,16 @@ namespace ABCo.ABSave.UnitTests.Converters
             var deserialized = DoDeserialize<GenericIDictionary>();
             CollectionAssert.AreEqual(obj.Keys.ToList(), deserialized.Keys.ToList());
             CollectionAssert.AreEqual(obj.Values.ToList(), deserialized.Values.ToList());
+        }
+        
+        [TestMethod]
+        public void Convert_GenericIDictionary_Invalid()
+        {
+            Setup<GenericIDictionary>(Settings);
+
+            var obj = new GenericIDictionary(true) { { 1, 2 }, { 3, 4 } };
+
+            Assert.ThrowsException<InvalidDictionaryException>(() => DoSerialize(obj));
         }
 
 
@@ -252,7 +263,13 @@ namespace ABCo.ABSave.UnitTests.Converters
 
         public class GenericIDictionary : IDictionary<int, int>
         {
+            public bool DisposedEnumerator { get; set; }
+
             Dictionary<int, int> _inner = new Dictionary<int, int>();
+            bool _useNonDictionaryEnumerator;
+
+            public GenericIDictionary() { }
+            public GenericIDictionary(bool useNonDictionaryEnumerator) => _useNonDictionaryEnumerator = useNonDictionaryEnumerator;
 
             public int this[int key] { get => _inner[key]; set => _inner[key] = value; }
             public ICollection<int> Keys => _inner.Keys;
@@ -265,11 +282,26 @@ namespace ABCo.ABSave.UnitTests.Converters
             public bool Contains(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Contains(item);
             public bool ContainsKey(int key) => _inner.ContainsKey(key);
             public void CopyTo(KeyValuePair<int, int>[] array, int arrayIndex) => ((IDictionary<int, int>)_inner).CopyTo(array, arrayIndex);
-            public IEnumerator<KeyValuePair<int, int>> GetEnumerator() => _inner.GetEnumerator();
+            public IEnumerator<KeyValuePair<int, int>> GetEnumerator() => _useNonDictionaryEnumerator ? new NonDictionaryEnumerator(this) : (IEnumerator<KeyValuePair<int, int>>)_inner.GetEnumerator();
             public bool Remove(int key) => _inner.Remove(key);
-            public bool Remove(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Remove(item);
+            public bool Remove(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Remove(item);    
             public bool TryGetValue(int key, out int value) => _inner.TryGetValue(key, out value);
-            IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_inner).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => _useNonDictionaryEnumerator ? new NonDictionaryEnumerator(this) : ((IEnumerable)_inner).GetEnumerator();
+
+            class NonDictionaryEnumerator : IEnumerator, IEnumerator<KeyValuePair<int, int>>
+            {
+                public object Current => 123;
+
+                GenericIDictionary _parent;
+
+                public NonDictionaryEnumerator(GenericIDictionary parent) => _parent = parent;
+
+                KeyValuePair<int, int> IEnumerator<KeyValuePair<int, int>>.Current => new KeyValuePair<int, int>(123, 123);
+
+                public void Dispose() => _parent.DisposedEnumerator = true;
+                public bool MoveNext() => throw new Exception("Failed - called 'MoveNext'!");
+                public void Reset() => throw new Exception("Failed - called 'Reset'!");
+            }
         }
     }
 }
