@@ -64,8 +64,12 @@ namespace ABCo.ABSave.Helpers
         public override int GetCount(object obj) => ((dynamic)obj).Count;
         public override IDictionaryEnumerator GetEnumerator(object obj)
         {
-            if (((IEnumerable)obj).GetEnumerator() is IDictionaryEnumerator asDictEnumerator) return asDictEnumerator;
-            else throw new InvalidDictionaryException(obj.GetType());
+            var enumerator = ((IEnumerable)obj).GetEnumerator();
+            if (enumerator is IDictionaryEnumerator asDictEnumerator) 
+                return asDictEnumerator;
+
+            if (enumerator is IDisposable disp) disp.Dispose();
+            throw new InvalidDictionaryException(obj.GetType());
         }
 
         public override object CreateCollection(Type type, int count) => (dynamic)Activator.CreateInstance(type)!;

@@ -83,6 +83,8 @@ namespace ABCo.ABSave.UnitTests.Converters
             var obj = new GenericAndNonGeneric() { 1, 2, 3, 4 };
 
             DoSerialize(obj);
+            Assert.IsTrue(obj.DisposedEnumerator);
+
             AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
             CollectionAssert.AreEqual(obj, DoDeserialize<GenericAndNonGeneric>());
         }
@@ -105,6 +107,8 @@ namespace ABCo.ABSave.UnitTests.Converters
             var obj = new GenericICollection() { 1, 2, 3, 4 };
 
             DoSerialize(obj);
+            Assert.IsTrue(obj.DisposedEnumerator);
+
             AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
             CollectionAssert.AreEqual(obj.Inner, DoDeserialize<GenericICollection>().Inner);
         }
@@ -129,6 +133,21 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
+        public void Convert_GenericIDictionary_NonGenericIDictionary()
+        {
+            Setup<Dictionary<int, bool>>(Settings);
+
+            var obj = new Dictionary<int, bool>() { { 1, true }, { 2, false } };
+
+            DoSerialize(obj);
+            AssertAndGoToStart(0, 2, 0, 1, 0, 0x82, 0);
+
+            var deserialized = DoDeserialize<Dictionary<int, bool>>();
+            CollectionAssert.AreEqual(obj.Keys.ToList(), deserialized.Keys.ToList());
+            CollectionAssert.AreEqual(obj.Values.ToList(), deserialized.Values.ToList());
+        }
+
+        [TestMethod]
         public void Context_GenericIDictionary()
         {
             var converter = InitializeNew(typeof(GenericIDictionary));
@@ -138,7 +157,6 @@ namespace ABCo.ABSave.UnitTests.Converters
             Assert.AreEqual(typeof(int), converter._valueType);
         }
 
-
         [TestMethod]
         public void Convert_GenericIDictionary_Valid()
         {
@@ -147,6 +165,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             var obj = new GenericIDictionary() { { 1, 2 }, { 3, 4 } };
 
             DoSerialize(obj);
+            Assert.IsTrue(obj.DisposedEnumerator);
             AssertAndGoToStart(0, 2, 0, 1, 2, 3, 4);
 
             var deserialized = DoDeserialize<GenericIDictionary>();
@@ -162,67 +181,14 @@ namespace ABCo.ABSave.UnitTests.Converters
             var obj = new GenericIDictionary(true) { { 1, 2 }, { 3, 4 } };
 
             Assert.ThrowsException<InvalidDictionaryException>(() => DoSerialize(obj));
+            Assert.IsTrue(obj.DisposedEnumerator);
         }
-
-
-        //        public void SerializeIDictionary_Generic()
-        //        {
-        //            var actual = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            var arrType = typeof(Dictionary<int, int>);
-
-        //            Assert.IsTrue(EnumerableTypeConverter.Instance.TryGenerateContext(arrType));
-        //            EnumerableTypeConverter.Instance.Serialize(new Dictionary<int, int>() { { 1, 2 }, { 3, 4 } }, arrType, actual);
-
-        //            var expected = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            expected.WriteInt32(2);
-        //            expected.WriteInt32(1);
-        //            expected.WriteInt32(2);
-        //            expected.WriteInt32(3);
-        //            expected.WriteInt32(4);
-
-        //            TestUtilities.CompareWriters(expected, actual);
-        //        }
-
-        //        [TestMethod]
-        //        public void SerializeIList_NonGeneric()
-        //        {
-        //            var actual = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            var arrType = typeof(ArrayList);
-
-        //            Assert.IsTrue(EnumerableTypeConverter.Instance.TryGenerateContext(arrType));
-        //            EnumerableTypeConverter.Instance.Serialize(new ArrayList() { 1, 2, 3, 4 }, arrType, actual);
-
-        //            var expected = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            expected.WriteInt32(4);
-        //            ABSaveItemConverter.Serialize(1, typeof(int), typeof(object), expected);
-        //            ABSaveItemConverter.Serialize(2, typeof(int), typeof(object), expected);
-        //            ABSaveItemConverter.Serialize(3, typeof(int), typeof(object), expected);
-        //            ABSaveItemConverter.Serialize(4, typeof(int), typeof(object), expected);
-
-        //            TestUtilities.CompareWriters(expected, actual);
-        //        }
-
-        //        [TestMethod]
-        //        public void SerializeIList_NonGeneric_Map()
-        //        {
-        //            var map = new CollectionMapItem(false, typeof(int), ABSaveCollectionInfo.NonGenericIList, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
-        //            var actual = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-
-        //            map.Serialize(new ArrayList() { 1, 2, 3, 4 }, typeof(ArrayList), actual);
-
-        //            var expected = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            expected.WriteInt32(4);
-        //            expected.WriteInt32(1);
-        //            expected.WriteInt32(2);
-        //            expected.WriteInt32(3);
-        //            expected.WriteInt32(4);
-
-        //            TestUtilities.CompareWriters(expected, actual);
-        //        }
 
         public class GenericAndNonGeneric : ICollection<int>, IList
         {
-            List<int> _inner = new List<int>();
+            public bool DisposedEnumerator { get; set; }
+
+            readonly List<int> _inner = new List<int>();
 
             public object this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
             public int Count => _inner.Count;
@@ -237,17 +203,19 @@ namespace ABCo.ABSave.UnitTests.Converters
             public bool Contains(object value) => _inner.Contains((int)value);
             public void CopyTo(int[] array, int arrayIndex) => _inner.CopyTo(array, arrayIndex);
             public void CopyTo(Array array, int index) => _inner.CopyTo((int[])array, index);
-            public IEnumerator<int> GetEnumerator() => _inner.GetEnumerator();
+            public IEnumerator<int> GetEnumerator() => new DisposalNotificationEnumerator<int>(this, _inner.GetEnumerator());
             public int IndexOf(object value) => _inner.IndexOf((int)value);
             public void Insert(int index, object value) => _inner.Insert(index, (int)value);
             public bool Remove(int item) => _inner.Remove(item);
             public void Remove(object value) => _inner.Remove((int)value);
             public void RemoveAt(int index) => _inner.RemoveAt(index);
-            IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_inner).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => new DisposalNotificationEnumerator<int>(this, ((IEnumerable)_inner).GetEnumerator());
         }
 
         public class GenericICollection : ICollection<int>
         {
+            public bool DisposedEnumerator { get; set; }
+
             public List<int> Inner = new List<int>();
 
             public int Count => Inner.Count;
@@ -256,17 +224,17 @@ namespace ABCo.ABSave.UnitTests.Converters
             public void Clear() => Inner.Clear();
             public bool Contains(int item) => Inner.Contains(item);
             public void CopyTo(int[] array, int arrayIndex) => Inner.CopyTo(array, arrayIndex);
-            public IEnumerator<int> GetEnumerator() => Inner.GetEnumerator();
+            public IEnumerator<int> GetEnumerator() => new DisposalNotificationEnumerator<int>(this, Inner.GetEnumerator());
             public bool Remove(int item) => Inner.Remove(item);
-            IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)Inner).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => new DisposalNotificationEnumerator<int>(this, ((IEnumerable)Inner).GetEnumerator());
         }
 
         public class GenericIDictionary : IDictionary<int, int>
         {
             public bool DisposedEnumerator { get; set; }
 
-            Dictionary<int, int> _inner = new Dictionary<int, int>();
-            bool _useNonDictionaryEnumerator;
+            readonly Dictionary<int, int> _inner = new Dictionary<int, int>();
+            readonly bool _useNonDictionaryEnumerator;
 
             public GenericIDictionary() { }
             public GenericIDictionary(bool useNonDictionaryEnumerator) => _useNonDictionaryEnumerator = useNonDictionaryEnumerator;
@@ -282,17 +250,17 @@ namespace ABCo.ABSave.UnitTests.Converters
             public bool Contains(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Contains(item);
             public bool ContainsKey(int key) => _inner.ContainsKey(key);
             public void CopyTo(KeyValuePair<int, int>[] array, int arrayIndex) => ((IDictionary<int, int>)_inner).CopyTo(array, arrayIndex);
-            public IEnumerator<KeyValuePair<int, int>> GetEnumerator() => _useNonDictionaryEnumerator ? new NonDictionaryEnumerator(this) : (IEnumerator<KeyValuePair<int, int>>)_inner.GetEnumerator();
+            public IEnumerator<KeyValuePair<int, int>> GetEnumerator() => _useNonDictionaryEnumerator ? (IEnumerator<KeyValuePair<int, int>>)new NonDictionaryEnumerator(this) : new DisposalNotificationEnumerator<KeyValuePair<int, int>>(this, _inner.GetEnumerator());
             public bool Remove(int key) => _inner.Remove(key);
             public bool Remove(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Remove(item);    
             public bool TryGetValue(int key, out int value) => _inner.TryGetValue(key, out value);
-            IEnumerator IEnumerable.GetEnumerator() => _useNonDictionaryEnumerator ? new NonDictionaryEnumerator(this) : ((IEnumerable)_inner).GetEnumerator();
+            IEnumerator IEnumerable.GetEnumerator() => _useNonDictionaryEnumerator ? (IEnumerator)new NonDictionaryEnumerator(this) : new DisposalNotificationEnumerator<KeyValuePair<int, int>>(this, ((IEnumerable)_inner).GetEnumerator());
 
             class NonDictionaryEnumerator : IEnumerator, IEnumerator<KeyValuePair<int, int>>
             {
                 public object Current => 123;
 
-                GenericIDictionary _parent;
+                readonly GenericIDictionary _parent;
 
                 public NonDictionaryEnumerator(GenericIDictionary parent) => _parent = parent;
 
@@ -302,6 +270,29 @@ namespace ABCo.ABSave.UnitTests.Converters
                 public bool MoveNext() => throw new Exception("Failed - called 'MoveNext'!");
                 public void Reset() => throw new Exception("Failed - called 'Reset'!");
             }
+        }
+
+        class DisposalNotificationEnumerator<T> : IEnumerator, IEnumerator<T>, IDictionaryEnumerator
+        {
+            public object Current => _realEnumerator.Current;
+            T IEnumerator<T>.Current => (T)_realEnumerator.Current;
+
+            public DictionaryEntry Entry => ((IDictionaryEnumerator)_realEnumerator).Entry;
+            public object Key => ((IDictionaryEnumerator)_realEnumerator).Key;
+            public object Value => ((IDictionaryEnumerator)_realEnumerator).Value;
+
+            readonly object _parent;
+            readonly IEnumerator _realEnumerator;
+
+            public DisposalNotificationEnumerator(object parent, IEnumerator realEnumerator)
+            {
+                _parent = parent;
+                _realEnumerator = realEnumerator;
+            }
+
+            public void Dispose() => ((dynamic)_parent).DisposedEnumerator = true;
+            public bool MoveNext() => _realEnumerator.MoveNext();
+            public void Reset() => _realEnumerator.Reset();
         }
     }
 }
