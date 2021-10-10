@@ -1,6 +1,7 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
+using ABCo.ABSave.Mapping.Description.Attributes;
 using ABCo.ABSave.Serialization.Converters;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -122,6 +123,54 @@ namespace ABCo.ABSave.UnitTests
         {
             var mii = new MapItemInfo(new DummyConverter(typeof(int)), true);
             Assert.IsFalse(mii.Equals("abc"));
+        }
+
+        [TestMethod]
+        public void AttributeWithVersion_CompareTo_LessThan()
+        {
+            var attr = new SaveAttribute
+            {
+                FromVer = 3
+            };
+
+            var attr2 = new SaveAttribute
+            {
+                FromVer = 2
+            };
+
+            Assert.AreEqual(-1, attr.CompareTo(attr2));
+        }
+
+        [TestMethod]
+        public void AttributeWithVersion_CompareTo_MoreThan()
+        {
+            var attr = new SaveAttribute
+            {
+                FromVer = 3
+            };
+
+            var attr2 = new SaveAttribute
+            {
+                FromVer = 4
+            };
+
+            Assert.AreEqual(1, attr.CompareTo(attr2));
+        }
+
+        [TestMethod]
+        public void AttributeWithVersion_CompareTo_Equal()
+        {
+            var attr = new SaveAttribute
+            {
+                FromVer = 3
+            };
+
+            var attr2 = new SaveAttribute
+            {
+                FromVer = 3
+            };
+
+            Assert.AreEqual(0, attr.CompareTo(attr2));
         }
 
         [TestMethod]
