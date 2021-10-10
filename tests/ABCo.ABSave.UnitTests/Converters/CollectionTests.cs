@@ -148,6 +148,22 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
+        public void Convert_GenericIDictionary_NonGenericIDictionary_NullKey()
+        {
+            Setup<Dictionary<string, int>>(Settings);
+
+            Serializer.WriteByte(0);
+            Serializer.WriteByte(1);
+            Serializer.WriteByte(0);
+            Serializer.WriteByte(0);
+            Serializer.WriteByte(5);
+            Serializer.Flush();
+            GoToStart();
+
+            Assert.ThrowsException<NullDictionaryKeyException>(() => DoDeserialize<Dictionary<string, int>>());
+        }
+
+        [TestMethod]
         public void Context_GenericIDictionary()
         {
             var converter = InitializeNew(typeof(GenericIDictionary));
@@ -158,7 +174,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
-        public void Convert_GenericIDictionary_Valid()
+        public void Convert_GenericIDictionary()
         {
             Setup<GenericIDictionary>(Settings);
 
@@ -174,7 +190,7 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
         
         [TestMethod]
-        public void Convert_GenericIDictionary_Invalid()
+        public void Convert_GenericIDictionary_InvalidEnumerator()
         {
             Setup<GenericIDictionary>(Settings);
 
