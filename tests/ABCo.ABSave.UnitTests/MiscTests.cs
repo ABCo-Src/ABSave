@@ -1,4 +1,5 @@
-﻿using ABCo.ABSave.Helpers;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Serialization.Converters;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -33,6 +34,23 @@ namespace ABCo.ABSave.UnitTests
             ABSaveUtils.WaitUntilNotGenerating(dummy);
             hitEnd = true;
             tsk.Wait();
+        }
+
+        [TestMethod]
+        public void SettingsBuilder_CustomValues()
+        {
+            var settings = ABSaveSettings.ForSpeed.Customize(b => b
+                .SetUseUTF8(false)
+                .SetUseLittleEndian(false)
+                .SetLazyWriteCompressed(false)
+                .SetIncludeVersioningHeader(true)
+                .SetCompressPrimitives(true));
+
+            Assert.IsFalse(settings.UseUTF8);
+            Assert.IsFalse(settings.UseLittleEndian);
+            Assert.IsFalse(settings.LazyCompressedWriting);
+            Assert.IsTrue(settings.IncludeVersioningHeader);
+            Assert.IsTrue(settings.CompressPrimitives);
         }
     }
 
