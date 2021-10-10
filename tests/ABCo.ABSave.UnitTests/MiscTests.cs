@@ -1,5 +1,6 @@
 ﻿using ABCo.ABSave.Configuration;
 using ABCo.ABSave.Helpers;
+using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Serialization.Converters;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -68,6 +69,62 @@ namespace ABCo.ABSave.UnitTests
         }
 
         [TestMethod]
+        public void MapItemInfo_GetItemType_NonNullable()
+        {
+            var mii = new MapItemInfo(new DummyConverter(typeof(string)), false);
+            Assert.AreEqual(typeof(string), mii.GetItemType());
+        }
+
+        [TestMethod]
+        public void MapItemInfo_GetItemType_Nullable()
+        {
+            var mii = new MapItemInfo(new DummyConverter(typeof(int)), true);
+            Assert.AreEqual(typeof(int?), mii.GetItemType());
+        }
+
+        [TestMethod]
+        public void MapItemInfo_GetItemType_IsEqual()
+        {
+            var dummy = new DummyConverter(typeof(int));
+            var mii = new MapItemInfo(dummy, true);
+            var mii2 = new MapItemInfo(dummy, true);
+
+            Assert.IsTrue(mii == mii2);
+            Assert.IsFalse(mii != mii2);
+            Assert.IsTrue(mii.Equals(mii2));
+        }
+
+        [TestMethod]
+        public void MapItemInfo_GetItemType_IsNotEqual_BecauseNullable()
+        {
+            var dummy = new DummyConverter(typeof(int));
+            var mii = new MapItemInfo(dummy, true);
+            var mii2 = new MapItemInfo(dummy, false);
+
+            Assert.IsFalse(mii == mii2);
+            Assert.IsTrue(mii != mii2);
+            Assert.IsFalse(mii.Equals(mii2));
+        }
+
+        [TestMethod]
+        public void MapItemInfo_GetItemType_IsNotEqual_BecauseConverterItemType()
+        {
+            var mii = new MapItemInfo(new DummyConverter(typeof(int)), true);
+            var mii2 = new MapItemInfo(new DummyConverter(typeof(string)), true);
+
+            Assert.IsFalse(mii == mii2);
+            Assert.IsTrue(mii != mii2);
+            Assert.IsFalse(mii.Equals(mii2));
+        }
+
+        [TestMethod]
+        public void MapItemInfo_GetItemType_IsNotEqual_BecauseBadComparison()
+        {
+            var mii = new MapItemInfo(new DummyConverter(typeof(int)), true);
+            Assert.IsFalse(mii.Equals("abc"));
+        }
+
+        [TestMethod]
         public void SettingsBuilder_CustomValues()
         {
             var settings = ABSaveSettings.ForSpeed.Customize(b => b
@@ -87,6 +144,9 @@ namespace ABCo.ABSave.UnitTests
 
     class DummyConverter : Converter
     {
+        public DummyConverter() { }
+        public DummyConverter(Type itemType) => ItemType = itemType;
+
         public override object Deserialize(in DeserializeInfo info)
         {
             throw new NotImplementedException();
