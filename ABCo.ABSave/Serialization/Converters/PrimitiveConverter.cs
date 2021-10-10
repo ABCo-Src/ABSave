@@ -38,8 +38,6 @@ namespace ABCo.ABSave.Serialization.Converters
             return 0;
         }
 
-        public override bool CheckType(CheckTypeInfo info) => info.Type.IsPrimitive;
-
         public override void Serialize(in SerializeInfo info)
         {
             if (_typeCode == PrimitiveType.Boolean)
@@ -65,7 +63,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
                 case PrimitiveType.SByte:
 
-                    serializer.WriteByte((byte)instance);
+                    serializer.WriteByte((byte)(sbyte)instance);
                     break;
 
                 case PrimitiveType.Int16:
