@@ -16,9 +16,9 @@ using System.Buffers;
 
 namespace ABCo.ABSave.Serialization.Reading
 {
-    public sealed partial class ABSaveDeserializer : IDisposable
+    public sealed class ABSaveDeserializer : IDisposable
     {
-        Stream _source;
+        Stream _rawSourceStream;
         public DeserializeCurrentState State { get; private set; }
 
         public byte CurrentByteFreeBits => _currentBitReader.FreeBits;
@@ -27,7 +27,7 @@ namespace ABCo.ABSave.Serialization.Reading
 
         internal ABSaveDeserializer(ABSaveMap map)
         {
-            _source = null!;
+            _rawSourceStream = null!;
             State = new DeserializeCurrentState(map);
             _currentBitReader = new BitReader(this);
         }
@@ -70,21 +70,15 @@ namespace ABCo.ABSave.Serialization.Reading
 
         #region Byte Reading
 
-        public byte ReadByte()
-        {
-            _currentBitReader.Reset();
-            return (byte)_source.ReadByte();
-        }
+        public byte ReadByte() => (byte)GetStream().ReadByte();        
 
         public void ReadBytes(Span<byte> dest)
         {
-            _currentBitReader.Reset();
-
 #if NETSTANDARD2_0
             byte[] buffer = ArrayPool<byte>.Shared.Rent(dest.Length);
             try
             {
-                _source.Read(buffer, 0, dest.Length);
+                GetStream().Read(buffer, 0, dest.Length);
                 buffer.AsSpan().Slice(0, dest.Length).CopyTo(dest);
             }
             finally
@@ -92,15 +86,11 @@ namespace ABCo.ABSave.Serialization.Reading
                 ArrayPool<byte>.Shared.Return(buffer);
             }
 #else
-            _source.Read(dest);
+            GetStream().Read(dest);
 #endif
         }
 
-        public void ReadBytes(byte[] dest)
-        {
-            _currentBitReader.Reset();
-            _source.Read(dest, 0, dest.Length);
-        }
+        public void ReadBytes(byte[] dest) => GetStream().Read(dest, 0, dest.Length);
 
 #endregion
 
@@ -208,11 +198,15 @@ namespace ABCo.ABSave.Serialization.Reading
 
         #endregion
 
-        public Stream GetStream() => _source;
+        public Stream GetStream()
+        {
+            _currentBitReader.Reset();
+            return _rawSourceStream;
+        }
 
         public void Initialize(Stream source, bool? writeVersioning)
         {
-            _source = source;
+            _rawSourceStream = source;
             Reset();
 
             if (writeVersioning == null)

@@ -21,9 +21,9 @@ namespace ABCo.ABSave.Serialization.Writing
     /// <summary>
     /// The central object that everything in ABSave writes to. Provides facilties to write primitive types, including strings.
     /// </summary>
-    public sealed partial class ABSaveSerializer : IDisposable
+    public sealed class ABSaveSerializer : IDisposable
     {
-        Stream _output = null!;
+        Stream _rawOutputStream = null!;
         public SerializeCurrentState State { get; }
 
         public byte CurrentByteFreeBits => _currentBitWriter.FreeBits;
@@ -32,7 +32,6 @@ namespace ABCo.ABSave.Serialization.Writing
 
         internal ABSaveSerializer(ABSaveMap map)
         {
-            _output = null!;
             State = new SerializeCurrentState(map);
             _currentBitWriter = new BitWriter(this);
         }
@@ -42,7 +41,7 @@ namespace ABCo.ABSave.Serialization.Writing
             if (!output.CanWrite)
                 throw new Exception("Cannot use unwriteable stream.");
 
-            _output = output;
+            _rawOutputStream = output;
             State.TargetVersions = targetVersions;
             State.HasVersioningInfo = writeVersioning;
 
@@ -64,7 +63,7 @@ namespace ABCo.ABSave.Serialization.Writing
         public Stream GetStream()
         {
             _currentBitWriter.Finish();
-            return _output;
+            return _rawOutputStream;
         }
 
         #region Bit Writing
@@ -79,37 +78,27 @@ namespace ABCo.ABSave.Serialization.Writing
 
         #region Byte Writing
 
-        internal void WriteByteUnchecked(byte byt) => _output.WriteByte(byt);
+        internal void WriteByteUnchecked(byte byt) => _rawOutputStream.WriteByte(byt);
 
-        public void WriteByte(byte byt)
-        {
-            _currentBitWriter.Finish();
-            _output.WriteByte(byt);
-        }
+        public void WriteByte(byte byt) => GetStream().WriteByte(byt);
 
-        public void WriteRawBytes(byte[] arr)
-        {
-            _currentBitWriter.Finish();
-            _output.Write(arr, 0, arr.Length);
-        }
+        public void WriteRawBytes(byte[] arr) => GetStream().Write(arr, 0, arr.Length);
 
         public void WriteRawBytes(ReadOnlySpan<byte> data) 
         {
-            _currentBitWriter.Finish();
-
 #if NETSTANDARD2_0
             byte[] buffer = ArrayPool<byte>.Shared.Rent(data.Length);
             try
             {
                 data.CopyTo(buffer);
-                _output.Write(buffer, 0, data.Length);
+                GetStream().Write(buffer, 0, data.Length);
             }
             finally
             {
                 ArrayPool<byte>.Shared.Return(buffer);
             }
 #else
-            _output.Write(data);
+            GetStream().Write(data);
 #endif
         }
 

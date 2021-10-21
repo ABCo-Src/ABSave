@@ -62,12 +62,6 @@ namespace ABCo.ABSave.Serialization.Reading
             _source = _deserializer.ReadByte();
             _freeBits = 8;
         }
-
-        public ABSaveDeserializer Finish()
-        {
-            _freeBits = 0;
-            return _deserializer;
-        }
     }
 
     //[StructLayout(LayoutKind.Auto)]
