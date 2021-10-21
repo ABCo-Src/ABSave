@@ -41,7 +41,9 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 #if NETSTANDARD2_0
                 Span<byte> buffer = size <= ABSaveUtils.MAX_STACK_SIZE ? stackalloc byte[byteSize] : deserializer.State.GetStringBuffer(byteSize);
                 deserializer.FastReadShorts(MemoryMarshal.Cast<byte, short>(buffer));
-                return buffer.ToString();
+
+                fixed (byte* bufferPtr = buffer)
+                    return new string((char*)bufferPtr, 0, size);
 #else
                 return string.Create(size, deserializer, (chars, state) =>
                 {
