@@ -200,115 +200,138 @@ namespace ABCo.ABSave.UnitTests.Converters
             Assert.IsTrue(obj.DisposedEnumerator);
         }
 
-        public class GenericAndNonGeneric : ICollection<int>, IList
+        [TestMethod]
+        public void Convert_PrivateCollectionType_ThrowsException()
         {
-            public bool DisposedEnumerator { get; set; }
+	        Assert.ThrowsException<InaccessibleTypeException>(() => InitializeNew(typeof(PrivateICollection)));
+        }
+    }
 
-            readonly List<int> _inner = new List<int>();
+    public class GenericAndNonGeneric : ICollection<int>, IList
+    {
+        public bool DisposedEnumerator { get; set; }
 
-            public object this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public int Count => _inner.Count;
-            public bool IsReadOnly => false;
-            public bool IsFixedSize => false;
-            public bool IsSynchronized => false;
-            public object SyncRoot => null;
-            public void Add(int item) => _inner.Add(item);
-            public int Add(object value) => ((IList)_inner).Add(value);
-            public void Clear() => _inner.Clear();
-            public bool Contains(int item) => _inner.Contains(item);
-            public bool Contains(object value) => _inner.Contains((int)value);
-            public void CopyTo(int[] array, int arrayIndex) => _inner.CopyTo(array, arrayIndex);
-            public void CopyTo(Array array, int index) => _inner.CopyTo((int[])array, index);
-            public IEnumerator<int> GetEnumerator() => new DisposalNotificationEnumerator<int>(this, _inner.GetEnumerator());
-            public int IndexOf(object value) => _inner.IndexOf((int)value);
-            public void Insert(int index, object value) => _inner.Insert(index, (int)value);
-            public bool Remove(int item) => _inner.Remove(item);
-            public void Remove(object value) => _inner.Remove((int)value);
-            public void RemoveAt(int index) => _inner.RemoveAt(index);
-            IEnumerator IEnumerable.GetEnumerator() => new DisposalNotificationEnumerator<int>(this, ((IEnumerable)_inner).GetEnumerator());
+        readonly List<int> _inner = new List<int>();
+
+        public object this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public int Count => _inner.Count;
+        public bool IsReadOnly => false;
+        public bool IsFixedSize => false;
+        public bool IsSynchronized => false;
+        public object SyncRoot => null;
+        public void Add(int item) => _inner.Add(item);
+        public int Add(object value) => ((IList)_inner).Add(value);
+        public void Clear() => _inner.Clear();
+        public bool Contains(int item) => _inner.Contains(item);
+        public bool Contains(object value) => _inner.Contains((int)value);
+        public void CopyTo(int[] array, int arrayIndex) => _inner.CopyTo(array, arrayIndex);
+        public void CopyTo(Array array, int index) => _inner.CopyTo((int[])array, index);
+        public IEnumerator<int> GetEnumerator() => new DisposalNotificationEnumerator<int>(this, _inner.GetEnumerator());
+        public int IndexOf(object value) => _inner.IndexOf((int)value);
+        public void Insert(int index, object value) => _inner.Insert(index, (int)value);
+        public bool Remove(int item) => _inner.Remove(item);
+        public void Remove(object value) => _inner.Remove((int)value);
+        public void RemoveAt(int index) => _inner.RemoveAt(index);
+        IEnumerator IEnumerable.GetEnumerator() => new DisposalNotificationEnumerator<int>(this, ((IEnumerable)_inner).GetEnumerator());
+    }
+
+    public class GenericICollection : ICollection<int>
+    {
+        public bool DisposedEnumerator { get; set; }
+
+        public List<int> Inner = new List<int>();
+
+        public int Count => Inner.Count;
+        public bool IsReadOnly => false;
+        public void Add(int item) => Inner.Add(item);
+        public void Clear() => Inner.Clear();
+        public bool Contains(int item) => Inner.Contains(item);
+        public void CopyTo(int[] array, int arrayIndex) => Inner.CopyTo(array, arrayIndex);
+        public IEnumerator<int> GetEnumerator() => new DisposalNotificationEnumerator<int>(this, Inner.GetEnumerator());
+        public bool Remove(int item) => Inner.Remove(item);
+        IEnumerator IEnumerable.GetEnumerator() => new DisposalNotificationEnumerator<int>(this, ((IEnumerable)Inner).GetEnumerator());
+    }
+
+    public class GenericIDictionary : IDictionary<int, int>
+    {
+        public bool DisposedEnumerator { get; set; }
+
+        readonly Dictionary<int, int> _inner = new Dictionary<int, int>();
+        readonly bool _useNonDictionaryEnumerator;
+
+        public GenericIDictionary() { }
+        public GenericIDictionary(bool useNonDictionaryEnumerator) => _useNonDictionaryEnumerator = useNonDictionaryEnumerator;
+
+        public int this[int key] { get => _inner[key]; set => _inner[key] = value; }
+        public ICollection<int> Keys => _inner.Keys;
+        public ICollection<int> Values => _inner.Values;
+        public int Count => _inner.Count;
+        public bool IsReadOnly => false;
+        public void Add(int key, int value) => _inner.Add(key, value);
+        public void Add(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Add(item);
+        public void Clear() => _inner.Clear();
+        public bool Contains(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Contains(item);
+        public bool ContainsKey(int key) => _inner.ContainsKey(key);
+        public void CopyTo(KeyValuePair<int, int>[] array, int arrayIndex) => ((IDictionary<int, int>)_inner).CopyTo(array, arrayIndex);
+        public IEnumerator<KeyValuePair<int, int>> GetEnumerator() => _useNonDictionaryEnumerator ? (IEnumerator<KeyValuePair<int, int>>)new NonDictionaryEnumerator(this) : new DisposalNotificationEnumerator<KeyValuePair<int, int>>(this, _inner.GetEnumerator());
+        public bool Remove(int key) => _inner.Remove(key);
+        public bool Remove(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Remove(item);
+        public bool TryGetValue(int key, out int value) => _inner.TryGetValue(key, out value);
+        IEnumerator IEnumerable.GetEnumerator() => _useNonDictionaryEnumerator ? (IEnumerator)new NonDictionaryEnumerator(this) : new DisposalNotificationEnumerator<KeyValuePair<int, int>>(this, ((IEnumerable)_inner).GetEnumerator());
+
+        class NonDictionaryEnumerator : IEnumerator, IEnumerator<KeyValuePair<int, int>>
+        {
+            public object Current => 123;
+
+            readonly GenericIDictionary _parent;
+
+            public NonDictionaryEnumerator(GenericIDictionary parent) => _parent = parent;
+
+            KeyValuePair<int, int> IEnumerator<KeyValuePair<int, int>>.Current => new KeyValuePair<int, int>(123, 123);
+
+            public void Dispose() => _parent.DisposedEnumerator = true;
+            public bool MoveNext() => throw new Exception("Failed - called 'MoveNext'!");
+            public void Reset() => throw new Exception("Failed - called 'Reset'!");
+        }
+    }
+
+    class DisposalNotificationEnumerator<T> : IEnumerator, IEnumerator<T>, IDictionaryEnumerator
+    {
+        public object Current => _realEnumerator.Current;
+        T IEnumerator<T>.Current => (T)_realEnumerator.Current;
+
+        public DictionaryEntry Entry => ((IDictionaryEnumerator)_realEnumerator).Entry;
+        public object Key => ((IDictionaryEnumerator)_realEnumerator).Key;
+        public object Value => ((IDictionaryEnumerator)_realEnumerator).Value;
+
+        readonly object _parent;
+        readonly IEnumerator _realEnumerator;
+
+        public DisposalNotificationEnumerator(object parent, IEnumerator realEnumerator)
+        {
+            _parent = parent;
+            _realEnumerator = realEnumerator;
         }
 
-        public class GenericICollection : ICollection<int>
-        {
-            public bool DisposedEnumerator { get; set; }
+        public void Dispose() => ((dynamic)_parent).DisposedEnumerator = true;
+        public bool MoveNext() => _realEnumerator.MoveNext();
+        public void Reset() => _realEnumerator.Reset();
+    }
 
-            public List<int> Inner = new List<int>();
+    class PrivateICollection : ICollection<int>
+    {
+        public bool DisposedEnumerator { get; set; }
 
-            public int Count => Inner.Count;
-            public bool IsReadOnly => false;
-            public void Add(int item) => Inner.Add(item);
-            public void Clear() => Inner.Clear();
-            public bool Contains(int item) => Inner.Contains(item);
-            public void CopyTo(int[] array, int arrayIndex) => Inner.CopyTo(array, arrayIndex);
-            public IEnumerator<int> GetEnumerator() => new DisposalNotificationEnumerator<int>(this, Inner.GetEnumerator());
-            public bool Remove(int item) => Inner.Remove(item);
-            IEnumerator IEnumerable.GetEnumerator() => new DisposalNotificationEnumerator<int>(this, ((IEnumerable)Inner).GetEnumerator());
-        }
+        public List<int> Inner = new List<int>();
 
-        public class GenericIDictionary : IDictionary<int, int>
-        {
-            public bool DisposedEnumerator { get; set; }
-
-            readonly Dictionary<int, int> _inner = new Dictionary<int, int>();
-            readonly bool _useNonDictionaryEnumerator;
-
-            public GenericIDictionary() { }
-            public GenericIDictionary(bool useNonDictionaryEnumerator) => _useNonDictionaryEnumerator = useNonDictionaryEnumerator;
-
-            public int this[int key] { get => _inner[key]; set => _inner[key] = value; }
-            public ICollection<int> Keys => _inner.Keys;
-            public ICollection<int> Values => _inner.Values;
-            public int Count => _inner.Count;
-            public bool IsReadOnly => false;
-            public void Add(int key, int value) => _inner.Add(key, value);
-            public void Add(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Add(item);
-            public void Clear() => _inner.Clear();
-            public bool Contains(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Contains(item);
-            public bool ContainsKey(int key) => _inner.ContainsKey(key);
-            public void CopyTo(KeyValuePair<int, int>[] array, int arrayIndex) => ((IDictionary<int, int>)_inner).CopyTo(array, arrayIndex);
-            public IEnumerator<KeyValuePair<int, int>> GetEnumerator() => _useNonDictionaryEnumerator ? (IEnumerator<KeyValuePair<int, int>>)new NonDictionaryEnumerator(this) : new DisposalNotificationEnumerator<KeyValuePair<int, int>>(this, _inner.GetEnumerator());
-            public bool Remove(int key) => _inner.Remove(key);
-            public bool Remove(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Remove(item);    
-            public bool TryGetValue(int key, out int value) => _inner.TryGetValue(key, out value);
-            IEnumerator IEnumerable.GetEnumerator() => _useNonDictionaryEnumerator ? (IEnumerator)new NonDictionaryEnumerator(this) : new DisposalNotificationEnumerator<KeyValuePair<int, int>>(this, ((IEnumerable)_inner).GetEnumerator());
-
-            class NonDictionaryEnumerator : IEnumerator, IEnumerator<KeyValuePair<int, int>>
-            {
-                public object Current => 123;
-
-                readonly GenericIDictionary _parent;
-
-                public NonDictionaryEnumerator(GenericIDictionary parent) => _parent = parent;
-
-                KeyValuePair<int, int> IEnumerator<KeyValuePair<int, int>>.Current => new KeyValuePair<int, int>(123, 123);
-
-                public void Dispose() => _parent.DisposedEnumerator = true;
-                public bool MoveNext() => throw new Exception("Failed - called 'MoveNext'!");
-                public void Reset() => throw new Exception("Failed - called 'Reset'!");
-            }
-        }
-
-        class DisposalNotificationEnumerator<T> : IEnumerator, IEnumerator<T>, IDictionaryEnumerator
-        {
-            public object Current => _realEnumerator.Current;
-            T IEnumerator<T>.Current => (T)_realEnumerator.Current;
-
-            public DictionaryEntry Entry => ((IDictionaryEnumerator)_realEnumerator).Entry;
-            public object Key => ((IDictionaryEnumerator)_realEnumerator).Key;
-            public object Value => ((IDictionaryEnumerator)_realEnumerator).Value;
-
-            readonly object _parent;
-            readonly IEnumerator _realEnumerator;
-
-            public DisposalNotificationEnumerator(object parent, IEnumerator realEnumerator)
-            {
-                _parent = parent;
-                _realEnumerator = realEnumerator;
-            }
-
-            public void Dispose() => ((dynamic)_parent).DisposedEnumerator = true;
-            public bool MoveNext() => _realEnumerator.MoveNext();
-            public void Reset() => _realEnumerator.Reset();
-        }
+        public int Count => Inner.Count;
+        public bool IsReadOnly => false;
+        public void Add(int item) => Inner.Add(item);
+        public void Clear() => Inner.Clear();
+        public bool Contains(int item) => Inner.Contains(item);
+        public void CopyTo(int[] array, int arrayIndex) => Inner.CopyTo(array, arrayIndex);
+        public IEnumerator<int> GetEnumerator() => new DisposalNotificationEnumerator<int>(this, Inner.GetEnumerator());
+        public bool Remove(int item) => Inner.Remove(item);
+        IEnumerator IEnumerable.GetEnumerator() => new DisposalNotificationEnumerator<int>(this, ((IEnumerable)Inner).GetEnumerator());
     }
 }
