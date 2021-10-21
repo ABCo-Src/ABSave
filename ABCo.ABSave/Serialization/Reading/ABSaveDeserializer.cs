@@ -64,7 +64,7 @@ namespace ABCo.ABSave.Serialization.Reading
         public bool ReadBit() => _currentBitReader.ReadBit();
         public byte ReadInteger(byte bitsRequired) => _currentBitReader.ReadInteger(bitsRequired);
         public byte GetCurrentByte() => _currentBitReader.CurrentByte;
-        public void MoveToNewCurrentByte() => _currentBitReader.MoveToNewByte();
+        public void SkipRestOfCurrentByte() => _currentBitReader.MoveToNewByte();
 
         #endregion
 
