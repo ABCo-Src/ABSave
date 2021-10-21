@@ -15,6 +15,7 @@ namespace ABCo.ABSave.UnitTests.Core
         // If anyone wants to write full serialization tests, it would be hugely appreciated. - ABPerson
 
         [TestMethod]
+        [DataRow(0LU)]
         [DataRow(8LU)]
         [DataRow(0b0001_0000_0001LU)]
         [DataRow(0b0100_0001_0001_0010LU)]
@@ -27,6 +28,7 @@ namespace ABCo.ABSave.UnitTests.Core
         public void Test8Free(ulong data) => Test(data, 8);
 
         [TestMethod]
+        [DataRow(0LU)]
         [DataRow(8LU)]
         [DataRow(0b0001_0000_0001LU)]
         [DataRow(0b0100_0001_0001_0010LU)]
@@ -39,6 +41,7 @@ namespace ABCo.ABSave.UnitTests.Core
         public void Test7Free(ulong data) => Test(data, 7);
 
         [TestMethod]
+        [DataRow(0LU)]
         [DataRow(8LU)]
         [DataRow(0b0001_0000_0001LU)]
         [DataRow(0b0100_0001_0001_0010LU)]
@@ -51,6 +54,7 @@ namespace ABCo.ABSave.UnitTests.Core
         public void Test6Free(ulong data) => Test(data, 6);
 
         [TestMethod]
+        [DataRow(0LU)]
         [DataRow(8LU)]
         [DataRow(0b0001_0000_0001LU)]
         [DataRow(0b0100_0001_0001_0010LU)]
@@ -63,6 +67,7 @@ namespace ABCo.ABSave.UnitTests.Core
         public void Test5Free(ulong data) => Test(data, 5);
 
         [TestMethod]
+        [DataRow(0LU)]
         [DataRow(8LU)]
         [DataRow(0b0001_0000_0001LU)]
         [DataRow(0b0100_0001_0001_0010LU)]
@@ -75,6 +80,7 @@ namespace ABCo.ABSave.UnitTests.Core
         public void Test4Free(ulong data) => Test(data, 4);
 
         [TestMethod]
+        [DataRow(0LU)]
         [DataRow(8LU)]
         [DataRow(0b0001_0000_0001LU)]
         [DataRow(0b0100_0001_0001_0010LU)]
@@ -87,6 +93,7 @@ namespace ABCo.ABSave.UnitTests.Core
         public void Test3Free(ulong data) => Test(data, 3);
 
         [TestMethod]
+        [DataRow(0LU)]
         [DataRow(8LU)]
         [DataRow(0b0001_0000_0001LU)]
         [DataRow(0b0100_0001_0001_0010LU)]
@@ -99,6 +106,7 @@ namespace ABCo.ABSave.UnitTests.Core
         public void Test2Free(ulong data) => Test(data, 2);
 
         [TestMethod]
+        [DataRow(0LU)]
         [DataRow(8LU)]
         [DataRow(0b0001_0000_0001LU)]
         [DataRow(0b0100_0001_0001_0010LU)]

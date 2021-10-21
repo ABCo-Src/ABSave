@@ -240,6 +240,18 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
+        public void Int32_Zero(bool compressed)
+        {
+            Setup<int>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize(0);
+            GoToStart();
+            Assert.AreEqual(0, DoDeserialize<int>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
         public void UInt32(bool compressed)
         {
             Setup<uint>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
@@ -259,6 +271,25 @@ namespace ABCo.ABSave.UnitTests.Converters
             DoSerialize(567L);
             GoToStart();
             Assert.AreEqual(567L, DoDeserialize<long>());
+        }
+
+        enum E
+        {
+            A,
+            B,
+            C
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void Int32_Enum(bool compressed)
+        {
+            Setup<E>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize(E.A);
+            GoToStart();
+            Assert.AreEqual(E.A, DoDeserialize<E>());
         }
 
         [TestMethod]
