@@ -72,7 +72,8 @@ namespace ABCo.ABSave.Serialization.Writing
         public void WriteBitOff() => _currentBitWriter.WriteBitOff();
         public void WriteBitWith(bool value) => _currentBitWriter.WriteBitWith(value);
         public void WriteInteger(byte number, byte bitsRequired) => _currentBitWriter.WriteInteger(number, bitsRequired);
-        public void FillRemainderOfCurrentByteWith(int n) => _currentBitWriter.FillRemainingWith(n);
+        public void FillRestOfCurrentByteWith(int n) => _currentBitWriter.FillRemainingWith(n);
+        public void SkipRestOfCurrentByte() => _currentBitWriter.MoveToNextByte();
 
         #endregion
 

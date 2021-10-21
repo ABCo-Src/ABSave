@@ -57,15 +57,13 @@ namespace ABCo.ABSave.Serialization.Reading
             }
         }
 
-        // Make sure this gets inlined so all the return logic get elided away if needed.
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte MoveToNewByte()
+        public void MoveToNewByte()
         {
-            byte oldSrc = (byte)_source;
             _source = _deserializer.ReadByte();
             _freeBits = 8;
-            return oldSrc;
         }
+
+        public void SkipRestOfCurrentByte() => _freeBits = 0;
     }
 
     //[StructLayout(LayoutKind.Auto)]
