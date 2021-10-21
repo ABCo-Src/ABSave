@@ -85,6 +85,16 @@ namespace ABCo.ABSave.UnitTests.Core
         }
 
         [TestMethod]
+        public void FillRemainingWith()
+        {
+            Initialize(ABSaveSettings.ForSpeed);
+
+            Serializer.FillRemainderOfCurrentByteWith(2);
+            Serializer.Flush();
+            AssertAndGoToStart(2);
+        }
+
+        [TestMethod]
         public void FreeBits()
         {
             Initialize(ABSaveSettings.ForSize);
