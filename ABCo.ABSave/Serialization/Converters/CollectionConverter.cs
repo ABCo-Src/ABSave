@@ -56,7 +56,14 @@ namespace ABCo.ABSave.Serialization.Converters
             serializer.WriteCompressedInt((uint)size);
 
             IEnumerator? enumerator = info.GetEnumerator(obj);
-            while (enumerator.MoveNext()) serializer.WriteItem(enumerator.Current, _elementOrKeyMap);
+            try
+            {
+                while (enumerator.MoveNext()) serializer.WriteItem(enumerator.Current, _elementOrKeyMap);
+            }
+            finally
+            {
+                if (enumerator is IDisposable disp) disp.Dispose();
+            }
         }
 
         void SerializeDictionary(object obj, DictionaryInfo info, ABSaveSerializer serializer)
@@ -65,10 +72,17 @@ namespace ABCo.ABSave.Serialization.Converters
             serializer.WriteCompressedInt((uint)size);
 
             IDictionaryEnumerator? enumerator = info.GetEnumerator(obj);
-            while (enumerator.MoveNext())
+            try
             {
-                serializer.WriteItem(enumerator.Key, _elementOrKeyMap);
-                serializer.WriteItem(enumerator.Value, _valueMap);
+                while (enumerator.MoveNext())
+                {
+                    serializer.WriteItem(enumerator.Key, _elementOrKeyMap);
+                    serializer.WriteItem(enumerator.Value, _valueMap);
+                }
+            }
+            finally
+            {
+                if (enumerator is IDisposable disp) disp.Dispose();
             }
         }
 

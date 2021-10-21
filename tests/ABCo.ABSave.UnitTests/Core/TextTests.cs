@@ -1,9 +1,11 @@
-﻿using ABCo.ABSave.Serialization.Reading;
+﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Serialization.Writing;
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Linq;
+using System.Text;
 
 namespace ABCo.ABSave.UnitTests.Core
 {
@@ -11,14 +13,57 @@ namespace ABCo.ABSave.UnitTests.Core
     public class TextTests : TestBase
     {
         [TestMethod]
+        public void String_NullableString_Null()
+        {
+            Initialize();
+
+            Serializer.WriteNullableString(null);
+            AssertAndGoToStart(0);
+
+            Assert.AreEqual(null, Deserializer.ReadNullableString());
+        }
+
+        [TestMethod]
+        public void String_NullableString_NotNull()
+        {
+            Initialize();
+
+            Serializer.WriteNullableString("ABC");
+            AssertAndGoToStart(0x83, (byte)'A', (byte)'B', (byte)'C');
+
+            Assert.AreEqual("ABC", Deserializer.ReadNullableString());
+        }
+
+        [TestMethod]
         public void String_UTF8()
         {
             Initialize();
 
             Serializer.WriteNonNullString("ABC");
-            AssertAndGoToStart(3, 65, 66, 67);
+            AssertAndGoToStart(3, (byte)'A', (byte)'B', (byte)'C');
 
             Assert.AreEqual("ABC", Deserializer.ReadNonNullString());
+        }
+
+        [TestMethod]
+        public void String_UTF16()
+        {
+            Initialize(ABSaveSettings.ForSpeed.Customize(c => c.SetUseUTF8(false)));
+
+            // Small buffer
+            Serializer.WriteNonNullString("ABC");
+            AssertAndGoToStart(GetByteArr(new object[] { BitConverter.GetBytes('A'), BitConverter.GetBytes('B'), BitConverter.GetBytes('C') }, 3, (short)GenType.ByteArr, (short)GenType.ByteArr, (short)GenType.ByteArr));
+
+            Assert.AreEqual("ABC", Deserializer.ReadNonNullString());
+
+            GoToStart();
+
+            // Large buffer
+            string newStr = new string('J', 1200);
+            Serializer.WriteNonNullString(newStr);
+            AssertAndGoToStart(GetByteArr(new object[] { 1200UL, Encoding.Unicode.GetBytes(newStr) }, (short)GenType.Size, (short)GenType.ByteArr));
+
+            Assert.AreEqual(newStr, Deserializer.ReadNonNullString());
         }
 
         [TestMethod]
@@ -29,7 +74,7 @@ namespace ABCo.ABSave.UnitTests.Core
             // Stack buffer
             {
                 Serializer.WriteUTF8("ABC".AsSpan());
-                AssertAndGoToStart(3, 65, 66, 67);
+                AssertAndGoToStart(3, (byte)'A', (byte)'B', (byte)'C');
             }
 
             {

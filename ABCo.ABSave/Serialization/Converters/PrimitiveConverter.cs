@@ -66,7 +66,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
                 case PrimitiveType.SByte:
 
-                    serializer.WriteByte((byte)instance);
+                    serializer.WriteByte((byte)(sbyte)instance);
                     break;
 
                 case PrimitiveType.Int16:

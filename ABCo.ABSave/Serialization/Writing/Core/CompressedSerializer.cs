@@ -43,7 +43,7 @@ namespace ABCo.ABSave.Serialization.Writing.Core
                 if (data.LessThan(1 << serializer.CurrentByteFreeBits >> 1))
                 {
                     serializer.WriteBitOn();
-                    serializer.FillRemainderOfCurrentByteWith(data.ToByte());
+                    serializer.FillRestOfCurrentByteWith(data.ToByte());
                 }
                 else
                 {
@@ -58,12 +58,12 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             {
                 if (data.LessThan(255))
                 {
-                    serializer.FillRemainderOfCurrentByteWith(1);
+                    serializer.FillRestOfCurrentByteWith(1);
                     serializer.WriteByte(data.ToByte());
                 }
                 else
                 {
-                    serializer.FillRemainderOfCurrentByteWith(0);
+                    serializer.FillRestOfCurrentByteWith(0);
                     WriteFull(serializer);
                 }
             }

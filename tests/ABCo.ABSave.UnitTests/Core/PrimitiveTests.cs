@@ -2,6 +2,7 @@
 using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.IO;
 using System.Linq;
 
 namespace ABCo.ABSave.UnitTests.Core
@@ -20,6 +21,91 @@ namespace ABCo.ABSave.UnitTests.Core
 
             Assert.AreEqual(5, Deserializer.ReadByte());
             Assert.AreEqual(7, Deserializer.ReadByte());
+        }
+
+        [TestMethod]
+        public void Bytes_Array()
+        {
+            Initialize();
+
+            byte[] arr = new byte[4] { 1, 2, 3, 4 };
+            Serializer.WriteRawBytes(arr);
+            AssertAndGoToStart(1, 2, 3, 4);
+
+            byte[] newArr = new byte[4];
+            Deserializer.ReadBytes(newArr);
+
+            CollectionAssert.AreEqual(arr, newArr);
+        }
+
+        [TestMethod]
+        public void Bytes_Span()
+        {
+            Initialize();
+
+            Span<byte> arr = new byte[4] { 1, 2, 3, 4 };
+            Serializer.WriteRawBytes(arr);
+            AssertAndGoToStart(1, 2, 3, 4);
+
+            Span<byte> newArr = new byte[4];
+            Deserializer.ReadBytes(newArr);
+
+            CollectionAssert.AreEqual(arr.ToArray(), newArr.ToArray());
+        }
+
+        [TestMethod]
+        public void FastShorts_KeepEndianness()
+        {
+            Initialize();
+
+            Span<short> arr = new short[2] { 15, 26 };
+            Serializer.FastWriteShorts(arr);
+            AssertAndGoToStart(GetByteArr(
+                new object[] { BitConverter.GetBytes((short)15), BitConverter.GetBytes((short)26) }, (short)GenType.ByteArr, (short)GenType.ByteArr));
+
+            Span<short> newArr = new short[2];
+            Deserializer.FastReadShorts(newArr);
+
+            CollectionAssert.AreEqual(arr.ToArray(), newArr.ToArray());
+        }
+
+        [TestMethod]
+        public void FastShorts_ReverseEndianness()
+        {
+            Initialize(ABSaveSettings.ForSpeed.Customize(c => c.SetUseLittleEndian(!BitConverter.IsLittleEndian)));
+
+            Span<short> arr = new short[2] { 15, 26 };
+            Serializer.FastWriteShorts(arr);
+            AssertAndGoToStart(GetByteArr(
+                new object[] { BitConverter.GetBytes((short)15).Reverse().ToArray(), BitConverter.GetBytes((short)26).Reverse().ToArray() }, (short)GenType.ByteArr, (short)GenType.ByteArr));
+
+            Span<short> newArr = new short[2];
+            Deserializer.FastReadShorts(newArr);
+
+            CollectionAssert.AreEqual(arr.ToArray(), newArr.ToArray());
+        }
+
+        [TestMethod]
+        public void GetStream_WithSurroundingBitSequence()
+        {
+            Initialize();
+
+            Serializer.WriteBitOff();
+            Serializer.WriteBitOn();
+            Stream stream = Serializer.GetStream();
+            stream.WriteByte(5);
+            Serializer.WriteBitOn();
+            Serializer.Flush();
+
+            AssertAndGoToStart(0x40, 5, 0x80);
+
+            Assert.IsFalse(Deserializer.ReadBit());
+            Assert.IsTrue(Deserializer.ReadBit());
+
+            Stream readStream = Deserializer.GetStream();
+            Assert.AreEqual(5, readStream.ReadByte());
+
+            Assert.IsTrue(Deserializer.ReadBit());
         }
 
         [DataRow(false)]

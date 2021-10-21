@@ -1,4 +1,5 @@
 ﻿using ABCo.ABSave.Configuration;
+using ABCo.ABSave.UnitTests.TestHelpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
@@ -84,6 +85,17 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
+        public void StringBuilder_Large()
+        {
+            Setup<StringBuilder>(ABSaveSettings.ForSize);
+            var obj = new StringBuilder(new string('a', 1024));
+
+            DoSerialize(obj);
+            GoToStart();
+            Assert.AreEqual(obj.ToString(), DoDeserialize<StringBuilder>().ToString());
+        }
+
+        [TestMethod]
         public void CharArray()
         {
             Setup<char[]>(ABSaveSettings.ForSize);
@@ -92,6 +104,17 @@ namespace ABCo.ABSave.UnitTests.Converters
             DoSerialize(obj);
             AssertAndGoToStart(0, 3, 65, 66, 67);
 
+            Assert.AreEqual(new string(obj), new string(DoDeserialize<char[]>()));
+        }
+
+        [TestMethod]
+        public void CharArray_UTF16()
+        {
+            Setup<char[]>(ABSaveSettings.ForSize.Customize(b => b.SetUseUTF8(false)));
+            var obj = new char[3] { 'A', 'B', 'C' };
+
+            DoSerialize(obj);
+            AssertAndGoToStart(GetByteArr(new object[] { 'A', 'B', 'C' }, 0, 3, (short)GenType.Numerical, (short)GenType.Numerical, (short)GenType.Numerical));
             Assert.AreEqual(new string(obj), new string(DoDeserialize<char[]>()));
         }
 
@@ -142,7 +165,6 @@ namespace ABCo.ABSave.UnitTests.Converters
             }
         }
 
-
         [TestMethod]
         [DataRow(false)]
         [DataRow(true)]
@@ -153,6 +175,18 @@ namespace ABCo.ABSave.UnitTests.Converters
             DoSerialize((byte)124);
             GoToStart();
             Assert.AreEqual(124, DoDeserialize<byte>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void SByte(bool compressed)
+        {
+            Setup<sbyte>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed);
+
+            DoSerialize((sbyte)-5);
+            GoToStart();
+            Assert.AreEqual(-5, DoDeserialize<sbyte>());
         }
 
         [TestMethod]
@@ -304,6 +338,14 @@ namespace ABCo.ABSave.UnitTests.Converters
             DoSerialize(56.57M);
             GoToStart();
             Assert.AreEqual(56.57M, DoDeserialize<decimal>());
+        }
+
+        [TestMethod]
+        [DataRow(false)]
+        [DataRow(true)]
+        public void IntPtr(bool compressed)
+        {
+            Assert.ThrowsException<Exception>(() => Setup<IntPtr>(compressed ? ABSaveSettings.ForSize : ABSaveSettings.ForSpeed));
         }
     }
 }

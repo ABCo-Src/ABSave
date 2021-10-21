@@ -63,11 +63,7 @@ namespace ABCo.ABSave.Serialization.Reading
             _freeBits = 8;
         }
 
-        public ABSaveDeserializer Finish()
-        {
-            _freeBits = 0;
-            return _deserializer;
-        }
+        public void SkipRestOfCurrentByte() => _freeBits = 0;
     }
 
     //[StructLayout(LayoutKind.Auto)]

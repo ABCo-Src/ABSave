@@ -54,5 +54,37 @@ namespace ABCo.ABSave.UnitTests.Core
             Deserializer.ReadBit();
             Assert.AreEqual(6, Deserializer.ReadInteger(7));
         }
+
+        [TestMethod]
+        public void FillRemainingWith()
+        {
+            Initialize(ABSaveSettings.ForSpeed);
+
+            Stream.WriteByte(2);
+            Stream.WriteByte(0x84);
+            Stream.WriteByte(2);
+            Stream.Position = 0;
+
+            Assert.AreEqual(2, Deserializer.ReadRestOfCurrentByte());
+            Assert.IsTrue(Deserializer.ReadBit());
+            Assert.AreEqual(4, Deserializer.ReadRestOfCurrentByte());
+            Assert.AreEqual(2, Deserializer.ReadByte());
+        }
+
+        [TestMethod]
+        public void SkipRemaining()
+        {
+            Initialize(ABSaveSettings.ForSpeed);
+
+            Stream.WriteByte(0x80);
+            Stream.WriteByte(2);
+            Stream.WriteByte(0x80);
+            Stream.Position = 0;
+
+            Assert.IsTrue(Deserializer.ReadBit());
+            Deserializer.SkipRestOfCurrentByte();
+            Assert.AreEqual(2, Deserializer.ReadByte());
+            Deserializer.SkipRestOfCurrentByte();
+        }
     }
 }

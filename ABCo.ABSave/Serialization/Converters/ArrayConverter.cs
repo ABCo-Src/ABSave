@@ -437,17 +437,6 @@ namespace ABCo.ABSave.Serialization.Converters
             public FastConversionType FastConversion;
             public Type ElementType;
             public MapItemInfo PerItem;
-
-            // For multi-dimensional arrays.
-            public ArrayTypeInfo(byte rank, Type elementType, MapItemInfo perItem)
-            {
-                Type = ArrayType.MultiDimensional;
-                FastConversion = FastConversionType.None;
-
-                Rank = rank;
-                ElementType = elementType;
-                PerItem = perItem;
-            }
         }
 
 #if NETSTANDARD2_0

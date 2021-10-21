@@ -9,6 +9,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
+using ABCo.ABSave.Exceptions;
 
 namespace ABCo.ABSave.UnitTests.Converters
 {
@@ -53,12 +55,38 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
+        public void Convert_List()
+        {
+            Setup<List<byte>>(Settings);
+
+            var obj = new List<byte> { 1, 2, 3, 4 };
+
+            DoSerialize(obj);
+            AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
+            CollectionAssert.AreEqual(obj, DoDeserialize<List<byte>>());
+        }
+
+        [TestMethod]
         public void Context_GenericICollection_NonGenericIList()
         {
             var converter = InitializeNew(typeof(GenericAndNonGeneric));
 
             Assert.IsInstanceOfType(converter._info, typeof(NonGenericIListInfo));
-            Assert.AreEqual(typeof(string), converter._elementOrKeyType);
+            Assert.AreEqual(typeof(int), converter._elementOrKeyType);
+        }
+
+        [TestMethod]
+        public void Convert_GenericICollection_NonGenericIList()
+        {
+            Setup<GenericAndNonGeneric>(Settings);
+
+            var obj = new GenericAndNonGeneric() { 1, 2, 3, 4 };
+
+            DoSerialize(obj);
+            Assert.IsTrue(obj.DisposedEnumerator);
+
+            AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
+            CollectionAssert.AreEqual(obj, DoDeserialize<GenericAndNonGeneric>());
         }
 
         [TestMethod]
@@ -68,6 +96,21 @@ namespace ABCo.ABSave.UnitTests.Converters
 
             Assert.IsInstanceOfType(converter._info, typeof(GenericICollectionInfo));
             Assert.AreEqual(typeof(int), converter._elementOrKeyType);
+        }
+
+
+        [TestMethod]
+        public void Convert_GenericICollection()
+        {
+            Setup<GenericICollection>(Settings);
+
+            var obj = new GenericICollection() { 1, 2, 3, 4 };
+
+            DoSerialize(obj);
+            Assert.IsTrue(obj.DisposedEnumerator);
+
+            AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
+            CollectionAssert.AreEqual(obj.Inner, DoDeserialize<GenericICollection>().Inner);
         }
 
         //[TestMethod]
@@ -90,173 +133,182 @@ namespace ABCo.ABSave.UnitTests.Converters
         }
 
         [TestMethod]
+        public void Convert_GenericIDictionary_NonGenericIDictionary()
+        {
+            Setup<Dictionary<int, bool>>(Settings);
+
+            var obj = new Dictionary<int, bool>() { { 1, true }, { 2, false } };
+
+            DoSerialize(obj);
+            AssertAndGoToStart(0, 2, 0, 1, 0, 0x82, 0);
+
+            var deserialized = DoDeserialize<Dictionary<int, bool>>();
+            CollectionAssert.AreEqual(obj.Keys.ToList(), deserialized.Keys.ToList());
+            CollectionAssert.AreEqual(obj.Values.ToList(), deserialized.Values.ToList());
+        }
+
+        [TestMethod]
+        public void Convert_GenericIDictionary_NonGenericIDictionary_NullKey()
+        {
+            Setup<Dictionary<string, int>>(Settings);
+
+            Serializer.WriteByte(0);
+            Serializer.WriteByte(1);
+            Serializer.WriteByte(0);
+            Serializer.WriteByte(0);
+            Serializer.WriteByte(5);
+            Serializer.Flush();
+            GoToStart();
+
+            Assert.ThrowsException<NullDictionaryKeyException>(() => DoDeserialize<Dictionary<string, int>>());
+        }
+
+        [TestMethod]
         public void Context_GenericIDictionary()
         {
             var converter = InitializeNew(typeof(GenericIDictionary));
 
             Assert.IsInstanceOfType(converter._info, typeof(GenericIDictionaryInfo));
-            Assert.AreEqual(typeof(string), converter._elementOrKeyType);
+            Assert.AreEqual(typeof(int), converter._elementOrKeyType);
             Assert.AreEqual(typeof(int), converter._valueType);
         }
 
-        //[TestMethod]
-        //public void Context_NonGenericIDictionary()
-        //{
-        //    var converter = InitializeNew(typeof(Hashtable));
-
-        //    Assert.IsInstanceOfType(converter._info, typeof(NonGenericIDictionaryInfo));
-        //    Assert.AreEqual(typeof(object), converter._elementOrKeyType);
-        //    Assert.AreEqual(typeof(object), converter._valueType);
-        //}
-
         [TestMethod]
-        public void Convert_List()
+        public void Convert_GenericIDictionary()
         {
-            Setup<List<byte>>(Settings);
+            Setup<GenericIDictionary>(Settings);
 
-            var obj = new List<byte> { 1, 2, 3, 4 };
+            var obj = new GenericIDictionary() { { 1, 2 }, { 3, 4 } };
 
             DoSerialize(obj);
-            AssertAndGoToStart(0, 4, 0, 1, 2, 3, 4);
-            CollectionAssert.AreEqual(obj, DoDeserialize<List<byte>>());
-        }
-
-        [TestMethod]
-        public void Convert_IDictionary_Generic()
-        {
-            Setup<Dictionary<byte, byte>>(Settings);
-
-            var obj = new Dictionary<byte, byte> { { 1, 2 }, { 3, 4 } };
-
-            DoSerialize(obj);
+            Assert.IsTrue(obj.DisposedEnumerator);
             AssertAndGoToStart(0, 2, 0, 1, 2, 3, 4);
-            CollectionAssert.AreEqual(obj, DoDeserialize<Dictionary<byte, byte>>());
+
+            var deserialized = DoDeserialize<GenericIDictionary>();
+            CollectionAssert.AreEqual(obj.Keys.ToList(), deserialized.Keys.ToList());
+            CollectionAssert.AreEqual(obj.Values.ToList(), deserialized.Values.ToList());
+        }
+        
+        [TestMethod]
+        public void Convert_GenericIDictionary_InvalidEnumerator()
+        {
+            Setup<GenericIDictionary>(Settings);
+
+            var obj = new GenericIDictionary(true) { { 1, 2 }, { 3, 4 } };
+
+            Assert.ThrowsException<InvalidDictionaryException>(() => DoSerialize(obj));
+            Assert.IsTrue(obj.DisposedEnumerator);
         }
 
-        //[TestMethod]
-        //public void Convert_IList_NonGeneric()
-        //{
-        //    Setup<ArrayList>(Settings);
-
-        //    var obj = new ArrayList() { (byte)7 };
-
-        //    Action<ABSaveSerializer> writeType = s => s.SerializeItem((byte)7, s.GetRuntimeMapItem(typeof(object)));
-
-        //    DoSerialize(obj);
-        //    AssertAndGoToStart(GetByteArr(new object[] { writeType }, 1, (short)GenType.Action));
-        //    CollectionAssert.AreEqual(obj, DoDeserialize<ArrayList>());
-        //}
-
-        //        public void SerializeIDictionary_Generic()
-        //        {
-        //            var actual = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            var arrType = typeof(Dictionary<int, int>);
-
-        //            Assert.IsTrue(EnumerableTypeConverter.Instance.TryGenerateContext(arrType));
-        //            EnumerableTypeConverter.Instance.Serialize(new Dictionary<int, int>() { { 1, 2 }, { 3, 4 } }, arrType, actual);
-
-        //            var expected = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            expected.WriteInt32(2);
-        //            expected.WriteInt32(1);
-        //            expected.WriteInt32(2);
-        //            expected.WriteInt32(3);
-        //            expected.WriteInt32(4);
-
-        //            TestUtilities.CompareWriters(expected, actual);
-        //        }
-
-        //        [TestMethod]
-        //        public void SerializeIList_NonGeneric()
-        //        {
-        //            var actual = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            var arrType = typeof(ArrayList);
-
-        //            Assert.IsTrue(EnumerableTypeConverter.Instance.TryGenerateContext(arrType));
-        //            EnumerableTypeConverter.Instance.Serialize(new ArrayList() { 1, 2, 3, 4 }, arrType, actual);
-
-        //            var expected = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            expected.WriteInt32(4);
-        //            ABSaveItemConverter.Serialize(1, typeof(int), typeof(object), expected);
-        //            ABSaveItemConverter.Serialize(2, typeof(int), typeof(object), expected);
-        //            ABSaveItemConverter.Serialize(3, typeof(int), typeof(object), expected);
-        //            ABSaveItemConverter.Serialize(4, typeof(int), typeof(object), expected);
-
-        //            TestUtilities.CompareWriters(expected, actual);
-        //        }
-
-        //        [TestMethod]
-        //        public void SerializeIList_NonGeneric_Map()
-        //        {
-        //            var map = new CollectionMapItem(false, typeof(int), ABSaveCollectionInfo.NonGenericIList, new TypeConverterMapItem(false, NumberTypeConverter.Instance));
-        //            var actual = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-
-        //            map.Serialize(new ArrayList() { 1, 2, 3, 4 }, typeof(ArrayList), actual);
-
-        //            var expected = new ABSaveSerializer(new MemoryStream(), new ABSaveSettings());
-        //            expected.WriteInt32(4);
-        //            expected.WriteInt32(1);
-        //            expected.WriteInt32(2);
-        //            expected.WriteInt32(3);
-        //            expected.WriteInt32(4);
-
-        //            TestUtilities.CompareWriters(expected, actual);
-        //        }
-
-        class GenericAndNonGeneric : ICollection<string>, IList
+        public class GenericAndNonGeneric : ICollection<int>, IList
         {
+            public bool DisposedEnumerator { get; set; }
+
+            readonly List<int> _inner = new List<int>();
+
             public object this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public int Count => throw new NotImplementedException();
-            public bool IsReadOnly => throw new NotImplementedException();
-            public bool IsFixedSize => throw new NotImplementedException();
-            public bool IsSynchronized => throw new NotImplementedException();
-            public object SyncRoot => throw new NotImplementedException();
-            public void Add(string item) => throw new NotImplementedException();
-            public int Add(object value) => throw new NotImplementedException();
-            public void Clear() => throw new NotImplementedException();
-            public bool Contains(string item) => throw new NotImplementedException();
-            public bool Contains(object value) => throw new NotImplementedException();
-            public void CopyTo(string[] array, int arrayIndex) => throw new NotImplementedException();
-            public void CopyTo(Array array, int index) => throw new NotImplementedException();
-            public IEnumerator<string> GetEnumerator() => throw new NotImplementedException();
-            public int IndexOf(object value) => throw new NotImplementedException();
-            public void Insert(int index, object value) => throw new NotImplementedException();
-            public bool Remove(string item) => throw new NotImplementedException();
-            public void Remove(object value) => throw new NotImplementedException();
-            public void RemoveAt(int index) => throw new NotImplementedException();
-            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+            public int Count => _inner.Count;
+            public bool IsReadOnly => false;
+            public bool IsFixedSize => false;
+            public bool IsSynchronized => false;
+            public object SyncRoot => null;
+            public void Add(int item) => _inner.Add(item);
+            public int Add(object value) => ((IList)_inner).Add(value);
+            public void Clear() => _inner.Clear();
+            public bool Contains(int item) => _inner.Contains(item);
+            public bool Contains(object value) => _inner.Contains((int)value);
+            public void CopyTo(int[] array, int arrayIndex) => _inner.CopyTo(array, arrayIndex);
+            public void CopyTo(Array array, int index) => _inner.CopyTo((int[])array, index);
+            public IEnumerator<int> GetEnumerator() => new DisposalNotificationEnumerator<int>(this, _inner.GetEnumerator());
+            public int IndexOf(object value) => _inner.IndexOf((int)value);
+            public void Insert(int index, object value) => _inner.Insert(index, (int)value);
+            public bool Remove(int item) => _inner.Remove(item);
+            public void Remove(object value) => _inner.Remove((int)value);
+            public void RemoveAt(int index) => _inner.RemoveAt(index);
+            IEnumerator IEnumerable.GetEnumerator() => new DisposalNotificationEnumerator<int>(this, ((IEnumerable)_inner).GetEnumerator());
         }
 
-        class GenericICollection : ICollection<int>
+        public class GenericICollection : ICollection<int>
         {
-            public int Count => throw new NotImplementedException();
-            public bool IsReadOnly => throw new NotImplementedException();
-            public void Add(int item) => throw new NotImplementedException();
-            public void Clear() => throw new NotImplementedException();
-            public bool Contains(int item) => throw new NotImplementedException();
-            public void CopyTo(int[] array, int arrayIndex) => throw new NotImplementedException();
-            public IEnumerator<int> GetEnumerator() => throw new NotImplementedException();
-            public bool Remove(int item) => throw new NotImplementedException();
-            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+            public bool DisposedEnumerator { get; set; }
+
+            public List<int> Inner = new List<int>();
+
+            public int Count => Inner.Count;
+            public bool IsReadOnly => false;
+            public void Add(int item) => Inner.Add(item);
+            public void Clear() => Inner.Clear();
+            public bool Contains(int item) => Inner.Contains(item);
+            public void CopyTo(int[] array, int arrayIndex) => Inner.CopyTo(array, arrayIndex);
+            public IEnumerator<int> GetEnumerator() => new DisposalNotificationEnumerator<int>(this, Inner.GetEnumerator());
+            public bool Remove(int item) => Inner.Remove(item);
+            IEnumerator IEnumerable.GetEnumerator() => new DisposalNotificationEnumerator<int>(this, ((IEnumerable)Inner).GetEnumerator());
         }
 
-        class GenericIDictionary : IDictionary<string, int>
+        public class GenericIDictionary : IDictionary<int, int>
         {
-            public int this[string key] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-            public ICollection<string> Keys => throw new NotImplementedException();
-            public ICollection<int> Values => throw new NotImplementedException();
-            public int Count => throw new NotImplementedException();
-            public bool IsReadOnly => throw new NotImplementedException();
-            public void Add(string key, int value) => throw new NotImplementedException();
-            public void Add(KeyValuePair<string, int> item) => throw new NotImplementedException();
-            public void Clear() => throw new NotImplementedException();
-            public bool Contains(KeyValuePair<string, int> item) => throw new NotImplementedException();
-            public bool ContainsKey(string key) => throw new NotImplementedException();
-            public void CopyTo(KeyValuePair<string, int>[] array, int arrayIndex) => throw new NotImplementedException();
-            public IEnumerator<KeyValuePair<string, int>> GetEnumerator() => throw new NotImplementedException();
-            public bool Remove(string key) => throw new NotImplementedException();
-            public bool Remove(KeyValuePair<string, int> item) => throw new NotImplementedException();
-            public bool TryGetValue(string key, out int value) => throw new NotImplementedException();
-            IEnumerator IEnumerable.GetEnumerator() => throw new NotImplementedException();
+            public bool DisposedEnumerator { get; set; }
+
+            readonly Dictionary<int, int> _inner = new Dictionary<int, int>();
+            readonly bool _useNonDictionaryEnumerator;
+
+            public GenericIDictionary() { }
+            public GenericIDictionary(bool useNonDictionaryEnumerator) => _useNonDictionaryEnumerator = useNonDictionaryEnumerator;
+
+            public int this[int key] { get => _inner[key]; set => _inner[key] = value; }
+            public ICollection<int> Keys => _inner.Keys;
+            public ICollection<int> Values => _inner.Values;
+            public int Count => _inner.Count;
+            public bool IsReadOnly => false;
+            public void Add(int key, int value) => _inner.Add(key, value);
+            public void Add(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Add(item);
+            public void Clear() => _inner.Clear();
+            public bool Contains(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Contains(item);
+            public bool ContainsKey(int key) => _inner.ContainsKey(key);
+            public void CopyTo(KeyValuePair<int, int>[] array, int arrayIndex) => ((IDictionary<int, int>)_inner).CopyTo(array, arrayIndex);
+            public IEnumerator<KeyValuePair<int, int>> GetEnumerator() => _useNonDictionaryEnumerator ? (IEnumerator<KeyValuePair<int, int>>)new NonDictionaryEnumerator(this) : new DisposalNotificationEnumerator<KeyValuePair<int, int>>(this, _inner.GetEnumerator());
+            public bool Remove(int key) => _inner.Remove(key);
+            public bool Remove(KeyValuePair<int, int> item) => ((IDictionary<int, int>)_inner).Remove(item);    
+            public bool TryGetValue(int key, out int value) => _inner.TryGetValue(key, out value);
+            IEnumerator IEnumerable.GetEnumerator() => _useNonDictionaryEnumerator ? (IEnumerator)new NonDictionaryEnumerator(this) : new DisposalNotificationEnumerator<KeyValuePair<int, int>>(this, ((IEnumerable)_inner).GetEnumerator());
+
+            class NonDictionaryEnumerator : IEnumerator, IEnumerator<KeyValuePair<int, int>>
+            {
+                public object Current => 123;
+
+                readonly GenericIDictionary _parent;
+
+                public NonDictionaryEnumerator(GenericIDictionary parent) => _parent = parent;
+
+                KeyValuePair<int, int> IEnumerator<KeyValuePair<int, int>>.Current => new KeyValuePair<int, int>(123, 123);
+
+                public void Dispose() => _parent.DisposedEnumerator = true;
+                public bool MoveNext() => throw new Exception("Failed - called 'MoveNext'!");
+                public void Reset() => throw new Exception("Failed - called 'Reset'!");
+            }
+        }
+
+        class DisposalNotificationEnumerator<T> : IEnumerator, IEnumerator<T>, IDictionaryEnumerator
+        {
+            public object Current => _realEnumerator.Current;
+            T IEnumerator<T>.Current => (T)_realEnumerator.Current;
+
+            public DictionaryEntry Entry => ((IDictionaryEnumerator)_realEnumerator).Entry;
+            public object Key => ((IDictionaryEnumerator)_realEnumerator).Key;
+            public object Value => ((IDictionaryEnumerator)_realEnumerator).Value;
+
+            readonly object _parent;
+            readonly IEnumerator _realEnumerator;
+
+            public DisposalNotificationEnumerator(object parent, IEnumerator realEnumerator)
+            {
+                _parent = parent;
+                _realEnumerator = realEnumerator;
+            }
+
+            public void Dispose() => ((dynamic)_parent).DisposedEnumerator = true;
+            public bool MoveNext() => _realEnumerator.MoveNext();
+            public void Reset() => _realEnumerator.Reset();
         }
     }
 }
