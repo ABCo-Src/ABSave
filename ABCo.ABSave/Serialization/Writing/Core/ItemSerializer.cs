@@ -40,14 +40,14 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         {
             Type? actualType = obj.GetType();
 
-            var currentInfo = SerializeConverterHeader(obj, converter, actualType, skipHeader, serializer);
+            var currentInfo = SerializeVersionInfoAndHeader(obj, converter, actualType, skipHeader, serializer);
             if (currentInfo == null) return;
 
             var serializeInfo = new Converter.SerializeInfo(obj, actualType, currentInfo, serializer);
             converter.Serialize(in serializeInfo);
         }
 
-        internal static VersionInfo? SerializeConverterHeader(object obj, Converter converter, Type actualType, bool skipHeader, ABSaveSerializer header)
+        internal static VersionInfo? SerializeVersionInfoAndHeader(object obj, Converter converter, Type actualType, bool skipHeader, ABSaveSerializer header)
         {
             var cache = header.State.GetCachedInfo(converter);
 

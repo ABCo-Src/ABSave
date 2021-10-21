@@ -212,8 +212,8 @@ namespace ABCo.ABSave.Serialization.Writing
         public void WriteItem(object? obj, MapItemInfo info) => ItemSerializer.SerializeItem(obj, info, this);
         public void WriteExactNonNullItem(object obj, MapItemInfo info) => ItemSerializer.SerializeExactNonNullItem(obj, info, this);
 
-        public VersionInfo WriteExactNonNullHeader(object obj, Type actualType, Converter converter) =>
-            ItemSerializer.SerializeConverterHeader(obj, converter, actualType, true, this)!;
+        public VersionInfo WriteVersionInfo(object obj, Type actualType, Converter converter) =>
+            ItemSerializer.SerializeVersionInfoAndHeader(obj, converter, actualType, skipHeader: true, this)!;
 
         public void WriteCompressedInt(uint data) => CompressedSerializer.WriteCompressedInt(data, this);
         public void WriteCompressedLong(ulong data) => CompressedSerializer.WriteCompressedLong(data, this);

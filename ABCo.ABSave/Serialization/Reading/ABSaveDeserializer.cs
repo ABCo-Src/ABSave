@@ -54,9 +54,9 @@ namespace ABCo.ABSave.Serialization.Reading
         public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
         public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
 
-        public VersionInfo ReadExactNonNullHeader(Converter converter)
+        public VersionInfo ReadVersionInfo(Converter converter)
         {
-            ItemDeserializer.DeserializeConverterHeader(converter, this, true, out var info);
+            ItemDeserializer.DeserializeVersionInfoAndHeader(converter, this, skipHeader: true, out var info);
             return info;
         }
 

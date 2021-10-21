@@ -36,14 +36,14 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 
         static object DeserializeConverter(Converter converter, ABSaveDeserializer deserializer, bool skipHeader)
         {
-            object? inheritanceHandled = DeserializeConverterHeader(converter, deserializer, skipHeader, out var info);
+            object? inheritanceHandled = DeserializeVersionInfoAndHeader(converter, deserializer, skipHeader, out var info);
             if (inheritanceHandled != null) return inheritanceHandled;
 
             var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info, deserializer);
             return converter.Deserialize(in deserializeInfo);
         }
 
-        internal static object? DeserializeConverterHeader(Converter converter, ABSaveDeserializer deserializer, bool skipHeader, out VersionInfo info)
+        internal static object? DeserializeVersionInfoAndHeader(Converter converter, ABSaveDeserializer deserializer, bool skipHeader, out VersionInfo info)
         {
             var details = deserializer.State.GetCachedInfo(converter);
 
