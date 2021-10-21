@@ -62,7 +62,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
         }
 
         static VersionInfo HandleNewVersion(Converter converter, ABSaveDeserializer deserializer) =>
-            deserializer.State.HasVersioningInfo ?
+            deserializer.State.IncludeVersioningInfo ?
                 deserializer.State.CreateNewCache(converter, ReadNewVersionInfo(deserializer)) :
                 deserializer.State.Map.GetVersionInfo(converter, 0);
 

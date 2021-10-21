@@ -43,7 +43,7 @@ namespace ABCo.ABSave.Serialization.Writing
 
             _rawOutputStream = output;
             State.TargetVersions = targetVersions;
-            State.HasVersioningInfo = writeVersioning;
+            State.IncludeVersioningInfo = writeVersioning;
 
             Reset();
         }

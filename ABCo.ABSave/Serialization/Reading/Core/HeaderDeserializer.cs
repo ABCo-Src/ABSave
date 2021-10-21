@@ -10,7 +10,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
         public static void ReadHeader(ABSaveDeserializer deserializer)
         {
             if (!deserializer.State.Settings.IncludeVersioningHeader) return;
-            deserializer.State.HasVersioningInfo = deserializer.ReadBit();
+            deserializer.State.IncludeVersioningInfo = deserializer.ReadBit();
         }
     }
 }

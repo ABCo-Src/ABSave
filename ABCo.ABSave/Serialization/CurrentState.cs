@@ -32,7 +32,7 @@ namespace ABCo.ABSave.Serialization
         /// <summary>
         /// Denotes whether versioning info is present or not.
         /// </summary>
-        public bool HasVersioningInfo { get; internal set; }
+        public bool IncludeVersioningInfo { get; internal set; }
 
         CachedConverterDetails[] _cachedConverterDetails = null!;
         byte[]? _stringBuffer;

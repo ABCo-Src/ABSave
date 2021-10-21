@@ -15,6 +15,23 @@ namespace ABCo.ABSave.UnitTests
     [TestClass]
     public class MiscTests : TestBase
     {
+        // TODO: Write a test to prove resetting deserializers resets all other things too.
+
+        [TestMethod]
+        public void Reset_Deserializer_ResetsCurrentBit()
+        {
+            Initialize();
+
+            Stream.WriteByte(0x80);
+            Stream.Position = 0;
+
+            Deserializer.ReadBit();
+            Deserializer.Reset();
+
+            // Make sure the current bit moved back to the beginning
+            Assert.IsTrue(Deserializer.ReadBit());
+        }
+
         [TestMethod]
         public void WaitUntilNotGenerating_NotGenerating()
         {

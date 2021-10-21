@@ -70,7 +70,7 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         /// <returns>Whether we applied the header</returns>
         static VersionInfo HandleNewVersion(Converter item, ABSaveSerializer header)
         {
-            uint version = header.State.HasVersioningInfo ? WriteNewVersionInfo(item, header) : 0;
+            uint version = header.State.IncludeVersioningInfo ? WriteNewVersionInfo(item, header) : 0;
             return header.State.CreateNewCache(item, version);
         }
 
