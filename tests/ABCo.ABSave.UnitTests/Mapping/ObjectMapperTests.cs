@@ -61,6 +61,29 @@ namespace ABCo.ABSave.UnitTests.Mapping
             VerifyRuns<FieldClass, string>(ref item.Accessor);
         }
 
+        [TestMethod]
+        public void GenerateFieldAccessor_ReadOnlyField_ThrowsException()
+        {
+	        Setup();
+
+	        var memberInfo = typeof(ReadonlyFieldClass).GetField(nameof(ReadonlyFieldClass.A));
+
+	        var item = new ObjectMemberSharedInfo();
+	        Assert.ThrowsException<UnsupportedMemberException>(() => MemberAccessorGenerator.GenerateFieldAccessor(ref item.Accessor, memberInfo));
+        }
+
+        [TestMethod]
+        public void GeneratePropertyAccessor_ReadonlyProperty_ThrowsException()
+        {
+	        Setup();
+
+	        var propertyInfo = typeof(ReadonlyPropertyClass).GetProperty(nameof(ReadonlyPropertyClass.A));
+	        
+	        var item = new ObjectMemberSharedInfo();
+
+            Assert.ThrowsException<UnsupportedMemberException>(() => RunGenerateAccessor(ref item.Accessor, typeof(int), typeof(ReadonlyPropertyClass), propertyInfo));
+        }
+
         void RunGenerateAccessor(ref MemberAccessor dest, Type type, Type parentType, PropertyInfo info)
         {
             var item = Generator.GetMap(type);
@@ -241,5 +264,17 @@ namespace ABCo.ABSave.UnitTests.Mapping
 
         [Save(10)]
         public long C = 0;
+    }
+
+    [SaveMembers(SaveMembersMode.Properties | SaveMembersMode.Fields)]
+    class ReadonlyFieldClass
+    {
+	    [Save(0)] public readonly int A = 0;
+    }
+
+    [SaveMembers()]
+    class ReadonlyPropertyClass
+    {
+	    [Save(0)] public int A { get; } = 0;
     }
 }
