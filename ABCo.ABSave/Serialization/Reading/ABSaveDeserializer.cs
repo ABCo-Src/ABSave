@@ -52,7 +52,7 @@ namespace ABCo.ABSave.Serialization.Reading
 
         public object? ReadRoot() => ItemDeserializer.DeserializeItem(State.Map._rootItem, this);
         public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
-        public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
+        public object ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
 
         public VersionInfo ReadVersionInfo(Converter converter) => ItemDeserializer.DeserializeVersionInfo(converter, this);
 
