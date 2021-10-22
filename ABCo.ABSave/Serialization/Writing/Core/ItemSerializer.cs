@@ -40,26 +40,33 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         {
             Type? actualType = obj.GetType();
 
-            var currentInfo = SerializeVersionInfoAndHeader(obj, converter, actualType, skipHeader, serializer);
+            var currentInfo = skipHeader ? SerializeVersionInfo(converter, serializer) : SerializeVersionInfoAndHeader(obj, converter, actualType, serializer);
             if (currentInfo == null) return;
 
             var serializeInfo = new Converter.SerializeInfo(obj, actualType, currentInfo, serializer);
             converter.Serialize(in serializeInfo);
         }
 
-        internal static VersionInfo? SerializeVersionInfoAndHeader(object obj, Converter converter, Type actualType, bool skipHeader, ABSaveSerializer header)
+        public static VersionInfo? SerializeVersionInfoAndHeader(object obj, Converter converter, Type actualType, ABSaveSerializer serializer)
+        {
+            VersionInfo? cache = SerializeVersionInfo(converter, serializer);
+
+            if (cache._inheritanceInfo != null)
+            {
+                SerializeActualTypeIfNeeded(cache._inheritanceInfo, obj, actualType, converter, serializer);
+                return null;
+            }
+
+            return cache;
+        }
+
+        public static VersionInfo SerializeVersionInfo(Converter converter, ABSaveSerializer header)
         {
             var cache = header.State.GetCachedInfo(converter);
 
             // Write and get the info for a version, if necessary
             if (cache == null)
                 cache = HandleNewVersion(converter, header);
-
-            if (cache._inheritanceInfo != null && !skipHeader)
-            {
-                SerializeActualTypeIfNeeded(cache._inheritanceInfo, obj, actualType, converter, header);
-                return null;
-            }
 
             return cache;
         }

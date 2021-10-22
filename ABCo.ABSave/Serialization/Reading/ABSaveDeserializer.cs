@@ -54,11 +54,7 @@ namespace ABCo.ABSave.Serialization.Reading
         public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
         public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
 
-        public VersionInfo ReadVersionInfo(Converter converter)
-        {
-            ItemDeserializer.DeserializeVersionInfoAndHeader(converter, this, skipHeader: true, out var info);
-            return info;
-        }
+        public VersionInfo ReadVersionInfo(Converter converter) => ItemDeserializer.DeserializeVersionInfo(converter, this);
 
         #region Bit Reading
 

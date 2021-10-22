@@ -78,7 +78,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
             if (baseType != null)
             {
-                var baseInfo = serializer.WriteVersionInfo(instance, actualType, baseType);
+                var baseInfo = serializer.WriteVersionInfo(baseType);
                 Serialize(instance, actualType, baseInfo!, serializer);
             }
 
