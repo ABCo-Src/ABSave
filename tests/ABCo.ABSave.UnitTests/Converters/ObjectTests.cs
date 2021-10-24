@@ -82,6 +82,16 @@ namespace ABCo.ABSave.UnitTests.Converters
         [TestMethod]
         public void Invalid_UnserializableBase() => Assert.ThrowsException<InvalidSaveBaseMembersException>(() => Setup<UnserializableBase>(ABSaveSettings.ForSpeed));
 
+        [TestMethod]
+        public void Initialize_NoPublicConstructor_ShouldThrowException() => 
+	        Assert.ThrowsException<UnsupportedTypeException>(() => 
+		        Setup<PrivateConstructor>(ABSaveSettings.ForSpeed));
+
+        [TestMethod]
+        public void Initialize_NoParameterlessConstructor_ShouldThrowException() =>
+	        Assert.ThrowsException<UnsupportedTypeException>(() =>
+		        Setup<NoParameterlessConstructor>(ABSaveSettings.ForSpeed));
+
         void RunTest<T>(T instance, int version, byte? noBaseExpectedFirstByte, byte? baseExpectedFirstByte, byte[] versionExpected, byte[] nonVersionExpected)
             where T : BaseWithoutHeader
         {
@@ -120,6 +130,32 @@ namespace ABCo.ABSave.UnitTests.Converters
             ReflectiveAssert(instance, (T)Deserializer.ReadItem(CurrentMapItem));
         }
     }
+
+    [SaveMembers]
+    public class PrivateConstructor
+    {
+        private PrivateConstructor()
+        {
+				
+        }
+
+        [Save(0)]
+        public int A { get; set; }
+    }
+
+
+    [SaveMembers]
+    public class NoParameterlessConstructor
+    {
+	    public NoParameterlessConstructor(int a)
+	    {
+		    A = a;
+	    }
+
+	    [Save(0)]
+	    public int A { get; set; }
+    }
+
 
     [SaveBaseMembers(typeof(string))]
     [SaveMembers]
