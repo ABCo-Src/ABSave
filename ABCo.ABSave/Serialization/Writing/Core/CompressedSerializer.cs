@@ -20,10 +20,7 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             }
         }
 
-        public static void WriteCompressedIntSigned(int data, ABSaveSerializer serializer) => WriteCompressedSigned<uint>(data, serializer);
-        public static void WriteCompressedLongSigned(long data, ABSaveSerializer serializer) => WriteCompressedSigned<ulong>(data, serializer);
-
-        static void WriteCompressedSigned<TNumType>(long data, ABSaveSerializer serializer)
+        public static void WriteCompressedSigned<TNumType>(long data, ABSaveSerializer serializer)
         {
             if (data < 0)
             {
@@ -37,10 +34,7 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             }
         }
 
-        public static void WriteCompressedInt(uint data, ABSaveSerializer serializer) => WriteCompressed<uint>(data, serializer);
-        public static void WriteCompressedLong(ulong data, ABSaveSerializer serializer) => WriteCompressed<ulong>(data, serializer);
-
-        static void WriteCompressed<TNumType>(ulong data, ABSaveSerializer target)
+        public static void WriteCompressed<TNumType>(ulong data, ABSaveSerializer target)
         {
             if (target.State.Settings.LazyCompressedWriting)
                 WriteCompressedLazyFast<TNumType>(data, target);

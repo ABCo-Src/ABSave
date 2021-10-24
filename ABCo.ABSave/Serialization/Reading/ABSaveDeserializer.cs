@@ -43,11 +43,11 @@ namespace ABCo.ABSave.Serialization.Reading
 
         public void ReadSettingsHeaderIfNeeded() => HeaderDeserializer.ReadHeader(this);
 
-        public uint ReadCompressedIntSigned() => (uint)CompressedDeserializer.ReadCompressedSigned(false, this);
-        public ulong ReadCompressedLongSigned() => (ulong)CompressedDeserializer.ReadCompressedSigned(true, this);
+        public uint ReadCompressedIntSigned() => (uint)CompressedDeserializer.ReadCompressedSigned<uint>(this);
+        public ulong ReadCompressedLongSigned() => CompressedDeserializer.ReadCompressedSigned<ulong>(this);
 
-        public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed(false, this);
-        public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed(true, this);
+        public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed<uint>(this);
+        public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed<ulong>(this);
 
         public string? ReadNullableString() => TextDeserializer.ReadNullableString(this);
         public string ReadNonNullString() => TextDeserializer.ReadNonNullString(this);
