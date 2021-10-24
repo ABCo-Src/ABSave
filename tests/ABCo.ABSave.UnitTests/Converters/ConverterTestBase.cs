@@ -10,10 +10,11 @@ namespace ABCo.ABSave.UnitTests.Converters
     {
         public Converter CurrentConverter = null!;
 
-        public void Setup<T>(ABSaveSettings settings, Dictionary<Type, uint> targetVersions = null)
+        public void Setup<T>(ABSaveSettings settings, Dictionary<Type, uint> targetVersions = null, bool includeVersioning = true) => Setup(settings, typeof(T), targetVersions, includeVersioning);
+        public void Setup(ABSaveSettings settings, Type type, Dictionary<Type, uint> targetVersions = null, bool includeVersioning = true)
         {
-            Initialize(settings, targetVersions);
-            ResetStateWithMapFor<T>();
+            Initialize(settings, targetVersions, false, includeVersioning);
+            ResetStateWithMapFor(type);
         }
 
         public void DoSerialize(object obj)
@@ -22,9 +23,7 @@ namespace ABCo.ABSave.UnitTests.Converters
             Serializer.Flush();
         }
 
-        public T DoDeserialize<T>()
-        {
-            return (T)Deserializer.ReadExactNonNullItem(CurrentMapItem);
-        }
+        public T DoDeserialize<T>() => (T)Deserializer.ReadExactNonNullItem(CurrentMapItem);
+        public object DoDeserialize() => Deserializer.ReadExactNonNullItem(CurrentMapItem);
     }
 }

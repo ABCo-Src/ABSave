@@ -15,7 +15,7 @@ using System.Text.Json;
 
 namespace ABCo.ABSave.Testing.ConsoleApp
 {
-
+    [MemoryDiagnoser]
     public class TestBenchmark
     {
         public MemoryStream ABSaveResult;
@@ -46,7 +46,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             MessagePackResult = new MemoryStream();
             BinaryPackResult = new MemoryStream();
 
-            Map = ABSaveMap.Get<JsonResponseModel>(ABSaveSettings.ForSpeed);
+            Map = ABSaveMap.Get<byte[]>(ABSaveSettings.ForSpeed);
 
             var str = File.ReadAllText($@"{Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)}\modelBig.txt");
 
@@ -65,7 +65,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         public void ABSave()
         {
             ABSaveResult.Position = 0;
-            ABSaveConvert.Serialize(TestObj, Map, ABSaveResult);
+            ABSaveConvert.Serialize(new byte[500000], Map, ABSaveResult);
         }
 
         //[Benchmark]
@@ -81,7 +81,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             TextJsonResult.Position = 0;
 
             using var writer = new Utf8JsonWriter(TextJsonResult, new JsonWriterOptions());
-            JsonSerializer.Serialize(writer, TestObj);
+            JsonSerializer.Serialize(writer, new byte[500000]);
         }
 
         //[Benchmark]
@@ -98,7 +98,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             BinaryConverter.Serialize(TestObj, BinaryPackResult);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public JsonResponseModel ABSave_Deserialize()
         {
             ABSaveResult.Position = 0;
@@ -114,7 +114,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
             return Utf8Json.JsonSerializer.Deserialize<JsonResponseModel>(Utf8JsonResult);
         }
 
-        [Benchmark]
+        //[Benchmark]
         public JsonResponseModel TextJson_Deserialize()
         {
             TextJsonResult.Position = 0;
@@ -206,10 +206,12 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
             var benchmarks = new TestBenchmark();
             benchmarks.Setup();
+            benchmarks.ABSave();
+            //benchmarks.ABSave_Deserialize();
 
             for (int i = 0; i < 16; i++)
             {
-                benchmarks.ABSave_Deserialize();
+                benchmarks.ABSave();
             }
 
             GC.Collect();
@@ -218,7 +220,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
 
             for (int i = 0; i < 1000; i++)
             {
-                benchmarks.ABSave_Deserialize();
+                benchmarks.ABSave();
             }
 
             Debugger.Break();
@@ -228,7 +230,7 @@ namespace ABCo.ABSave.Testing.ConsoleApp
         {
             var benchmarks = new TestBenchmark();
             benchmarks.Setup();
-            benchmarks.ABSave_Deserialize();
+            benchmarks.ABSave();
             benchmarks.Finish();
         }
 
