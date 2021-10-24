@@ -6,7 +6,7 @@
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>ABSaveStrongName.snk</AssemblyOriginatorKeyFile>
     <Platforms>AnyCPU;x64;x86</Platforms>
-    <Version>2.2-beta</Version>
+    <Version>2.3-beta</Version>
     <Authors>ABPerson</Authors>
     <Company>ABCo</Company>
     <Description>A blazing-fast binary serializer with very small output powered by live IL injection!</Description>
