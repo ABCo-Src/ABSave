@@ -7,6 +7,14 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal static class CompressedDeserializer
     {
+        public static ulong ReadCompressedSigned(bool canBeLong, ABSaveDeserializer deserializer)
+        {
+            bool negative = deserializer.ReadBit();
+            ulong res = ReadCompressed(canBeLong, deserializer);
+
+            return negative ? (ulong)-(long)res : res;
+        }
+
         public static ulong ReadCompressed(bool canBeLong, ABSaveDeserializer deserializer)
         {
             if (deserializer.State.Settings.LazyCompressedWriting)

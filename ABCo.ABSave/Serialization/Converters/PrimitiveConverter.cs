@@ -55,7 +55,7 @@ namespace ABCo.ABSave.Serialization.Converters
                 SerializeDirect(info.Serializer, info.Instance);
         }
 
-        void SerializeCompressed(ABSaveSerializer serializer, object instance)
+        public void SerializeCompressed(ABSaveSerializer serializer, object instance)
         {
             switch (_typeCode)
             {
@@ -71,7 +71,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
                 case PrimitiveType.Int16:
 
-                    serializer.WriteCompressedInt((uint)(short)instance);
+                    serializer.WriteCompressedIntSigned((short)instance);
                     break;
 
                 case PrimitiveType.UInt16:
@@ -86,7 +86,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
                 case PrimitiveType.Int32:
 
-                    serializer.WriteCompressedInt((uint)(int)instance);
+                    serializer.WriteCompressedIntSigned((int)instance);
                     break;
 
                 case PrimitiveType.UInt32:
@@ -96,7 +96,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
                 case PrimitiveType.Int64:
 
-                    serializer.WriteCompressedLong((ulong)(long)instance);
+                    serializer.WriteCompressedLongSigned((long)instance);
                     break;
 
                 case PrimitiveType.UInt64:
@@ -225,12 +225,12 @@ namespace ABCo.ABSave.Serialization.Converters
                     PrimitiveType.Byte => deserializer.ReadByte(),
                     PrimitiveType.SByte => (sbyte)deserializer.ReadByte(),
                     PrimitiveType.UInt16 => (ushort)deserializer.ReadCompressedInt(),
-                    PrimitiveType.Int16 => (short)deserializer.ReadCompressedInt(),
+                    PrimitiveType.Int16 => (short)deserializer.ReadCompressedIntSigned(),
                     PrimitiveType.Char => (char)deserializer.ReadCompressedInt(),
                     PrimitiveType.UInt32 => deserializer.ReadCompressedInt(),
-                    PrimitiveType.Int32 => (int)deserializer.ReadCompressedInt(),
+                    PrimitiveType.Int32 => (int)deserializer.ReadCompressedIntSigned(),
                     PrimitiveType.UInt64 => deserializer.ReadCompressedLong(),
-                    PrimitiveType.Int64 => (long)deserializer.ReadCompressedLong(),
+                    PrimitiveType.Int64 => (long)deserializer.ReadCompressedLongSigned(),
                     PrimitiveType.Single => deserializer.ReadSingle(),
                     PrimitiveType.Double => deserializer.ReadDouble(),
                     PrimitiveType.Decimal => deserializer.ReadDecimal(),

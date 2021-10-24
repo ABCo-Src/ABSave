@@ -214,6 +214,8 @@ namespace ABCo.ABSave.Serialization.Writing
 
         public VersionInfo WriteVersionInfo(Converter converter) => ItemSerializer.SerializeVersionInfo(converter, this);
 
+        public void WriteCompressedIntSigned(int data) => CompressedSerializer.WriteCompressedIntSigned(data, this);
+        public void WriteCompressedLongSigned(long data) => CompressedSerializer.WriteCompressedLongSigned(data, this);
         public void WriteCompressedInt(uint data) => CompressedSerializer.WriteCompressedInt(data, this);
         public void WriteCompressedLong(ulong data) => CompressedSerializer.WriteCompressedLong(data, this);
         public void WriteNullableString(string? str) => TextSerializer.WriteString(str, this);

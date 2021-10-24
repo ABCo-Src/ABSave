@@ -20,6 +20,23 @@ namespace ABCo.ABSave.Serialization.Writing.Core
             }
         }
 
+        public static void WriteCompressedIntSigned(int data, ABSaveSerializer serializer) => WriteCompressedSigned<uint>(data, serializer);
+        public static void WriteCompressedLongSigned(long data, ABSaveSerializer serializer) => WriteCompressedSigned<ulong>(data, serializer);
+
+        static void WriteCompressedSigned<TNumType>(long data, ABSaveSerializer serializer)
+        {
+            if (data < 0)
+            {
+                serializer.WriteBitOn();
+                WriteCompressed<TNumType>((ulong)-data, serializer);
+            }
+            else
+            {
+                serializer.WriteBitOff();
+                WriteCompressed<TNumType>((ulong)data, serializer);
+            }
+        }
+
         public static void WriteCompressedInt(uint data, ABSaveSerializer serializer) => WriteCompressed<uint>(data, serializer);
         public static void WriteCompressedLong(ulong data, ABSaveSerializer serializer) => WriteCompressed<ulong>(data, serializer);
 
