@@ -36,14 +36,18 @@ namespace ABCo.ABSave.Serialization.Reading
         {
             State.Reset();
             State.CachedKeys.Clear();
+            _currentBitReader.Reset();
         }
 
         public void Dispose() => State.Map.ReleaseDeserializer(this);
 
         public void ReadSettingsHeaderIfNeeded() => HeaderDeserializer.ReadHeader(this);
 
-        public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed(false, this);
-        public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed(true, this);
+        public uint ReadCompressedIntSigned() => (uint)CompressedDeserializer.ReadCompressedSigned<uint>(this);
+        public ulong ReadCompressedLongSigned() => CompressedDeserializer.ReadCompressedSigned<ulong>(this);
+
+        public uint ReadCompressedInt() => (uint)CompressedDeserializer.ReadCompressed<uint>(this);
+        public ulong ReadCompressedLong() => CompressedDeserializer.ReadCompressed<ulong>(this);
 
         public string? ReadNullableString() => TextDeserializer.ReadNullableString(this);
         public string ReadNonNullString() => TextDeserializer.ReadNonNullString(this);
@@ -51,13 +55,9 @@ namespace ABCo.ABSave.Serialization.Reading
 
         public object? ReadRoot() => ItemDeserializer.DeserializeItem(State.Map._rootItem, this);
         public object? ReadItem(MapItemInfo info) => ItemDeserializer.DeserializeItem(info, this);
-        public object? ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
+        public object ReadExactNonNullItem(MapItemInfo info) => ItemDeserializer.DeserializeExactNonNullItem(info, this);
 
-        public VersionInfo ReadExactNonNullHeader(Converter converter)
-        {
-            ItemDeserializer.DeserializeConverterHeader(converter, this, true, out var info);
-            return info;
-        }
+        public VersionInfo ReadVersionInfo(Converter converter) => ItemDeserializer.DeserializeVersionInfo(converter, this);
 
         #region Bit Reading
 
@@ -220,7 +220,7 @@ namespace ABCo.ABSave.Serialization.Reading
                 if (State.Settings.IncludeVersioningHeader)
                     throw new Exception("When DEserializing, the field 'writeVersioning' should be left blank unless 'IncludeVersioningHeader' is disabled in the settings, because when enabled the versioning header is how ABSave determines whether version numbers are present or not when deserializing.");
 
-                State.HasVersioningInfo = writeVersioning.Value;
+                State.IncludeVersioningInfo = writeVersioning.Value;
             }
         }
     }

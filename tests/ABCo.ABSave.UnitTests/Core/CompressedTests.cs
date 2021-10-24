@@ -15,17 +15,68 @@ namespace ABCo.ABSave.UnitTests.Core
         // If anyone wants to write full serialization tests, it would be hugely appreciated. - ABPerson
 
         [TestMethod]
-        [DataRow(0LU)]
-        [DataRow(8LU)]
-        [DataRow(0b0001_0000_0001LU)]
-        [DataRow(0b0100_0001_0001_0010LU)]
-        [DataRow(0b0010_0110_0010_0101_1010_0000_0000LU)]
-        [DataRow(0b1_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        [DataRow(0b1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        [DataRow(0b0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        [DataRow(0b1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        [DataRow(0b1_1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        public void Test8Free(ulong data) => Test(data, 8);
+        [DataRow(0)]
+        [DataRow(-657)]
+        [DataRow(471)]
+        [DataRow(-26821087191097L)]
+        [DataRow(26821087191100L)]
+        public void Test8Free_Signed(long data) => Test((ulong)data, 8, true);
+
+        [TestMethod]
+        [DataRow(0)]
+        [DataRow(-657)]
+        [DataRow(471)]
+        [DataRow(-26821087191097L)]
+        [DataRow(26821087191100L)]
+        public void Test7Free_Signed(long data) => Test((ulong)data, 7, true);
+
+        [TestMethod]
+        [DataRow(0)]
+        [DataRow(-657)]
+        [DataRow(471)]
+        [DataRow(-26821087191097L)]
+        [DataRow(26821087191100L)]
+        public void Test6Free_Signed(long data) => Test((ulong)data, 6, true);
+
+        [TestMethod]
+        [DataRow(0)]
+        [DataRow(-657)]
+        [DataRow(471)]
+        [DataRow(-26821087191097L)]
+        [DataRow(26821087191100L)]
+        public void Test5Free_Signed(long data) => Test((ulong)data, 5, true);
+
+        [TestMethod]
+        [DataRow(0)]
+        [DataRow(-657)]
+        [DataRow(471)]
+        [DataRow(-26821087191097L)]
+        [DataRow(26821087191100L)]
+        public void Test4Free_Signed(long data) => Test((ulong)data, 4, true);
+
+        [TestMethod]
+        [DataRow(0)]
+        [DataRow(-657)]
+        [DataRow(471)]
+        [DataRow(-26821087191097L)]
+        [DataRow(26821087191100L)]
+        public void Test3Free_Signed(long data) => Test((ulong)data, 3, true);
+
+        [TestMethod]
+        [DataRow(0)]
+        [DataRow(-657)]
+        [DataRow(471)]
+        [DataRow(-26821087191097L)]
+        [DataRow(26821087191100L)]
+        public void Test2Free_Signed(long data) => Test((ulong)data, 2, true);
+
+        [TestMethod]
+        [DataRow(0)]
+        [DataRow(-657)]
+        [DataRow(471)]
+        [DataRow(-26821087191097L)]
+        [DataRow(26821087191100L)]
+        public void Test1Free_Signed(long data) => Test((ulong)data, 1, true);
 
         [TestMethod]
         [DataRow(0LU)]
@@ -38,7 +89,7 @@ namespace ABCo.ABSave.UnitTests.Core
         [DataRow(0b0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1_1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        public void Test7Free(ulong data) => Test(data, 7);
+        public void Test8Free(ulong data) => Test(data, 8, false);
 
         [TestMethod]
         [DataRow(0LU)]
@@ -51,7 +102,7 @@ namespace ABCo.ABSave.UnitTests.Core
         [DataRow(0b0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1_1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        public void Test6Free(ulong data) => Test(data, 6);
+        public void Test7Free(ulong data) => Test(data, 7, false);
 
         [TestMethod]
         [DataRow(0LU)]
@@ -64,7 +115,7 @@ namespace ABCo.ABSave.UnitTests.Core
         [DataRow(0b0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1_1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        public void Test5Free(ulong data) => Test(data, 5);
+        public void Test6Free(ulong data) => Test(data, 6, false);
 
         [TestMethod]
         [DataRow(0LU)]
@@ -77,7 +128,7 @@ namespace ABCo.ABSave.UnitTests.Core
         [DataRow(0b0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1_1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        public void Test4Free(ulong data) => Test(data, 4);
+        public void Test5Free(ulong data) => Test(data, 5, false);
 
         [TestMethod]
         [DataRow(0LU)]
@@ -90,7 +141,7 @@ namespace ABCo.ABSave.UnitTests.Core
         [DataRow(0b0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1_1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        public void Test3Free(ulong data) => Test(data, 3);
+        public void Test4Free(ulong data) => Test(data, 4, false);
 
         [TestMethod]
         [DataRow(0LU)]
@@ -103,7 +154,7 @@ namespace ABCo.ABSave.UnitTests.Core
         [DataRow(0b0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1_1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        public void Test2Free(ulong data) => Test(data, 2);
+        public void Test3Free(ulong data) => Test(data, 3, false);
 
         [TestMethod]
         [DataRow(0LU)]
@@ -116,28 +167,49 @@ namespace ABCo.ABSave.UnitTests.Core
         [DataRow(0b0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
         [DataRow(0b1_1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
-        public void Test1Free(ulong data) => Test(data, 1);
+        public void Test2Free(ulong data) => Test(data, 2, false);
 
-        void Test(ulong data, byte bitsFree)
+        [TestMethod]
+        [DataRow(0LU)]
+        [DataRow(8LU)]
+        [DataRow(0b0001_0000_0001LU)]
+        [DataRow(0b0100_0001_0001_0010LU)]
+        [DataRow(0b0010_0110_0010_0101_1010_0000_0000LU)]
+        [DataRow(0b1_0101_1001_1010_0101_0111_1111_1010_1010LU)]
+        [DataRow(0b1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
+        [DataRow(0b0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
+        [DataRow(0b1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
+        [DataRow(0b1_1111_1101_0101_1110_1000_1110_0101_1001_1010_0101_0111_1111_1010_1010LU)]
+        public void Test1Free(ulong data) => Test(data, 1, false);
+
+        void Test(ulong data, byte bitsFree, bool signed)
         {
-            TestWithSettings(data, bitsFree, false);
-            TestWithSettings(data, bitsFree, true);
+            TestWithSettings(data, bitsFree, false, signed);
+            TestWithSettings(data, bitsFree, true, signed);
         }
 
-        void TestWithSettings(ulong data, byte bitsFree, bool lazy)
+        void TestWithSettings(ulong data, byte bitsFree, bool lazy, bool signed)
         {
             Initialize(ABSaveSettings.ForSpeed, null, lazy);
 
             // Write up the number of bits we want free.
             Serializer.WriteInteger(0, (byte)(8 - bitsFree));
 
-            if (data < uint.MaxValue)
+            bool isIntSized = !signed && data < uint.MaxValue || signed && (long)data <= int.MaxValue && (long)data >= int.MinValue;
+
+            if (isIntSized)
             {
-                Serializer.WriteCompressedInt((uint)data);
+                if (signed)
+                    Serializer.WriteCompressedIntSigned((int)data);
+                else
+                    Serializer.WriteCompressedInt((uint)data);
             }
             else
             {
-                Serializer.WriteCompressedLong(data);
+                if (signed)
+                    Serializer.WriteCompressedLongSigned((long)data);
+                else
+                    Serializer.WriteCompressedLong(data);
             }
 
             Serializer.WriteByte(127);
@@ -148,13 +220,13 @@ namespace ABCo.ABSave.UnitTests.Core
                 // Read up the number of bits we want free.
                 Deserializer.ReadInteger((byte)(8 - bitsFree));
 
-                if (data < uint.MaxValue)
+                if (isIntSized)
                 {
-                    Assert.AreEqual((uint)data, Deserializer.ReadCompressedInt());
+                    Assert.AreEqual((uint)data, signed ? Deserializer.ReadCompressedIntSigned() : Deserializer.ReadCompressedInt());
                 }
                 else
                 {
-                    Assert.AreEqual(data, Deserializer.ReadCompressedLong());
+                    Assert.AreEqual(data, signed ? Deserializer.ReadCompressedLongSigned() : Deserializer.ReadCompressedLong());
                 }
             }
 

@@ -36,14 +36,28 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 
         static object DeserializeConverter(Converter converter, ABSaveDeserializer deserializer, bool skipHeader)
         {
-            object? inheritanceHandled = DeserializeConverterHeader(converter, deserializer, skipHeader, out var info);
-            if (inheritanceHandled != null) return inheritanceHandled;
+            VersionInfo? info;
+            
+            // Handle the header/version info.
+            if (skipHeader)
+                info = DeserializeVersionInfo(converter, deserializer);
+            else
+            {
+                object? inheritanceHandled = DeserializeVersionInfoAndHeader(converter, deserializer, out info);
+                if (inheritanceHandled != null) return inheritanceHandled;
+            }
 
-            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info, deserializer);
+            var deserializeInfo = new Converter.DeserializeInfo(converter.ItemType, info!, deserializer);
             return converter.Deserialize(in deserializeInfo);
         }
 
-        internal static object? DeserializeConverterHeader(Converter converter, ABSaveDeserializer deserializer, bool skipHeader, out VersionInfo info)
+        public static object? DeserializeVersionInfoAndHeader(Converter converter, ABSaveDeserializer deserializer, out VersionInfo? info)
+        {
+            info = DeserializeVersionInfo(converter, deserializer);
+            return info._inheritanceInfo == null ? null : DeserializeActualType(info._inheritanceInfo, converter, deserializer);
+        }
+
+        public static VersionInfo DeserializeVersionInfo(Converter converter, ABSaveDeserializer deserializer)
         {
             var details = deserializer.State.GetCachedInfo(converter);
 
@@ -51,18 +65,11 @@ namespace ABCo.ABSave.Serialization.Reading.Core
             if (details == null)
                 details = HandleNewVersion(converter, deserializer);
 
-            if (details._inheritanceInfo != null && !skipHeader)
-            {
-                info = null!;
-                return DeserializeActualType(details._inheritanceInfo, converter, deserializer);
-            }
-
-            info = details;
-            return null;
+            return details;
         }
 
         static VersionInfo HandleNewVersion(Converter converter, ABSaveDeserializer deserializer) =>
-            deserializer.State.HasVersioningInfo ?
+            deserializer.State.IncludeVersioningInfo ?
                 deserializer.State.CreateNewCache(converter, ReadNewVersionInfo(deserializer)) :
                 deserializer.State.Map.GetVersionInfo(converter, 0);
 

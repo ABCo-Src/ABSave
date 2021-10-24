@@ -52,8 +52,13 @@ namespace ABCo.ABSave.Serialization.Converters
             if (type.IsSZArray)
 #endif
             {
-                info.FastConversion = GetFastType(info.ElementType);
-                info.Type = ArrayType.SZArrayManual;
+                info.FastItemTypeCode = Type.GetTypeCode(info.ElementType);
+                info.Type = 
+                    info.FastItemTypeCode >= TypeCode.SByte && info.FastItemTypeCode <= TypeCode.Double
+                    ? ArrayType.SZArrayFast : ArrayType.SZArrayManual;
+
+                // char[]s should go to the TextConverter, not here!
+                if (info.FastItemTypeCode == TypeCode.Char) throw new Exception("char[] went to ArrayConverter and not TextConverter");
 
                 //info.Type = info.FastConversion == FastConversionType.None ? ArrayType.SZArrayManual : ArrayType.SZArrayFast;
             }
@@ -81,13 +86,12 @@ namespace ABCo.ABSave.Serialization.Converters
 
             switch (_info.Type)
             {
-                // TODO: This doesn't work with element type versions so temporarily disabled!
-                //case ArrayType.SZArrayFast:
-                //    {
-                //        SerializeFast(arr, context.FastConversion, ref header);
+                case ArrayType.SZArrayFast:
+                    {
+                        SerializeFast(arr, serializer);
 
-                //        break;
-                //    }
+                        break;
+                    }
                 case ArrayType.SZArrayManual:
                     {
                         serializer.WriteCompressedInt((uint)len);
@@ -199,38 +203,37 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override object Deserialize(in DeserializeInfo info) => Deserialize(info.Deserializer);
 
-        object Deserialize(ABSaveDeserializer header)
+        object Deserialize(ABSaveDeserializer deserializer)
         {
             switch (_info.Type)
             {
-                // TODO: This doesn't work with element type versions so temporarily disabled!
-                //case ArrayType.SZArrayFast:
-                //    return DeserializeFast(context.FastConversion, ref header);
+                case ArrayType.SZArrayFast:
+                    return DeserializeFast(deserializer);
                 case ArrayType.SZArrayManual:
                     {
-                        int arrSize = (int)header.ReadCompressedInt();
+                        int arrSize = (int)deserializer.ReadCompressedInt();
                         var arr = Array.CreateInstance(_info.ElementType, arrSize);
 
-                        for (int i = 0; i < arrSize; i++) arr.SetValue(header.ReadItem(_info.PerItem), i);
+                        for (int i = 0; i < arrSize; i++) arr.SetValue(deserializer.ReadItem(_info.PerItem), i);
                         return arr;
                     }
                 case ArrayType.SNZArray:
                     {
-                        int arrSize = (int)header.ReadCompressedInt();
-                        int i = (int)header.ReadCompressedInt();
+                        int arrSize = (int)deserializer.ReadCompressedInt();
+                        int i = (int)deserializer.ReadCompressedInt();
 
                         var arr = Array.CreateInstance(_info.ElementType, new int[] { arrSize }, new int[] { i });
 
                         int end = i + arrSize;
-                        for (; i < end; i++) arr.SetValue(header.ReadItem(_info.PerItem), i);
+                        for (; i < end; i++) arr.SetValue(deserializer.ReadItem(_info.PerItem), i);
                         return arr;
                     }
                 case ArrayType.MultiDimensional:
                     {
-                        bool hasCustomLowerBounds = header.ReadBit();
-                        int arrSize = (int)header.ReadCompressedInt();
+                        bool hasCustomLowerBounds = deserializer.ReadBit();
+                        int arrSize = (int)deserializer.ReadCompressedInt();
 
-                        return DeserializeMultiDimensionalArray(in _info, hasCustomLowerBounds, arrSize, header);
+                        return DeserializeMultiDimensionalArray(in _info, hasCustomLowerBounds, arrSize, deserializer);
                     }
 
                 // Unknown
@@ -288,89 +291,151 @@ namespace ABCo.ABSave.Serialization.Converters
 
 #endregion
 
-        static FastConversionType GetFastType(Type elementType) => Type.GetTypeCode(elementType) switch
+        #region Primitive Optimization
+
+        unsafe void SerializeFast(Array arr, ABSaveSerializer serializer)
         {
-            TypeCode.Byte => FastConversionType.Byte,
-            TypeCode.SByte => FastConversionType.SByte,
-            TypeCode.Int16 => FastConversionType.Short,
-            TypeCode.UInt16 => FastConversionType.UShort,
-            TypeCode.Char => FastConversionType.Char,
-            _ => FastConversionType.None
-        };
+            // Length
+            serializer.WriteCompressedInt((uint)arr.Length);
 
-#region Primitive Optimization
+            // Item Version Info (if necessary)
+            serializer.WriteVersionInfo(_info.PerItem.Converter);
 
-        //static unsafe void SerializeFast(Array arr, FastConversionType type, ABSaveSerializer header)
-        //{
-        //    // TODO: Remove tight coupling with TextConverter.
-        //    if (type == FastConversionType.Char) TextConverter.SerializeCharArray((char[])arr, ref header);
+            // Data
+            switch (_info.FastItemTypeCode)
+            {
+                case TypeCode.Byte:
+                    serializer.WriteRawBytes((byte[])arr);
+                    break;
+                case TypeCode.SByte:
+                    serializer.WriteRawBytes(MemoryMarshal.Cast<sbyte, byte>((sbyte[])arr));
+                    break;
 
-        //    header.Serializer.WriteCompressed((uint)arr.Length, ref header);
+                // If we're trying to compress primitives for Int16 and UInt16, fallback to the less specialized SerializeBytesFast path.
+                case TypeCode.Int16:
+                    if (serializer.State.Settings.CompressPrimitives)
+                        SerializeBytesFast((Span<short>)(short[])arr, serializer);
+                    else
+                        serializer.FastWriteShorts((Span<short>)(short[])arr);
 
-        //    switch (type)
-        //    {
-        //        case FastConversionType.Byte:
-        //            header.Serializer.WriteByteArray((byte[])arr);
-        //            break;
-        //        case FastConversionType.SByte:
-        //            var data = ((sbyte[])arr).AsSpan();
-        //            header.Serializer.WriteBytes(MemoryMarshal.Cast<sbyte, byte>(data));
+                    break;
+                case TypeCode.UInt16:
+                    if (serializer.State.Settings.CompressPrimitives)
+                        SerializeBytesFast((Span<ushort>)(ushort[])arr, serializer);
+                    else
+                        serializer.FastWriteShorts(MemoryMarshal.Cast<ushort, short>((ushort[])arr));
 
-        //            break;
-        //        case FastConversionType.Short:
-        //            header.Serializer.FastWriteShorts(((short[])arr).AsSpan());
-        //            break;
-        //        case FastConversionType.UShort:
-        //            var shortData = ((ushort[])arr).AsSpan();
-        //            header.Serializer.FastWriteShorts(MemoryMarshal.Cast<ushort, short>(shortData));
-        //            break;
-        //        default:
-        //            throw new Exception("ABSAVE: The context given was invalid.");
-        //    }
-        //}
+                    break;
+                case TypeCode.Int32:
+                    SerializeBytesFast((Span<int>)(int[])arr, serializer);
+                    break;
+                case TypeCode.UInt32:
+                    SerializeBytesFast((Span<uint>)(uint[])arr, serializer);
+                    break;
+                case TypeCode.Int64:
+                    SerializeBytesFast((Span<long>)(long[])arr, serializer);
+                    break;
+                case TypeCode.UInt64:
+                    SerializeBytesFast((Span<ulong>)(ulong[])arr, serializer);
+                    break;
+                case TypeCode.Single:
+                    SerializeBytesFast((Span<float>)(float[])arr, serializer);
+                    break;
+                case TypeCode.Double:
+                    SerializeBytesFast((Span<double>)(double[])arr, serializer);
+                    break;
+            }
+        }
 
-        //unsafe static Array DeserializeFast(FastConversionType type, ABSaveDeserializer header)
-        //{
-        //    // TODO: Remove tight coupling with TextConverter.
-        //    if (type == FastConversionType.Char) return TextConverter.DeserializeCharArray(ref header);
+        unsafe void SerializeBytesFast<T>(Span<T> arr, ABSaveSerializer serializer) where T : struct
+        {
+            // For now, we don't support these cases. They could be optimized in the future, however.
+            if (serializer.State.Settings.CompressPrimitives || serializer.State.ShouldReverseEndian)
+            {
+                // Manually serialize each item.
+                for (int i = 0; i < arr.Length; i++)
+                    serializer.WriteExactNonNullItem(arr[i], _info.PerItem);
+            }
+            else
+                serializer.WriteRawBytes(MemoryMarshal.Cast<T, byte>(arr));            
 
-        //    int length = (int)header.Deserializer.ReadCompressedInt(ref header);
-        //    switch (type)
-        //    {
-        //        case FastConversionType.Byte:
-        //            {  
-        //                var arr = new byte[length];
-        //                header.Deserializer.ReadBytes(arr);
-        //                return arr;
-        //            }
-        //        case FastConversionType.SByte:
-        //            {
-        //                var arr = new sbyte[length];
-        //                fixed (sbyte* arrData = arr)
-        //                    header.Deserializer.ReadBytes(new Span<byte>(arrData, length));
+        }
 
-        //                return arr;
-        //            }
-        //        case FastConversionType.Short:
-        //            {
-        //                var arr = new short[length];
-        //                header.Deserializer.FastReadShorts(arr.AsSpan());
+        unsafe Array DeserializeFast(ABSaveDeserializer deserializer)
+        {
+            // Length
+            int len = (int)deserializer.ReadCompressedInt();
 
-        //                return arr;
-        //            }
-        //        case FastConversionType.UShort:
-        //            {
-        //                var arr = new ushort[length];
-        //                header.Deserializer.FastReadShorts(MemoryMarshal.Cast<ushort, short>(arr.AsSpan()));
+            // Item Version Info (if necessary)
+            deserializer.ReadVersionInfo(_info.PerItem.Converter);
 
-        //                return arr;
-        //            }
-        //        default:
-        //            throw new Exception("ABSAVE: The context given was invalid.");
-        //    }
-        //}
+            // Data
+            switch (_info.FastItemTypeCode)
+            {
+                case TypeCode.Byte:
+                    {
+                        byte[] arr = new byte[len];
+                        deserializer.ReadBytes(arr);
+                        return arr;
+                    }
+                case TypeCode.SByte:
+                    {
+                        sbyte[] arr = new sbyte[len];
+                        deserializer.ReadBytes(MemoryMarshal.Cast<sbyte, byte>(arr));
+                        return arr;
+                    }
+                // If we're trying to compress primitives for Int16 and UInt16, fallback to the less specialized SerializeBytesFast path.
+                case TypeCode.Int16:
+                    if (deserializer.State.Settings.CompressPrimitives)
+                        return DeserializeBytesFast<short>(len, deserializer);
+                    {
+                        short[] arr = new short[len];
+                        deserializer.FastReadShorts(arr);
+                        return arr;
+                    }
+                case TypeCode.UInt16:
+                    if (deserializer.State.Settings.CompressPrimitives)
+                        return DeserializeBytesFast<ushort>(len, deserializer);
+                    {
+                        ushort[] arr = new ushort[len];
+                        deserializer.FastReadShorts(MemoryMarshal.Cast<ushort, short>(arr));
+                        return arr;
+                    }
+                case TypeCode.Int32:
+                    return DeserializeBytesFast<int>(len, deserializer);
+                case TypeCode.UInt32:
+                    return DeserializeBytesFast<uint>(len, deserializer);
+                case TypeCode.Int64:
+                    return DeserializeBytesFast<long>(len, deserializer);
+                case TypeCode.UInt64:
+                    return DeserializeBytesFast<ulong>(len, deserializer);
+                case TypeCode.Single:
+                    return DeserializeBytesFast<float>(len, deserializer);
+                case TypeCode.Double:
+                    return DeserializeBytesFast<double>(len, deserializer);
+                default:
+                    throw new Exception("Invalid TypeCode in fast array converter!");
+            }
+        }
 
-#endregion
+        unsafe Array DeserializeBytesFast<T>(int len, ABSaveDeserializer deserializer) where T : struct
+        {
+            T[] res = new T[len];
+
+            // For now, we don't support these cases. They could be optimized in the future, however.
+            if (deserializer.State.Settings.CompressPrimitives || deserializer.State.ShouldReverseEndian)
+            {
+                // Manually deserialize each item.
+                for (int i = 0; i < res.Length; i++)
+                    res[i] = (T)deserializer.ReadExactNonNullItem(_info.PerItem);
+            }
+            else
+                deserializer.ReadBytes(MemoryMarshal.Cast<T, byte>(res));
+
+            return res;
+        }
+
+        #endregion
 
         [StructLayout(LayoutKind.Auto)]
         readonly struct MDSerializeArrayInfo
@@ -433,8 +498,8 @@ namespace ABCo.ABSave.Serialization.Converters
         struct ArrayTypeInfo
         {
             public ArrayType Type;
+            public TypeCode FastItemTypeCode;
             public byte Rank;
-            public FastConversionType FastConversion;
             public Type ElementType;
             public MapItemInfo PerItem;
         }
@@ -447,5 +512,8 @@ namespace ABCo.ABSave.Serialization.Converters
             return type == szVersion;
         }
 #endif
+
+        // Internal for testing. I know, this is a little poor, but it is what it is!
+        internal bool IsSerializingFast => _info.Type == ArrayType.SZArrayFast;
     }
 }

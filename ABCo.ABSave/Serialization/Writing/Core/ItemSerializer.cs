@@ -40,26 +40,33 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         {
             Type? actualType = obj.GetType();
 
-            var currentInfo = SerializeConverterHeader(obj, converter, actualType, skipHeader, serializer);
+            var currentInfo = skipHeader ? SerializeVersionInfo(converter, serializer) : SerializeVersionInfoAndHeader(obj, converter, actualType, serializer);
             if (currentInfo == null) return;
 
             var serializeInfo = new Converter.SerializeInfo(obj, actualType, currentInfo, serializer);
             converter.Serialize(in serializeInfo);
         }
 
-        internal static VersionInfo? SerializeConverterHeader(object obj, Converter converter, Type actualType, bool skipHeader, ABSaveSerializer header)
+        public static VersionInfo? SerializeVersionInfoAndHeader(object obj, Converter converter, Type actualType, ABSaveSerializer serializer)
+        {
+            VersionInfo? cache = SerializeVersionInfo(converter, serializer);
+
+            if (cache._inheritanceInfo != null)
+            {
+                SerializeActualTypeIfNeeded(cache._inheritanceInfo, obj, actualType, converter, serializer);
+                return null;
+            }
+
+            return cache;
+        }
+
+        public static VersionInfo SerializeVersionInfo(Converter converter, ABSaveSerializer header)
         {
             var cache = header.State.GetCachedInfo(converter);
 
             // Write and get the info for a version, if necessary
             if (cache == null)
                 cache = HandleNewVersion(converter, header);
-
-            if (cache._inheritanceInfo != null && !skipHeader)
-            {
-                SerializeActualTypeIfNeeded(cache._inheritanceInfo, obj, actualType, converter, header);
-                return null;
-            }
 
             return cache;
         }
@@ -70,7 +77,7 @@ namespace ABCo.ABSave.Serialization.Writing.Core
         /// <returns>Whether we applied the header</returns>
         static VersionInfo HandleNewVersion(Converter item, ABSaveSerializer header)
         {
-            uint version = header.State.HasVersioningInfo ? WriteNewVersionInfo(item, header) : 0;
+            uint version = header.State.IncludeVersioningInfo ? WriteNewVersionInfo(item, header) : 0;
             return header.State.CreateNewCache(item, version);
         }
 

@@ -7,15 +7,23 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 {
     internal static class CompressedDeserializer
     {
-        public static ulong ReadCompressed(bool canBeLong, ABSaveDeserializer deserializer)
+        public static ulong ReadCompressedSigned<T>(ABSaveDeserializer deserializer)
+        {
+            bool negative = deserializer.ReadBit();
+            ulong res = ReadCompressed<T>(deserializer);
+
+            return negative ? (ulong)-(long)res : res;
+        }
+
+        public static ulong ReadCompressed<T>(ABSaveDeserializer deserializer)
         {
             if (deserializer.State.Settings.LazyCompressedWriting)
-                return ReadCompressedLazyFast(canBeLong, deserializer);
+                return ReadCompressedLazyFast<T>(deserializer);
             else
                 return ReadCompressedSlow(deserializer);
         }
 
-        public static ulong ReadCompressedLazyFast(bool canBeLong, ABSaveDeserializer deserializer)
+        public static ulong ReadCompressedLazyFast<T>(ABSaveDeserializer deserializer)
         {
             // If the header is big enough, the value will have been fit into the rest of the header.
             if (deserializer.CurrentByteFreeBits > 3)
@@ -39,7 +47,7 @@ namespace ABCo.ABSave.Serialization.Reading.Core
 
             ulong ReadFull(ABSaveDeserializer deserializer)
             {
-                if (canBeLong)
+                if (typeof(T) == typeof(ulong)) // This check is elided by the JIT
                     return (ulong)deserializer.ReadInt64();
                 else
                     return (ulong)deserializer.ReadInt32();

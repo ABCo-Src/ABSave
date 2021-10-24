@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using ABCo.ABSave.Serialization.Converters;
 
 namespace ABCo.ABSave.UnitTests.TestHelpers
 {
@@ -21,7 +22,7 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
         public ABSaveDeserializer Deserializer;
 
         public void Initialize(Dictionary<Type, uint> targetVersions = null) => Initialize(ABSaveSettings.ForSpeed, targetVersions);
-        public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null, bool lazyWriteCompressed = false)
+        public void Initialize(ABSaveSettings template, Dictionary<Type, uint> targetVersions = null, bool lazyWriteCompressed = false, bool includeVersioning = true)
         {
             var settings = template.Customize(b => b
                 .SetLazyWriteCompressed(lazyWriteCompressed)
@@ -34,8 +35,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             CurrentMap = ABSaveMap.Get<EmptyClass>(settings);
 
             Stream = new MemoryStream();
-            Serializer = CurrentMap.GetSerializer(Stream, true, targetVersions);
-            Deserializer = CurrentMap.GetDeserializer(Stream, true);
+            Serializer = CurrentMap.GetSerializer(Stream, includeVersioning, targetVersions);
+            Deserializer = CurrentMap.GetDeserializer(Stream, includeVersioning);
         }
 
         public void GoToStart() => Stream.Position = 0;
@@ -117,14 +118,14 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                             break;
                         case GenType.Action:
 
-                            SetupSerializer();
+                            SetupSerializer(true);
                             ((Action<ABSaveSerializer>)itms[currentItmsPos++])(serializer);
                             bytes.AddRange(((MemoryStream)serializer.GetStream()).ToArray());
 
                             break;
                         case GenType.MapItem:
 
-                            SetupSerializer();
+                            SetupSerializer(true);
 
                             var genMap = (GenMap)itms[currentItmsPos++];
                             serializer.WriteExactNonNullItem(genMap.Obj, genMap.Item);
@@ -133,10 +134,16 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
                             break;
                         case GenType.Size:
 
-                            SetupSerializer();
-                            serializer.WriteCompressedLong((ulong)itms[currentItmsPos++]);
+                            // Create a whole new serializer so we have enough control over the settings to force it to write a size.
+                            MemoryStream sizeDest = new MemoryStream();
 
-                            bytes.AddRange(((MemoryStream)serializer.GetStream()).ToArray());
+                            var map = ABSaveMap.GetNonGeneric(itms[currentItmsPos].GetType(), ABSaveSettings.ForSize);
+                            var sizeSerializer = map.GetSerializer(sizeDest, false);
+
+                            sizeSerializer.WriteRoot(itms[currentItmsPos++]);
+                            sizeSerializer.Flush();
+
+                            bytes.AddRange(((MemoryStream)sizeSerializer.GetStream()).ToArray());
                             break;
                     }
                 }
@@ -144,15 +151,14 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
 
             return bytes.ToArray();
 
-            void SetupSerializer()
+            void SetupSerializer(bool writeVersioning)
             {
                 if (serializer == null)
                 {
-                    serializer = CurrentMap.GetSerializer(new MemoryStream(), true);
+                    serializer = CurrentMap.GetSerializer(new MemoryStream(), writeVersioning);
                 }
                 else
                 {
-                    serializer.Reset();
                     serializer.GetStream().Position = 0;
                 }
             }
@@ -165,6 +171,8 @@ namespace ABCo.ABSave.UnitTests.TestHelpers
             second.CopyTo(res, 1);
             return res;
         }
+
+        public static byte[] Reverse(byte[] b) => b.Reverse().ToArray();
 
         public static void ReflectiveAssert(object expected, object actual)
         {

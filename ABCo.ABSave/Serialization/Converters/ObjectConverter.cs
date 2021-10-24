@@ -78,7 +78,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
             if (baseType != null)
             {
-                var baseInfo = serializer.WriteExactNonNullHeader(instance, actualType, baseType);
+                var baseInfo = serializer.WriteVersionInfo(baseType);
                 Serialize(instance, actualType, baseInfo!, serializer);
             }
 
@@ -104,8 +104,7 @@ namespace ABCo.ABSave.Serialization.Converters
 
             if (baseType != null)
             {
-                // TODO: Don't directly call this with map guides.
-                VersionInfo baseInfo = deserializer.ReadExactNonNullHeader(baseType);
+                VersionInfo baseInfo = deserializer.ReadVersionInfo(baseType);
                 DeserializeInto(obj, baseInfo, deserializer);
             }
 

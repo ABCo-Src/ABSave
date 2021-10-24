@@ -61,7 +61,7 @@ namespace ABCo.ABSave.UnitTests.Core
             // Large buffer
             string newStr = new string('J', 1200);
             Serializer.WriteNonNullString(newStr);
-            AssertAndGoToStart(GetByteArr(new object[] { 1200UL, Encoding.Unicode.GetBytes(newStr) }, (short)GenType.Size, (short)GenType.ByteArr));
+            AssertAndGoToStart(GetByteArr(new object[] { 1200U, Encoding.Unicode.GetBytes(newStr) }, (short)GenType.Size, (short)GenType.ByteArr));
 
             Assert.AreEqual(newStr, Deserializer.ReadNonNullString());
         }
