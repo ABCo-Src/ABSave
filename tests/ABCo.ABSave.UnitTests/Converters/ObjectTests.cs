@@ -92,6 +92,19 @@ namespace ABCo.ABSave.UnitTests.Converters
 	        Assert.ThrowsException<UnsupportedTypeException>(() =>
 		        Setup<NoParameterlessConstructor>(ABSaveSettings.ForSpeed));
 
+        [TestMethod]
+        public void SerializeAndDeserialize_AbstractClass_ShouldThrowException()
+        {
+            Setup<AbstractClass>(ABSaveSettings.ForSpeed);
+
+            Assert.ThrowsException<UnsupportedTypeException>(() => DoSerialize(new AbstractClassSub()));
+
+            Serializer.Flush();
+            GoToStart();
+
+            Assert.ThrowsException<UnsupportedTypeException>(DoDeserialize<AbstractClass>);
+        }
+
         void RunTest<T>(T instance, int version, byte? noBaseExpectedFirstByte, byte? baseExpectedFirstByte, byte[] versionExpected, byte[] nonVersionExpected)
             where T : BaseWithoutHeader
         {
@@ -156,6 +169,17 @@ namespace ABCo.ABSave.UnitTests.Converters
 	    public int A { get; set; }
     }
 
+    [SaveMembers]
+    public abstract class AbstractClass
+    {
+
+    }
+
+    [SaveMembers]
+    public class AbstractClassSub : AbstractClass
+    {
+
+    }
 
     [SaveBaseMembers(typeof(string))]
     [SaveMembers]
