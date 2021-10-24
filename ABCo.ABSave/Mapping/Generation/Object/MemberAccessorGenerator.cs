@@ -3,14 +3,19 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
+using ABCo.ABSave.Exceptions;
 
 namespace ABCo.ABSave.Mapping.Generation.Object
 {
     internal static class MemberAccessorGenerator
     {
-        internal static void GenerateFieldAccessor(ref MemberAccessor dest, MemberInfo memberInfo) =>
-            dest.Initialize(MemberAccessorType.Field, memberInfo, null);
+	    internal static void GenerateFieldAccessor(ref MemberAccessor dest, FieldInfo fieldInfo)
+	    {
+            if(fieldInfo.IsInitOnly) throw new UnsupportedMemberException(fieldInfo, "Field is readonly.");
 
+            dest.Initialize(MemberAccessorType.Field, fieldInfo, null);
+        }
+	    
         internal struct PropertyToProcess
         {
             public ObjectMemberSharedInfo Info;
@@ -30,6 +35,8 @@ namespace ABCo.ABSave.Mapping.Generation.Object
         /// </summary>
         internal static void DoGeneratePropertyAccessor(ref MemberAccessor accessor, MapItemInfo item, Converter parentItem, PropertyInfo property)
         {
+	        if (!property.CanWrite) throw new UnsupportedMemberException(property, "Property is readonly.");
+
             // All property optimizations rely on the parent being a reference-type.
             if (!parentItem.IsValueItemType)
             {
@@ -51,7 +58,6 @@ namespace ABCo.ABSave.Mapping.Generation.Object
                     CreateAllRefTypeAccessor(ref accessor, parentItem.ItemType, item.GetItemType(), property);
                     return;
                 }
-
             }
 
             // Unoptimized
@@ -89,7 +95,6 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 
             accessor.Initialize(MemberAccessorType.AllRefProperty, propGetter, propSetter);
         }
-
 
         internal static void ProcessAllQueuedAccessors(List<PropertyToProcess> properties)
         {

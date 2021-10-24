@@ -48,7 +48,7 @@ namespace ABCo.ABSave.Mapping.Generation.Object
             if (memberInfo is FieldInfo field)
             {
                 itemType = field.FieldType;
-                MemberAccessorGenerator.GenerateFieldAccessor(ref dest.Accessor, memberInfo);
+                MemberAccessorGenerator.GenerateFieldAccessor(ref dest.Accessor, field);
             }
             else if (memberInfo is PropertyInfo property)
             {
@@ -79,6 +79,5 @@ namespace ABCo.ABSave.Mapping.Generation.Object
 
             return intermediate.Details.Processed;
         }
-
     }
 }

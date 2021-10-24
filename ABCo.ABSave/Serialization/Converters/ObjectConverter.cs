@@ -1,5 +1,5 @@
-﻿using ABCo.ABSave.Serialization.Reading;
-using ABCo.ABSave.Exceptions;
+﻿using ABCo.ABSave.Exceptions;
+using ABCo.ABSave.Helpers;
 using ABCo.ABSave.Mapping;
 using ABCo.ABSave.Mapping.Description;
 using ABCo.ABSave.Mapping.Description.Attributes;
@@ -8,23 +8,28 @@ using ABCo.ABSave.Mapping.Generation;
 using ABCo.ABSave.Mapping.Generation.Converters;
 using ABCo.ABSave.Mapping.Generation.IntermediateObject;
 using ABCo.ABSave.Mapping.Generation.Object;
+using ABCo.ABSave.Serialization.Reading;
 using ABCo.ABSave.Serialization.Writing;
-using ABCo.ABSave.Serialization.Writing.Core;
 using System;
-using System.Reflection;
 
 namespace ABCo.ABSave.Serialization.Converters
 {
-    [SelectOtherWithCheckType]
+	[SelectOtherWithCheckType]
     public class ObjectConverter : Converter
     {
         internal IntermediateObjectInfo _intermediateInfo;
 
         SaveMembersMode _saveMode;
+        bool _isAbstract;
 
         public override uint Initialize(InitializeInfo info)
         {
-            return IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _intermediateInfo);
+	        _isAbstract = info.Type.IsAbstract;
+
+	        if (!info.Type.HasEmptyOrDefaultConstructor())
+		        throw new UnsupportedTypeException(info.Type, "Type does not have a parameterless constructor");
+                
+	        return IntermediateMapper.CreateIntermediateObjectInfo(info.Type, _saveMode, out _intermediateInfo);
         }
 
         public override VersionInfo? GetVersionInfo(InitializeInfo info, uint version)
@@ -70,8 +75,10 @@ namespace ABCo.ABSave.Serialization.Converters
         public override void Serialize(in SerializeInfo info) =>
             Serialize(info.Instance, info.ActualType, info.VersionInfo, info.Serializer);
 
-        static void Serialize(object instance, Type actualType, VersionInfo info, ABSaveSerializer serializer)
+        void Serialize(object instance, Type actualType, VersionInfo info, ABSaveSerializer serializer)
         {
+	        if (_isAbstract) throw new UnsupportedTypeException(actualType, "Type is abstract");
+
             ObjectVersionInfo versionInfo = (ObjectVersionInfo)info;
             ObjectMemberSharedInfo[]? members = versionInfo.Members;
             ObjectConverter? baseType = versionInfo.BaseObject;
@@ -91,6 +98,8 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override object Deserialize(in DeserializeInfo info)
         {
+	        if (_isAbstract) throw new UnsupportedTypeException(info.ActualType, "Type is abstract");
+
             object res = Activator.CreateInstance(info.ActualType)!;
             DeserializeInto(res, info.VersionInfo, info.Deserializer);
             return res;

@@ -29,7 +29,9 @@ namespace ABCo.ABSave.Serialization.Converters
 
         public override uint Initialize(InitializeInfo info)
         {
-            // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
+	        if (!info.Type.IsPublic) throw new InaccessibleTypeException(info.Type);
+
+	        // Try to handle any immediately recognizable types (such as List<> or any direct interfaces).
             if (TryHandleDirectTypes(info, info.Type)) return 0;
 
             // Work out what category this type falls under.
