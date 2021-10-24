@@ -16,7 +16,7 @@
     <PackageTags>Serializer, Deserializer, Binary, Converter, Type converter, Fast, IL generation</PackageTags>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <PackageIcon>Icon.png</PackageIcon>
-    <PackageReleaseNotes>Improved Stability</PackageReleaseNotes>
+    <PackageReleaseNotes>Improved Stability + Improved Performance</PackageReleaseNotes>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
