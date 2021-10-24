@@ -435,77 +435,7 @@ namespace ABCo.ABSave.Serialization.Converters
             return res;
         }
 
-        //static unsafe void SerializeFast(Array arr, FastConversionType type, ABSaveSerializer header)
-        //{
-        //    // TODO: Remove tight coupling with TextConverter.
-        //    if (type == FastConversionType.Char) TextConverter.SerializeCharArray((char[])arr, ref header);
-
-            //    header.Serializer.WriteCompressed((uint)arr.Length, ref header);
-
-            //    switch (type)
-            //    {
-            //        case FastConversionType.Byte:
-            //            header.Serializer.WriteByteArray((byte[])arr);
-            //            break;
-            //        case FastConversionType.SByte:
-            //            var data = ((sbyte[])arr).AsSpan();
-            //            header.Serializer.WriteBytes(MemoryMarshal.Cast<sbyte, byte>(data));
-
-            //            break;
-            //        case FastConversionType.Short:
-            //            header.Serializer.FastWriteShorts(((short[])arr).AsSpan());
-            //            break;
-            //        case FastConversionType.UShort:
-            //            var shortData = ((ushort[])arr).AsSpan();
-            //            header.Serializer.FastWriteShorts(MemoryMarshal.Cast<ushort, short>(shortData));
-            //            break;
-            //        default:
-            //            throw new Exception("ABSAVE: The context given was invalid.");
-            //    }
-            //}
-
-            //unsafe static Array DeserializeFast(FastConversionType type, ABSaveDeserializer header)
-            //{
-            //    // TODO: Remove tight coupling with TextConverter.
-            //    if (type == FastConversionType.Char) return TextConverter.DeserializeCharArray(ref header);
-
-            //    int length = (int)header.Deserializer.ReadCompressedInt(ref header);
-            //    switch (type)
-            //    {
-            //        case FastConversionType.Byte:
-            //            {  
-            //                var arr = new byte[length];
-            //                header.Deserializer.ReadBytes(arr);
-            //                return arr;
-            //            }
-            //        case FastConversionType.SByte:
-            //            {
-            //                var arr = new sbyte[length];
-            //                fixed (sbyte* arrData = arr)
-            //                    header.Deserializer.ReadBytes(new Span<byte>(arrData, length));
-
-            //                return arr;
-            //            }
-            //        case FastConversionType.Short:
-            //            {
-            //                var arr = new short[length];
-            //                header.Deserializer.FastReadShorts(arr.AsSpan());
-
-            //                return arr;
-            //            }
-            //        case FastConversionType.UShort:
-            //            {
-            //                var arr = new ushort[length];
-            //                header.Deserializer.FastReadShorts(MemoryMarshal.Cast<ushort, short>(arr.AsSpan()));
-
-            //                return arr;
-            //            }
-            //        default:
-            //            throw new Exception("ABSAVE: The context given was invalid.");
-            //    }
-            //}
-
-            #endregion
+        #endregion
 
         [StructLayout(LayoutKind.Auto)]
         readonly struct MDSerializeArrayInfo
