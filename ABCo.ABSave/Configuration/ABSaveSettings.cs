@@ -30,7 +30,7 @@ namespace ABCo.ABSave.Configuration
         internal IReadOnlyList<ConverterInfo> NonExactConverters { get; }
         internal int ConverterCount { get; }
 
-        internal ABSaveSettings Customize(Action<SettingsBuilder> customizer)
+        public ABSaveSettings Customize(Action<SettingsBuilder> customizer)
         {
             var builder = new SettingsBuilder();
             customizer(builder);
